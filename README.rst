@@ -38,6 +38,7 @@ Create a polygon cross section:
 
 
 M-kappa of a concrete cross section:
+
 .. code:: python
 
 	import StructuralEngineering.concrete as se
