@@ -1,19 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from intersection import do_intersect
+from intersection import do_intersect, Point
 
 
 class Epsilon:
     def __init__(self):
         self.eps_array = None
 
-    def create_eps_array(self, top_eps, bottom_eps):
-        self.eps_array = np.linspace(top_eps, bottom_eps)
+    def create_eps_array(self, top_eps=0, bottom_eps=0, nValues=1000 ):
+        self.eps_array = np.linspace(top_eps, bottom_eps, nValues)
+        return self.eps_array
 
 
 class CrossSection:
     def __init__(self, coordinate_list):
-        self.nValues = 10000
+        self.nValues = 1000
         self.width_array = None
         self.height_array = None
         self.height = None
@@ -21,6 +22,7 @@ class CrossSection:
         self.moment_of_inertia = None
         self.coordinate_list = None
         self.xValuesPerSection = np.zeros([self.nValues, 2])
+        self.section_height = None
 
         self.section_coordinates(coordinate_list)
         self.det_center_of_gravity()
@@ -38,11 +40,13 @@ class CrossSection:
         # Closes the cross section if necessary
         if coordinate_list[0] != coordinate_list[-1]:
             coordinate_list.append(coordinate_list[0])
-        self.coordinate_list = coordinate_list
 
-        if not self.valid_cross_section():
-            print("The lines of the cross section have one or multiple intersections, "
-                  "the calculation is probably flawed")
+        self.coordinate_list = []
+        for i in range(len(coordinate_list)):
+            self.coordinate_list.append(Point(coordinate_list[i][0], coordinate_list[i][1]))
+
+        # Check the input
+        self.valid_cross_section()
 
         # The empty array that will be filled with width values
         self.width_array = np.empty(self.nValues)
@@ -86,6 +90,9 @@ class CrossSection:
                 self.xValuesPerSection[count] = np.array([x_left, x_right])
             count += 1
 
+        # set the height of one section
+        self.section_height = self.height / self.nValues
+
     def det_center_of_gravity(self):
         sigA = 0
         sig_A_times_z = 0
@@ -127,7 +134,7 @@ class CrossSection:
     def print_in_lines(self):
         minVal = 1e6
         maxVal = -1e6
-        for i in range(a.nValues):
+        for i in range(self.nValues):
 
             # print 1 in the 100 lines
             if i % int(self.nValues / 100) == 0:
@@ -158,21 +165,21 @@ class CrossSection:
             # add every 2 points, after the first 2 points as aline
             lines.append([point_1, point_2])
 
-        # Check for every line if it intersects with other lines, except with the two connected lines
         doesIntersect = False
         # Last line connects the polygon, thus will result to an intersection True
         lines.__delitem__(-1)
         for i in range(len(lines)):
+
+            # Check for every line if it intersects with other lines, except with the two connected lines
             for val in range(len(lines)):
                 if val != i and val != i - 1 and val != i + 1:
                     if do_intersect(lines[val], lines[i]):
                         doesIntersect = True
-
+        assert (not doesIntersect), "The lines of the cross section have one or multiple intersections"
         return not doesIntersect
 
-a = CrossSection([[0, 0], [0, 500], [300, 500], [250, 250], [500, 0], [0, 0]])
-print(a.moment_of_inertia)
-a.print_in_lines()
+
+
 
 
 

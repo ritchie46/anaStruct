@@ -3,6 +3,9 @@ class Point:
         self.x = x
         self.z = z
 
+    def print(self):
+        print(self.x, self.z)
+
 
 def on_segment(p, q, r):
     """"
@@ -17,11 +20,11 @@ def on_segment(p, q, r):
         return False
 
 
-def orientation(p, q, r):
+def orientation(p1, p2, p3):
     """
-    :param p: point object with x and z members
-    :param q: point object with x and z members
-    :param r: point object with x and z members
+    :param p1: point object with x and z members
+    :param p2: point object with x and z members
+    :param p3: point object with x and z members
     :return: orientation
 
     To find orientation of ordered triplet (p, q, r).
@@ -31,8 +34,7 @@ def orientation(p, q, r):
     2 --> Counterclockwise
     See http://www.geeksforgeeks.org/orientation-3-ordered-points/
     """
-
-    val = int((q.z - p.z) * (r.x - q.x) - (q.x - p.x) * (r.z - q.z))
+    val = (p2.z - p1.z) * (p3.x - p2.x) - (p2.x - p1.x) * (p3.z - p2.z)
 
     if val == 0:
         return 0  # co-linear
@@ -46,7 +48,7 @@ def do_intersect(line_1, line_2):
     """
     :param line_1: list with two coordinates [[x1, z1], [x2, z2]]
     :param line_2: list with two coordinates [[x1, z1], [x2, z2]]
-    :return:
+    :return: boolean: True if intersect, False if not
 
 
     p1____________ q1
@@ -59,10 +61,10 @@ def do_intersect(line_1, line_2):
     p2
     """
 
-    p1 = Point(x=line_1[0][0], z=line_1[0][1])
-    q1 = Point(x=line_1[1][0], z=line_1[1][1])
-    p2 = Point(x=line_2[0][0], z=line_2[0][1])
-    q2 = Point(x=line_2[1][0], z=line_2[1][1])
+    p1 = Point(x=line_1[0].x, z=line_1[0].z)
+    q1 = Point(x=line_1[1].x, z=line_1[1].z)
+    p2 = Point(x=line_2[0].x, z=line_2[0].z)
+    q2 = Point(x=line_2[1].x, z=line_2[1].z)
 
     # check which orientations occur, clockwise, counterclockwise and co-linear
     o1 = orientation(p1, q1, p2)
@@ -90,7 +92,6 @@ def do_intersect(line_1, line_2):
     # p2, q2 and q1 are co-linear and q1 lies on segment p2q2
     if o4 == 0 and on_segment(p2, q1, q2):
         return True
-
     return False
 
 
