@@ -1,7 +1,7 @@
 Structural Engineering
 ======================
 
-*Will be a small library with solutions for Structural Engineering problems*
+*A small library with solutions for Structural Engineering problems*
 
 Installation
 ============
@@ -11,6 +11,7 @@ Installation
     $ pip install structural_engineering
 
 For now you're able to create a cross section of any polygon and determine:
+ - Matrix FEM for beams (Work In Progress)
  - Moment of Inertia
  - Center of Gravity
 
@@ -21,6 +22,39 @@ Concrete calculation
 Coming up:
  - LE (Resisting Moment) any material.
  - FRP reinforcement
+ 
+FEM method for 2D frameworks
+ - Bending moment and node reaction forces work
+ - More than two elements at one node does not work
+ 
+ .. code:: python
+
+	import StructuralEngineering.FEM.beams as se
+	
+	# create a new system
+	system = se.SystemElements()
+	
+	# add beams to the system. positive z-axis is down, positive x-axis is the right
+	system.add_element(location_list=[[0, 0], [0, -5]], EA=5e3, EI=5000)
+	system.add_element(location_list=[[0, -5], [5, -5]], EA=5e3, EI=5000)
+	system.add_element(location_list=[[5, -5], [5, 0]], EA=5e3, EI=5000)
+
+	# add loads to the elements and nodes
+	system.q_load(elementID=2, q=10, direction=1)
+	system.point_load(Fx=30, nodeID=2)
+	
+	# add supports at the nodes
+	system.add_support_fixed(nodeID=1)
+	system.add_support_fixed(nodeID=4)
+
+	# solve the equations
+	system.assemble_system_matrix()
+	system.process_conditions()
+	system.solve()
+	
+	# show the bending moment
+	system.show_bending_moment()
+
 
 Create a polygon cross section:
 

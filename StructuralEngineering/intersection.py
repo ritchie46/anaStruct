@@ -1,10 +1,4 @@
-class Point:
-    def __init__(self, x, z):
-        self.x = x
-        self.z = z
-
-    def do_print(self):
-        print(self.x, self.z)
+from StructuralEngineering.trigonometry import Point
 
 
 def on_segment(p, q, r):

@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from StructuralEngineering.intersection import do_intersect, Point
+from StructuralEngineering.intersection import do_intersect
+from StructuralEngineering.trigonometry import Point
 
 
 class Epsilon:
