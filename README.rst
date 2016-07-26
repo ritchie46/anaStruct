@@ -23,7 +23,7 @@ Coming up:
  - LE (Resisting Moment) any material.
  - FRP reinforcement
  
-FEM method for 2D frameworks
+FEM method for 2D frames (Matrix Frames)
  - Bending moment and node reaction forces work
  - More than two elements at one node does not work
  
