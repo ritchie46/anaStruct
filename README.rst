@@ -20,7 +20,7 @@ FEM method for 2D frames (Matrix Frames) (Work in Progress)
  
  .. code:: python
 
-	import StructuralEngineering.FEM.beams as se
+	import StructuralEngineering.FEM.system as se
 	
 	# create a new system
 	system = se.SystemElements()
@@ -46,8 +46,11 @@ FEM method for 2D frames (Matrix Frames) (Work in Progress)
 	# show the bending moment
 	system.show_bending_moment()
 
-	# show the normal forces
-	system.show_normal_forces()
+	# show the normal force
+	system.show_normal_force()
+
+    # show the shear force
+	system.show_shear_force()
 
 Cross Sections
 ==============
