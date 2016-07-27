@@ -1,15 +1,14 @@
 from distutils.core import setup
 
 setup(
-    name='structural_engineering',
-    version="0.1.2",
+    name='StructuralEngineering',
+    version="0.1.335",
     description='structural engineering package',
     author='Ritchie Vink',
     author_email='ritchie46@gmail.com',
-    url='http://pypi.python.org/pypi/structural_engineering/',
+    url='http://pypi.python.org/pypi/StructuralEngineering/',
     license='MIT License',
-    packages=['StructuralEngineering', ],
-    long_description=open('README.rst').read(),
+    packages=['StructuralEngineering', 'FEM'],
     install_requires=[
         "matplotlib",
         "numpy",

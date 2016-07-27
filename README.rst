@@ -10,22 +10,13 @@ Installation
 
     $ pip install StructuralEngineering
 
-For now you're able to create a cross section of any polygon and determine:
- - Matrix FEM for beams (Work In Progress)
- - Moment of Inertia
- - Center of Gravity
 
-Concrete calculation
- - Concrete cross section calculation for multiple layers of rebar
- - M-Kappa (concrete)
-
-Coming up:
- - LE (Resisting Moment) any material.
- - FRP reinforcement
- 
-FEM method for 2D frames (Matrix Frames)
- - Bending moment and node reaction forces work
- - More than two elements at one node does not work
+FEM method for 2D frames (Matrix Frames) (Work in Progress)
+===========================================================
+ - Bending moment (visual plot), works
+ - Normal force (visual plot), works
+ - Shear force (visual plot), coming up
+ - Numeral results, coming up
  
  .. code:: python
 
@@ -54,6 +45,18 @@ FEM method for 2D frames (Matrix Frames)
 	
 	# show the bending moment
 	system.show_bending_moment()
+
+	# show the normal forces
+	system.show_normal_forces()
+
+
+For now you're able to create a cross section of any polygon and determine:
+ - Moment of Inertia
+ - Center of Gravity
+
+ Concrete calculation
+ - Concrete cross section calculation for multiple layers of rebar
+ - M-Kappa (concrete)
 
 
 Create a polygon cross section:
