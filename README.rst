@@ -49,7 +49,8 @@ FEM method for 2D frames (Matrix Frames) (Work in Progress)
 	# show the normal forces
 	system.show_normal_forces()
 
-
+Cross Sections
+==============
 For now you're able to create a cross section of any polygon and determine:
  - Moment of Inertia
  - Center of Gravity
