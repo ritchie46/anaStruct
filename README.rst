@@ -1,14 +1,14 @@
 Structural Engineering
 ======================
 
-*A small library with solutions for Structural Engineering problems*
+*A small library with solutions for Structural Engineering problems.*
 
 Installation
 ============
 
 ::
 
-    $ pip install structural_engineering
+    $ pip install StructuralEngineering
 
 For now you're able to create a cross section of any polygon and determine:
  - Matrix FEM for beams (Work In Progress)
