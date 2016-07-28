@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='StructuralEngineering',
-    version="0.1.336",
+    version="0.1.337",
     description='structural engineering package',
     author='Ritchie Vink',
     author_email='ritchie46@gmail.com',

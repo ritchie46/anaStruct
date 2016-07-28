@@ -7,6 +7,7 @@ import numpy as np
 from StructuralEngineering.FEM.elements import Element
 from StructuralEngineering.FEM.node import Node
 from StructuralEngineering.trigonometry import Point
+from StructuralEngineering.FEM.plotter import Plotter
 
 
 class SystemElements:
@@ -99,8 +100,10 @@ class SystemElements:
 
         if id1 is False:
             self.node_ids.append(nodeID1)
+            self.node_objects.append(Node(ID=nodeID1, point=point_1))
         if id2 is False:
             self.node_ids.append(nodeID2)
+        self.node_objects.append(Node(ID=nodeID2, point=point_2))
 
         # determine the length of the elements
         point = copy.copy(point_2)
@@ -325,150 +328,19 @@ class SystemElements:
 
         return self.system_force_vector
 
+    def show_structure(self):
+        plot = Plotter(self)
+        plot.plot_structure(plot_now=True)
+
     def show_bending_moment(self):
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        con = 20
-
-        # determine factor scale by the maximum moment
-        max_moment = 0
-        for el in self.elements:
-            if el.q_load:
-                sagging_moment = abs(1 / 8 * -el.q_load * el.l ** 2 + 0.5 * (el.node_1.Ty + el.node_2.Ty))
-                if sagging_moment > max_moment:
-                    max_moment = sagging_moment
-
-            if abs(el.node_1.Ty) > max_moment:
-                max_moment = abs(el.node_1.Ty)
-            if abs(el.node_2.Ty) > max_moment:
-                max_moment = abs(el.node_2.Ty)
-
-        if math.isclose(max_moment, 0, rel_tol=1e-4) is False:
-            factor = 1 / max_moment
-        else:
-            factor = 0.1
-
-        # determine max value for scaling
-        max_val = 0
-
-        for el in self.elements:
-            # plot structure
-            axis_values = el.plot_values_element()
-            x_val = axis_values[0]
-            y_val = axis_values[1]
-            ax.plot(x_val , y_val, color='black')
-
-            if max(max(x_val ), max(y_val)) > max_val:
-                max_val = max(max(x_val ), max(y_val))
-
-            # plot moment
-            axis_values = el.plot_values_bending_moment(factor, con)
-            x_val = axis_values[0]
-            y_val = axis_values[1]
-            ax.plot(x_val , y_val, color='b')
-
-            # add value to plot
-            ax.text(x_val[1], y_val[1], "%s" % round(abs(el.node_1.Ty), 2))
-            ax.text(x_val[-2], y_val[-2], "%s" % round(abs(el.node_2.Ty), 2))
-
-            if el.q_load:
-                index = con // 2
-                ax.text(x_val[index], y_val[index], "%s" % round(abs(axis_values[2]), 2))
-
-        max_val += 2
-        ax.axis([-2, max_val, -2, max_val])
-        plt.show()
+        plot = Plotter(self)
+        plot.bending_moment()
 
     def show_normal_force(self):
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        con = 20
-
-        # determine max value for scaling
-        max_val = 0
-
-        # determine factor scale by the maximum force
-        max_force = 0
-        for el in self.elements:
-            if abs(el.N) > max_force:
-                max_force = abs(el.N)
-
-        if math.isclose(max_force, 0):
-            factor = 0.1
-        else:
-            factor = 1 / max_force
-
-        for el in self.elements:
-            # plot structure
-            axis_values = el.plot_values_element()
-            x_val = axis_values[0]
-            y_val = axis_values[1]
-            ax.plot(x_val, y_val, color='black')
-
-            if max(max(x_val ), max(y_val)) > max_val:
-                max_val = max(max(x_val), max(y_val))
-
-            # plot force
-            axis_values = el.plot_values_normal_force(factor)
-            x_val = axis_values[0]
-            y_val = axis_values[1]
-            ax.plot(x_val, y_val, color='b')
-
-            # add value to plot
-            ax.text(x_val[1], y_val[1], "%s" % round(el.N, 2))
-            ax.text(x_val[-2], y_val[-2], "%s" % round(el.N, 2))
-
-        max_val += 2
-        ax.axis([-2, max_val, -2, max_val])
-        plt.show()
+        plot = Plotter(self)
+        plot.normal_force()
 
     def show_shear_force(self):
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        con = 20
-
-        # determine max value for scaling
-        max_val = 0
-
-        # determine factor scale by the maximum force
-        max_force = 0
-        for el in self.elements:
-            # check for the maximum shear force per element (last variable in array is shear)
-            sol = el.plot_values_shear_force(factor=1)
-            if abs(sol[-1]) > max_force:
-                max_force = abs(sol[-1])
-            if abs(sol[-2]) > max_force:
-                max_force = abs(sol[-2])
-
-        if math.isclose(max_force, 0):
-            factor = 0.1
-        else:
-            factor = 1 / max_force
-
-        for el in self.elements:
-            # plot structure
-            axis_values = el.plot_values_element()
-            x_val = axis_values[0]
-            y_val = axis_values[1]
-            ax.plot(x_val, y_val, color='black')
-
-            # the max_value is used for the scaling
-            if max(max(x_val), max(y_val)) > max_val:
-                max_val = max(max(x_val), max(y_val))
-
-            # plot force
-            axis_values = el.plot_values_shear_force(factor)
-            x_val = axis_values[0]
-            y_val = axis_values[1]
-            ax.plot(x_val, y_val, color='b')
-
-            # add value to plot
-            sol = el.plot_values_shear_force(factor=1)
-            ax.text(x_val[1], y_val[1], "%s" % round(sol[-2], 2))
-            ax.text(x_val[-2], y_val[-2], "%s" % round(sol[-1], 2))
-
-        max_val += 2
-        ax.axis([-2, max_val, -2, max_val])
-        plt.show()
-
+        plot = Plotter(self)
+        plot.shear_force()
 
