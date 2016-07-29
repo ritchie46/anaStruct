@@ -344,3 +344,5 @@ class SystemElements:
         plot = Plotter(self)
         plot.shear_force()
 
+        np.__version__
+
