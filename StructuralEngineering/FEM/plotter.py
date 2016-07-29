@@ -33,10 +33,12 @@ class Plotter:
         """
         :param max_val: max scale of the plot
         """
-        width = 2 / max_val
-        height = 2 / max_val
+
+        width = 4 / max_val
+        height = 4 / max_val
         for node in self.system.supports_fixed:
-            support_patch = mpatches.Rectangle((node.point.x - width * 0.5, -node.point.z - width),
+
+            support_patch = mpatches.Rectangle((node.point.x - width * 0.25, -node.point.z - width * 0.25),
                                                width, height, color='r', zorder=9)
             self.one_fig.add_patch(support_patch)
 
@@ -44,7 +46,7 @@ class Plotter:
         """
         :param max_val: max scale of the plot
         """
-        radius = 1.5 / max_val
+        radius = 3 / max_val
         for node in self.system.supports_hinged:
             support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius),
                                                     numVertices=3, radius=radius, color='r', zorder=9)
@@ -54,7 +56,7 @@ class Plotter:
         """
         :param max_val: max scale of the plot
         """
-        radius = 1.5 / max_val
+        radius = 3 / max_val
         for node in self.system.supports_roll:
             support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius),
                                                     numVertices=3, radius=radius, color='r', zorder=9)
