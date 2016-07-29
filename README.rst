@@ -10,8 +10,8 @@ Installation
 
     $ pip install StructuralEngineering
 
-for the lates vestion:
-download this repository, and unzip the file. Open the command box in the unzipped file location and run:
+For the latest version:
+Download this repository and unzip the file. Open the command box in the unzipped file location and run:
 
 ::
 
@@ -45,8 +45,6 @@ FEM method for 2D frames (Matrix Frames) (Work in Progress)
     system.add_support_fixed(nodeID=4)
 
     # solve the equations
-    system.assemble_system_matrix()
-    system.process_conditions()
     system.solve()
 
     # show the bending moment

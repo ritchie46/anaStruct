@@ -151,7 +151,7 @@ class SystemElements:
             row += 1
         self.system_matrix_locations.append(global_matrix_location)
 
-    def assemble_system_matrix(self):
+    def __assemble_system_matrix(self):
         """
         Shape of the matrix = n nodes * n d.o.f.
         Shape = n * 3
@@ -210,11 +210,12 @@ class SystemElements:
             self.system_displacement_vector[index] = 0
         return self.system_displacement_vector
 
-    def process_conditions(self):
+    def __process_conditions(self):
         original_force_vector = np.array(self.system_force_vector)
         original_system_matrix = np.array(self.system_matrix)
+
         remove_count = 0
-        # remove the unsulvable values from the matrix and vectors
+        # remove the unsolvable values from the matrix and vectors
         for i in range(self.shape_system_matrix):
             index = i - remove_count
             if self.system_displacement_vector[index] == 0:
@@ -232,14 +233,20 @@ class SystemElements:
         self.system_matrix = original_system_matrix
 
     def solve(self):
+        self.__assemble_system_matrix()
+        self.__process_conditions()
+
+        # solution of the reduced system (reduced due to support conditions)
         reduced_displacement_vector = np.linalg.solve(self.reduced_system_matrix, self.reduced_force_vector)
+
+        # add the solution of the reduced system in the complete system displacement vector
         self.system_displacement_vector = np.zeros(self.shape_system_matrix)
         count = 0
-
         for i in self.remainder_indexes:
             self.system_displacement_vector[i] = reduced_displacement_vector[count]
             count += 1
 
+        # determine the displacement vector of the elements
         # determine the size (=6)  and the indexes of the displacement vector per element
         for i in self.elements:
             max_index = i.node_ids[-1] * 3
@@ -376,8 +383,6 @@ system.add_support_fixed(nodeID=1)
 system.add_support_fixed(nodeID=4)
 
 # solve the equations
-system.assemble_system_matrix()
-system.process_conditions()
 system.solve()
 
 # show the bending moment
