@@ -37,7 +37,7 @@ class Plotter:
         height = 2 / max_val
         for node in self.system.supports_fixed:
             support_patch = mpatches.Rectangle((node.point.x - width * 0.5, -node.point.z - width),
-                                               width, height, color='r', zorder=10)
+                                               width, height, color='r', zorder=9)
             self.one_fig.add_patch(support_patch)
 
     def __hinged_support_patch(self, max_val):
@@ -47,7 +47,7 @@ class Plotter:
         radius = 1.5 / max_val
         for node in self.system.supports_hinged:
             support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius),
-                                                    numVertices=3, radius=radius, color='r', zorder=10)
+                                                    numVertices=3, radius=radius, color='r', zorder=9)
             self.one_fig.add_patch(support_patch)
 
     def __roll_support_patch(self, max_val):
@@ -57,7 +57,7 @@ class Plotter:
         radius = 1.5 / max_val
         for node in self.system.supports_roll:
             support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius),
-                                                    numVertices=3, radius=radius, color='r', zorder=10)
+                                                    numVertices=3, radius=radius, color='r', zorder=9)
             self.one_fig.add_patch(support_patch)
             y = node.point.z - 2 * radius
             self.one_fig.plot([node.point.x - radius, node.point.x + radius], [y, y], color='r')
@@ -79,8 +79,8 @@ class Plotter:
                 max_val = max(max(x_val), max(y_val))
 
             # add node ID to plot
-            self.one_fig.text(x_val[0] + 0.1, y_val[0] + 0.1, '%d' % el.nodeID1, color='g', fontsize=9)
-            self.one_fig.text(x_val[-1] + 0.1, y_val[-1] + 0.1, '%d' % el.nodeID2, color='g', fontsize=9)
+            self.one_fig.text(x_val[0] + 0.1, y_val[0] + 0.1, '%d' % el.nodeID1, color='g', fontsize=9, zorder=10)
+            self.one_fig.text(x_val[-1] + 0.1, y_val[-1] + 0.1, '%d' % el.nodeID2, color='g', fontsize=9, zorder=10)
 
             # add element ID to plot
             if 0 < el.alpha <= math.pi:
@@ -89,7 +89,7 @@ class Plotter:
                 x_val = (x_val[0] + x_val[-1]) / 2 - math.sin(el.alpha) * 0.1
             y_val = (y_val[0] + y_val[-1]) / 2 + math.cos(el.alpha) * 0.1
 
-            self.one_fig.text(x_val, y_val, "%d" % el.ID, color='r', fontsize=9)
+            self.one_fig.text(x_val, y_val, "%d" % el.ID, color='r', fontsize=9, zorder=10)
         max_val += 2
         self.one_fig.axis([-2, max_val, -2, max_val])
 
