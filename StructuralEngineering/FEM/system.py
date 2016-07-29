@@ -367,16 +367,25 @@ class SystemElements:
         plot = Plotter(self)
         plot.shear_force()
 
+"""
 system = SystemElements()
+
+# add beams to the system. positive z-axis is down, positive x-axis is the right
+system.add_element(location_list=[[0, 0], [3, -4]], EA=5e9, EI=4000)
+system.add_element(location_list=[[3, -4], [8, -4]], EA=5e9, EI=8000)
+
+system.show_structure()
+
 
 # add beams to the system. positive z-axis is down, positive x-axis is the right
 system.add_element(location_list=[[0, 0], [0, -5]], EA=5e3, EI=5000)
 system.add_element(location_list=[[0, -5], [5, -5]], EA=5e3, EI=5000)
 system.add_element(location_list=[[5, -5], [5, 0]], EA=5e3, EI=5000)
 
+
 # add loads to the elements and nodes
 system.q_load(elementID=2, q=10, direction=1)
-system.point_load(Fx=30, nodeID=2)
+#system.point_load(Fx=30, nodeID=2)
 
 # add supports at the nodes
 system.add_support_fixed(nodeID=1)
@@ -388,6 +397,6 @@ system.solve()
 # show the bending moment
 #system.show_bending_moment()
 
-system.show_shear_force()
+system.show_shear_force()"""
 
 
