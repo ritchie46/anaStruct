@@ -1,5 +1,5 @@
 class Node:
-    def __init__(self, ID, Fx=0, Fz=0, Ty=0, ux=0, uz=0, phiy=0, point=None):
+    def __init__(self, ID, Fx=0, Fz=0, Ty=0, ux=0, uz=0, phi_y=0, point=None):
         """
         :param ID: ID of the node, integer
         :param Fx: Value of Fx
@@ -7,7 +7,7 @@ class Node:
         :param Ty: Value of Ty
         :param ux: Value of ux
         :param uz: Value of uz
-        :param phiy: Value of phi
+        :param phi_y: Value of phi
         :param point: Point object
         """
         self.ID = ID
@@ -18,7 +18,7 @@ class Node:
         # displacements
         self.ux = ux
         self.uz = uz
-        self.phiy = phiy
+        self.phi_y = phi_y
         self.point = point
 
     def show_result(self):
@@ -28,5 +28,17 @@ class Node:
               "Ty = %s\n"
               "ux = %s\n"
               "uz = %s\n"
-              "phiy = %s" % (self.ID, self.Fx, self.Fz, self.Ty, self.ux, self.uz, self.phiy))
+              "phiy = %s" % (self.ID, self.Fx, self.Fz, self.Ty, self.ux, self.uz, self.phi_y))
+
+    def __add__(self, other):
+        assert(self.ID == other.ID), "Cannot add nodes as the ID's don't match. The nodes positions don't match."
+        Fx = self.Fx + other.Fx
+        Fz = self.Fz + other.Fz
+        Ty = self.Ty + other.Ty
+        ux = self.ux + other.ux
+        uz = self.uz + other.uz
+        phi_y = self.phi_y + other.phi_y
+
+        return Node(self.ID, Fx, Fz, Ty, ux, uz, phi_y, self.point)
+
 

@@ -1,9 +1,8 @@
 import copy
 import math
-
-import matplotlib.pyplot as plt
 import numpy as np
 
+from StructuralEngineering.FEM.postprocess import SystemLevel as post_sl
 from StructuralEngineering.FEM.elements import Element
 from StructuralEngineering.FEM.node import Node
 from StructuralEngineering.trigonometry import Point
@@ -32,6 +31,7 @@ class SystemElements:
         self.supports_fixed = []
         self.supports_hinged = []
         self.supports_roll = []
+        self.post_processor = post_sl(self)
 
     def add_element(self, location_list, EA, EI):
         """
@@ -249,19 +249,13 @@ class SystemElements:
                 i.element_displacement_vector[val] = self.system_displacement_vector[min_index + val]
                 i.determine_force_vector()
 
-        self.node_results()
+        # determining the node results in post processing class
+        self.post_processor.node_results()
+
+        # check the values in the displacement vector for extreme values, indicating a flawed calculation
+        for value in np.nditer(self.system_displacement_vector):
+            assert(value < 1e9), "The displacements of the structure exceed 1e9. Check your support conditions"
         return self.system_displacement_vector
-
-    def node_results(self):
-        """
-        assigns the forces and displacements determined in the system_vectors and the element_vectors to the nodes.
-        """
-
-        for el in self.elements:
-            el.determine_node_results()
-
-            el.node_1.show_result()
-            el.node_2.show_result()
 
     def add_support_hinged(self, nodeID):
         """
@@ -379,7 +373,7 @@ system.point_load(Fx=30, nodeID=2)
 
 # add supports at the nodes
 system.add_support_fixed(nodeID=1)
-system.add_support_roll(nodeID=4)
+system.add_support_fixed(nodeID=4)
 
 # solve the equations
 system.assemble_system_matrix()
@@ -387,5 +381,8 @@ system.process_conditions()
 system.solve()
 
 # show the bending moment
-system.show_bending_moment()
+#system.show_bending_moment()
+
+system.show_shear_force()
+
 

@@ -54,7 +54,7 @@ class Element:
             Ty=self.element_force_vector[2] + self.element_primary_force_vector[2],
             ux=self.element_displacement_vector[0],
             uz=self.element_displacement_vector[1],
-            phiy=self.element_displacement_vector[2],
+            phi_y=self.element_displacement_vector[2],
         )
 
         self.node_2 = Node(
@@ -64,7 +64,7 @@ class Element:
             Ty=self.element_force_vector[5] + self.element_primary_force_vector[5],
             ux=self.element_displacement_vector[3],
             uz=self.element_displacement_vector[4],
-            phiy=self.element_displacement_vector[5]
+            phi_y=self.element_displacement_vector[5]
         )
         self.determine_normal_force()
 
