@@ -368,4 +368,3 @@ class SystemElements:
         plot.shear_force()
 
 
-

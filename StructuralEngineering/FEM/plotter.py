@@ -8,6 +8,9 @@ class Plotter:
         self.system = system
         fig = plt.figure()
         self.one_fig = fig.add_subplot(111)
+        plt.tight_layout()
+        plt.style.use('ggplot')
+        self.max_val = None
         self.plot_structure()
         self.max_force = 0
 
@@ -92,6 +95,8 @@ class Plotter:
             y_val = (y_val[0] + y_val[-1]) / 2 + math.cos(el.alpha) * 0.1
 
             self.one_fig.text(x_val, y_val, "%d" % el.ID, color='r', fontsize=9, zorder=10)
+
+        self.max_val = max_val
         max_val += 2
         self.one_fig.axis([-2, max_val, -2, max_val])
 
@@ -111,8 +116,10 @@ class Plotter:
             self.one_fig.plot(x_val, y_val, color='b')
 
             # add value to plot
-            self.one_fig.text(x_val[1], y_val[1], "%s" % round(force_1, 2))
-            self.one_fig.text(x_val[-2], y_val[-2], "%s" % round(force_2, 2))
+            self.one_fig.text(x_val[1] + 2 / self.max_val, y_val[1] + 2 / self.max_val, "%s" % abs(round(force_1, 1)),
+                              fontsize=9)
+            self.one_fig.text(x_val[-2] - 2 / self.max_val, y_val[-2] + 2 / self.max_val, "%s" % abs(round(force_2, 1)),
+                              fontsize=9)
 
     def normal_force(self):
         # determine max factor for scaling
@@ -137,7 +144,7 @@ class Plotter:
 
             if el.q_load:
                 index = con // 2
-                self.one_fig.text(axis_values[0][index], axis_values[1][index], "%s" % round(abs(axis_values[2]), 2))
+                self.one_fig.text(axis_values[0][index], axis_values[1][index], "%s" % round(abs(axis_values[2]), 1))
         plt.show()
 
     def shear_force(self):
