@@ -1,7 +1,7 @@
 Structural Engineering
 ======================
 
-*A small library with solutions for Structural Engineering problems.*
+*A small Python 3 library with solutions for Structural Engineering problems.*
 
 Installation
 ============
@@ -10,6 +10,12 @@ Installation
 
     $ pip install StructuralEngineering
 
+for the lates vestion:
+download this repository, and unzip the file. Open the command box in the unzipped file location and run:
+
+::
+
+    $ python setup.py install
 
 FEM method for 2D frames (Matrix Frames) (Work in Progress)
 ===========================================================
