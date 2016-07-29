@@ -33,6 +33,9 @@ class SystemElements:
         self.supports_roll = []
         self.post_processor = post_sl(self)
 
+    def add_truss_element(self, location_list, EA):
+        self.add_element(location_list, EA, EI=0)
+
     def add_element(self, location_list, EA, EI):
         """
         :param location_list: [[x, z], [x, z]]
