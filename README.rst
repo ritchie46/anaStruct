@@ -19,9 +19,9 @@ Download this repository and unzip the file. Open the command box in the unzippe
 
 FEM method for 2D frames (Matrix Frames) (Work in Progress)
 ===========================================================
- - Bending moment (visual plot), works
- - Normal force (visual plot), works
- - Shear force (visual plot), coming up
+ - Bending moment (visual plot)
+ - Normal force (visual plot)
+ - Shear force (visual plot)
  - Numeral results, coming up
  
  .. code:: python
