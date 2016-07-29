@@ -6,7 +6,7 @@ class Point:
         self.x = x
         self.z = z
 
-    def print(self):
+    def print_values(self):
         print(self.x, self.z)
 
     def modulus(self):

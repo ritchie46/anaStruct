@@ -28,6 +28,10 @@ class SystemElements:
         self.removed_indexes = []
         # list of indexes that remain after conditions are applied
         self.remainder_indexes = []
+        # keep track of the nodeID of the supports
+        self.supports_fixed = []
+        self.supports_hinged = []
+        self.supports_roll = []
 
     def add_element(self, location_list, EA, EI):
         """
@@ -256,8 +260,8 @@ class SystemElements:
         for el in self.elements:
             el.determine_node_results()
 
-            el.node_1.print()
-            el.node_2.print()
+            el.node_1.show_result()
+            el.node_2.show_result()
 
     def add_support_hinged(self, nodeID):
         """
@@ -265,6 +269,12 @@ class SystemElements:
         :param nodeID: integer representing the nodes ID
         """
         self.set_displacement_vector([(nodeID, 1), (nodeID, 2)])
+
+        # add the support to the support list for the plotter
+        for obj in self.node_objects:
+            if obj.ID == nodeID:
+                self.supports_hinged.append(obj)
+                break
 
     def add_support_roll(self, nodeID, direction=2):
         """
@@ -274,12 +284,24 @@ class SystemElements:
         """
         self.set_displacement_vector([(nodeID, direction)])
 
+        # add the support to the support list for the plotter
+        for obj in self.node_objects:
+            if obj.ID == nodeID:
+                self.supports_roll.append(obj)
+                break
+
     def add_support_fixed(self, nodeID):
         """
         adds a fixed support at the given node
         :param nodeID: integer representing the nodes ID
         """
         self.set_displacement_vector([(nodeID, 1), (nodeID, 2), (nodeID, 3)])
+
+        # add the support to the support list for the plotter
+        for obj in self.node_objects:
+            if obj.ID == nodeID:
+                self.supports_fixed.append(obj)
+                break
 
     def q_load(self, elementID, q, direction=1):
         """
@@ -344,5 +366,26 @@ class SystemElements:
         plot = Plotter(self)
         plot.shear_force()
 
-        np.__version__
+system = SystemElements()
+
+# add beams to the system. positive z-axis is down, positive x-axis is the right
+system.add_element(location_list=[[0, 0], [0, -5]], EA=5e3, EI=5000)
+system.add_element(location_list=[[0, -5], [5, -5]], EA=5e3, EI=5000)
+system.add_element(location_list=[[5, -5], [5, 0]], EA=5e3, EI=5000)
+
+# add loads to the elements and nodes
+system.q_load(elementID=2, q=10, direction=1)
+system.point_load(Fx=30, nodeID=2)
+
+# add supports at the nodes
+system.add_support_fixed(nodeID=1)
+system.add_support_roll(nodeID=4)
+
+# solve the equations
+system.assemble_system_matrix()
+system.process_conditions()
+system.solve()
+
+# show the bending moment
+system.show_bending_moment()
 

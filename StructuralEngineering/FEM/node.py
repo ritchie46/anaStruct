@@ -19,9 +19,9 @@ class Node:
         self.ux = ux
         self.uz = uz
         self.phiy = phiy
-        self.point = None
+        self.point = point
 
-    def print(self):
+    def show_result(self):
         print("\nID = %s\n"
               "Fx = %s\n"
               "Fz = %s\n"
@@ -29,3 +29,4 @@ class Node:
               "ux = %s\n"
               "uz = %s\n"
               "phiy = %s" % (self.ID, self.Fx, self.Fz, self.Ty, self.ux, self.uz, self.phiy))
+

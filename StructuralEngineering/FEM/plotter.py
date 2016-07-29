@@ -29,14 +29,38 @@ class Plotter:
             factor = 1 / self.max_force
         return factor
 
-    def __fixed_support_patch(self, node):
+    def __fixed_support_patch(self, max_val):
         """
-        :param node: Node object
+        :param max_val: max scale of the plot
         """
-        support_patch = mpatches.Rectangle((-0.2, -0.2), 0.4, 0.2, color='orange')
-        self.one_fig.add_patch(support_patch)
+        width = 2 / max_val
+        height = 2 / max_val
+        for node in self.system.supports_fixed:
+            support_patch = mpatches.Rectangle((node.point.x - width * 0.5, -node.point.z - width),
+                                               width, height, color='r', zorder=10)
+            self.one_fig.add_patch(support_patch)
 
-        # NEED TO FINISH
+    def __hinged_support_patch(self, max_val):
+        """
+        :param max_val: max scale of the plot
+        """
+        radius = 1.5 / max_val
+        for node in self.system.supports_hinged:
+            support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius),
+                                                    numVertices=3, radius=radius, color='r', zorder=10)
+            self.one_fig.add_patch(support_patch)
+
+    def __roll_support_patch(self, max_val):
+        """
+        :param max_val: max scale of the plot
+        """
+        radius = 1.5 / max_val
+        for node in self.system.supports_roll:
+            support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius),
+                                                    numVertices=3, radius=radius, color='r', zorder=10)
+            self.one_fig.add_patch(support_patch)
+            y = node.point.z - 2 * radius
+            self.one_fig.plot([node.point.x - radius, node.point.x + radius], [y, y], color='r')
 
     def plot_structure(self, plot_now=False):
         """
@@ -68,6 +92,11 @@ class Plotter:
             self.one_fig.text(x_val, y_val, "%d" % el.ID, color='r', fontsize=9)
         max_val += 2
         self.one_fig.axis([-2, max_val, -2, max_val])
+
+        # add supports
+        self.__fixed_support_patch(max_val)
+        self.__hinged_support_patch(max_val)
+        self.__roll_support_patch(max_val)
 
         if plot_now:
             plt.show()
