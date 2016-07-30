@@ -214,7 +214,6 @@ class Plotter:
         for el in self.system.elements:
             axis_values = plot_values_normal_force(el, factor)
             self.plot_force(axis_values, el.N, el.N)
-
         plt.show()
 
     def bending_moment(self):
@@ -225,11 +224,15 @@ class Plotter:
 
         for el in self.system.elements:
             axis_values = plot_values_bending_moment(el, factor, con)
-            self.plot_force(axis_values, el.node_1.Ty, el.node_2.Ty)
+            self.plot_force(axis_values, abs(el.node_1.Ty), abs(el.node_2.Ty))
 
             if el.q_load:
                 index = con // 2
-                self.one_fig.text(axis_values[0][index], axis_values[1][index], "%s" % round(abs(axis_values[2]), 1))
+                offset = -self.max_val * 0.05
+                x = axis_values[0][index] + math.sin(-el.alpha) * offset
+                y = axis_values[1][index] + math.cos(-el.alpha) * offset
+                self.one_fig.text(x, y, "%s" % round(abs(axis_values[2]), 1),
+                                  fontsize=9)
         plt.show()
 
     def shear_force(self):

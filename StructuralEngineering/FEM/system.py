@@ -194,16 +194,17 @@ class SystemElements:
         Shape = n * 3
         :return:
         """
-        shape = len(self.node_ids) * 3
-        self.shape_system_matrix = shape
-        self.system_matrix = np.zeros((shape, shape))
+        if self.system_matrix is None:
+            shape = len(self.node_ids) * 3
+            self.shape_system_matrix = shape
+            self.system_matrix = np.zeros((shape, shape))
 
         for i in range(len(self.elements)):
 
-            for row in range(len(self.system_matrix_locations[i])):
+            for row_index in range(len(self.system_matrix_locations[i])):
                 count = 0
-                for loc in self.system_matrix_locations[i][row]:
-                    self.system_matrix[loc[0]][loc[1]] += self.elements[i].stiffness_matrix[row][count]
+                for loc in self.system_matrix_locations[i][row_index]:
+                    self.system_matrix[loc[0]][loc[1]] += self.elements[i].stiffness_matrix[row_index][count]
                     count += 1
 
         # returns True if symmetrical.
@@ -344,6 +345,40 @@ class SystemElements:
             if obj.ID == nodeID:
                 self.supports_fixed.append(obj)
                 break
+
+
+    def add_support_spring(self, translation, nodeID, K):
+        """
+        :param translation: Integer representing prevented translation.
+        1 = translation in x
+        2 = translation in z
+        3 = rotation in y
+        :param nodeID: Integer representing the nodes ID.
+        :param K: Stiffness of the spring
+
+        The stiffness of the spring is added in the system matrix at the location that represents the node and the
+        displacement.
+        """
+        if self.system_matrix is None:
+            shape = len(self.node_ids) * 3
+            self.shape_system_matrix = shape
+            self.system_matrix = np.zeros((shape, shape))
+
+        # determine the location in the system matrix
+        # row and column are the same
+        matrix_index = (nodeID - 1) * 3 + translation - 1
+
+        #  first index is row, second is column
+        self.system_matrix[matrix_index][matrix_index] += K
+
+        if translation == 1:
+            self.set_displacement_vector([(nodeID, 2), (nodeID, 3)])
+        elif translation == 2:
+            self.set_displacement_vector([(nodeID, 1), (nodeID, 3)])
+        elif translation == 3:
+            self.set_displacement_vector([(nodeID, 1), (nodeID, 2)])
+
+
 
     def q_load(self, elementID, q, direction=1):
         """
