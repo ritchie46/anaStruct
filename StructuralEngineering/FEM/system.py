@@ -34,7 +34,7 @@ class SystemElements:
         self.post_processor = post_sl(self)
 
     def add_truss_element(self, location_list, EA):
-        self.add_element(location_list, EA, EI=0)
+        self.add_element(location_list, EA, EI=1e-15)
 
     def add_element(self, location_list, EA, EI):
         """
@@ -45,23 +45,6 @@ class SystemElements:
         """
         # add the element number
         self.count += 1
-
-        """"
-        # add the number of the nodes of the elements
-
-        if len(self.node_ids) == 0:
-            self.node_ids.append(1)
-            self.node_ids.append(2)
-
-            nodeID1 = 1
-            nodeID2 = 2
-        else:
-            self.node_ids.append(self.node_ids[-1] + 1)
-
-            nodeID1 = self.node_ids[-2]
-            nodeID2 = nodeID1 + 1
-        """
-
         point_1 = Point(location_list[0][0], location_list[0][1])
         point_2 = Point(location_list[1][0], location_list[1][1])
 
@@ -140,19 +123,67 @@ class SystemElements:
         element.node_2 = Node(nodeID2)
         self.elements.append(element)
 
-        # determine the location of each value of the local stiffness matrix in the global stiffness matrix
-        row = (self.node_ids[-2] - 1) * 3 + 1
-        global_matrix_location = []
+        """
+        system matrix [K]
 
-        for i in self.elements[-1].stiffness_matrix:
-            column = (self.node_ids[-2] - 1) * 3 + 1
-            full_row = []
-            for val in range(len(i)):
-                full_row.append((row, column))
-                column += 1
-            global_matrix_location.append(full_row)
-            row += 1
-        self.system_matrix_locations.append(global_matrix_location)
+        [fx 1] [K         |  \ node 1 starts at row 1
+        |fz 1] |  K       |  /
+        |Ty 1] |   K      | /
+        |fx 2] |    K     |  \ node 2 starts at row 4
+        |fz 2] |     K    |  /
+        |Ty 2] |      K   | /
+        |fx 3] |       K  |  \ node 3 starts at row 7
+        |fz 3] |        K |  /
+        [Ty 3] [         K] /
+
+                n   n  n
+                o   o  o
+                d   d  d
+                e   e  e
+                1   2  3
+
+        thus with appending numbers in the system matrix: column = row
+        """
+        # starting row
+        # node 1
+        row_index_n1 = (element.node_1.ID - 1) * 3 + 1
+
+        # node 2
+        row_index_n2 = (element.node_2.ID - 1) * 3 + 1
+        matrix_locations = []
+
+        for _ in range(3):  # ux1, uz1, phi1
+            full_row_locations = []
+            column_index_n1 = (element.node_1.ID - 1) * 3 + 1
+            column_index_n2 = (element.node_2.ID - 1) * 3 + 1
+
+            for i in range(3):  # matrix row index 1, 2, 3
+                full_row_locations.append((row_index_n1, column_index_n1))
+                column_index_n1 += 1
+
+            for i in range(3):  # matrix row index 4, 5, 6
+                full_row_locations.append((row_index_n1, column_index_n2))
+                column_index_n2 += 1
+
+            row_index_n1 += 1
+            matrix_locations.append(full_row_locations)
+
+        for _ in range(3):  # ux3, uz3, phi3
+            full_row_locations = []
+            column_index_n1 = (element.node_1.ID - 1) * 3 + 1
+            column_index_n2 = (element.node_2.ID - 1) * 3 + 1
+
+            for i in range(3):  # matrix row index 1, 2, 3
+                full_row_locations.append((row_index_n2, column_index_n1))
+                column_index_n1 += 1
+
+            for i in range(3):  # matrix row index 4, 5, 6
+                full_row_locations.append((row_index_n2, column_index_n2))
+                column_index_n2 += 1
+
+            row_index_n2 += 1
+            matrix_locations.append(full_row_locations)
+        self.system_matrix_locations.append(matrix_locations)
 
     def __assemble_system_matrix(self):
         """
@@ -236,6 +267,7 @@ class SystemElements:
         self.system_matrix = original_system_matrix
 
     def solve(self):
+        #assert(self.system_force_vector), "There are no forces on the structure"
         self.__assemble_system_matrix()
         self.__process_conditions()
 
@@ -257,7 +289,8 @@ class SystemElements:
 
             for val in range(6):
                 i.element_displacement_vector[val] = self.system_displacement_vector[min_index + val]
-                i.determine_force_vector()
+            # Make sure it stays dedent from for loop
+            i.determine_force_vector()
 
         # determining the node results in post processing class
         self.post_processor.node_results()

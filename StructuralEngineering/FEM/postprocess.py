@@ -50,7 +50,6 @@ class ElementLevel:
     @staticmethod
     def _determine_normal_force(element):
         dx = element.point_1.x - element.point_2.x
-
         if math.isclose(dx, 0):  # element is vertical
             if element.point_1.z < element.point_2.z:  # point 1 is bottom
                 element.N = -element.node_1.Fz  # compression and tension in opposite direction

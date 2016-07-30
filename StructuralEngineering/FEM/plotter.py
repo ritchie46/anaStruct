@@ -38,11 +38,11 @@ class Plotter:
         :param max_val: max scale of the plot
         """
 
-        width = 4 / max_val
-        height = 4 / max_val
+        width = 0.05 * max_val
+        height = 0.05 * max_val
         for node in self.system.supports_fixed:
 
-            support_patch = mpatches.Rectangle((node.point.x - width * 0.25, -node.point.z - width * 0.25),
+            support_patch = mpatches.Rectangle((node.point.x - width * 0.5, - node.point.z - width * 0.5),
                                                width, height, color='r', zorder=9)
             self.one_fig.add_patch(support_patch)
 
@@ -50,7 +50,7 @@ class Plotter:
         """
         :param max_val: max scale of the plot
         """
-        radius = 3 / max_val
+        radius = 0.03 * max_val
         for node in self.system.supports_hinged:
             support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius),
                                                     numVertices=3, radius=radius, color='r', zorder=9)
@@ -60,7 +60,7 @@ class Plotter:
         """
         :param max_val: max scale of the plot
         """
-        radius = 3 / max_val
+        radius = 0.03 * max_val
         for node in self.system.supports_roll:
             support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius),
                                                     numVertices=3, radius=radius, color='r', zorder=9)
@@ -120,9 +120,9 @@ class Plotter:
             self.one_fig.plot(x_val, y_val, color='b')
 
             # add value to plot
-            self.one_fig.text(x_val[1] - 2 / self.max_val, y_val[1] + 2 / self.max_val, "%s" % abs(round(force_1, 1)),
+            self.one_fig.text(x_val[1] - 2 / self.max_val, y_val[1] + 2 / self.max_val, "%s" % round(force_1, 1),
                               fontsize=9)
-            self.one_fig.text(x_val[-2] - 2 / self.max_val, y_val[-2] + 2 / self.max_val, "%s" % abs(round(force_2, 1)),
+            self.one_fig.text(x_val[-2] - 2 / self.max_val, y_val[-2] + 2 / self.max_val, "%s" % round(force_2, 1),
                               fontsize=9)
 
     def normal_force(self):
