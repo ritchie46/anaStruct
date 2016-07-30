@@ -23,6 +23,7 @@ class SystemElements:
         self.shape_system_matrix = None
         self.reduced_force_vector = None
         self.reduced_system_matrix = None
+        self.post_processor = post_sl(self)
         # list of removed indexes due to conditions
         self.removed_indexes = []
         # list of indexes that remain after conditions are applied
@@ -31,10 +32,12 @@ class SystemElements:
         self.supports_fixed = []
         self.supports_hinged = []
         self.supports_roll = []
-        self.post_processor = post_sl(self)
+        # keep track of the loads
+        self.loads_point = []  # node ids with a point load
+        self.loads_q = []  # element ids with a q-load
 
     def add_truss_element(self, location_list, EA):
-        self.add_element(location_list, EA, EI=1e-15)
+        self.add_element(location_list, EA, EI=1e-14)
 
     def add_element(self, location_list, EA, EI):
         """
@@ -350,6 +353,8 @@ class SystemElements:
         :return:
         """
 
+        self.loads_q.append(elementID)
+
         for obj in self.elements:
             if obj.ID == elementID:
                 element = obj
@@ -382,6 +387,8 @@ class SystemElements:
         return self.system_force_vector
 
     def point_load(self, Fx=0, Fz=0, nodeID=None):
+
+        self.loads_point.append((nodeID, Fx, Fz))
 
         if nodeID is not None:
             # system force vector.

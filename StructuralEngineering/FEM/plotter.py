@@ -10,7 +10,6 @@ class Plotter:
         fig = plt.figure()
         self.one_fig = fig.add_subplot(111)
         plt.tight_layout()
-        plt.style.use('ggplot')
         self.max_val = None
         self.plot_structure()
         self.max_force = 0
@@ -68,6 +67,85 @@ class Plotter:
             y = node.point.z - 2 * radius
             self.one_fig.plot([node.point.x - radius, node.point.x + radius], [y, y], color='r')
 
+    def __q_load_patch(self, max_val):
+        """
+        :param max_val: max scale of the plot
+
+        xn1;yn1  q-load   xn1;yn1
+        -------------------
+        |__________________|
+        x1;y1  element    x2;y2
+        """
+        h = 0.05 * max_val
+
+        for q_ID in self.system.loads_q:
+            for el in self.system.elements:
+                if el.ID == q_ID:
+                    if el.q_load > 0:
+                        direction = 1
+                    else:
+                        direction = -1
+
+                    x1 = el.point_1.x
+                    y1 = -el.point_1.z
+                    x2 = el.point_2.x
+                    y2 = -el.point_2.z
+                    # - value, because the positive z of the system is opposite of positive y of the plotter
+                    xn1 = x1 + math.sin(-el.alpha) * h * direction
+                    yn1 = y1 + math.cos(-el.alpha) * h * direction
+                    xn2 = x2 + math.sin(-el.alpha) * h * direction
+                    yn2 = y2 + math.cos(-el.alpha) * h * direction
+                    self.one_fig.plot([x1, xn1, xn2, x2], [y1, yn1, yn2, y2], color='g')
+
+                    # arrow
+                    xa_1 = (x2 - x1) * 0.2 + x1 + math.sin(-el.alpha) * 0.8 * h * direction
+                    ya_1 = (y2 - y1) * 0.2 + y1 + math.cos(-el.alpha) * 0.8 * h * direction
+                    len_x = math.sin(-el.alpha - math.pi) * 0.6 * h * direction
+                    len_y = math.cos(-el.alpha - math.pi) * 0.6 * h * direction
+                    xt = xa_1 + math.sin(-el.alpha) * 0.4 * h * direction
+                    yt = ya_1 + math.cos(-el.alpha) * 0.4 * h * direction
+                    # fc = face color, ec = edge color
+                    self.one_fig.arrow(xa_1, ya_1, len_x, len_y, head_width=h*0.25, head_length=0.2*h, ec='g', fc='g')
+                    self.one_fig.text(xt, yt, "q=%d" % el.q_load, color='k', fontsize=9, zorder=10)
+
+    def __point_load_patch(self, max_val):
+        """
+        :param max_val: max scale of the plot
+        """
+        h = 0.1 * max_val
+
+        for F_tuple in self.system.loads_point:
+            for node in self.system.node_objects:
+                if node.ID == F_tuple[0]:  # F_tuple[0] = ID
+                    if F_tuple[1] > 0:  # Fx is positive
+                        x = node.point.x - h
+                        y = -node.point.z
+                        len_x = 0.8 * h
+                        len_y = 0
+                        F = F_tuple[1]
+                    elif F_tuple[1] < 0:  # Fx is negative
+                        x = node.point.x + h
+                        y = -node.point.z
+                        len_x = -0.8 * h
+                        len_y = 0
+                        F = F_tuple[1]
+                    elif F_tuple[2] > 0:  # Fz is positive
+                        x = node.point.x
+                        y = -node.point.z + h
+                        len_x = 0
+                        len_y = -0.8 * h
+                        F = F_tuple[2]
+                    elif F_tuple[2] - 0:  # Fz is negative
+                        x = node.point.x
+                        y = -node.point.z - h
+                        len_x = 0
+                        len_y = 0.8 * h
+                        F = F_tuple[2]
+
+                    self.one_fig.arrow(x, y, len_x, len_y, head_width=h*0.15, head_length=0.2*h, ec='b', fc='orange',
+                                       zorder=11)
+                    self.one_fig.text(x, y, "F=%d" % F, color='k', fontsize=9, zorder=10)
+
     def plot_structure(self, plot_now=False):
         """
         :param plot_now: boolean if True, plt.figure will plot.
@@ -110,6 +188,9 @@ class Plotter:
         self.__roll_support_patch(max_val)
 
         if plot_now:
+            # add_loads
+            self.__q_load_patch(max_val)
+            self.__point_load_patch(max_val)
             plt.show()
 
     def plot_force(self, axis_values, force_1, force_2):
@@ -176,6 +257,7 @@ def plot_values_element(element):
     x_val = [element.point_1.x, element.point_2.x]
     y_val = [-element.point_1.z, -element.point_2.z]
     return x_val, y_val
+
 
 def plot_values_shear_force(element, factor=1):
     dx = element.point_1.x - element.point_2.x
