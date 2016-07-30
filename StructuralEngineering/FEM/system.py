@@ -146,16 +146,16 @@ class SystemElements:
         """
         # starting row
         # node 1
-        row_index_n1 = (element.node_1.ID - 1) * 3 + 1
+        row_index_n1 = (element.node_1.ID - 1) * 3
 
         # node 2
-        row_index_n2 = (element.node_2.ID - 1) * 3 + 1
+        row_index_n2 = (element.node_2.ID - 1) * 3
         matrix_locations = []
 
         for _ in range(3):  # ux1, uz1, phi1
             full_row_locations = []
-            column_index_n1 = (element.node_1.ID - 1) * 3 + 1
-            column_index_n2 = (element.node_2.ID - 1) * 3 + 1
+            column_index_n1 = (element.node_1.ID - 1) * 3
+            column_index_n2 = (element.node_2.ID - 1) * 3
 
             for i in range(3):  # matrix row index 1, 2, 3
                 full_row_locations.append((row_index_n1, column_index_n1))
@@ -170,8 +170,8 @@ class SystemElements:
 
         for _ in range(3):  # ux3, uz3, phi3
             full_row_locations = []
-            column_index_n1 = (element.node_1.ID - 1) * 3 + 1
-            column_index_n2 = (element.node_2.ID - 1) * 3 + 1
+            column_index_n1 = (element.node_1.ID - 1) * 3
+            column_index_n2 = (element.node_2.ID - 1) * 3
 
             for i in range(3):  # matrix row index 1, 2, 3
                 full_row_locations.append((row_index_n2, column_index_n1))
@@ -200,7 +200,7 @@ class SystemElements:
             for row in range(len(self.system_matrix_locations[i])):
                 count = 0
                 for loc in self.system_matrix_locations[i][row]:
-                    self.system_matrix[loc[0]-1][loc[1]-1] += self.elements[i].stiffness_matrix[row][count]
+                    self.system_matrix[loc[0]][loc[1]] += self.elements[i].stiffness_matrix[row][count]
                     count += 1
 
         # returns True if symmetrical.
@@ -267,7 +267,7 @@ class SystemElements:
         self.system_matrix = original_system_matrix
 
     def solve(self):
-        #assert(self.system_force_vector), "There are no forces on the structure"
+        assert(self.system_force_vector is not None), "There are no forces on the structure"
         self.__assemble_system_matrix()
         self.__process_conditions()
 
@@ -282,15 +282,17 @@ class SystemElements:
             count += 1
 
         # determine the displacement vector of the elements
-        # determine the size (=6)  and the indexes of the displacement vector per element
-        for i in self.elements:
-            max_index = i.node_ids[-1] * 3
-            min_index = max_index - 6
+        for el in self.elements:
+            index_node_1 = (el.node_1.ID - 1) * 3
+            index_node_2 = (el.node_2.ID - 1) * 3
 
-            for val in range(6):
-                i.element_displacement_vector[val] = self.system_displacement_vector[min_index + val]
-            # Make sure it stays dedent from for loop
-            i.determine_force_vector()
+            for i in range(3): # node 1 ux, uz, phi
+                el.element_displacement_vector[i] = self.system_displacement_vector[index_node_1 + i]
+
+            for i in range(3):  # node 2 ux, uz, phi
+                el.element_displacement_vector[3 + i] = self.system_displacement_vector[index_node_2 + i]
+
+            el.determine_force_vector()
 
         # determining the node results in post processing class
         self.post_processor.node_results()
