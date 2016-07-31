@@ -67,6 +67,33 @@ class Plotter:
             y = node.point.z - 2 * radius
             self.one_fig.plot([node.point.x - radius, node.point.x + radius], [y, y], color='r')
 
+    def __rotating_spring_support_patch(self, max_val):
+        """
+        :param max_val: max scale of the plot
+        """
+        radius = 0.03 * max_val
+
+        for node in self.system.supports_spring_y:
+            r = np.arange(0, radius, 0.01)
+            theta = 25 * math.pi * r
+            x_val = []
+            y_val = []
+
+            count = 0
+            for angle in theta:
+                x = math.cos(angle) * r[count] + node.point.x
+                y = math.sin(angle) * r[count] - radius - node.point.z
+                x_val.append(x)
+                y_val.append(y)
+                count += 1
+
+            self.one_fig.plot(x_val, y_val, color='r', zorder=9)
+
+            # Triangle
+            support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius * 3),
+                                                    numVertices=3, radius=radius, color='r', zorder=9)
+            self.one_fig.add_patch(support_patch)
+
     def __q_load_patch(self, max_val):
         """
         :param max_val: max scale of the plot
@@ -186,6 +213,7 @@ class Plotter:
         self.__fixed_support_patch(max_val)
         self.__hinged_support_patch(max_val)
         self.__roll_support_patch(max_val)
+        self.__rotating_spring_support_patch(max_val)
 
         if plot_now:
             # add_loads
@@ -214,6 +242,18 @@ class Plotter:
         for el in self.system.elements:
             axis_values = plot_values_normal_force(el, factor)
             self.plot_force(axis_values, el.N, el.N)
+
+            point = (el.point_2 - el.point_1) / 2 + el.point_1
+            if el.N < 0:
+                point.displace_polar(alpha=el.alpha + 0.5 * math.pi, radius=0.5 * el.N * factor, inverse_z_axis=True)
+
+                self.one_fig.text(point.x, -point.z, "-",
+                                  fontsize=20, color='b')
+            if el.N > 0:
+                point.displace_polar(alpha=el.alpha + 0.5 * math.pi, radius=0.5 * el.N * factor, inverse_z_axis=True)
+
+                self.one_fig.text(point.x, -point.z, "+",
+                                  fontsize=20, color='b')
         plt.show()
 
     def bending_moment(self):

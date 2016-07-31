@@ -32,6 +32,9 @@ class SystemElements:
         self.supports_fixed = []
         self.supports_hinged = []
         self.supports_roll = []
+        self.supports_spring_x = []
+        self.supports_spring_z = []
+        self.supports_spring_y = []
         # keep track of the loads
         self.loads_point = []  # node ids with a point load
         self.loads_q = []  # element ids with a q-load
@@ -99,8 +102,8 @@ class SystemElements:
         self.node_objects.append(Node(ID=nodeID2, point=point_2))
 
         # determine the length of the elements
-        point = copy.copy(point_2)
-        l = point.subtract_point(point_1).modulus()
+        point = point_2 - point_1
+        l = point.modulus()
 
         # determine the angle of the element with the global x-axis
         delta_x = point_2.x - point_1.x
@@ -346,8 +349,7 @@ class SystemElements:
                 self.supports_fixed.append(obj)
                 break
 
-
-    def add_support_spring(self, translation, nodeID, K):
+    def add_support_spring(self, nodeID, translation, K):
         """
         :param translation: Integer representing prevented translation.
         1 = translation in x
@@ -371,16 +373,32 @@ class SystemElements:
         #  first index is row, second is column
         self.system_matrix[matrix_index][matrix_index] += K
 
-        if translation == 1:
+        if translation == 1:  # translation spring in x-axis
             self.set_displacement_vector([(nodeID, 2), (nodeID, 3)])
-        elif translation == 2:
+
+            # add the support to the support list for the plotter
+            for obj in self.node_objects:
+                if obj.ID == nodeID:
+                    self.supports_spring_x.append(obj)
+                    break
+        elif translation == 2:  # translation spring in z-axis
             self.set_displacement_vector([(nodeID, 1), (nodeID, 3)])
-        elif translation == 3:
+
+            # add the support to the support list for the plotter
+            for obj in self.node_objects:
+                if obj.ID == nodeID:
+                    self.supports_spring_z.append(obj)
+                    break
+        elif translation == 3:  # rotational spring in y-axis
             self.set_displacement_vector([(nodeID, 1), (nodeID, 2)])
 
+            # add the support to the support list for the plotter
+            for obj in self.node_objects:
+                if obj.ID == nodeID:
+                    self.supports_spring_y.append(obj)
+                    break
 
-
-    def q_load(self, elementID, q, direction=1):
+    def q_load(self, q, elementID, direction=1):
         """
         :param elementID: integer representing the element ID
         :param direction: 1 = towards the element, -1 = away from the element
