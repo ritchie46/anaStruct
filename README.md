@@ -1,4 +1,4 @@
-## installation
+## Installation
 
 For the latest version download this repository and unzip the file. Open the command box in the unzipped file location and run:
 ```
@@ -9,7 +9,8 @@ $ python setup.py install
 ![](https://github.com/ritchie46/structural_engineering/blob/wiki/wiki/example_3/structure_3.png?raw=true =125x)
 
 See the wiki for some examples.
-*[Read the docs!](https://github.com/ritchie46/structural_engineering/wiki)
+
+* [Read the docs!](https://github.com/ritchie46/structural_engineering/wiki)
 
 
 ## Concrete M-kappa diagram
