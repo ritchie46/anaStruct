@@ -464,3 +464,5 @@ class SystemElements:
     def show_shear_force(self):
         plot = Plotter(self)
         plot.shear_force()
+
+

@@ -193,8 +193,8 @@ class Plotter:
             self.one_fig.text(x_val[0] + 0.1, y_val[0] + 0.1, '%d' % el.nodeID1, color='g', fontsize=9, zorder=10)
             self.one_fig.text(x_val[-1] + 0.1, y_val[-1] + 0.1, '%d' % el.nodeID2, color='g', fontsize=9, zorder=10)
 
-        self.max_val = max_val
         max_val += 2
+        self.max_val = max_val
         self.one_fig.axis([-2, max_val, -2, max_val])
 
         for el in self.system.elements:
@@ -230,33 +230,39 @@ class Plotter:
 
             # add value to plot
             self.one_fig.text(x_val[1] - 2 / self.max_val, y_val[1] + 2 / self.max_val, "%s" % round(force_1, 1),
-                              fontsize=9)
+                              fontsize=9, ha='center', va='center',)
             self.one_fig.text(x_val[-2] - 2 / self.max_val, y_val[-2] + 2 / self.max_val, "%s" % round(force_2, 1),
-                              fontsize=9)
+                              fontsize=9, ha='center', va='center',)
 
     def normal_force(self):
+        self.one_fig.text(self.max_val * 0.1 - 2, self.max_val * 0.9, "NORMAL FORCE", fontsize=8)
+
         # determine max factor for scaling
         for el in self.system.elements:
             factor = self.__set_factor(el.N, el.N)
 
         for el in self.system.elements:
-            axis_values = plot_values_normal_force(el, factor)
-            self.plot_force(axis_values, el.N, el.N)
+            if math.isclose(el.N, 0, rel_tol=1e-5, abs_tol=1e-9):
+                pass
+            else:
+                axis_values = plot_values_normal_force(el, factor)
+                self.plot_force(axis_values, el.N, el.N)
 
-            point = (el.point_2 - el.point_1) / 2 + el.point_1
-            if el.N < 0:
-                point.displace_polar(alpha=el.alpha + 0.5 * math.pi, radius=0.5 * el.N * factor, inverse_z_axis=True)
+                point = (el.point_2 - el.point_1) / 2 + el.point_1
+                if el.N < 0:
+                    point.displace_polar(alpha=el.alpha + 0.5 * math.pi, radius=0.5 * el.N * factor, inverse_z_axis=True)
 
-                self.one_fig.text(point.x, -point.z, "-",
-                                  fontsize=20, color='b')
-            if el.N > 0:
-                point.displace_polar(alpha=el.alpha + 0.5 * math.pi, radius=0.5 * el.N * factor, inverse_z_axis=True)
+                    self.one_fig.text(point.x, -point.z, "-", ha='center', va='center',
+                                      fontsize=20, color='b')
+                if el.N > 0:
+                    point.displace_polar(alpha=el.alpha + 0.5 * math.pi, radius=0.5 * el.N * factor, inverse_z_axis=True)
 
-                self.one_fig.text(point.x, -point.z, "+",
-                                  fontsize=20, color='b')
+                    self.one_fig.text(point.x, -point.z, "+", ha='center', va='center',
+                                      fontsize=14, color='b')
         plt.show()
 
     def bending_moment(self):
+        self.one_fig.text(self.max_val * 0.1 - 2, self.max_val * 0.9, "BENDING MOMENT", fontsize=8)
         con = 20
         # determine max factor for scaling
         for el in self.system.elements:
@@ -276,6 +282,7 @@ class Plotter:
         plt.show()
 
     def shear_force(self):
+        self.one_fig.text(self.max_val * 0.1 - 2, self.max_val * 0.9, "SHEAR FORCE", fontsize=8)
         # determine max factor for scaling
         for el in self.system.elements:
             sol = plot_values_shear_force(el, factor=1)
