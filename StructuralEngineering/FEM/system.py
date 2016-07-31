@@ -306,7 +306,7 @@ class SystemElements:
 
         # check the values in the displacement vector for extreme values, indicating a flawed calculation
         for value in np.nditer(self.system_displacement_vector):
-            assert(value < 1e9), "The displacements of the structure exceed 1e9. Check your support conditions"
+            assert(value < 1e3), "The displacements of the structure exceed 1e3. Check your support conditions"
         return self.system_displacement_vector
 
     def add_support_hinged(self, nodeID):
@@ -466,3 +466,18 @@ class SystemElements:
         plot.shear_force()
 
 
+# Create a new system object.
+system = SystemElements()
+
+# Add beams to the system. Positive z-axis is down, positive x-axis is the right.
+system.add_element(location_list=[[0, 0], [3, -4]], EA=5e9, EI=8000)
+system.add_element(location_list=[[3, -4], [8, -4]], EA=5e9, EI=4000)
+
+# add loads to the element ID 2
+system.q_load(elementID=2, q=10, direction=1)
+
+# add hinged support to node ID 1
+system.add_support_hinged(1)
+
+system.solve()
+system.show_normal_force()
