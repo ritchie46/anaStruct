@@ -326,7 +326,7 @@ class SystemElements:
         """
         adds a rollable support at the given node
         :param nodeID: integer representing the nodes ID
-        :param direction: integer representing that is fixed: x = 1, z = 2
+        :param direction: integer representing the direction that is fixed: x = 1, z = 2
         """
         self.set_displacement_vector([(nodeID, direction)])
 

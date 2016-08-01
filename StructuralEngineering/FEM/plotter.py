@@ -91,7 +91,44 @@ class Plotter:
 
             # Triangle
             support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius * 3),
-                                                    numVertices=3, radius=radius, color='r', zorder=9)
+                                                    numVertices=3, radius=radius * 0.9, color='r', zorder=9)
+            self.one_fig.add_patch(support_patch)
+
+    def __spring_support_patch(self, max_val):
+        """
+        :param max_val: max scale of the plot
+        """
+        h = 0.03 * max_val
+        left = -0.5 * h
+        right = 0.5 * h
+        dh = 0.2 * h
+
+        for node in self.system.supports_spring_z:
+            yval = np.arange(0, -9, -1)
+            yval = yval * dh
+            xval = np.array([0, 0, left, right, left, right, left, 0, 0])
+
+            yval = yval - node.point.z
+            xval = xval + node.point.x
+            # Triangle
+            support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - h * 2.6),
+                                                    numVertices=3, radius=h * 0.9, color='r', zorder=10)
+
+            self.one_fig.plot(xval, yval, color='r', zorder=10)
+            self.one_fig.add_patch(support_patch)
+
+        for node in self.system.supports_spring_x:
+            xval = np.arange(0, 9, 1)
+            xval = xval * dh
+            yval = np.array([0, 0, left, right, left, right, left, 0, 0])
+
+            xval = xval + node.point.x
+            yval = yval - node.point.z
+            # Triangle
+            support_patch = mpatches.RegularPolygon((node.point.x + h * 1.7, -node.point.z - h ),
+                                                    numVertices=3, radius=h * 0.9, color='r', zorder=10)
+
+            self.one_fig.plot(xval, yval, color='r', zorder=10)
             self.one_fig.add_patch(support_patch)
 
     def __q_load_patch(self, max_val):
@@ -214,6 +251,7 @@ class Plotter:
         self.__hinged_support_patch(max_val)
         self.__roll_support_patch(max_val)
         self.__rotating_spring_support_patch(max_val)
+        self.__spring_support_patch(max_val)
 
         if plot_now:
             # add_loads
