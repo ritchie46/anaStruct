@@ -303,20 +303,33 @@ class Plotter:
         self.one_fig.text(self.max_val * 0.1 - 2, self.max_val * 0.9, "BENDING MOMENT", fontsize=8)
         con = 20
         # determine max factor for scaling
+        factor = 0
         for el in self.system.elements:
-            factor = self.__set_factor(el.node_1.Ty, el.node_2.Ty)
-
-        for el in self.system.elements:
-            axis_values = plot_values_bending_moment(el, factor, con)
-            self.plot_force(axis_values, abs(el.node_1.Ty), abs(el.node_2.Ty))
-
             if el.q_load:
-                index = con // 2
-                offset = -self.max_val * 0.05
-                x = axis_values[0][index] + math.sin(-el.alpha) * offset
-                y = axis_values[1][index] + math.cos(-el.alpha) * offset
-                self.one_fig.text(x, y, "%s" % round(abs(axis_values[2]), 1),
-                                  fontsize=9)
+                m_sag = (el.node_1.Ty - el.node_2.Ty) * 0.5 - 1 / 8 * el.q_load * el.l**2
+                value_1 = max(abs(el.node_1.Ty), abs(m_sag))
+                value_2 = max(value_1, abs(el.node_2.Ty))
+                el_factor = self.__set_factor(value_1, value_2)
+            else:
+                el_factor = self.__set_factor(el.node_1.Ty, el.node_2.Ty)
+            factor = el_factor if (el_factor > factor) else factor
+
+        for el in self.system.elements:
+            if math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and \
+                    math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and el.q_load is None:
+                # If True there is no bending moment, so no need for plotting.
+                pass
+            else:
+                axis_values = plot_values_bending_moment(el, factor, con)
+                self.plot_force(axis_values, abs(el.node_1.Ty), abs(el.node_2.Ty))
+
+                if el.q_load:
+                    index = con // 2
+                    offset = -self.max_val * 0.05
+                    x = axis_values[0][index] + math.sin(-el.alpha) * offset
+                    y = axis_values[1][index] + math.cos(-el.alpha) * offset
+                    self.one_fig.text(x, y, "%s" % round(abs(axis_values[2]), 1),
+                                      fontsize=9)
         plt.show()
 
     def shear_force(self):
@@ -329,10 +342,15 @@ class Plotter:
             factor = self.__set_factor(shear_1, shear_2)
 
         for el in self.system.elements:
-            axis_values = plot_values_shear_force(el, factor)
-            shear_1 = axis_values[-2]
-            shear_2 = axis_values[-1]
-            self.plot_force(axis_values, shear_1, shear_2)
+            if math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and \
+                    math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and el.q_load is None:
+                # If True there is no bending moment, thus no shear force, so no need for plotting.
+                pass
+            else:
+                axis_values = plot_values_shear_force(el, factor)
+                shear_1 = axis_values[-2]
+                shear_2 = axis_values[-1]
+                self.plot_force(axis_values, shear_1, shear_2)
         plt.show()
 
 
@@ -473,9 +491,10 @@ def plot_values_bending_moment(element, factor, con):
 
         if element.q_load:
             x = i * element.l
-            q_part = (-0.5 * -element.q_load * x ** 2 + 0.5 * -element.q_load * element.l * x)
+            q_part = (-0.5 * -element.q_load * x**2 + 0.5 * -element.q_load * element.l * x)
 
-            y_val[count] += math.cos(element.alpha) * q_part * factor
+            x_val[count] += math.sin(-element.alpha) * q_part * factor
+            y_val[count] += math.cos(-element.alpha) * q_part * factor
         count += 1
 
     x_val = np.append(x_val, x2)
