@@ -122,11 +122,11 @@ class SystemElements:
         elif delta_x > 0 and delta_z > 0:  # quadrant 1 of unity circle
             ai = math.atan(abs(delta_z) / abs(delta_x))
         elif delta_x < 0 < delta_z:  # quadrant 2 of unity circle
-            ai = 0.5 * math.pi + math.atan(abs(delta_z) / abs(delta_x))
+            ai = 0.5 * math.pi + math.atan(abs(delta_x) / abs(delta_z))
         elif delta_x < 0 and delta_z < 0:  # quadrant 3 of unity circle
             ai = math.pi + math.atan(abs(delta_z) / abs(delta_x))
         elif delta_z < 0 < delta_x:  # quadrant 4 of unity circle
-            ai = 1.5 * math.pi + math.atan(abs(delta_z) / abs(delta_x))
+            ai = 1.5 + math.pi + math.atan(abs(delta_x) / abs(delta_z))
         else:
             raise ValueError("Can't determine the angle of the given element")
 
@@ -306,7 +306,7 @@ class SystemElements:
             index_node_1 = (el.node_1.ID - 1) * 3
             index_node_2 = (el.node_2.ID - 1) * 3
 
-            for i in range(3): # node 1 ux, uz, phi
+            for i in range(3):  # node 1 ux, uz, phi
                 el.element_displacement_vector[i] = self.system_displacement_vector[index_node_1 + i]
 
             for i in range(3):  # node 2 ux, uz, phi
@@ -502,6 +502,5 @@ class SystemElements:
             else:
                 result_list.append((obj.ID, obj.Fx, obj.Fz, obj.Ty, obj.ux, obj.uz, obj.phi_y))
         return result_list
-
 
 

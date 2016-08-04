@@ -116,3 +116,4 @@ class ElementLevel:
                     element.N = -math.sqrt(element.node_1.Fx ** 2 + element.node_1.Fz ** 2)
                 else:
                     element.N = math.sqrt(element.node_1.Fx ** 2 + element.node_1.Fz ** 2)
+

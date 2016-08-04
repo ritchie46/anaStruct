@@ -486,21 +486,20 @@ def plot_values_shear_force(element, factor=1):
             y_2 = y2 + shear_2 * math.sin(0.5 * math.pi + element.alpha) * factor
 
     else:
-        if math.cos(element.alpha) > 0:
-            if element.point_1.x < element.point_2.x:  # point 1 is left
-                shear_1 = -(math.sin(element.alpha) * element.node_1.Fx + math.cos(element.alpha) * element.node_1.Fz)
-                shear_2 = math.sin(element.alpha) * element.node_2.Fx + math.cos(element.alpha) * element.node_2.Fz
-                x_1 = x1 + shear_1 * math.cos(1.5 * math.pi + element.alpha) * factor
-                y_1 = y1 + shear_1 * math.sin(1.5 * math.pi + element.alpha) * factor
-                x_2 = x2 + shear_2 * math.cos(1.5 * math.pi + element.alpha) * factor
-                y_2 = y2 + shear_2 * math.sin(1.5 * math.pi + element.alpha) * factor
-            else:  # point 1 is right
-                shear_1 = math.sin(element.alpha) * element.node_1.Fx + math.cos(element.alpha) * element.node_1.Fz
-                shear_2 = -(math.sin(element.alpha) * element.node_2.Fx + math.cos(element.alpha) * element.node_2.Fz)
-                x_1 = x1 + shear_1 * math.cos(0.5 * math.pi + element.alpha) * factor
-                y_1 = y1 + shear_1 * math.sin(0.5 * math.pi + element.alpha) * factor
-                x_2 = x2 + shear_2 * math.cos(0.5 * math.pi + element.alpha) * factor
-                y_2 = y2 + shear_2 * math.sin(0.5 * math.pi + element.alpha) * factor
+        if element.point_1.x < element.point_2.x:  # point 1 is left
+            shear_1 = -(math.sin(element.alpha) * element.node_1.Fx + math.cos(element.alpha) * element.node_1.Fz)
+            shear_2 = math.sin(element.alpha) * element.node_2.Fx + math.cos(element.alpha) * element.node_2.Fz
+            x_1 = x1 + shear_1 * math.cos(1.5 * math.pi + element.alpha) * factor
+            y_1 = y1 + shear_1 * math.sin(1.5 * math.pi + element.alpha) * factor
+            x_2 = x2 + shear_2 * math.cos(1.5 * math.pi + element.alpha) * factor
+            y_2 = y2 + shear_2 * math.sin(1.5 * math.pi + element.alpha) * factor
+        else:  # point 1 is right
+            shear_1 = math.sin(element.alpha) * element.node_1.Fx + math.cos(element.alpha) * element.node_1.Fz
+            shear_2 = -(math.sin(element.alpha) * element.node_2.Fx + math.cos(element.alpha) * element.node_2.Fz)
+            x_1 = x1 + shear_1 * math.cos(0.5 * math.pi + element.alpha) * factor
+            y_1 = y1 + shear_1 * math.sin(0.5 * math.pi + element.alpha) * factor
+            x_2 = x2 + shear_2 * math.cos(0.5 * math.pi + element.alpha) * factor
+            y_2 = y2 + shear_2 * math.sin(0.5 * math.pi + element.alpha) * factor
 
     x_val = [x1, x_1, x_2, x2]
     y_val = [y1, y_1, y_2, y2]
