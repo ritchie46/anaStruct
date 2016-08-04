@@ -24,6 +24,7 @@ class SystemElements:
         self.reduced_force_vector = None
         self.reduced_system_matrix = None
         self.post_processor = post_sl(self)
+        self.plotter = Plotter(self)
         # list of removed indexes due to conditions
         self.removed_indexes = []
         # list of indexes that remain after conditions are applied
@@ -38,6 +39,8 @@ class SystemElements:
         # keep track of the loads
         self.loads_point = []  # node ids with a point load
         self.loads_q = []  # element ids with a q-load
+        # results
+        self.reaction_forces = []  # node objects
 
     def add_truss_element(self, location_list, EA):
         self.add_element(location_list, EA, EI=1e-14)
@@ -303,10 +306,12 @@ class SystemElements:
 
         # determining the node results in post processing class
         self.post_processor.node_results()
+        self.post_processor.reaction_forces()
 
         # check the values in the displacement vector for extreme values, indicating a flawed calculation
         for value in np.nditer(self.system_displacement_vector):
-            assert(value < 1e3), "The displacements of the structure exceed 1e3. Check your support conditions"
+            assert(value < 1e6), "The displacements of the structure exceed 1e6. Check your support conditions," \
+                                 "or your elements Young's modulus"
         return self.system_displacement_vector
 
     def add_support_hinged(self, nodeID):
@@ -450,18 +455,40 @@ class SystemElements:
         return self.system_force_vector
 
     def show_structure(self):
-        plot = Plotter(self)
-        plot.plot_structure(plot_now=True)
+        self.plotter.plot_structure(plot_now=True)
 
     def show_bending_moment(self):
-        plot = Plotter(self)
-        plot.bending_moment()
+        self.plotter.bending_moment()
 
     def show_normal_force(self):
-        plot = Plotter(self)
-        plot.normal_force()
+        self.plotter.normal_force()
 
     def show_shear_force(self):
-        plot = Plotter(self)
-        plot.shear_force()
+        self.plotter.shear_force()
 
+    def show_reaction_force(self):
+        self.plotter.reaction_forces()
+
+    def get_node_results_system(self, nodeID=0):
+        """
+        :param nodeID: (integer) representing the node's ID. If integer = 0, the results of all nodes are returned
+        :return:
+                if nodeID == 0: (list)
+                    Returns a list containing tuples with the results
+                if nodeID > 0: (tuple)
+                    indexes:
+                    0: node's ID
+                    1: Fx
+                    2: Fz
+                    3: Ty
+                    4: ux
+                    5: uz
+                    6: phi_y
+        """
+        result_list = []
+        for obj in self.node_objects:
+            if obj.ID == nodeID:
+                return obj.ID, obj.Fx, obj.Fz, obj.Ty, obj.ux, obj.uz, obj.phi_y
+            else:
+                result_list.append((obj.ID, obj.Fx, obj.Fz, obj.Ty, obj.ux, obj.uz, obj.phi_y))
+        return result_list

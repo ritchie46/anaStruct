@@ -7,12 +7,13 @@ import matplotlib.patches as mpatches
 class Plotter:
     def __init__(self, system):
         self.system = system
+        self.max_val = None
+        self.max_force = 0
+
+    def __start_plot(self):
         fig = plt.figure()
         self.one_fig = fig.add_subplot(111)
         plt.tight_layout()
-        self.max_val = None
-        self.plot_structure()
-        self.max_force = 0
 
     def __set_factor(self, value_1, value_2):
         """
@@ -172,6 +173,44 @@ class Plotter:
                     self.one_fig.arrow(xa_1, ya_1, len_x, len_y, head_width=h*0.25, head_length=0.2*h, ec='g', fc='g')
                     self.one_fig.text(xt, yt, "q=%d" % el.q_load, color='k', fontsize=9, zorder=10)
 
+    def __arrow_patch_values(self, Fx, Fz, node, h):
+        """
+        :param Fx: (float)
+        :param Fz: (float)
+
+        -- One of the above must be zero. The function created to find the non-zero F-direction.
+
+        :param node: (Node object)
+        :param h: (float) Is a scale variable
+        :return: Variables for the matplotlib plotter
+        """
+        if Fx > 0:  # Fx is positive
+            x = node.point.x - h
+            y = -node.point.z
+            len_x = 0.8 * h
+            len_y = 0
+            F = Fx
+        elif Fx < 0:  # Fx is negative
+            x = node.point.x + h
+            y = -node.point.z
+            len_x = -0.8 * h
+            len_y = 0
+            F = Fx
+        elif Fz > 0:  # Fz is positive
+            x = node.point.x
+            y = -node.point.z + h
+            len_x = 0
+            len_y = -0.8 * h
+            F = Fz
+        else:  # Fz is negative
+            x = node.point.x
+            y = -node.point.z - h
+            len_x = 0
+            len_y = 0.8 * h
+            F = Fz
+
+        return x, y, len_x, len_y, F
+
     def __point_load_patch(self, max_val):
         """
         :param max_val: max scale of the plot
@@ -181,40 +220,23 @@ class Plotter:
         for F_tuple in self.system.loads_point:
             for node in self.system.node_objects:
                 if node.ID == F_tuple[0]:  # F_tuple[0] = ID
-                    if F_tuple[1] > 0:  # Fx is positive
-                        x = node.point.x - h
-                        y = -node.point.z
-                        len_x = 0.8 * h
-                        len_y = 0
-                        F = F_tuple[1]
-                    elif F_tuple[1] < 0:  # Fx is negative
-                        x = node.point.x + h
-                        y = -node.point.z
-                        len_x = -0.8 * h
-                        len_y = 0
-                        F = F_tuple[1]
-                    elif F_tuple[2] > 0:  # Fz is positive
-                        x = node.point.x
-                        y = -node.point.z + h
-                        len_x = 0
-                        len_y = -0.8 * h
-                        F = F_tuple[2]
-                    elif F_tuple[2] - 0:  # Fz is negative
-                        x = node.point.x
-                        y = -node.point.z - h
-                        len_x = 0
-                        len_y = 0.8 * h
-                        F = F_tuple[2]
+                    sol = self.__arrow_patch_values(F_tuple[1], F_tuple[2], node, h)
+                    x = sol[0]
+                    y = sol[1]
+                    len_x = sol[2]
+                    len_y = sol[3]
+                    F = sol[4]
 
                     self.one_fig.arrow(x, y, len_x, len_y, head_width=h*0.15, head_length=0.2*h, ec='b', fc='orange',
                                        zorder=11)
                     self.one_fig.text(x, y, "F=%d" % F, color='k', fontsize=9, zorder=10)
 
-    def plot_structure(self, plot_now=False):
+    def plot_structure(self, plot_now=False, supports=True):
         """
         :param plot_now: boolean if True, plt.figure will plot.
         :return: -
         """
+        self.__start_plot()
         max_val = 0
         for el in self.system.elements:
             # plot structure
@@ -247,11 +269,12 @@ class Plotter:
             self.one_fig.text(x_val, y_val, "%d" % el.ID, color='r', fontsize=9, zorder=10)
 
         # add supports
-        self.__fixed_support_patch(max_val)
-        self.__hinged_support_patch(max_val)
-        self.__roll_support_patch(max_val)
-        self.__rotating_spring_support_patch(max_val)
-        self.__spring_support_patch(max_val)
+        if supports:
+            self.__fixed_support_patch(max_val)
+            self.__hinged_support_patch(max_val)
+            self.__roll_support_patch(max_val)
+            self.__rotating_spring_support_patch(max_val)
+            self.__spring_support_patch(max_val)
 
         if plot_now:
             # add_loads
@@ -273,6 +296,7 @@ class Plotter:
                               fontsize=9, ha='center', va='center',)
 
     def normal_force(self):
+        self.plot_structure()
         self.one_fig.text(self.max_val * 0.1 - 2, self.max_val * 0.9, "NORMAL FORCE", fontsize=8)
 
         # determine max factor for scaling
@@ -300,6 +324,7 @@ class Plotter:
         plt.show()
 
     def bending_moment(self):
+        self.plot_structure()
         self.one_fig.text(self.max_val * 0.1 - 2, self.max_val * 0.9, "BENDING MOMENT", fontsize=8)
         con = 20
         # determine max factor for scaling
@@ -333,6 +358,7 @@ class Plotter:
         plt.show()
 
     def shear_force(self):
+        self.plot_structure()
         self.one_fig.text(self.max_val * 0.1 - 2, self.max_val * 0.9, "SHEAR FORCE", fontsize=8)
         # determine max factor for scaling
         for el in self.system.elements:
@@ -353,6 +379,41 @@ class Plotter:
                 self.plot_force(axis_values, shear_1, shear_2)
         plt.show()
 
+    def reaction_forces(self):
+        self.plot_structure(supports=False)
+
+        h = 0.2 * self.max_val
+        max_force = 0
+
+        for node in self.system.reaction_forces:
+            max_force = abs(node.Fx) if abs(node.Fx) > max_force else max_force
+            max_force = abs(node.Fz) if abs(node.Fz) > max_force else max_force
+
+        for node in self.system.reaction_forces:
+            # x direction
+            scale = abs(node.Fx) / max_force * h
+            sol = self.__arrow_patch_values(node.Fx, 0, node, scale)
+            x = sol[0]
+            y = sol[1]
+            len_x = sol[2]
+            len_y = sol[3]
+
+            self.one_fig.arrow(x, y, len_x, len_y, head_width=h * 0.15, head_length=0.2 * scale, ec='b', fc='orange',
+                               zorder=11)
+            self.one_fig.text(x, y, "R=%d" % node.Fx, color='k', fontsize=9, zorder=10)
+
+            # y direction
+            scale = abs(node.Fz) / max_force * h
+            sol = self.__arrow_patch_values(0, node.Fz, node, scale)
+            x = sol[0]
+            y = sol[1]
+            len_x = sol[2]
+            len_y = sol[3]
+
+            self.one_fig.arrow(x, y, len_x, len_y, head_width=h * 0.15, head_length=0.2 * scale, ec='b', fc='orange',
+                               zorder=11)
+            self.one_fig.text(x, y, "R=%d" % node.Fz, color='k', fontsize=9, zorder=10)
+        plt.show()
 
 """
 ### element functions ###
@@ -453,7 +514,6 @@ def plot_values_bending_moment(element, factor, con):
     x2 = element.point_2.x
     y2 = -element.point_2.z
     dx = x2 - x1
-    dy = y2 - y1
 
     if math.isclose(element.alpha, 0.5 * math.pi, rel_tol=1e-4) or \
             math.isclose(element.alpha, 1.5 * math.pi, rel_tol=1e-4):
