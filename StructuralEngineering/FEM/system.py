@@ -112,15 +112,17 @@ class SystemElements:
         delta_x = point_2.x - point_1.x
         delta_z = point_2.z - point_1.z
 
-        if math.isclose(delta_x, 0, rel_tol=1e-5):
+        if math.isclose(delta_x, 0, rel_tol=1e-5, abs_tol=1e-9):
             if delta_z > 0:
                 ai = 1.5 * math.pi
             else:
                 ai = 0.5 * math.pi
-        else:
+        elif delta_x > 0:
             ai = -math.atan(delta_z / delta_x)
-        # aj = ai
+        else:
+            ai = -0.5 * math.pi - math.atan(abs(delta_x) / abs(delta_z))
 
+        # aj = ai
         # add element
         element = Element(self.count, EA, EI, l, ai, ai, point_1, point_2)
         element.node_ids.append(nodeID1)
@@ -379,7 +381,7 @@ class SystemElements:
         self.system_matrix[matrix_index][matrix_index] += K
 
         if translation == 1:  # translation spring in x-axis
-            self.set_displacement_vector([(nodeID, 2), (nodeID, 3)])
+            self.set_displacement_vector([(nodeID, 2)])
 
             # add the support to the support list for the plotter
             for obj in self.node_objects:
@@ -387,7 +389,7 @@ class SystemElements:
                     self.supports_spring_x.append(obj)
                     break
         elif translation == 2:  # translation spring in z-axis
-            self.set_displacement_vector([(nodeID, 1), (nodeID, 3)])
+            self.set_displacement_vector([(nodeID, 1)])
 
             # add the support to the support list for the plotter
             for obj in self.node_objects:
@@ -467,7 +469,7 @@ class SystemElements:
         self.plotter.shear_force()
 
     def show_reaction_force(self):
-        self.plotter.reaction_forces()
+        self.plotter.reaction_force()
 
     def get_node_results_system(self, nodeID=0):
         """
@@ -492,3 +494,4 @@ class SystemElements:
             else:
                 result_list.append((obj.ID, obj.Fx, obj.Fz, obj.Ty, obj.ux, obj.uz, obj.phi_y))
         return result_list
+

@@ -50,7 +50,7 @@ class Plotter:
         """
         :param max_val: max scale of the plot
         """
-        radius = 0.03 * max_val
+        radius = 0.04 * max_val
         for node in self.system.supports_hinged:
             support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius),
                                                     numVertices=3, radius=radius, color='r', zorder=9)
@@ -72,11 +72,11 @@ class Plotter:
         """
         :param max_val: max scale of the plot
         """
-        radius = 0.03 * max_val
+        radius = 0.04 * max_val
 
         for node in self.system.supports_spring_y:
-            r = np.arange(0, radius, 0.01)
-            theta = 25 * math.pi * r
+            r = np.arange(0, radius, 0.001)
+            theta = 25 * math.pi * r / (0.2 * max_val)
             x_val = []
             y_val = []
 
@@ -99,7 +99,7 @@ class Plotter:
         """
         :param max_val: max scale of the plot
         """
-        h = 0.03 * max_val
+        h = 0.04 * max_val
         left = -0.5 * h
         right = 0.5 * h
         dh = 0.2 * h
@@ -237,7 +237,8 @@ class Plotter:
         :return: -
         """
         self.__start_plot()
-        max_val = 0
+        max_x = 0
+        max_z = 0
         for el in self.system.elements:
             # plot structure
             axis_values = plot_values_element(el)
@@ -245,16 +246,18 @@ class Plotter:
             y_val = axis_values[1]
             self.one_fig.plot(x_val, y_val, color='black', marker='s')
 
-            if max(max(x_val), max(y_val)) > max_val:
-                max_val = max(max(x_val), max(y_val))
+            # determine max values for scaling the plotter
+            max_x = max([abs(x) for x in x_val]) if max([abs(x) for x in x_val]) > max_x else max_x
+            max_z = max([abs(x) for x in y_val]) if max([abs(x) for x in y_val]) > max_z else max_z
 
             # add node ID to plot
             self.one_fig.text(x_val[0] + 0.1, y_val[0] + 0.1, '%d' % el.nodeID1, color='g', fontsize=9, zorder=10)
             self.one_fig.text(x_val[-1] + 0.1, y_val[-1] + 0.1, '%d' % el.nodeID2, color='g', fontsize=9, zorder=10)
 
-        max_val += 2
+        max_val = max(max_x, max_z)
         self.max_val = max_val
-        self.one_fig.axis([-2, max_val, -2, max_val])
+        offset = max_val // 2
+        self.one_fig.axis([-offset, max_val + offset, -offset, max_val + offset])
 
         for el in self.system.elements:
             # add element ID to plot
@@ -379,8 +382,9 @@ class Plotter:
                 self.plot_force(axis_values, shear_1, shear_2)
         plt.show()
 
-    def reaction_forces(self):
+    def reaction_force(self):
         self.plot_structure(supports=False)
+        self.one_fig.text(self.max_val * 0.1 - 2, self.max_val * 0.9, "REACTION FORCE", fontsize=8)
 
         h = 0.2 * self.max_val
         max_force = 0
@@ -390,29 +394,46 @@ class Plotter:
             max_force = abs(node.Fz) if abs(node.Fz) > max_force else max_force
 
         for node in self.system.reaction_forces:
-            # x direction
-            scale = abs(node.Fx) / max_force * h
-            sol = self.__arrow_patch_values(node.Fx, 0, node, scale)
-            x = sol[0]
-            y = sol[1]
-            len_x = sol[2]
-            len_y = sol[3]
+            if not math.isclose(node.Fx, 0, rel_tol=1e-5, abs_tol=1e-9):
+                # x direction
+                scale = abs(node.Fx) / max_force * h
+                sol = self.__arrow_patch_values(node.Fx, 0, node, scale)
+                x = sol[0]
+                y = sol[1]
+                len_x = sol[2]
+                len_y = sol[3]
 
-            self.one_fig.arrow(x, y, len_x, len_y, head_width=h * 0.15, head_length=0.2 * scale, ec='b', fc='orange',
-                               zorder=11)
-            self.one_fig.text(x, y, "R=%d" % node.Fx, color='k', fontsize=9, zorder=10)
+                self.one_fig.arrow(x, y, len_x, len_y, head_width=h * 0.15, head_length=0.2 * scale, ec='b', fc='orange',
+                                   zorder=11)
+                self.one_fig.text(x, y, "R=%d" % node.Fx, color='k', fontsize=9, zorder=10)
 
-            # y direction
-            scale = abs(node.Fz) / max_force * h
-            sol = self.__arrow_patch_values(0, node.Fz, node, scale)
-            x = sol[0]
-            y = sol[1]
-            len_x = sol[2]
-            len_y = sol[3]
+            if not math.isclose(node.Fz, 0, rel_tol=1e-5, abs_tol=1e-9):
+                # z direction
+                scale = abs(node.Fz) / max_force * h
+                sol = self.__arrow_patch_values(0, node.Fz, node, scale)
+                x = sol[0]
+                y = sol[1]
+                len_x = sol[2]
+                len_y = sol[3]
 
-            self.one_fig.arrow(x, y, len_x, len_y, head_width=h * 0.15, head_length=0.2 * scale, ec='b', fc='orange',
-                               zorder=11)
-            self.one_fig.text(x, y, "R=%d" % node.Fz, color='k', fontsize=9, zorder=10)
+                self.one_fig.arrow(x, y, len_x, len_y, head_width=h * 0.15, head_length=0.2 * scale, ec='b', fc='orange',
+                                   zorder=11)
+                self.one_fig.text(x, y, "R=%d" % node.Fz, color='k', fontsize=9, zorder=10)
+
+            if not math.isclose(node.Ty, 0, rel_tol=1e-5, abs_tol=1e-9):
+                """
+                'r: regex
+                '$...$': render the strings using mathtext
+                """
+                if node.Ty > 0:
+                    self.one_fig.plot(node.point.x, -node.point.z, marker=r'$\circlearrowleft$', ms=25,
+                                      color='orange')
+                if node.Ty < 0:
+                    self.one_fig.plot(node.point.x, -node.point.z, marker=r'$\circlearrowright$', ms=25,
+                                      color='orange')
+
+                self.one_fig.text(node.point.x + h * 0.2, -node.point.z + h * 0.2, "T=%d" % node.Ty, color='k',
+                                  fontsize=9, zorder=10)
         plt.show()
 
 """

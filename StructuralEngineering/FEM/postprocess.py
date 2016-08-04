@@ -106,14 +106,13 @@ class ElementLevel:
                 element.N = element.node_1.Fx  # compression and tension in opposite direction
 
         else:
-            if math.cos(element.alpha) > 0:
-                if element.point_1.x < element.point_2.x:  # point 1 is left
-                    if element.node_1.Fx > 0:  # compression in element
-                        element.N = -math.sqrt(element.node_1.Fx ** 2 + element.node_1.Fz ** 2)
-                    else:
-                        element.N = math.sqrt(element.node_1.Fx ** 2 + element.node_1.Fz ** 2)
-                else:  # point 1 is right
-                    if element.node_1.Fx < 0:  # compression in element
-                        element.N = -math.sqrt(element.node_1.Fx ** 2 + element.node_1.Fz ** 2)
-                    else:
-                        element.N = math.sqrt(element.node_1.Fx ** 2 + element.node_1.Fz ** 2)
+            if element.point_1.x < element.point_2.x:  # point 1 is left
+                if element.node_1.Fx > 0:  # compression in element
+                    element.N = -math.sqrt(element.node_1.Fx ** 2 + element.node_1.Fz ** 2)
+                else:
+                    element.N = math.sqrt(element.node_1.Fx ** 2 + element.node_1.Fz ** 2)
+            else:  # point 1 is right
+                if element.node_1.Fx < 0:  # compression in element
+                    element.N = -math.sqrt(element.node_1.Fx ** 2 + element.node_1.Fz ** 2)
+                else:
+                    element.N = math.sqrt(element.node_1.Fx ** 2 + element.node_1.Fz ** 2)
