@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def find_closest_index(array, searchFor):
     """
     Find the closest index in an ordered array
@@ -47,3 +50,15 @@ def find_closest_index(array, searchFor):
                     return i
                 else:
                     return i - 1
+
+
+def is_moving_towards(test_node, node_position, displacement):
+    """
+    Tests if a node is displacing towards or away from the node.
+    :param test_node: Nodes that stands still (vector)
+    :param node_position: Node of which the displacment tested (vector)
+    :param displacement: (vector)
+    :return: (Boolean)
+    """
+    to_node = test_node - node_position
+    return np.dot(to_node, displacement) > 0

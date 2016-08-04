@@ -1,6 +1,10 @@
-import math
 import copy
+import math
+
+import numpy as np
+
 from StructuralEngineering.FEM.node import Node
+from StructuralEngineering.basic import is_moving_towards
 
 
 class SystemLevel:
@@ -92,28 +96,14 @@ class ElementLevel:
 
     @staticmethod
     def _determine_normal_force(element):
-        dx = element.point_1.x - element.point_2.x
-        if math.isclose(dx, 0):  # element is vertical
-            if element.point_1.z < element.point_2.z:  # point 1 is bottom
-                element.N = -element.node_1.Fz  # compression and tension in opposite direction
-            else:
-                element.N = element.node_1.Fz  # compression and tension in opposite direction
+        test_node = np.array([element.point_1.x, element.point_1.z])
+        node_position = np.array([element.point_2.x, element.point_2.z])
+        displacement = np.array([element.node_2.ux - element.node_1.ux, element.node_2.uz - element.node_1.uz])
 
-        elif math.isclose(element.alpha, 0):  # element is horizontal
-            if element.point_1.x < element.point_2.x:  # point 1 is left
-                element.N = -element.node_1.Fx  # compression and tension in good direction
-            else:
-                element.N = element.node_1.Fx  # compression and tension in opposite direction
+        force_towards = is_moving_towards(test_node, node_position, displacement)
+        N = abs(math.sin(element.alpha) * element.node_1.Fz) + abs(math.cos(element.alpha) * element.node_1.Fx)
 
+        if force_towards:
+            element.N = -N
         else:
-            if element.point_1.x < element.point_2.x:  # point 1 is left
-                if element.node_1.Fx > 0:  # compression in element
-                    element.N = -math.sqrt(element.node_1.Fx ** 2 + element.node_1.Fz ** 2)
-                else:
-                    element.N = math.sqrt(element.node_1.Fx ** 2 + element.node_1.Fz ** 2)
-            else:  # point 1 is right
-                if element.node_1.Fx < 0:  # compression in element
-                    element.N = -math.sqrt(element.node_1.Fx ** 2 + element.node_1.Fz ** 2)
-                else:
-                    element.N = math.sqrt(element.node_1.Fx ** 2 + element.node_1.Fz ** 2)
-
+            element.N = N
