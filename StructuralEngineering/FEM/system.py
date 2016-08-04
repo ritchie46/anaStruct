@@ -110,17 +110,25 @@ class SystemElements:
 
         # determine the angle of the element with the global x-axis
         delta_x = point_2.x - point_1.x
-        delta_z = point_2.z - point_1.z
+        delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
 
-        if math.isclose(delta_x, 0, rel_tol=1e-5, abs_tol=1e-9):
-            if delta_z > 0:
+        if math.isclose(delta_x, 0, rel_tol=1e-5, abs_tol=1e-9):  # element is vertical
+            if delta_z < 0:
                 ai = 1.5 * math.pi
             else:
                 ai = 0.5 * math.pi
-        elif delta_x > 0:
-            ai = -math.atan(delta_z / delta_x)
+        elif math.isclose(delta_z, 0, rel_tol=1e-5, abs_tol=1e-9): # element is horizontal
+            ai = 0
+        elif delta_x > 0 and delta_z > 0:  # quadrant 1 of unity circle
+            ai = math.atan(abs(delta_z) / abs(delta_x))
+        elif delta_x < 0 < delta_z:  # quadrant 2 of unity circle
+            ai = 0.5 * math.pi + math.atan(abs(delta_z) / abs(delta_x))
+        elif delta_x < 0 and delta_z < 0:  # quadrant 3 of unity circle
+            ai = math.pi + math.atan(abs(delta_z) / abs(delta_x))
+        elif delta_z < 0 < delta_x:  # quadrant 4 of unity circle
+            ai = 1.5 * math.pi + math.atan(abs(delta_z) / abs(delta_x))
         else:
-            ai = -0.5 * math.pi - math.atan(abs(delta_x) / abs(delta_z))
+            raise ValueError("Can't determine the angle of the given element")
 
         # aj = ai
         # add element
@@ -494,4 +502,6 @@ class SystemElements:
             else:
                 result_list.append((obj.ID, obj.Fx, obj.Fz, obj.Ty, obj.ux, obj.uz, obj.phi_y))
         return result_list
+
+
 
