@@ -30,7 +30,7 @@ class Plotter:
         if math.isclose(self.max_force, 0):
             factor = 0.1
         else:
-            factor = 1 / self.max_force
+            factor = 0.15 * self.max_val / self.max_force
         return factor
 
     def __fixed_support_patch(self, max_val):
@@ -300,6 +300,7 @@ class Plotter:
                               fontsize=9, ha='center', va='center',)
 
     def normal_force(self):
+        self.max_force = 0
         self.plot_structure()
 
         # determine max factor for scaling
@@ -328,6 +329,7 @@ class Plotter:
 
     def bending_moment(self):
         self.plot_structure()
+        self.max_force = 0
         con = 20
 
         # determine max factor for scaling
@@ -337,10 +339,9 @@ class Plotter:
                 m_sag = (el.node_1.Ty - el.node_2.Ty) * 0.5 - 1 / 8 * el.q_load * el.l**2
                 value_1 = max(abs(el.node_1.Ty), abs(m_sag))
                 value_2 = max(value_1, abs(el.node_2.Ty))
-                el_factor = self.__set_factor(value_1, value_2)
+                factor = self.__set_factor(value_1, value_2)
             else:
-                el_factor = self.__set_factor(el.node_1.Ty, el.node_2.Ty)
-            factor = el_factor if (el_factor > factor) else factor
+                factor = self.__set_factor(el.node_1.Ty, el.node_2.Ty)
 
         # determine the axis values
         for el in self.system.elements:
@@ -364,14 +365,13 @@ class Plotter:
 
     def shear_force(self):
         self.plot_structure()
+        self.max_force = 0
 
         # determine max factor for scaling
-        factor = 0
         for el in self.system.elements:
             shear_1 = max(el.shear_force)
-            shear_2 = max(el.shear_force)
-            el_factor = self.__set_factor(shear_1, shear_2)
-            factor = el_factor if (el_factor > factor) else factor
+            shear_2 = min(el.shear_force)
+            factor = self.__set_factor(shear_1, shear_2)
 
         for el in self.system.elements:
             if math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and \
