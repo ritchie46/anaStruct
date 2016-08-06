@@ -364,12 +364,14 @@ class Plotter:
 
     def shear_force(self):
         self.plot_structure()
+
         # determine max factor for scaling
+        factor = 0
         for el in self.system.elements:
-            sol = plot_values_shear_force(el, factor=1)
-            shear_1 = sol[-2]
-            shear_2 = sol[-1]
-            factor = self.__set_factor(shear_1, shear_2)
+            shear_1 = max(el.shear_force)
+            shear_2 = max(el.shear_force)
+            el_factor = self.__set_factor(shear_1, shear_2)
+            factor = el_factor if (el_factor > factor) else factor
 
         for el in self.system.elements:
             if math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and \
@@ -449,58 +451,19 @@ def plot_values_element(element):
 
 
 def plot_values_shear_force(element, factor=1):
-    dx = element.point_1.x - element.point_2.x
     x1 = element.point_1.x
     y1 = -element.point_1.z
     x2 = element.point_2.x
     y2 = -element.point_2.z
 
-    if math.isclose(dx, 0):  # element is vertical
-        shear_1 = -(math.sin(element.alpha) * element.node_1.Fx + math.cos(element.alpha) * element.node_1.Fz)
-        shear_2 = (math.sin(element.alpha) * element.node_2.Fx + math.cos(element.alpha) * element.node_2.Fz)
+    shear_1 = element.shear_force[0]
+    shear_2 = element.shear_force[-1]
 
-        if element.point_1.z > element.point_2.z:  # point 1 is bottom
-            x_1 = x1 + shear_1 * math.cos(1.5 * math.pi + element.alpha) * factor
-            y_1 = y1 + shear_1 * math.sin(1.5 * math.pi + element.alpha) * factor
-            x_2 = x2 + shear_2 * math.cos(1.5 * math.pi + element.alpha) * factor
-            y_2 = y2 + shear_2 * math.sin(1.5 * math.pi + element.alpha) * factor
-        else:
-            x_1 = x1 + shear_1 * math.cos(0.5 * math.pi + element.alpha) * factor
-            y_1 = y1 + shear_1 * math.sin(0.5 * math.pi + element.alpha) * factor
-            x_2 = x2 + shear_2 * math.cos(0.5 * math.pi + element.alpha) * factor
-            y_2 = y2 + shear_2 * math.sin(0.5 * math.pi + element.alpha) * factor
-
-    elif math.isclose(element.alpha, 0):  # element is horizontal
-        if element.point_1.x < element.point_2.x:  # point 1 is left
-            shear_1 = -(math.sin(element.alpha) * element.node_1.Fx + math.cos(element.alpha) * element.node_1.Fz)
-            shear_2 = math.sin(element.alpha) * element.node_2.Fx + math.cos(element.alpha) * element.node_2.Fz
-            x_1 = x1 + shear_1 * math.cos(1.5 * math.pi + element.alpha) * factor
-            y_1 = y1 + shear_1 * math.sin(1.5 * math.pi + element.alpha) * factor
-            x_2 = x2 + shear_2 * math.cos(1.5 * math.pi + element.alpha) * factor
-            y_2 = y2 + shear_2 * math.sin(1.5 * math.pi + element.alpha) * factor
-        else:
-            shear_1 = math.sin(element.alpha) * element.node_1.Fx + math.cos(element.alpha) * element.node_1.Fz
-            shear_2 = -(math.sin(element.alpha) * element.node_2.Fx + math.cos(element.alpha) * element.node_2.Fz)
-            x_1 = x1 + shear_1 * math.cos(0.5 * math.pi + element.alpha) * factor
-            y_1 = y1 + shear_1 * math.sin(0.5 * math.pi + element.alpha) * factor
-            x_2 = x2 + shear_2 * math.cos(0.5 * math.pi + element.alpha) * factor
-            y_2 = y2 + shear_2 * math.sin(0.5 * math.pi + element.alpha) * factor
-
-    else:
-        if element.point_1.x < element.point_2.x:  # point 1 is left
-            shear_1 = -(math.sin(element.alpha) * element.node_1.Fx + math.cos(element.alpha) * element.node_1.Fz)
-            shear_2 = math.sin(element.alpha) * element.node_2.Fx + math.cos(element.alpha) * element.node_2.Fz
-            x_1 = x1 + shear_1 * math.cos(1.5 * math.pi + element.alpha) * factor
-            y_1 = y1 + shear_1 * math.sin(1.5 * math.pi + element.alpha) * factor
-            x_2 = x2 + shear_2 * math.cos(1.5 * math.pi + element.alpha) * factor
-            y_2 = y2 + shear_2 * math.sin(1.5 * math.pi + element.alpha) * factor
-        else:  # point 1 is right
-            shear_1 = math.sin(element.alpha) * element.node_1.Fx + math.cos(element.alpha) * element.node_1.Fz
-            shear_2 = -(math.sin(element.alpha) * element.node_2.Fx + math.cos(element.alpha) * element.node_2.Fz)
-            x_1 = x1 + shear_1 * math.cos(0.5 * math.pi + element.alpha) * factor
-            y_1 = y1 + shear_1 * math.sin(0.5 * math.pi + element.alpha) * factor
-            x_2 = x2 + shear_2 * math.cos(0.5 * math.pi + element.alpha) * factor
-            y_2 = y2 + shear_2 * math.sin(0.5 * math.pi + element.alpha) * factor
+    # apply angle ai
+    x_1 = x1 + shear_1 * math.sin(-element.alpha) * factor
+    y_1 = y1 + shear_1 * math.cos(-element.alpha) * factor
+    x_2 = x2 + shear_2 * math.sin(-element.alpha) * factor
+    y_2 = y2 + shear_2 * math.cos(-element.alpha) * factor
 
     x_val = [x1, x_1, x_2, x2]
     y_val = [y1, y_1, y_2, y2]
@@ -525,8 +488,9 @@ def plot_values_normal_force(element, factor):
 
 def plot_values_bending_moment(element, factor, con):
     """
-    :param factor: scaling the plot
-    :param con: amount of x-values
+    :param element: (object) of the Element class
+    :param factor: (float) scaling the plot
+    :param con: (integer) amount of x-values
     :return:
     """
     x1 = element.point_1.x
@@ -548,7 +512,6 @@ def plot_values_bending_moment(element, factor, con):
     y_val = np.empty(con)
     dx = x2 - x1
     dy = y2 - y1
-
 
     # determine moment for 0 < x < length of the element
     count = 0

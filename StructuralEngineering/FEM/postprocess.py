@@ -1,6 +1,5 @@
 import copy
 import math
-
 import numpy as np
 
 from StructuralEngineering.FEM.node import Node
@@ -10,6 +9,8 @@ from StructuralEngineering.basic import is_moving_towards
 class SystemLevel:
     def __init__(self, system):
         self.system = system
+        # post processor element level
+        self.post_el = ElementLevel(self.system)
 
     def node_results(self):
         """
@@ -17,9 +18,9 @@ class SystemLevel:
         Results placed in SystemElements class: self.node_objects (list).
         """
 
-        # post processor element level
-        post_el = ElementLevel(self.system)
-        post_el.node_results()
+        for el in self.system.elements:
+            # post processor element level
+            self.post_el.node_results(el)
 
         count = 0
         for node in self.system.node_objects:
@@ -63,36 +64,43 @@ class SystemLevel:
                     node.phi_y = None
                     self.system.reaction_forces.append(node)
 
+    def element_results(self):
+        """
+        Determines the element results for al elements in the system on element level.
+        """
+        for el in self.system.elements:
+            self.post_el.determine_bending_moment(el, 10)
+            self.post_el.determine_shear_force(el)
+
 
 class ElementLevel:
     def __init__(self, system):
         self.system = system
 
-    def node_results(self):
+    def node_results(self, element):
         """
         Determine node results on the element level.
         """
-        for el in self.system.elements:
-            el.node_1 = Node(
-                ID=el.node_ids[0],
-                Fx=el.element_force_vector[0] + el.element_primary_force_vector[0],
-                Fz=el.element_force_vector[1] + el.element_primary_force_vector[1],
-                Ty=el.element_force_vector[2] + el.element_primary_force_vector[2],
-                ux=el.element_displacement_vector[0],
-                uz=el.element_displacement_vector[1],
-                phi_y=el.element_displacement_vector[2],
-            )
+        element.node_1 = Node(
+            ID=element.node_ids[0],
+            Fx=element.element_force_vector[0] + element.element_primary_force_vector[0],
+            Fz=element.element_force_vector[1] + element.element_primary_force_vector[1],
+            Ty=element.element_force_vector[2] + element.element_primary_force_vector[2],
+            ux=element.element_displacement_vector[0],
+            uz=element.element_displacement_vector[1],
+            phi_y=element.element_displacement_vector[2],
+        )
 
-            el.node_2 = Node(
-                ID=el.node_ids[1],
-                Fx=el.element_force_vector[3] + el.element_primary_force_vector[3],
-                Fz=el.element_force_vector[4] + el.element_primary_force_vector[4],
-                Ty=el.element_force_vector[5] + el.element_primary_force_vector[5],
-                ux=el.element_displacement_vector[3],
-                uz=el.element_displacement_vector[4],
-                phi_y=el.element_displacement_vector[5]
-            )
-            self._determine_normal_force(el)
+        element.node_2 = Node(
+            ID=element.node_ids[1],
+            Fx=element.element_force_vector[3] + element.element_primary_force_vector[3],
+            Fz=element.element_force_vector[4] + element.element_primary_force_vector[4],
+            Ty=element.element_force_vector[5] + element.element_primary_force_vector[5],
+            ux=element.element_displacement_vector[3],
+            uz=element.element_displacement_vector[4],
+            phi_y=element.element_displacement_vector[5]
+        )
+        self._determine_normal_force(element)
 
     @staticmethod
     def _determine_normal_force(element):
@@ -107,3 +115,40 @@ class ElementLevel:
             element.N = -N
         else:
             element.N = N
+
+    @staticmethod
+    def determine_bending_moment(element, con):
+        dT = -(element.node_2.Ty + element.node_1.Ty)  # T2 - (-T1)
+
+        x_val = np.linspace(0, 1, con)
+        m_val = np.empty(con)
+
+        # determine moment for 0 < x < length of the element
+        count = 0
+        for i in x_val:
+            x = i * element.l
+            x_val[count] = x
+            m_val[count] = element.node_1.Ty + i * dT
+
+            if element.q_load:
+                q_part = (-0.5 * -element.q_load * x**2 + 0.5 * -element.q_load * element.l * x)
+                m_val[count] += q_part
+            count += 1
+        element.bending_moment = m_val
+
+    @staticmethod
+    def determine_shear_force(element):
+        """
+        Determines the shear force by differentiating the bending moment
+        :param element: (object) of the Element class
+        """
+        dV = np.diff(element.bending_moment)
+        length = len(element.bending_moment)
+        dx = element.l / (length - 1)
+        shear_force = dV / dx
+
+        # Due to differentiation the first and the last values must be corrected.
+        correction = shear_force[1] - shear_force[0]
+        shear_force = np.insert(shear_force, 0, [shear_force[0] - 0.5 * correction])
+        shear_force = np.insert(shear_force, length, [shear_force[-1] + 0.5 * correction])
+        element.shear_force = shear_force

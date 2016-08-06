@@ -320,6 +320,7 @@ class SystemElements:
         # determining the node results in post processing class
         self.post_processor.node_results()
         self.post_processor.reaction_forces()
+        self.post_processor.element_results()
 
         # check the values in the displacement vector for extreme values, indicating a flawed calculation
         for value in np.nditer(self.system_displacement_vector):
