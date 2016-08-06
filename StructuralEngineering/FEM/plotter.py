@@ -233,8 +233,9 @@ class Plotter:
 
     def plot_structure(self, plot_now=False, supports=True):
         """
-        :param plot_now: boolean if True, plt.figure will plot.
-        :return: -
+        :param plot_now: (boolean) if True, plt.figure will plot.
+        :param supports: (boolean) if True, supports are plotted.
+        :return:
         """
         self.__start_plot()
         max_x = 0
@@ -300,7 +301,6 @@ class Plotter:
 
     def normal_force(self):
         self.plot_structure()
-        self.one_fig.text(self.max_val * 0.1 - 2, self.max_val * 0.9, "NORMAL FORCE", fontsize=8)
 
         # determine max factor for scaling
         for el in self.system.elements:
@@ -328,8 +328,8 @@ class Plotter:
 
     def bending_moment(self):
         self.plot_structure()
-        self.one_fig.text(self.max_val * 0.1 - 2, self.max_val * 0.9, "BENDING MOMENT", fontsize=8)
         con = 20
+
         # determine max factor for scaling
         factor = 0
         for el in self.system.elements:
@@ -342,11 +342,13 @@ class Plotter:
                 el_factor = self.__set_factor(el.node_1.Ty, el.node_2.Ty)
             factor = el_factor if (el_factor > factor) else factor
 
+        # determine the axis values
         for el in self.system.elements:
             if math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and \
                     math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and el.q_load is None:
                 # If True there is no bending moment, so no need for plotting.
                 pass
+
             else:
                 axis_values = plot_values_bending_moment(el, factor, con)
                 self.plot_force(axis_values, abs(el.node_1.Ty), abs(el.node_2.Ty))
@@ -362,7 +364,6 @@ class Plotter:
 
     def shear_force(self):
         self.plot_structure()
-        self.one_fig.text(self.max_val * 0.1 - 2, self.max_val * 0.9, "SHEAR FORCE", fontsize=8)
         # determine max factor for scaling
         for el in self.system.elements:
             sol = plot_values_shear_force(el, factor=1)
@@ -528,46 +529,32 @@ def plot_values_bending_moment(element, factor, con):
     :param con: amount of x-values
     :return:
     """
-    # plot the bending moment
     x1 = element.point_1.x
     y1 = -element.point_1.z
     x2 = element.point_2.x
     y2 = -element.point_2.z
-    dx = x2 - x1
 
-    if math.isclose(element.alpha, 0.5 * math.pi, rel_tol=1e-4) or \
-            math.isclose(element.alpha, 1.5 * math.pi, rel_tol=1e-4):
-        # point 1 is bottom
-        x_1 = x1 + element.node_1.Ty * math.cos(0.5 * math.pi + element.alpha) * factor
-        y_1 = y1 + element.node_1.Ty * math.sin(0.5 * math.pi + element.alpha) * factor
-        x_2 = x2 - element.node_2.Ty * math.cos(0.5 * math.pi + element.alpha) * factor
-        y_2 = y2 - element.node_2.Ty * math.sin(0.5 * math.pi + element.alpha) * factor
+    # Determine forces for horizontal element ai = 0
+    T_left = element.node_1.Ty
+    T_right = -element.node_2.Ty
 
-    else:
-        if dx > 0:  # point 1 = left and point 2 is right
-            # With a negative moment (at support), left is positive and right is negative
-            # node 1 is left, node 2 is right
-            x_1 = x1 + element.node_1.Ty * math.cos(0.5 * math.pi + element.alpha) * factor
-            y_1 = y1 + element.node_1.Ty * math.sin(0.5 * math.pi + element.alpha) * factor
-            x_2 = x2 - element.node_2.Ty * math.cos(0.5 * math.pi + element.alpha) * factor
-            y_2 = y2 - element.node_2.Ty * math.sin(0.5 * math.pi + element.alpha) * factor
-        else:
-            # node 1 is right, node 2 is left
-            x_1 = x1 - element.node_1.Ty * math.cos(0.5 * math.pi + element.alpha) * factor
-            y_1 = y1 - element.node_1.Ty * math.sin(0.5 * math.pi + element.alpha) * factor
-            x_2 = x2 + element.node_2.Ty * math.cos(0.5 * math.pi + element.alpha) * factor
-            y_2 = y2 + element.node_2.Ty * math.sin(0.5 * math.pi + element.alpha) * factor
+    # apply angle ai
+    x1 += T_left * math.sin(-element.alpha) * factor
+    y1 += T_left * math.cos(-element.alpha) * factor
+    x2 += T_right * math.sin(-element.alpha) * factor
+    y2 += T_right * math.cos(-element.alpha) * factor
 
     x_val = np.linspace(0, 1, con)
     y_val = np.empty(con)
-    dx = x_2 - x_1
-    dy = y_2 - y_1
-    count = 0
+    dx = x2 - x1
+    dy = y2 - y1
+
 
     # determine moment for 0 < x < length of the element
+    count = 0
     for i in x_val:
-        x_val[count] = x_1 + i * dx
-        y_val[count] = y_1 + i * dy
+        x_val[count] = x1 + i * dx
+        y_val[count] = y1 + i * dy
 
         if element.q_load:
             x = i * element.l
@@ -577,13 +564,14 @@ def plot_values_bending_moment(element, factor, con):
             y_val[count] += math.cos(-element.alpha) * q_part * factor
         count += 1
 
-    x_val = np.append(x_val, x2)
-    y_val = np.append(y_val, y2)
-    x_val = np.insert(x_val, 0, x1)
-    y_val = np.insert(y_val, 0, y1)
+    x_val = np.append(x_val, element.point_2.x)
+    y_val = np.append(y_val, -element.point_2.z)
+    x_val = np.insert(x_val, 0, element.point_1.x)
+    y_val = np.insert(y_val, 0, -element.point_1.z)
 
     if element.q_load:
         sagging_moment = (-element.node_1.Ty + element.node_2.Ty) * 0.5 + 0.125 * element.q_load * element.l ** 2
         return x_val, y_val, sagging_moment
     else:
         return x_val, y_val
+

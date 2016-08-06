@@ -117,8 +117,11 @@ class SystemElements:
                 ai = 1.5 * math.pi
             else:
                 ai = 0.5 * math.pi
-        elif math.isclose(delta_z, 0, rel_tol=1e-5, abs_tol=1e-9): # element is horizontal
-            ai = 0
+        elif math.isclose(delta_z, 0, rel_tol=1e-5, abs_tol=1e-9):  # element is horizontal
+            if delta_x > 0:
+                ai = 0
+            else:
+                ai = math.pi
         elif delta_x > 0 and delta_z > 0:  # quadrant 1 of unity circle
             ai = math.atan(abs(delta_z) / abs(delta_x))
         elif delta_x < 0 < delta_z:  # quadrant 2 of unity circle
@@ -502,3 +505,4 @@ class SystemElements:
             else:
                 result_list.append((obj.ID, obj.Fx, obj.Fz, obj.Ty, obj.ux, obj.uz, obj.phi_y))
         return result_list
+
