@@ -42,6 +42,8 @@ class Element:
         self.N = None
         self.bending_moment = None
         self.shear_force = None
+        self.deflection = None
+        self.max_deflection = None
 
     def determine_force_vector(self):
         self.element_force_vector = np.dot(self.stiffness_matrix, self.element_displacement_vector)

@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 from StructuralEngineering.FEM.node import Node
-from StructuralEngineering.basic import is_moving_towards
+from StructuralEngineering.basic import is_moving_towards, find_nearest
 
 
 class SystemLevel:
@@ -31,10 +31,12 @@ class SystemLevel:
                 elif el.node_2.ID == node.ID:
                     self.system.node_objects[count] -= el.node_2
 
-            # The displacements are the same direction, therefore the -1 multiplication
-            self.system.node_objects[count].ux *= -1
-            self.system.node_objects[count].uz *= -1
-            self.system.node_objects[count].phi_y *= -1
+                # The displacements are not summarized. Therefore the displacements are set for every node 1.
+                # In order to ensure that every node is overwrote.
+                if el.node_1.ID == node.ID:
+                    self.system.node_objects[count].ux = el.node_1.ux
+                    self.system.node_objects[count].uz = el.node_1.uz
+                    self.system.node_objects[count].phi_y = el.node_1.phi_y
             count += 1
 
     def reaction_forces(self):
@@ -69,8 +71,10 @@ class SystemLevel:
         Determines the element results for al elements in the system on element level.
         """
         for el in self.system.elements:
-            self.post_el.determine_bending_moment(el, 10)
-            self.post_el.determine_shear_force(el)
+            con = 100
+            self.post_el.determine_bending_moment(el, con)
+            self.post_el.determine_shear_force(el, con)
+            self.post_el.determine_displacements(el, el.bending_moment, con)
 
 
 class ElementLevel:
@@ -137,18 +141,54 @@ class ElementLevel:
         element.bending_moment = m_val
 
     @staticmethod
-    def determine_shear_force(element):
+    def determine_shear_force(element, con):
         """
-        Determines the shear force by differentiating the bending moment
+        Determines the shear force by differentiating the bending moment.
         :param element: (object) of the Element class
         """
         dV = np.diff(element.bending_moment)
-        length = len(element.bending_moment)
-        dx = element.l / (length - 1)
+        dx = element.l / (con - 1)
         shear_force = dV / dx
 
         # Due to differentiation the first and the last values must be corrected.
         correction = shear_force[1] - shear_force[0]
         shear_force = np.insert(shear_force, 0, [shear_force[0] - 0.5 * correction])
-        shear_force = np.insert(shear_force, length, [shear_force[-1] + 0.5 * correction])
+        shear_force = np.insert(shear_force, con, [shear_force[-1] + 0.5 * correction])
         element.shear_force = shear_force
+
+    @staticmethod
+    def determine_displacements(element, moment, con):
+        """
+        Determines the displacement by integrating the bending moment.
+        :param element: (object) of the Element class
+
+        deflection w =
+        EI * (d^4/dx^4 * w(x)) = q
+
+        solution of differential equation:
+
+        w = 1/24 qx^4 + 1/6 c1x^3 + 1/2 c2 x^2 + c3x + c4  ---> c4 = w(0)
+        phi = -1/6 qx^3/EI - 1/2c1x^2 -c2x -c3  ---> c3 = -phi
+        M = EI(-1/2qx^2/EI -c1x -c2)  ---> c2 = -M/EI
+        V = EI(-qx/EI -c1)  ---> c1 = -V/EI
+        """
+
+        c1 = -element.shear_force[0] / element.EI
+        c2 = -element.bending_moment[0] / element.EI
+        c3 = element.node_1.phi_y   # TEST IF THE +/- SIGNS ARE CORRECT
+        c4 = (element.node_1.ux * math.sin(element.alpha) + element.node_1.uz * math.cos(element.alpha))
+        w = np.empty(con)
+        dx = element.l / con
+
+        for i in range(con):
+            x = (i + 1) * dx
+            w[i] = 1 / 6 * c1 * x**3 + 0.5 * c2 * x**2 + c3 * x + c4
+            if element.q_load:
+                w[i] += 1 / 24 * -element.q_load * x**4 / element.EI
+        element.deflection = -w
+
+        # max deflection
+        element.max_deflection = max(abs(min(w)), abs(max(w)))
+
+
+

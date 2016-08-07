@@ -2,6 +2,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from StructuralEngineering.basic import find_nearest
 
 
 class Plotter:
@@ -286,18 +287,25 @@ class Plotter:
             self.__point_load_patch(max_val)
             plt.show()
 
-    def plot_force(self, axis_values, force_1, force_2):
+    def _add_node_values(self, x_val, y_val, value_1, value_2, digits):
+        # add value to plot
+        self.one_fig.text(x_val[1] - 2 / self.max_val, y_val[1] + 2 / self.max_val, "%s" % round(value_1, digits),
+                          fontsize=9, ha='center', va='center', )
+        self.one_fig.text(x_val[-2] - 2 / self.max_val, y_val[-2] + 2 / self.max_val, "%s" % round(value_2, digits),
+                          fontsize=9, ha='center', va='center', )
 
-            # plot force
-            x_val = axis_values[0]
-            y_val = axis_values[1]
-            self.one_fig.plot(x_val, y_val, color='b')
+    def _add_element_values(self, x_val, y_val, value, index, digits=1):
+        self.one_fig.text(x_val[index], y_val[index], "%s" % round(value, digits),
+                          fontsize=9, ha='center', va='center', )
 
-            # add value to plot
-            self.one_fig.text(x_val[1] - 2 / self.max_val, y_val[1] + 2 / self.max_val, "%s" % round(force_1, 1),
-                              fontsize=9, ha='center', va='center',)
-            self.one_fig.text(x_val[-2] - 2 / self.max_val, y_val[-2] + 2 / self.max_val, "%s" % round(force_2, 1),
-                              fontsize=9, ha='center', va='center',)
+    def plot_result(self, axis_values, force_1=None, force_2=None, digits=1, node_results=True, marker=None):
+        # plot force
+        x_val = axis_values[0]
+        y_val = axis_values[1]
+        self.one_fig.plot(x_val, y_val, color='b', marker=marker, markevery=x_val.size)
+
+        if node_results:
+            self._add_node_values(x_val, y_val, force_1, force_2, digits)
 
     def normal_force(self):
         self.max_force = 0
@@ -312,7 +320,7 @@ class Plotter:
                 pass
             else:
                 axis_values = plot_values_normal_force(el, factor)
-                self.plot_force(axis_values, el.N, el.N)
+                self.plot_result(axis_values, el.N, el.N)
 
                 point = (el.point_2 - el.point_1) / 2 + el.point_1
                 if el.N < 0:
@@ -352,7 +360,7 @@ class Plotter:
 
             else:
                 axis_values = plot_values_bending_moment(el, factor, con)
-                self.plot_force(axis_values, abs(el.node_1.Ty), abs(el.node_2.Ty))
+                self.plot_result(axis_values, abs(el.node_1.Ty), abs(el.node_2.Ty))
 
                 if el.q_load:
                     index = con // 2
@@ -382,12 +390,11 @@ class Plotter:
                 axis_values = plot_values_shear_force(el, factor)
                 shear_1 = axis_values[-2]
                 shear_2 = axis_values[-1]
-                self.plot_force(axis_values, shear_1, shear_2)
+                self.plot_result(axis_values, shear_1, shear_2)
         plt.show()
 
     def reaction_force(self):
         self.plot_structure(supports=False)
-        self.one_fig.text(self.max_val * 0.1 - 2, self.max_val * 0.9, "REACTION FORCE", fontsize=8)
 
         h = 0.2 * self.max_val
         max_force = 0
@@ -437,6 +444,28 @@ class Plotter:
 
                 self.one_fig.text(node.point.x + h * 0.2, -node.point.z + h * 0.2, "T=%d" % node.Ty, color='k',
                                   fontsize=9, zorder=10)
+        plt.show()
+
+    def displacements(self):
+        self.plot_structure()
+        self.max_force = 0
+
+        # determine max factor for scaling
+        for el in self.system.elements:
+            u_node = max(abs(el.node_1.ux), abs(el.node_1.uz))
+            factor = self.__set_factor(el.max_deflection, u_node)
+
+        for el in self.system.elements:
+            axis_values = plot_values_deflection(el, factor)
+            self.plot_result(axis_values, node_results=False, marker='s')
+
+            # index of the max deflection
+            if max(abs(el.deflection)) > min(abs(el.deflection)):
+                index = el.deflection.argmax()
+            else:
+                index = el.deflection.argmin()
+            self._add_element_values(axis_values[0], axis_values[1], el.deflection[index], index, 3)
+
         plt.show()
 
 """
@@ -538,3 +567,28 @@ def plot_values_bending_moment(element, factor, con):
     else:
         return x_val, y_val
 
+
+def plot_values_deflection(element, factor):
+    ux1 = element.node_1.ux * factor
+    uz1 = -element.node_1.uz * factor
+
+    x1 = element.point_1.x + ux1
+    y1 = -element.point_1.z + uz1
+    x2 = element.point_2.x + ux1
+    y2 = -element.point_2.z + uz1
+
+    x_val = np.linspace(0, 1, len(element.deflection))
+    y_val = np.empty(len(element.deflection))
+    dx = x2 - x1
+    dy = y2 - y1
+
+    count = 0
+    for i in x_val:
+        x_val[count] = x1 + i * dx
+        x_val[count] += (element.deflection[count] * math.sin(element.alpha) -
+                         element.deflection[0] * math.sin(element.alpha)) * factor
+        y_val[count] = y1 + i * dy
+        y_val[count] -= (element.deflection[count] * math.cos(element.alpha) +
+                         element.deflection[0] * math.cos(element.alpha)) * factor
+        count += 1
+    return x_val, y_val

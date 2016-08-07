@@ -62,3 +62,16 @@ def is_moving_towards(test_node, node_position, displacement):
     """
     to_node = test_node - node_position
     return np.dot(to_node, displacement) > 0
+
+
+def find_nearest(array, value):
+    """
+    :param array: (numpy array object)
+    :param value: (float) value searched for
+    :return: (tuple) nearest value, index
+    """
+    # Subtract the value of the value's in the array. Make the values absolute.
+    # The lowest value is the nearest.
+    index = (np.abs(array-value)).argmin()
+    return array[index], index
+

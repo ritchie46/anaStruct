@@ -483,6 +483,9 @@ class SystemElements:
     def show_reaction_force(self):
         self.plotter.reaction_force()
 
+    def show_displacement(self):
+        self.plotter.displacements()
+
     def get_node_results_system(self, nodeID=0):
         """
         :param nodeID: (integer) representing the node's ID. If integer = 0, the results of all nodes are returned
@@ -506,3 +509,4 @@ class SystemElements:
             else:
                 result_list.append((obj.ID, obj.Fx, obj.Fz, obj.Ty, obj.ux, obj.uz, obj.phi_y))
         return result_list
+
