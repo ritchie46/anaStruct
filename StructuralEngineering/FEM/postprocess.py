@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 from StructuralEngineering.FEM.node import Node
-from StructuralEngineering.basic import is_moving_towards, find_nearest
+from StructuralEngineering.basic import is_moving_towards
 
 
 class SystemLevel:
@@ -175,7 +175,7 @@ class ElementLevel:
 
         c1 = -element.shear_force[0] / element.EI
         c2 = -element.bending_moment[0] / element.EI
-        c3 = element.node_1.phi_y   # TEST IF THE +/- SIGNS ARE CORRECT
+        c3 = element.node_1.phi_y
         c4 = (element.node_1.ux * math.sin(element.alpha) + element.node_1.uz * math.cos(element.alpha))
         w = np.empty(con)
         dx = element.l / con

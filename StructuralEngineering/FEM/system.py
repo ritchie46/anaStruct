@@ -509,4 +509,3 @@ class SystemElements:
             else:
                 result_list.append((obj.ID, obj.Fx, obj.Fz, obj.Ty, obj.ux, obj.uz, obj.phi_y))
         return result_list
-

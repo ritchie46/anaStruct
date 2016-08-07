@@ -338,7 +338,7 @@ class Plotter:
     def bending_moment(self):
         self.plot_structure()
         self.max_force = 0
-        con = 20
+        con = len(self.system.elements[0].bending_moment)
 
         # determine max factor for scaling
         factor = 0
@@ -363,11 +363,12 @@ class Plotter:
                 self.plot_result(axis_values, abs(el.node_1.Ty), abs(el.node_2.Ty))
 
                 if el.q_load:
-                    index = con // 2
+                    m_sag = min(el.bending_moment)
+                    index = find_nearest(el.bending_moment, m_sag)[1]
                     offset = -self.max_val * 0.05
                     x = axis_values[0][index] + math.sin(-el.alpha) * offset
                     y = axis_values[1][index] + math.cos(-el.alpha) * offset
-                    self.one_fig.text(x, y, "%s" % round(abs(axis_values[2]), 1),
+                    self.one_fig.text(x, y, "%s" % round(m_sag, 1),
                                       fontsize=9)
         plt.show()
 
@@ -494,8 +495,8 @@ def plot_values_shear_force(element, factor=1):
     x_2 = x2 + shear_2 * math.sin(-element.alpha) * factor
     y_2 = y2 + shear_2 * math.cos(-element.alpha) * factor
 
-    x_val = [x1, x_1, x_2, x2]
-    y_val = [y1, y_1, y_2, y2]
+    x_val = np.array([x1, x_1, x_2, x2])
+    y_val = np.array([y1, y_1, y_2, y2])
     return x_val, y_val, shear_1, shear_2
 
 
@@ -561,11 +562,7 @@ def plot_values_bending_moment(element, factor, con):
     x_val = np.insert(x_val, 0, element.point_1.x)
     y_val = np.insert(y_val, 0, -element.point_1.z)
 
-    if element.q_load:
-        sagging_moment = (-element.node_1.Ty + element.node_2.Ty) * 0.5 + 0.125 * element.q_load * element.l ** 2
-        return x_val, y_val, sagging_moment
-    else:
-        return x_val, y_val
+    return x_val, y_val
 
 
 def plot_values_deflection(element, factor):
