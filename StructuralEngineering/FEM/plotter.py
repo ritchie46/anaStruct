@@ -302,7 +302,7 @@ class Plotter:
         # plot force
         x_val = axis_values[0]
         y_val = axis_values[1]
-        self.one_fig.plot(x_val, y_val, color='b', marker=marker, markevery=x_val.size)
+        self.one_fig.plot(x_val, y_val, color='b', marker=marker, markevery=1e9)
 
         if node_results:
             self._add_node_values(x_val, y_val, force_1, force_2, digits)
