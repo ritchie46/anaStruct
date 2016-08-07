@@ -6,11 +6,11 @@ $ python setup.py install
 ```
 
 ## 2D FEM Frames and Trusses
-![](https://github.com/ritchie46/structural_engineering/blob/wiki/wiki/example_3/structure_3.png?raw=true =125x)
+![](images/random/structure.png)
 
 ### See the wiki for some examples.
 
-* [Read the docs!](https://github.com/ritchie46/structural_engineering/wiki)
+* __[Read the docs!](https://github.com/ritchie46/structural_engineering/wiki)__
 
 
 ## Concrete M-kappa diagram
