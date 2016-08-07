@@ -6,7 +6,7 @@ $ python setup.py install
 ```
 
 ## 2D FEM Frames and Trusses
-![](images/random/structure.png)
+![](images/rand/structure.png)
 
 ### See the wiki for some examples.
 
