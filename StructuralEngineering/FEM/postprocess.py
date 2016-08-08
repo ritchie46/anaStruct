@@ -37,6 +37,10 @@ class SystemLevel:
                     self.system.node_objects[count].ux = el.node_1.ux
                     self.system.node_objects[count].uz = el.node_1.uz
                     self.system.node_objects[count].phi_y = el.node_1.phi_y
+                if el.node_2.ID == node.ID:
+                    self.system.node_objects[count].ux = el.node_2.ux
+                    self.system.node_objects[count].uz = el.node_2.uz
+                    self.system.node_objects[count].phi_y = el.node_2.phi_y
             count += 1
 
     def reaction_forces(self):
@@ -74,7 +78,7 @@ class SystemLevel:
             con = 100
             self.post_el.determine_bending_moment(el, con)
             self.post_el.determine_shear_force(el, con)
-            self.post_el.determine_displacements(el, el.bending_moment, con)
+            self.post_el.determine_displacements(el, con)
 
 
 class ElementLevel:
@@ -157,7 +161,7 @@ class ElementLevel:
         element.shear_force = shear_force
 
     @staticmethod
-    def determine_displacements(element, moment, con):
+    def determine_displacements(element, con):
         """
         Determines the displacement by integrating the bending moment.
         :param element: (object) of the Element class
@@ -172,9 +176,13 @@ class ElementLevel:
         M = EI(-1/2qx^2/EI -c1x -c2)  ---> c2 = -M/EI
         V = EI(-qx/EI -c1)  ---> c1 = -V/EI
         """
+        if element.type == 'truss':
+            EI = 1e16
+        else:
+            EI = element.EI
 
-        c1 = -element.shear_force[0] / element.EI
-        c2 = -element.bending_moment[0] / element.EI
+        c1 = -element.shear_force[0] / EI
+        c2 = -element.bending_moment[0] / EI
         c3 = element.node_1.phi_y
         c4 = (element.node_1.ux * math.sin(element.alpha) + element.node_1.uz * math.cos(element.alpha))
         w = np.empty(con)
@@ -184,7 +192,7 @@ class ElementLevel:
             x = (i + 1) * dx
             w[i] = 1 / 6 * c1 * x**3 + 0.5 * c2 * x**2 + c3 * x + c4
             if element.q_load:
-                w[i] += 1 / 24 * -element.q_load * x**4 / element.EI
+                w[i] += 1 / 24 * -element.q_load * x**4 / EI
         element.deflection = -w
 
         # max deflection

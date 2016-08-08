@@ -21,6 +21,7 @@ class Element:
         :param point_2: point object
         """
         self.ID = ID
+        self.type = None
         self.EA = EA
         self.EI = EI
         self.l = l
