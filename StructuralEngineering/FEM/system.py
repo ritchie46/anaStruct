@@ -43,9 +43,9 @@ class SystemElements:
         self.reaction_forces = []  # node objects
 
     def add_truss_element(self, location_list, EA):
-        self.add_element(location_list, EA, 1e-14, 'truss')
+        self.add_element(location_list, EA, 1e-14, type='truss')
 
-    def add_element(self, location_list, EA, EI, *args):
+    def add_element(self, location_list, EA, EI, **kwargs):
         """
         :param location_list: [[x, z], [x, z]]
         :param EA: EA
@@ -144,9 +144,8 @@ class SystemElements:
         element.node_1 = Node(nodeID1)
         element.node_2 = Node(nodeID2)
 
-        if args:
-            if args[0] == 'truss':
-                element.type = 'truss'
+        element.type = kwargs.get('type', 'general')  # searches key 'type', otherwise set default value 'general'
+
         self.elements.append(element)
 
         """
