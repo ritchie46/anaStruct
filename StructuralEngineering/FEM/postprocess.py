@@ -184,7 +184,7 @@ class ElementLevel:
         c1 = -element.shear_force[0] / EI
         c2 = -element.bending_moment[0] / EI
         c3 = element.node_1.phi_y
-        c4 = (element.node_1.ux * math.sin(element.alpha) + element.node_1.uz * math.cos(element.alpha))
+        c4 = 0
         w = np.empty(con)
         dx = element.l / con
 
@@ -197,6 +197,19 @@ class ElementLevel:
 
         # max deflection
         element.max_deflection = max(abs(min(w)), abs(max(w)))
+
+        """
+        Extension
+        """
+
+        u = element.N / element.EA * element.l
+        du = u / con
+
+        element.extension = np.empty(con)
+
+        for i in range(con):
+            u = du * (i + 1)
+            element.extension[i] = u
 
 
 

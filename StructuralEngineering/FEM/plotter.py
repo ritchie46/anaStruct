@@ -571,21 +571,27 @@ def plot_values_deflection(element, factor):
 
     x1 = element.point_1.x + ux1
     y1 = -element.point_1.z + uz1
-    x2 = element.point_2.x + ux1
-    y2 = -element.point_2.z + uz1
 
-    x_val = np.linspace(0, 1, len(element.deflection))
-    y_val = np.empty(len(element.deflection))
-    dx = x2 - x1
-    dy = y2 - y1
+    n_val = len(element.deflection)
+    x_val = np.empty(n_val)
+    y_val = np.empty(n_val)
 
-    count = 0
-    for i in x_val:
-        x_val[count] = x1 + i * dx
-        x_val[count] += (element.deflection[count] * math.sin(element.alpha) -
-                         element.deflection[0] * math.sin(element.alpha)) * factor
-        y_val[count] = y1 + i * dy
-        y_val[count] -= (element.deflection[count] * math.cos(element.alpha) +
-                         element.deflection[0] * math.cos(element.alpha)) * factor
-        count += 1
+    dl = element.l / n_val
+
+    for i in range(n_val):
+        dx = (element.deflection[i] * math.sin(element.alpha)
+              + element.extension[i] * math.cos(element.alpha)) * factor
+        dy = (element.deflection[i] * -math.cos(element.alpha)
+              + element.extension[i] * math.sin(element.alpha)) * factor
+
+        x = (i + 1) * dl * math.cos(element.alpha)
+        y = (i + 1) * dl * math.sin(element.alpha)
+
+        x_val[i] = x1 + x + dx
+        y_val[i] = y1 + y + dy
+
+    x_val = np.insert(x_val, 0, x1)
+    y_val = np.insert(y_val, 0, y1)
+
     return x_val, y_val
+

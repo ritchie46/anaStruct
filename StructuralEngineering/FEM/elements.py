@@ -44,6 +44,7 @@ class Element:
         self.bending_moment = None
         self.shear_force = None
         self.deflection = None
+        self.extension = None
         self.max_deflection = None
 
     def determine_force_vector(self):
