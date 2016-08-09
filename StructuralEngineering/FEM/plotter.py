@@ -454,18 +454,22 @@ class Plotter:
         # determine max factor for scaling
         for el in self.system.elements:
             u_node = max(abs(el.node_1.ux), abs(el.node_1.uz))
-            factor = self.__set_factor(el.max_deflection, u_node)
+            if el.type == "general":
+                factor = self.__set_factor(el.max_deflection, u_node)
+            else:  # element is truss
+                factor = self.__set_factor(u_node, 0)
 
         for el in self.system.elements:
             axis_values = plot_values_deflection(el, factor)
             self.plot_result(axis_values, node_results=False, marker='s')
 
-            # index of the max deflection
-            if max(abs(el.deflection)) > min(abs(el.deflection)):
-                index = el.deflection.argmax()
-            else:
-                index = el.deflection.argmin()
-            self._add_element_values(axis_values[0], axis_values[1], el.deflection[index], index, 3)
+            if el.type == "general":
+                # index of the max deflection
+                if max(abs(el.deflection)) > min(abs(el.deflection)):
+                    index = el.deflection.argmax()
+                else:
+                    index = el.deflection.argmin()
+                self._add_element_values(axis_values[0], axis_values[1], el.deflection[index], index, 3)
 
         plt.show()
 
@@ -568,30 +572,39 @@ def plot_values_bending_moment(element, factor, con):
 def plot_values_deflection(element, factor):
     ux1 = element.node_1.ux * factor
     uz1 = -element.node_1.uz * factor
+    ux2 = element.node_2.ux * factor
+    uz2 = -element.node_2.uz * factor
 
     x1 = element.point_1.x + ux1
     y1 = -element.point_1.z + uz1
 
-    n_val = len(element.deflection)
-    x_val = np.empty(n_val)
-    y_val = np.empty(n_val)
+    if element.type == "general":
+        n_val = len(element.deflection)
+        x_val = np.empty(n_val)
+        y_val = np.empty(n_val)
 
-    dl = element.l / n_val
+        dl = element.l / n_val
 
-    for i in range(n_val):
-        dx = (element.deflection[i] * math.sin(element.alpha)
-              + element.extension[i] * math.cos(element.alpha)) * factor
-        dy = (element.deflection[i] * -math.cos(element.alpha)
-              + element.extension[i] * math.sin(element.alpha)) * factor
+        for i in range(n_val):
+            dx = (element.deflection[i] * math.sin(element.alpha)
+                  + element.extension[i] * math.cos(element.alpha)) * factor
+            dy = (element.deflection[i] * -math.cos(element.alpha)
+                  + element.extension[i] * math.sin(element.alpha)) * factor
 
-        x = (i + 1) * dl * math.cos(element.alpha)
-        y = (i + 1) * dl * math.sin(element.alpha)
+            x = (i + 1) * dl * math.cos(element.alpha)
+            y = (i + 1) * dl * math.sin(element.alpha)
 
-        x_val[i] = x1 + x + dx
-        y_val[i] = y1 + y + dy
+            x_val[i] = x1 + x + dx
+            y_val[i] = y1 + y + dy
 
-    x_val = np.insert(x_val, 0, x1)
-    y_val = np.insert(y_val, 0, y1)
+        x_val = np.insert(x_val, 0, x1)
+        y_val = np.insert(y_val, 0, y1)
+
+    else:  # truss element has no bending
+        x2 = element.point_2.x + ux2
+        y2 = -element.point_2.z + uz2
+        x_val = np.array([x1, x2])
+        y_val = np.array([y1, y2])
 
     return x_val, y_val
 

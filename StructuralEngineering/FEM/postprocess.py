@@ -176,27 +176,23 @@ class ElementLevel:
         M = EI(-1/2qx^2/EI -c1x -c2)  ---> c2 = -M/EI
         V = EI(-qx/EI -c1)  ---> c1 = -V/EI
         """
-        if element.type == 'truss':
-            EI = 1e16
-        else:
-            EI = element.EI
+        if element.type == 'general':
+            c1 = -element.shear_force[0] / element.EI
+            c2 = -element.bending_moment[0] / element.EI
+            c3 = element.node_1.phi_y
+            c4 = 0
+            w = np.empty(con)
+            dx = element.l / con
 
-        c1 = -element.shear_force[0] / EI
-        c2 = -element.bending_moment[0] / EI
-        c3 = element.node_1.phi_y
-        c4 = 0
-        w = np.empty(con)
-        dx = element.l / con
+            for i in range(con):
+                x = (i + 1) * dx
+                w[i] = 1 / 6 * c1 * x**3 + 0.5 * c2 * x**2 + c3 * x + c4
+                if element.q_load:
+                    w[i] += 1 / 24 * -element.q_load * x**4 / element.EI
+            element.deflection = -w
 
-        for i in range(con):
-            x = (i + 1) * dx
-            w[i] = 1 / 6 * c1 * x**3 + 0.5 * c2 * x**2 + c3 * x + c4
-            if element.q_load:
-                w[i] += 1 / 24 * -element.q_load * x**4 / EI
-        element.deflection = -w
-
-        # max deflection
-        element.max_deflection = max(abs(min(w)), abs(max(w)))
+            # max deflection
+            element.max_deflection = max(abs(min(w)), abs(max(w)))
 
         """
         Extension
