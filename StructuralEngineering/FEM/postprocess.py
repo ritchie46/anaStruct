@@ -31,6 +31,13 @@ class SystemLevel:
                 elif el.node_2.ID == node.ID:
                     self.system.node_objects[count] -= el.node_2
 
+            # Loads that are applied on the node of the support. Moment at a hinged support may not lead to reaction
+            # moment
+            for F_tuple in self.system.loads_moment:
+                if F_tuple[0] == node.ID:
+                    self.system.node_objects[count].Ty += F_tuple[2]
+                    print(self.system.node_objects[count].Ty)
+
                 # The displacements are not summarized. Therefore the displacements are set for every node 1.
                 # In order to ensure that every node is overwrote.
                 if el.node_1.ID == node.ID:

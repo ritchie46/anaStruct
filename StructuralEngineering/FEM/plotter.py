@@ -232,6 +232,22 @@ class Plotter:
                                        zorder=11)
                     self.one_fig.text(x, y, "F=%d" % F, color='k', fontsize=9, zorder=10)
 
+    def __moment_load_patch(self, max_val):
+
+        h = 0.2 * max_val
+
+        for F_tuple in self.system.loads_moment:
+            for node in self.system.node_objects:
+                if node.ID == F_tuple[0]:
+                    if F_tuple[2] > 0:
+                        self.one_fig.plot(node.point.x, -node.point.z, marker=r'$\circlearrowleft$', ms=25,
+                                      color='orange')
+                    else:
+                        self.one_fig.plot(node.point.x, -node.point.z, marker=r'$\circlearrowright$', ms=25,
+                                      color='orange')
+                    self.one_fig.text(node.point.x + h * 0.2, -node.point.z + h * 0.2, "T=%d" % F_tuple[2], color='k',
+                                      fontsize=9, zorder=10)
+
     def plot_structure(self, plot_now=False, supports=True):
         """
         :param plot_now: (boolean) if True, plt.figure will plot.
@@ -285,6 +301,7 @@ class Plotter:
             # add_loads
             self.__q_load_patch(max_val)
             self.__point_load_patch(max_val)
+            self.__moment_load_patch(max_val)
             plt.show()
 
     def _add_node_values(self, x_val, y_val, value_1, value_2, digits):

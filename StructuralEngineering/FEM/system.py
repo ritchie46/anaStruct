@@ -1,7 +1,5 @@
-import copy
 import math
 import numpy as np
-
 from StructuralEngineering.FEM.postprocess import SystemLevel as post_sl
 from StructuralEngineering.FEM.elements import Element
 from StructuralEngineering.FEM.node import Node
@@ -39,6 +37,7 @@ class SystemElements:
         # keep track of the loads
         self.loads_point = []  # node ids with a point load
         self.loads_q = []  # element ids with a q-load
+        self.loads_moment = []
         # results
         self.reaction_forces = []  # node objects
 
@@ -234,7 +233,7 @@ class SystemElements:
 
     def set_force_vector(self, force_list):
         """
-        :param force_list: list containing a tuples with the
+        :param force_list: list containing tuples with the
         1. number of the node,
         2. the number of the direction (1 = x, 2 = z, 3 = y)
         3. the force
@@ -462,7 +461,6 @@ class SystemElements:
         return self.system_force_vector
 
     def point_load(self, Fx=0, Fz=0, nodeID=None):
-
         self.loads_point.append((nodeID, Fx, Fz))
 
         if nodeID is not None:
@@ -470,6 +468,13 @@ class SystemElements:
             self.set_force_vector([(nodeID, 1, Fx), (nodeID, 2, Fz)])
 
         return self.system_force_vector
+
+    def moment_load(self, Ty=0, nodeID=None):
+        self.loads_moment.append((nodeID, 3, Ty))
+
+        if nodeID is not None:
+            # system force vector.
+            self.set_force_vector([(nodeID, 3, Ty)])
 
     def show_structure(self):
         self.plotter.plot_structure(plot_now=True)

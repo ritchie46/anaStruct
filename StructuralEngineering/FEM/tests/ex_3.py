@@ -1,4 +1,3 @@
-import math
 from StructuralEngineering.FEM import system as se
 
 
