@@ -518,3 +518,75 @@ class SystemElements:
                 result_list.append((obj.ID, obj.Fx, obj.Fz, obj.Ty, obj.ux, obj.uz, obj.phi_y))
         return result_list
 
+    def get_element_results(self, elementID=0):
+        """
+        :param elementID: (int) representing the elements ID. If elementID = 0 the results of all elements are returned.
+        :return:
+                if nodeID == 0: (list)
+                    Returns a list containing tuples with the results
+                if nodeID > 0: (tuple)
+                    indexes:
+                    0: elements ID
+                    1: length of the element
+                    2: elements angle with the global x-axis is radians
+                    3: extension
+                    4: normal force
+                    5: absolute value of maximum deflection
+                    6: absolute value of maximum bending moment
+                    7: absolute value of maximum shear force
+                    8: q-load applying on the element
+        """
+        result_list = []
+        for el in self.elements:
+            if elementID == el.ID:
+                if el.type == "truss":
+                    return (el.ID,
+                        el.l,
+                        el.alpha,
+                        el.extension[0],
+                        el.N,
+                        None,
+                        None,
+                        None,
+                        None
+                            )
+                else:
+                    return (el.ID,
+                            el.l,
+                            el.alpha,
+                            el.extension[0],
+                            el.N,
+                            max(abs(min(el.deflection)), abs(max(el.deflection))),
+                            max(abs(min(el.bending_moment)), abs(max(el.bending_moment))),
+                            max(abs(min(el.shear_force)), abs(max(el.shear_force))),
+                            el.q_load
+                            )
+            else:
+                if el.type == "truss":
+                    result_list.append(
+                        (el.ID,
+                         el.l,
+                         el.alpha,
+                         el.extension[0],
+                         el.N,
+                         None,
+                         None,
+                         None,
+                         None
+                         )
+                    )
+
+                else:
+                    result_list.append((
+                        el.ID,
+                        el.l,
+                        el.alpha,
+                        el.extension[0],
+                        el.N,
+                        max(abs(min(el.deflection)), abs(max(el.deflection))),
+                        max(abs(min(el.bending_moment)), abs(max(el.bending_moment))),
+                        max(abs(min(el.shear_force)), abs(max(el.shear_force))),
+                        el.q_load
+                    )
+                    )
+        return result_list

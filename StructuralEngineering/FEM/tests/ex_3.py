@@ -16,6 +16,7 @@ def test():
     system.point_load(Fx=30, nodeID=2)
     system.q_load(q=10, elementID=2)
     system.solve()
+    print(system.get_element_results(elementID=0))
     system.show_structure()
     system.show_reaction_force()
     system.show_normal_force()
