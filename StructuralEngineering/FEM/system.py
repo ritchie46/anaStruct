@@ -128,7 +128,7 @@ class SystemElements:
         elif delta_x < 0 and delta_z < 0:  # quadrant 3 of unity circle
             ai = math.pi + math.atan(abs(delta_z) / abs(delta_x))
         elif delta_z < 0 < delta_x:  # quadrant 4 of unity circle
-            ai = 1.5 + math.pi + math.atan(abs(delta_x) / abs(delta_z))
+            ai = 1.5 * math.pi + math.atan(abs(delta_x) / abs(delta_z))
         else:
             raise ValueError("Can't determine the angle of the given element")
 
