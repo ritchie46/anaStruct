@@ -6,7 +6,6 @@ def test():
     system.add_element(location_list=[[0, 0], [5, 0]], EA=5e9, EI=8000)
     system.add_element(location_list=[[5, 0], [5, -5]], EA=5e9, EI=4000)
 
-    #system.q_load(elementID=2, q=2)
     system.moment_load(Ty=10, nodeID=3)
 
     system.add_support_hinged(nodeID=1)

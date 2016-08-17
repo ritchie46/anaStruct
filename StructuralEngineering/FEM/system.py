@@ -354,7 +354,7 @@ class SystemElements:
         # add the support to the support list for the plotter
         for obj in self.node_objects:
             if obj.ID == nodeID:
-                self.supports_roll.append(obj)
+                self.supports_roll.append((obj, direction))
                 break
 
     def add_support_fixed(self, nodeID):
@@ -590,3 +590,4 @@ class SystemElements:
                     )
                     )
         return result_list
+

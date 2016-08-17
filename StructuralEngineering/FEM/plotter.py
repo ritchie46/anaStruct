@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from StructuralEngineering.basic import find_nearest
@@ -62,12 +63,34 @@ class Plotter:
         :param max_val: max scale of the plot
         """
         radius = 0.03 * max_val
-        for node in self.system.supports_roll:
-            support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius),
-                                                    numVertices=3, radius=radius, color='r', zorder=9)
-            self.one_fig.add_patch(support_patch)
-            y = node.point.z - 2 * radius
-            self.one_fig.plot([node.point.x - radius, node.point.x + radius], [y, y], color='r')
+        for tpl in self.system.supports_roll:
+            node = tpl[0]
+            direction = tpl[1]
+
+            if direction == 2:  # horizontal roll
+                support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius),
+                                                        numVertices=3, radius=radius, color='r', zorder=9)
+                self.one_fig.add_patch(support_patch)
+                y = -node.point.z - 2 * radius
+                self.one_fig.plot([node.point.x - radius, node.point.x + radius], [y, y], color='r')
+            elif direction == 1:  # vertical roll
+                center = 0
+                x1 = center + math.cos(math.pi) * radius + node.point.x + radius
+                z1 = center + math.sin(math.pi) * radius - node.point.z
+                x2 = center + math.cos(math.radians(90)) * radius + node.point.x + radius
+                z2 = center + math.sin(math.radians(90)) * radius - node.point.z
+                x3 = center + math.cos(math.radians(270)) * radius + node.point.x + radius
+                z3 = center + math.sin(math.radians(270)) * radius - node.point.z
+
+                triangle = np.array([[x1, z1], [x2, z2], [x3, z3]])
+                # translate the support to the node
+
+                support_patch = mpatches.Polygon(triangle, color='r', zorder=9)
+                self.one_fig.add_patch(support_patch)
+
+                y = -node.point.z - radius
+                self.one_fig.plot([node.point.x + radius * 1.5, node.point.x + radius * 1.5], [y, y + 2 * radius],
+                                  color='r')
 
     def __rotating_spring_support_patch(self, max_val):
         """
