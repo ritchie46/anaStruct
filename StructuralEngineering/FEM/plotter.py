@@ -63,9 +63,10 @@ class Plotter:
         :param max_val: max scale of the plot
         """
         radius = 0.03 * max_val
-        for tpl in self.system.supports_roll:
-            node = tpl[0]
-            direction = tpl[1]
+        count = 0
+        for node in self.system.supports_roll:
+
+            direction = self.system.supports_roll_direction[count]
 
             if direction == 2:  # horizontal roll
                 support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius),
@@ -91,6 +92,7 @@ class Plotter:
                 y = -node.point.z - radius
                 self.one_fig.plot([node.point.x + radius * 1.5, node.point.x + radius * 1.5], [y, y + 2 * radius],
                                   color='r')
+            count += 1
 
     def __rotating_spring_support_patch(self, max_val):
         """

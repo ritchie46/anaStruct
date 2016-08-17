@@ -34,6 +34,7 @@ class SystemElements:
         self.supports_spring_x = []
         self.supports_spring_z = []
         self.supports_spring_y = []
+        self.supports_roll_direction = []
         # keep track of the loads
         self.loads_point = []  # node ids with a point load
         self.loads_q = []  # element ids with a q-load
@@ -354,7 +355,8 @@ class SystemElements:
         # add the support to the support list for the plotter
         for obj in self.node_objects:
             if obj.ID == nodeID:
-                self.supports_roll.append((obj, direction))
+                self.supports_roll_direction.append(direction)
+                self.supports_roll.append(obj)
                 break
 
     def add_support_fixed(self, nodeID):

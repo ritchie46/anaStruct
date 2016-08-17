@@ -58,8 +58,7 @@ class SystemLevel:
             supports.append(node.ID)
         for node in self.system.supports_hinged:
             supports.append(node.ID)
-        for tpl in self.system.supports_roll:
-            node = tpl[0]
+        for node in self.system.supports_roll:
             supports.append(node.ID)
         for node in self.system.supports_spring_x:
             supports.append(node.ID)
