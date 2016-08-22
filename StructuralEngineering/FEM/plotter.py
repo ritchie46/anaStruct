@@ -146,11 +146,11 @@ class Plotter:
 
         for node in self.system.supports_spring_x:
             xval = np.arange(0, 9, 1)
-            xval = xval * dh
+            xval *= dh
             yval = np.array([0, 0, left, right, left, right, left, 0, 0])
 
-            xval = xval + node.point.x
-            yval = yval - node.point.z
+            xval += node.point.x
+            yval -= node.point.z
             # Triangle
             support_patch = mpatches.RegularPolygon((node.point.x + h * 1.7, -node.point.z - h ),
                                                     numVertices=3, radius=h * 0.9, color='r', zorder=10)
@@ -282,6 +282,8 @@ class Plotter:
         self.__start_plot()
         max_x = 0
         max_z = 0
+        min_x = 0
+        min_z = 0
         for el in self.system.elements:
             # plot structure
             axis_values = plot_values_element(el)
@@ -293,14 +295,24 @@ class Plotter:
             max_x = max([abs(x) for x in x_val]) if max([abs(x) for x in x_val]) > max_x else max_x
             max_z = max([abs(x) for x in y_val]) if max([abs(x) for x in y_val]) > max_z else max_z
 
+            min_x = min([abs(x) for x in x_val]) if min([abs(x) for x in x_val]) < min_x else min_x
+            min_z = min([abs(x) for x in y_val]) if min([abs(x) for x in y_val]) < min_z else min_z
+            center_x = (max_x - min_x) / 2 + min_x
+            center_z = (max_z - min_z) / 2 + min_x
+
             # add node ID to plot
             self.one_fig.text(x_val[0] + 0.1, y_val[0] + 0.1, '%d' % el.nodeID1, color='g', fontsize=9, zorder=10)
             self.one_fig.text(x_val[-1] + 0.1, y_val[-1] + 0.1, '%d' % el.nodeID2, color='g', fontsize=9, zorder=10)
 
         max_val = max(max_x, max_z)
         self.max_val = max_val
-        offset = max_val // 2
-        self.one_fig.axis([-offset, max_val + offset, -offset, max_val + offset])
+        offset = max_val
+        plusxrange = center_x + offset
+        plusyrange = center_z + offset
+        minxrange = center_x - offset
+        minyrange = center_z - offset
+
+        self.one_fig.axis([minxrange, plusxrange, minyrange, plusyrange])
 
         for el in self.system.elements:
             # add element ID to plot
