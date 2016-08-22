@@ -348,11 +348,11 @@ class Plotter:
         self.one_fig.text(x_val[-2] - 2 / self.max_val, y_val[-2] + 2 / self.max_val, "%s" % round(value_2, digits),
                           fontsize=9, ha='center', va='center', )
 
-    def _add_element_values(self, x_val, y_val, value, index, digits=1):
+    def _add_element_values(self, x_val, y_val, value, index, digits=2):
         self.one_fig.text(x_val[index], y_val[index], "%s" % round(value, digits),
                           fontsize=9, ha='center', va='center', )
 
-    def plot_result(self, axis_values, force_1=None, force_2=None, digits=1, node_results=True, marker=None):
+    def plot_result(self, axis_values, force_1=None, force_2=None, digits=2, node_results=True, marker=None):
         # plot force
         x_val = axis_values[0]
         y_val = axis_values[1]
@@ -470,7 +470,7 @@ class Plotter:
 
                 self.one_fig.arrow(x, y, len_x, len_y, head_width=h * 0.15, head_length=0.2 * scale, ec='b', fc='orange',
                                    zorder=11)
-                self.one_fig.text(x, y, "R=%d" % node.Fx, color='k', fontsize=9, zorder=10)
+                self.one_fig.text(x, y, "R=%s" % round(node.Fx, 2), color='k', fontsize=9, zorder=10)
 
             if not math.isclose(node.Fz, 0, rel_tol=1e-5, abs_tol=1e-9):
                 # z direction
@@ -483,7 +483,7 @@ class Plotter:
 
                 self.one_fig.arrow(x, y, len_x, len_y, head_width=h * 0.15, head_length=0.2 * scale, ec='b', fc='orange',
                                    zorder=11)
-                self.one_fig.text(x, y, "R=%d" % node.Fz, color='k', fontsize=9, zorder=10)
+                self.one_fig.text(x, y, "R=%s" % round(node.Fz, 2), color='k', fontsize=9, zorder=10)
 
             if not math.isclose(node.Ty, 0, rel_tol=1e-5, abs_tol=1e-9):
                 """
@@ -497,8 +497,8 @@ class Plotter:
                     self.one_fig.plot(node.point.x, -node.point.z, marker=r'$\circlearrowright$', ms=25,
                                       color='orange')
 
-                self.one_fig.text(node.point.x + h * 0.2, -node.point.z + h * 0.2, "T=%d" % node.Ty, color='k',
-                                  fontsize=9, zorder=10)
+                self.one_fig.text(node.point.x + h * 0.2, -node.point.z + h * 0.2, "T=%s" % round(node.Ty, 2),
+                                  color='k', fontsize=9, zorder=10)
         plt.show()
 
     def displacements(self):
