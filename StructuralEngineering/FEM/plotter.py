@@ -300,10 +300,6 @@ class Plotter:
             center_x = (max_x - min_x) / 2 + min_x
             center_z = (max_z - min_z) / 2 + min_x
 
-            # add node ID to plot
-            self.one_fig.text(x_val[0] + 0.1, y_val[0] + 0.1, '%d' % el.nodeID1, color='g', fontsize=9, zorder=10)
-            self.one_fig.text(x_val[-1] + 0.1, y_val[-1] + 0.1, '%d' % el.nodeID2, color='g', fontsize=9, zorder=10)
-
         max_val = max(max_x, max_z)
         self.max_val = max_val
         offset = max_val
@@ -315,16 +311,24 @@ class Plotter:
         self.one_fig.axis([minxrange, plusxrange, minyrange, plusyrange])
 
         for el in self.system.elements:
-            # add element ID to plot
+
             axis_values = plot_values_element(el)
             x_val = axis_values[0]
             y_val = axis_values[1]
 
-            factor = 1.5 / self.max_val
+            # add node ID to plot
+            offset = max_val * 0.015
+            self.one_fig.text(x_val[0] + offset, y_val[0] + offset, '%d' % el.nodeID1, color='g', fontsize=9, zorder=10)
+            self.one_fig.text(x_val[-1] + offset, y_val[-1] + offset, '%d' % el.nodeID2, color='g', fontsize=9,
+                              zorder=10)
+
+            # add element ID to plot
+            factor = 0.02 * self.max_val
             x_val = (x_val[0] + x_val[-1]) / 2 - math.sin(el.alpha) * factor
             y_val = (y_val[0] + y_val[-1]) / 2 + math.cos(el.alpha) * factor
 
             self.one_fig.text(x_val, y_val, "%d" % el.ID, color='r', fontsize=9, zorder=10)
+
 
         # add supports
         if supports:
@@ -352,11 +356,11 @@ class Plotter:
         self.one_fig.text(x_val[index], y_val[index], "%s" % round(value, digits),
                           fontsize=9, ha='center', va='center', )
 
-    def plot_result(self, axis_values, force_1=None, force_2=None, digits=2, node_results=True, marker=None):
+    def plot_result(self, axis_values, force_1=None, force_2=None, digits=2, node_results=True):
         # plot force
         x_val = axis_values[0]
         y_val = axis_values[1]
-        self.one_fig.plot(x_val, y_val, color='b', marker=marker, markevery=1e9)
+        self.one_fig.plot(x_val, y_val, color='b')
 
         if node_results:
             self._add_node_values(x_val, y_val, force_1, force_2, digits)
@@ -515,7 +519,7 @@ class Plotter:
 
         for el in self.system.elements:
             axis_values = plot_values_deflection(el, factor)
-            self.plot_result(axis_values, node_results=False, marker='s')
+            self.plot_result(axis_values, node_results=False)
 
             if el.type == "general":
                 # index of the max deflection
