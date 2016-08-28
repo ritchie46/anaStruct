@@ -329,7 +329,6 @@ class Plotter:
 
             self.one_fig.text(x_val, y_val, "%d" % el.ID, color='r', fontsize=9, zorder=10)
 
-
         # add supports
         if supports:
             self.__fixed_support_patch(max_val)
