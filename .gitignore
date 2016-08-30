@@ -36,7 +36,9 @@ Packages #
 .Trashes
 ehthumbs.db
 Thumbs.db
+/StructuralEngineering.egg-info
+/dist
 
-/.idea
+*/.idea
 /__pycache__
 *.pyc

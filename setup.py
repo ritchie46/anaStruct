@@ -11,7 +11,7 @@ setup(
     description='structural engineering package',
     author='Ritchie Vink',
     author_email='ritchie46@gmail.com',
-    url='http://pypi.python.org/pypi/StructuralEngineering/',
+    url='http://laizen.nl',
     license='MIT License',
     packages=['StructuralEngineering', 'StructuralEngineering.FEM'],
     install_requires=[

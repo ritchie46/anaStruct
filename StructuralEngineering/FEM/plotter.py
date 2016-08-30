@@ -345,10 +345,12 @@ class Plotter:
             plt.show()
 
     def _add_node_values(self, x_val, y_val, value_1, value_2, digits):
+        offset = self.max_val * 0.015
+
         # add value to plot
-        self.one_fig.text(x_val[1] - 2 / self.max_val, y_val[1] + 2 / self.max_val, "%s" % round(value_1, digits),
+        self.one_fig.text(x_val[1] - offset, y_val[1] + offset, "%s" % round(value_1, digits),
                           fontsize=9, ha='center', va='center', )
-        self.one_fig.text(x_val[-2] - 2 / self.max_val, y_val[-2] + 2 / self.max_val, "%s" % round(value_2, digits),
+        self.one_fig.text(x_val[-2] - offset, y_val[-2] + offset, "%s" % round(value_2, digits),
                           fontsize=9, ha='center', va='center', )
 
     def _add_element_values(self, x_val, y_val, value, index, digits=2):
