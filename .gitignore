@@ -39,6 +39,8 @@ Thumbs.db
 /StructuralEngineering.egg-info
 /dist
 
-*/.idea
+*.idea
+.idea
+/.idea
 /__pycache__
 *.pyc
