@@ -20,6 +20,7 @@ class Node:
         self.uz = uz
         self.phi_y = phi_y
         self.point = point
+        self.hinge = False
 
     def show_result(self):
         print("\nID = %s\n"

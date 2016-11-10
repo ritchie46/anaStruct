@@ -93,16 +93,35 @@ class SystemElements:
         id2 = False
         for i in self.node_ids:
             if i == nodeID1:
-                id1 = True  # nodeID1 allready in system
+                id1 = True  # nodeID1 already in system
+                index_id1 = i - 1
             if i == nodeID2:
-                id2 = True  # nodeID2 allready in system
+                id2 = True  # nodeID2 already in system
+                index_id2 = i - 1
 
         if id1 is False:
             self.node_ids.append(nodeID1)
             self.node_objects.append(Node(ID=nodeID1, point=point_1))
+            index_id1 = len(self.node_objects) - 1
         if id2 is False:
             self.node_ids.append(nodeID2)
-        self.node_objects.append(Node(ID=nodeID2, point=point_2))
+            self.node_objects.append(Node(ID=nodeID2, point=point_2))
+            index_id2 = len(self.node_objects) - 1
+
+        """
+        Only one hinge per node. If not, the matrix cannot be solved.
+        """
+
+        if hinge == 1:
+            if self.node_objects[index_id1].hinge:
+                hinge = None
+            else:
+                self.node_objects[index_id1].hinge = True
+        if hinge == 2:
+            if self.node_objects[index_id2].hinge:
+                hinge = None
+            else:
+                self.node_objects[index_id2].hinge = True
 
         # determine the length of the elements
         point = point_2 - point_1
