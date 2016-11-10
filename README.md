@@ -18,7 +18,6 @@ $ python setup.py install
 ## 2D FEM Frames and Trusses
 ![](images/rand/structure.png)
 
-M-kappa of a concrete cross section:
 
 ```python
 # if using ipython notebook
