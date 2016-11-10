@@ -9,7 +9,7 @@ Shear deformation is not taken into account.
 
 
 class Element:
-    def __init__(self, ID, EA, EI, l, ai, aj, point_1, point_2):
+    def __init__(self, ID, EA, EI, l, ai, aj, point_1, point_2, hinge=None):
         """
         :param ID: integer representing the elements ID
         :param EA: Young's modulus * Area
@@ -19,6 +19,7 @@ class Element:
         :param aj: = ai
         :param point_1: point object
         :param point_2: point object
+        :param hinge: (integer) 1 or 2. Adds an hinge ad the first or second node.
         """
         self.ID = ID
         self.type = None
@@ -29,7 +30,7 @@ class Element:
         self.point_2 = point_2
         self.alpha = ai
         self.kinematic_matrix = kinematic_matrix(ai, aj, l)
-        self.constitutive_matrix = constitutive_matrix(EA, EI, l)
+        self.constitutive_matrix = constitutive_matrix(EA, EI, l, hinge)
         self.stiffness_matrix = stiffness_matrix(self.constitutive_matrix, self.kinematic_matrix)
         self.nodeID1 = None
         self.nodeID2 = None
@@ -59,11 +60,18 @@ def kinematic_matrix(ai, aj, l):
                      [-math.sin(ai) / l, -math.cos(ai) / l, 0, math.sin(aj) / l, math.cos(aj) / l, 1]])
 
 
-def constitutive_matrix(EA, EI, l):
-
-    return np.array([[EA / l, 0, 0],
-                     [0, 4 * EI / l, -2 * EI / l],
-                     [0, -2 * EI / l, 4 * EI / l]])
+def constitutive_matrix(EA, EI, l, hinge=None):
+    matrix = np.array([[EA / l, 0, 0],
+                      [0, 4 * EI / l, -2 * EI / l],
+                      [0, -2 * EI / l, 4 * EI / l]])
+    if hinge is None:
+        return matrix
+    elif hinge == 2:
+        matrix[1][2] = matrix[2][1] = matrix[2][2] = 0
+    elif hinge == 1:
+        matrix[1][1] = matrix[1][2] = matrix[2][1] = 0
+    print(matrix)
+    return matrix
 
 
 def stiffness_matrix(var_constitutive_matrix, var_kinematic_matrix):

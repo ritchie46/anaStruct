@@ -45,12 +45,12 @@ class SystemElements:
     def add_truss_element(self, location_list, EA):
         self.add_element(location_list, EA, 1e-14, type='truss')
 
-    def add_element(self, location_list, EA, EI, **kwargs):
+    def add_element(self, location_list, EA, EI, hinge=None, **kwargs):
         """
         :param location_list: [[x, z], [x, z]]
-        :param EA: EA
-        :param EI: EI
-        :return: Void
+        :param EA: (float) EA
+        :param EI: (float) EI
+        :param hinge: (integer) 1 or 2. Adds an hinge ad the first or second node.
         """
         # add the element number
         self.count += 1
@@ -135,7 +135,7 @@ class SystemElements:
 
         # aj = ai
         # add element
-        element = Element(self.count, EA, EI, l, ai, ai, point_1, point_2)
+        element = Element(self.count, EA, EI, l, ai, ai, point_1, point_2, hinge)
         element.node_ids.append(nodeID1)
         element.node_ids.append(nodeID2)
         element.nodeID1 = nodeID1
