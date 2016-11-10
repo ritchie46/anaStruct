@@ -19,38 +19,29 @@ $ python setup.py install
 ![](images/rand/structure.png)
 
 
-## Concrete M-kappa diagram
-
-M-kappa of a concrete cross section:
-
 ```python
-import StructuralEngineering.concrete as se
-# Define the concrete material
-g_concrete = se.MaterialConcrete(
-    fck=20,  # characteristic compression stress capacity
-    fctk=1.545,  # characteristic tensile stress capacity
-)
+# if using ipython notebook
+%matplotlib inline
 
-# Create the stress-strain-diagram
-g_concrete.det_bi_linear_diagram()
+import StructuralEngineering.FEM.system as se
 
-# Define the rebar material
-g_rebar = se.MaterialRebar(
-    fyk=500,
-)
+# Create a new system object.
+system = se.SystemElements()
 
-# Define the reinforced concrete cross section
-# beam 300 * 500
-cs = se.ReinforcedConcrete(
-    coordinate_list=[[0, 0], [0, 500], [300, 500], [300, 0], [0, 0]],
-    materialConcrete=g_concrete,
-    materialRebar=g_rebar)
+# Add beams to the system. Positive z-axis is down, positive x-axis is the right.
+system.add_element(location_list=[[0, 0], [0, -5]], EA=15000, EI=5000)
+system.add_element(location_list=[[0, -5], [5, -5]], EA=15000, EI=5000)
+system.add_element(location_list=[[5, -5], [5, 0]], EA=15000, EI=5000)
 
-# add rebar
-cs.add_rebar(
-    n=2,  # number of bars
-    diam=12,  # diameter of the bars
-    d=400)  # distance from the top of the cross section
+# Add supports.
+system.add_support_fixed(nodeID=1)
+# Add a rotational spring at node 4.
+system.add_support_spring(nodeID=4, translation=3, K=4000)
 
-cs.plot_M_Kappa()
+# Add loads.
+system.point_load(Fx=30, nodeID=2)
+system.q_load(q=10, elementID=2)
+
+system.show_structure()
+system.solve()
 ```
