@@ -350,11 +350,16 @@ class SystemElements:
                                  "or your elements Young's modulus"
         return self.system_displacement_vector
 
+    def _support_check(self, nodeID):
+        if self.node_objects[nodeID - 1].hinge:
+            raise Exception ("You cannot add a support to a hinged node.")
+
     def add_support_hinged(self, nodeID):
         """
         adds a hinged support a the given node
         :param nodeID: integer representing the nodes ID
         """
+        self._support_check(nodeID)
         self.set_displacement_vector([(nodeID, 1), (nodeID, 2)])
 
         # add the support to the support list for the plotter
@@ -369,6 +374,7 @@ class SystemElements:
         :param nodeID: integer representing the nodes ID
         :param direction: integer representing the direction that is fixed: x = 1, z = 2
         """
+        self._support_check(nodeID)
         self.set_displacement_vector([(nodeID, direction)])
 
         # add the support to the support list for the plotter
@@ -383,6 +389,7 @@ class SystemElements:
         adds a fixed support at the given node
         :param nodeID: integer representing the nodes ID
         """
+        self._support_check(nodeID)
         self.set_displacement_vector([(nodeID, 1), (nodeID, 2), (nodeID, 3)])
 
         # add the support to the support list for the plotter
@@ -403,6 +410,7 @@ class SystemElements:
         The stiffness of the spring is added in the system matrix at the location that represents the node and the
         displacement.
         """
+        self._support_check(nodeID)
         if self.system_matrix is None:
             shape = len(self.node_ids) * 3
             self.shape_system_matrix = shape
