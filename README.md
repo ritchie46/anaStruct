@@ -1,5 +1,5 @@
 # StructuralEngineering 2D Frames and Trusses
-This is a small package for python 3. With it you can solve 2D Frames and Trusses calculations. Determine the bending moment, shear force, normal force and the displacements.
+Solve 2D Frames and Trusses calculations. Determine the bending moment, shear force, normal force and displacements.
 
 ### Take a look at my blog for some examples.
 
