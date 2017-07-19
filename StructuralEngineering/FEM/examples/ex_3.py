@@ -1,7 +1,7 @@
 from StructuralEngineering.FEM import system as se
 
 
-def test():
+def run():
     system = se.SystemElements()
 
     # Add beams to the system. Positive z-axis is down, positive x-axis is the right.
@@ -16,7 +16,6 @@ def test():
     system.point_load(Fx=30, nodeID=2)
     system.q_load(q=10, elementID=2)
     system.solve()
-    print(system.get_element_results(elementID=0))
     system.show_structure()
     system.show_reaction_force()
     system.show_normal_force()
@@ -25,4 +24,4 @@ def test():
     system.show_displacement()
 
 if __name__ == "__main__":
-    test()
+    run()

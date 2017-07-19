@@ -2,7 +2,7 @@ import math
 from StructuralEngineering.FEM import system as se
 
 
-def test():
+def run():
     system = se.SystemElements()
 
     system.add_truss_element(location_list=[[0, 0], [0, -5]], EA=5000)
@@ -16,7 +16,6 @@ def test():
     system.point_load(Fx=10, nodeID=2)
 
     system.solve()
-    print(system.get_element_results(elementID=0))
     system.show_structure()
     system.show_reaction_force()
     system.show_normal_force()
@@ -25,4 +24,4 @@ def test():
     system.show_displacement()
 
 if __name__ == "__main__":
-    test()
+    run()
