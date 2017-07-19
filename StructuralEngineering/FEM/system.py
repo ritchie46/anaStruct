@@ -546,9 +546,9 @@ class SystemElements:
     def show_displacement(self):
         self.plotter.displacements()
 
-    def get_node_results_system(self, nodeID=0):
+    def get_node_results_system(self, node_id=0):
         """
-        :param nodeID: (integer) representing the node's ID. If integer = 0, the results of all nodes are returned
+        :param node_id: (integer) representing the node's ID. If integer = 0, the results of all nodes are returned
         :return:
                 if nodeID == 0: (list)
                     Returns a list containing tuples with the results
@@ -556,7 +556,7 @@ class SystemElements:
         """
         result_list = []
         for obj in self.node_objects:
-            if obj.id == nodeID:
+            if obj.id == node_id:
                 return {
                     "id": obj.id,
                     "Fx": obj.Fx,
@@ -570,9 +570,9 @@ class SystemElements:
                 result_list.append((obj.id, obj.Fx, obj.Fz, obj.Ty, obj.ux, obj.uz, obj.phi_y))
         return result_list
 
-    def get_element_results(self, elementID=0, verbose=False):
+    def get_element_results(self, element_id=0, verbose=False):
         """
-        :param elementID: (int) representing the elements ID. If elementID = 0 the results of all elements are returned.
+        :param element_id: (int) representing the elements ID. If elementID = 0 the results of all elements are returned.
         :param verbose: (bool) If set to True the numerical results for the deflection and the bending moments are
                                returned.
         :return:
@@ -580,34 +580,35 @@ class SystemElements:
                     Returns a list containing tuples with the results
                 if nodeID > 0: (dict)
         """
-        result_list = []
-        for el in self.elements:
-            if elementID == el.id:
-                if el.type == "truss":
-                    return {
-                        "id": el.id,
-                        "length": el.l,
-                        "alpha": el.alpha,
-                        "u": el.extension[0],
-                        "N": el.N
-                    }
-                else:
-                    return {
-                        "id": el.id,
-                        "length": el.l,
-                        "alpha": el.alpha,
-                        "u": el.extension[0],
-                        "N": el.N,
-                        "wmax": np.min(el.deflection),
-                        "wmin": np.max(el.deflection),
-                        "w": el.deflection if verbose else None,
-                        "Mmin": np.min(el.bending_moment),
-                        "Mmax": np.max(el.bending_moment),
-                        "M": el.bending_moment if verbose else None,
-                        "q": el.q_load
-                    }
-
+        if element_id != 0:
+            el = self.element_map[element_id]
+            if el.type == "truss":
+                return {
+                    "id": el.id,
+                    "length": el.l,
+                    "alpha": el.alpha,
+                    "u": el.extension[0],
+                    "N": el.N
+                }
             else:
+                return {
+                    "id": el.id,
+                    "length": el.l,
+                    "alpha": el.alpha,
+                    "u": el.extension[0],
+                    "N": el.N,
+                    "wmax": np.min(el.deflection),
+                    "wmin": np.max(el.deflection),
+                    "w": el.deflection if verbose else None,
+                    "Mmin": np.min(el.bending_moment),
+                    "Mmax": np.max(el.bending_moment),
+                    "M": el.bending_moment if verbose else None,
+                    "q": el.q_load
+                }
+        else:
+            result_list = []
+            for el in self.elements:
+
                 if el.type == "truss":
                     result_list.append({
                         "id": el.id,
@@ -635,5 +636,5 @@ class SystemElements:
                             "q": el.q_load
                         }
                     )
-        return result_list
+            return result_list
 
