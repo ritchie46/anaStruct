@@ -13,7 +13,7 @@ def run():
     system.add_support_hinged(node_id=1)
     system.add_support_hinged(node_id=4)
 
-    system.point_load(Fx=10, nodeID=2)
+    system.point_load(Fx=10, node_id=2)
 
     system.solve()
     system.show_structure()

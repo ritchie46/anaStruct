@@ -27,7 +27,7 @@ class SystemElements:
         self.removed_indexes = []
         # list of indexes that remain after conditions are applied
         self.remainder_indexes = []
-        # keep track of the nodeID of the supports
+        # keep track of the node_id of the supports
         self.supports_fixed = []
         self.supports_hinged = []
         self.supports_roll = []
@@ -43,7 +43,7 @@ class SystemElements:
         self.reaction_forces = []  # node objects
 
         self.non_linear = False
-        self.non_linear_elements = {}
+        self.non_linear_elements = {}  # keys are element ids, values are dicts: {node_index: max moment capacity}
         self.element_map = {}
 
     def add_truss_element(self, location_list, EA):
@@ -76,12 +76,12 @@ class SystemElements:
         if len(self.elements) != 0:
             count = 1
             for el in self.elements:
-                # check if node 1 of the element meets another node. If so, both have the same nodeID
+                # check if node 1 of the element meets another node. If so, both have the same node_id
                 if el.point_1 == point_1:
-                    node_id1 = el.nodeID1
+                    node_id1 = el.node_id1
                     existing_node1 = True
                 elif el.point_2 == point_1:
-                    node_id1 = el.nodeID2
+                    node_id1 = el.node_id2
                     existing_node1 = True
                 elif count == len(self.elements) and existing_node1 is False:
                     self.max_node_id += 1
@@ -89,10 +89,10 @@ class SystemElements:
 
                 # check for node 2
                 if el.point_1 == point_2:
-                    node_id2 = el.nodeID1
+                    node_id2 = el.node_id1
                     existing_node2 = True
                 elif el.point_2 == point_2:
-                    node_id2 = el.nodeID2
+                    node_id2 = el.node_id2
                     existing_node2 = True
                 elif count == len(self.elements) and existing_node2 is False:
                     self.max_node_id += 1
@@ -104,10 +104,10 @@ class SystemElements:
         id2 = False
         for i in self.node_ids:
             if i == node_id1:
-                id1 = True  # nodeID1 already in system
+                id1 = True  # node_id1 already in system
                 index_id1 = i - 1
             if i == node_id2:
-                id2 = True  # nodeID2 already in system
+                id2 = True  # node_id2 already in system
                 index_id2 = i - 1
 
         if id1 is False:
@@ -168,8 +168,8 @@ class SystemElements:
         element = Element(self.count, EA, EI, l, ai, point_1, point_2, hinge)
         element.node_ids.append(node_id1)
         element.node_ids.append(node_id2)
-        element.nodeID1 = node_id1
-        element.nodeID2 = node_id2
+        element.node_id1 = node_id1
+        element.node_id2 = node_id2
 
         element.node_1 = Node(node_id1)
         element.node_2 = Node(node_id2)
@@ -364,7 +364,8 @@ class SystemElements:
 
         # start stiffness adaptation
         if self.non_linear:
-            s
+            for k, v in self.non_linear_elements:
+                self.element_map[k]
 
         # check the values in the displacement vector for extreme values, indicating a flawed calculation
         assert(np.any(self.system_displacement_vector < 1e6)), "The displacements of the structure exceed 1e6. " \
@@ -373,8 +374,8 @@ class SystemElements:
 
         return self.system_displacement_vector
 
-    def _support_check(self, nodeID):
-        if self.node_objects[nodeID - 1].hinge:
+    def _support_check(self, node_id):
+        if self.node_objects[node_id - 1].hinge:
             raise Exception ("You cannot add a support to a hinged node.")
 
     def add_support_hinged(self, node_id):
@@ -512,21 +513,21 @@ class SystemElements:
 
         return self.system_force_vector
 
-    def point_load(self, Fx=0, Fz=0, nodeID=None):
-        self.loads_point.append((nodeID, Fx, Fz))
+    def point_load(self, Fx=0, Fz=0, node_id=None):
+        self.loads_point.append((node_id, Fx, Fz))
 
-        if nodeID is not None:
+        if node_id is not None:
             # system force vector.
-            self.set_force_vector([(nodeID, 1, Fx), (nodeID, 2, Fz)])
+            self.set_force_vector([(node_id, 1, Fx), (node_id, 2, Fz)])
 
         return self.system_force_vector
 
-    def moment_load(self, Ty=0, nodeID=None):
-        self.loads_moment.append((nodeID, 3, Ty))
+    def moment_load(self, Ty=0, node_id=None):
+        self.loads_moment.append((node_id, 3, Ty))
 
-        if nodeID is not None:
+        if node_id is not None:
             # system force vector.
-            self.set_force_vector([(nodeID, 3, Ty)])
+            self.set_force_vector([(node_id, 3, Ty)])
 
     def show_structure(self):
         self.plotter.plot_structure(plot_now=True)
@@ -550,9 +551,9 @@ class SystemElements:
         """
         :param node_id: (integer) representing the node's ID. If integer = 0, the results of all nodes are returned
         :return:
-                if nodeID == 0: (list)
+                if node_id == 0: (list)
                     Returns a list containing tuples with the results
-                if nodeID > 0: (dict)
+                if node_id > 0: (dict)
         """
         result_list = []
         for obj in self.node_objects:
@@ -576,9 +577,9 @@ class SystemElements:
         :param verbose: (bool) If set to True the numerical results for the deflection and the bending moments are
                                returned.
         :return:
-                if nodeID == 0: (list)
+                if node_id == 0: (list)
                     Returns a list containing tuples with the results
-                if nodeID > 0: (dict)
+                if node_id > 0: (dict)
         """
         if element_id != 0:
             el = self.element_map[element_id]

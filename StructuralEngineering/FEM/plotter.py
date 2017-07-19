@@ -318,8 +318,8 @@ class Plotter:
 
             # add node ID to plot
             offset = max_val * 0.015
-            self.one_fig.text(x_val[0] + offset, y_val[0] + offset, '%d' % el.nodeID1, color='g', fontsize=9, zorder=10)
-            self.one_fig.text(x_val[-1] + offset, y_val[-1] + offset, '%d' % el.nodeID2, color='g', fontsize=9,
+            self.one_fig.text(x_val[0] + offset, y_val[0] + offset, '%d' % el.node_id1, color='g', fontsize=9, zorder=10)
+            self.one_fig.text(x_val[-1] + offset, y_val[-1] + offset, '%d' % el.node_id2, color='g', fontsize=9,
                               zorder=10)
 
             # add element ID to plot
