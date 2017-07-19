@@ -9,14 +9,13 @@ Shear deformation is not taken into account.
 
 
 class Element:
-    def __init__(self, ID, EA, EI, l, ai, aj, point_1, point_2, hinge=None):
+    def __init__(self, ID, EA, EI, l, ai, point_1, point_2, hinge=None):
         """
         :param ID: integer representing the elements ID
         :param EA: Young's modulus * Area
         :param EI: Young's modulus * Moment of Inertia
         :param l: length
         :param ai: angle between element and x-axis
-        :param aj: = ai
         :param point_1: point object
         :param point_2: point object
         :param hinge: (integer) 1 or 2. Adds an hinge ad the first or second node.
@@ -29,7 +28,7 @@ class Element:
         self.point_1 = point_1
         self.point_2 = point_2
         self.alpha = ai
-        self.kinematic_matrix = kinematic_matrix(ai, aj, l)
+        self.kinematic_matrix = kinematic_matrix(ai, l)
         self.constitutive_matrix = constitutive_matrix(EA, EI, l, hinge)
         self.stiffness_matrix = stiffness_matrix(self.constitutive_matrix, self.kinematic_matrix)
         self.nodeID1 = None
@@ -53,11 +52,11 @@ class Element:
         return self.element_force_vector
 
 
-def kinematic_matrix(ai, aj, l):
+def kinematic_matrix(ai, l):
 
-    return np.array([[-math.cos(ai), math.sin(ai), 0, math.cos(aj), -math.sin(aj), 0],
-                     [math.sin(ai) / l, math.cos(ai) / l, -1, -math.sin(aj) / l, -math.cos(aj) / l, 0],
-                     [-math.sin(ai) / l, -math.cos(ai) / l, 0, math.sin(aj) / l, math.cos(aj) / l, 1]])
+    return np.array([[-math.cos(ai), math.sin(ai), 0, math.cos(ai), -math.sin(ai), 0],
+                     [math.sin(ai) / l, math.cos(ai) / l, -1, -math.sin(ai) / l, -math.cos(ai) / l, 0],
+                     [-math.sin(ai) / l, -math.cos(ai) / l, 0, math.sin(ai) / l, math.cos(ai) / l, 1]])
 
 
 def constitutive_matrix(EA, EI, l, hinge=None):

@@ -42,8 +42,10 @@ class SystemElements:
         # results
         self.reaction_forces = []  # node objects
 
+        self.non_linear = False
+
     def add_truss_element(self, location_list, EA):
-        self.add_element(location_list, EA, 1e-14, type='truss')
+        return self.add_element(location_list, EA, 1e-14, type='truss')
 
     def add_element(self, location_list, EA, EI, hinge=None, mp=None, type="general"):
         """
@@ -53,14 +55,15 @@ class SystemElements:
         :param hinge: (integer) 1 or 2. Adds an hinge at the first or second node.
         :param mp: (dict) Set a maximum plastic moment capacity. Keys are integers representing the nodes. Values
                           are the bending moment capacity.
+        :return element id: (int)
         """
         # add the element number
         self.count += 1
         point_1 = Point(location_list[0][0], location_list[0][1])
         point_2 = Point(location_list[1][0], location_list[1][1])
 
-        nodeID1 = 1
-        nodeID2 = 2
+        node_id1 = 1
+        node_id2 = 2
         existing_node1 = False
         existing_node2 = False
 
@@ -69,45 +72,45 @@ class SystemElements:
             for el in self.elements:
                 # check if node 1 of the element meets another node. If so, both have the same nodeID
                 if el.point_1 == point_1:
-                    nodeID1 = el.nodeID1
+                    node_id1 = el.nodeID1
                     existing_node1 = True
                 elif el.point_2 == point_1:
-                    nodeID1 = el.nodeID2
+                    node_id1 = el.nodeID2
                     existing_node1 = True
                 elif count == len(self.elements) and existing_node1 is False:
                     self.max_node_id += 1
-                    nodeID1 = self.max_node_id
+                    node_id1 = self.max_node_id
 
                 # check for node 2
                 if el.point_1 == point_2:
-                    nodeID2 = el.nodeID1
+                    node_id2 = el.nodeID1
                     existing_node2 = True
                 elif el.point_2 == point_2:
-                    nodeID2 = el.nodeID2
+                    node_id2 = el.nodeID2
                     existing_node2 = True
                 elif count == len(self.elements) and existing_node2 is False:
                     self.max_node_id += 1
-                    nodeID2 = self.max_node_id
+                    node_id2 = self.max_node_id
                 count += 1
 
         # append the nodes to the system nodes list
         id1 = False
         id2 = False
         for i in self.node_ids:
-            if i == nodeID1:
+            if i == node_id1:
                 id1 = True  # nodeID1 already in system
                 index_id1 = i - 1
-            if i == nodeID2:
+            if i == node_id2:
                 id2 = True  # nodeID2 already in system
                 index_id2 = i - 1
 
         if id1 is False:
-            self.node_ids.append(nodeID1)
-            self.node_objects.append(Node(ID=nodeID1, point=point_1))
+            self.node_ids.append(node_id1)
+            self.node_objects.append(Node(ID=node_id1, point=point_1))
             index_id1 = len(self.node_objects) - 1
         if id2 is False:
-            self.node_ids.append(nodeID2)
-            self.node_objects.append(Node(ID=nodeID2, point=point_2))
+            self.node_ids.append(node_id2)
+            self.node_objects.append(Node(ID=node_id2, point=point_2))
             index_id2 = len(self.node_objects) - 1
 
         """
@@ -156,14 +159,14 @@ class SystemElements:
 
         # aj = ai
         # add element
-        element = Element(self.count, EA, EI, l, ai, ai, point_1, point_2, hinge)
-        element.node_ids.append(nodeID1)
-        element.node_ids.append(nodeID2)
-        element.nodeID1 = nodeID1
-        element.nodeID2 = nodeID2
+        element = Element(self.count, EA, EI, l, ai, point_1, point_2, hinge)
+        element.node_ids.append(node_id1)
+        element.node_ids.append(node_id2)
+        element.nodeID1 = node_id1
+        element.nodeID2 = node_id2
 
-        element.node_1 = Node(nodeID1)
-        element.node_2 = Node(nodeID2)
+        element.node_1 = Node(node_id1)
+        element.node_2 = Node(node_id2)
 
         element.type = type
 
@@ -230,6 +233,7 @@ class SystemElements:
             row_index_n2 += 1
             matrix_locations.append(full_row_locations)
         self.system_matrix_locations.append(matrix_locations)
+        return self.count
 
     def __assemble_system_matrix(self):
         """
@@ -552,6 +556,8 @@ class SystemElements:
     def get_element_results(self, elementID=0, verbose=False):
         """
         :param elementID: (int) representing the elements ID. If elementID = 0 the results of all elements are returned.
+        :param verbose: (bool) If set to True the numerical results for the deflection and the bending moments are
+                               returned.
         :return:
                 if nodeID == 0: (list)
                     Returns a list containing tuples with the results
