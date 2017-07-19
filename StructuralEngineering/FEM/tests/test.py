@@ -43,7 +43,7 @@ class SimpleTest(unittest.TestCase):
         system.q_load(q=10, element_id=2)
         sol = np.fromstring("""0.          0.          0.          0.06264607  0.00379285 -0.0128231
   0.0575402   0.01287382 -0.00216051  0.          0.         -0.0080909""", float, sep=" ")
-        self.assertTrue(np.allclose(system.solve(), sol))
+        self.assertTrue(np.allclose(system.solve(), sol, 1e-3))
 
     def test_example_4(self):
         system = se.SystemElements()

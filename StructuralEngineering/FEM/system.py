@@ -254,9 +254,10 @@ class SystemElements:
         Shape of the matrix = n nodes * n d.o.f.
         Shape = n * 3
         """
-        shape = len(self.node_ids) * 3
-        self.shape_system_matrix = shape
-        self.system_matrix = np.zeros((shape, shape))
+        if self.system_matrix is None:
+            shape = len(self.node_ids) * 3
+            self.shape_system_matrix = shape
+            self.system_matrix = np.zeros((shape, shape))
 
         for i in range(len(self.elements)):
             for row_index in range(len(self.system_matrix_locations[i])):
@@ -334,6 +335,7 @@ class SystemElements:
         for _ in range(1500):
             self.remainder_indexes = []
             self.removed_indexes = []
+            self.system_matrix = None
             factors = []
             # update the elements stiffnesses
             for k, v in self.non_linear_elements.items():
