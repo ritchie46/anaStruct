@@ -45,3 +45,6 @@ class Point:
             return True
         else:
             return False
+
+    def __str__(self):
+        return "x: %s, z: %s" % (self.x, self.z)

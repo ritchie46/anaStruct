@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from StructuralEngineering.basic import converge, Vertex
+from StructuralEngineering.basic import converge, Vertex, BaseVertex
 from StructuralEngineering.FEM.postprocess import SystemLevel as post_sl
 from StructuralEngineering.FEM.elements import Element
 from StructuralEngineering.FEM.node import Node
@@ -69,7 +69,7 @@ class SystemElements:
         # add the element number
         self.count += 1
 
-        if isinstance(location_list[0], Vertex):
+        if isinstance(location_list[0], BaseVertex):
             point_1 = Point(location_list[0].x, location_list[0].z)
             point_2 = Point(location_list[1].x, location_list[1].z)
         else:
@@ -339,10 +339,12 @@ class SystemElements:
         self.system_force_vector = original_force_vector
         self.system_matrix = original_system_matrix
 
-    def _stiffness_adaptation(self):
+    def _stiffness_adaptation(self, verbosity):
         self.solve(True)
+        if verbosity == 0:
+            print("Starting stiffness adaptation calculation.")
 
-        for _ in range(1500):
+        for c in range(1500):
             self.remainder_indexes = []
             self.removed_indexes = []
             self.system_matrix = None
@@ -350,24 +352,29 @@ class SystemElements:
             # update the elements stiffnesses
             for k, v in self.non_linear_elements.items():
                 el = self.element_map[k]
+                print("v", v)
                 for node_no, mp in v.items():
                     m_e = el.element_force_vector[node_no * 3 - 1]
-
-                    if m_e > mp:
+                    print(m_e, mp, node_no)
+                    if abs(m_e) > mp:
                         el.nodes_plastic[node_no - 1] = True
                     if el.nodes_plastic[node_no - 1]:
                         factor = converge(m_e, mp, 3)
                         factors.append(factor)
                         el.update_stiffness(factor, node_no)
 
+            print(factors, np.allclose(factors, 1, 1e-3))
             if not np.allclose(factors, 1, 1e-3):
                 self.solve(True)
             else:
-                break
 
-    def solve(self, force_linear=False):
+                break
+        if verbosity == 0:
+            print("Solved in {} iterations".format(c))
+
+    def solve(self, force_linear=False, verbosity=0):
         if self.non_linear and not force_linear:
-            self._stiffness_adaptation()
+            self._stiffness_adaptation(verbosity)
 
         assert(self.system_force_vector is not None), "There are no forces on the structure"
         self.__assemble_system_matrix()
@@ -567,25 +574,25 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         self.plotter.plot_structure(figsize, verbosity, plot_now=True)
 
-    def show_bending_moment(self, figsize=None):
+    def show_bending_moment(self, verbosity=0, figsize=None):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.bending_moment(figsize)
+        self.plotter.bending_moment(figsize, verbosity)
 
-    def show_normal_force(self, figsize=None):
+    def show_normal_force(self, verbosity=0, figsize=None):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.normal_force(figsize)
+        self.plotter.normal_force(figsize, verbosity)
 
-    def show_shear_force(self, figsize=None):
+    def show_shear_force(self, verbosity=0, figsize=None):
         figsize = self.figsize if figsize is None else figsize
         self.plotter.shear_force(figsize)
 
-    def show_reaction_force(self, figsize=None):
+    def show_reaction_force(self, verbosity=0, figsize=None):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.reaction_force(figsize)
+        self.plotter.reaction_force(figsize, verbosity)
 
-    def show_displacement(self, figsize=None):
+    def show_displacement(self, verbosity=0, figsize=None):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.displacements(figsize)
+        self.plotter.displacements(figsize, verbosity)
 
     def get_node_results_system(self, node_id=0):
         """
