@@ -273,7 +273,7 @@ class Plotter:
                     self.one_fig.text(node.point.x + h * 0.2, -node.point.z + h * 0.2, "T=%d" % F_tuple[2], color='k',
                                       fontsize=9, zorder=10)
 
-    def plot_structure(self, figsize, verbosity, plot_now=False, supports=True):
+    def plot_structure(self, figsize, verbosity, plot_now=False, supports=True, scale=1):
         """
         :param plot_now: (boolean) if True, plt.figure will plot.
         :param supports: (boolean) if True, supports are plotted.
@@ -302,7 +302,7 @@ class Plotter:
 
         max_val = max(max_x, max_z)
         self.max_val = max_val
-        offset = max_val
+        offset = max_val * scale
         plusxrange = center_x + offset
         plusyrange = center_z + offset
         minxrange = center_x - offset
@@ -367,9 +367,9 @@ class Plotter:
         if node_results:
             self._add_node_values(x_val, y_val, force_1, force_2, digits)
 
-    def normal_force(self, figsize):
+    def normal_force(self, figsize, verbosity, scale):
         self.max_force = 0
-        self.plot_structure(figsize)
+        self.plot_structure(figsize, 1, scale=scale)
 
         # determine max factor for scaling
         for el in self.system.elements:
@@ -386,17 +386,19 @@ class Plotter:
                 if el.N < 0:
                     point.displace_polar(alpha=el.alpha + 0.5 * math.pi, radius=0.5 * el.N * factor, inverse_z_axis=True)
 
-                    self.one_fig.text(point.x, -point.z, "-", ha='center', va='center',
-                                      fontsize=20, color='b')
+                    if verbosity == 0:
+                        self.one_fig.text(point.x, -point.z, "-", ha='center', va='center',
+                                          fontsize=20, color='b')
                 if el.N > 0:
                     point.displace_polar(alpha=el.alpha + 0.5 * math.pi, radius=0.5 * el.N * factor, inverse_z_axis=True)
 
-                    self.one_fig.text(point.x, -point.z, "+", ha='center', va='center',
-                                      fontsize=14, color='b')
+                    if verbosity == 0:
+                        self.one_fig.text(point.x, -point.z, "+", ha='center', va='center',
+                                          fontsize=14, color='b')
         plt.show()
 
-    def bending_moment(self, figsize, verbosity):
-        self.plot_structure(figsize, 1)
+    def bending_moment(self, figsize, verbosity, scale):
+        self.plot_structure(figsize, 1, scale=scale)
         self.max_force = 0
         con = len(self.system.elements[0].bending_moment)
 
@@ -438,8 +440,8 @@ class Plotter:
                                           fontsize=9)
         plt.show()
 
-    def shear_force(self, figsize, verbosity):
-        self.plot_structure(figsize, verbosity)
+    def shear_force(self, figsize, verbosity, scale):
+        self.plot_structure(figsize, 1, scale=scale)
         self.max_force = 0
 
         # determine max factor for scaling
@@ -457,11 +459,17 @@ class Plotter:
                 axis_values = plot_values_shear_force(el, factor)
                 shear_1 = axis_values[-2]
                 shear_2 = axis_values[-1]
-                self.plot_result(axis_values, shear_1, shear_2)
+
+                if verbosity == 0:
+                    node_results = True
+                else:
+                    node_results = False
+
+                self.plot_result(axis_values, shear_1, shear_2, node_results=node_results)
         plt.show()
 
-    def reaction_force(self, figsize, verbosity):
-        self.plot_structure(figsize, verbosity, supports=False)
+    def reaction_force(self, figsize, verbosity, scale):
+        self.plot_structure(figsize, 1, supports=False, scale=scale)
 
         h = 0.2 * self.max_val
         max_force = 0
@@ -482,7 +490,9 @@ class Plotter:
 
                 self.one_fig.arrow(x, y, len_x, len_y, head_width=h * 0.15, head_length=0.2 * scale, ec='b', fc='orange',
                                    zorder=11)
-                self.one_fig.text(x, y, "R=%s" % round(node.Fx, 2), color='k', fontsize=9, zorder=10)
+
+                if verbosity == 0:
+                    self.one_fig.text(x, y, "R=%s" % round(node.Fx, 2), color='k', fontsize=9, zorder=10)
 
             if not math.isclose(node.Fz, 0, rel_tol=1e-5, abs_tol=1e-9):
                 # z direction
@@ -513,8 +523,8 @@ class Plotter:
                                   color='k', fontsize=9, zorder=10)
         plt.show()
 
-    def displacements(self, figsize, verbosity):
-        self.plot_structure(figsize, verbosity)
+    def displacements(self, figsize, verbosity, scale):
+        self.plot_structure(figsize, 1, scale=scale)
         self.max_force = 0
 
         # determine max factor for scaling
@@ -535,7 +545,9 @@ class Plotter:
                     index = el.deflection.argmax()
                 else:
                     index = el.deflection.argmin()
-                self._add_element_values(axis_values[0], axis_values[1], el.deflection[index], index, 3)
+
+                if verbosity == 0:
+                    self._add_element_values(axis_values[0], axis_values[1], el.deflection[index], index, 3)
 
         plt.show()
 

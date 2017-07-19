@@ -48,6 +48,7 @@ class SystemElements:
         self.non_linear = False
         self.non_linear_elements = {}  # keys are element ids, values are dicts: {node_index: max moment capacity}
         self.element_map = {}
+        self.node_map = {}
 
     def add_truss_element(self, location_list, EA):
         return self.add_element(location_list, EA, 1e-14, type='truss')
@@ -114,37 +115,37 @@ class SystemElements:
         # append the nodes to the system nodes list
         id1 = False
         id2 = False
-        for i in self.node_ids:
-            if i == node_id1:
-                id1 = True  # node_id1 already in system
-                index_id1 = i - 1
-            if i == node_id2:
-                id2 = True  # node_id2 already in system
-                index_id2 = i - 1
+
+        if node_id1 in self.node_map:
+            id1 = True  # node_id1 already in system
+        if node_id2 in self.node_map:
+            id2 = True  # node_id1 already in system
 
         if id1 is False:
+            node = Node(id=node_id1, point=point_1)
             self.node_ids.append(node_id1)
-            self.node_objects.append(Node(id=node_id1, point=point_1))
-            index_id1 = len(self.node_objects) - 1
+            self.node_objects.append(node)
+            self.node_map[node_id1] = node
         if id2 is False:
+            node = Node(id=node_id2, point=point_2)
             self.node_ids.append(node_id2)
-            self.node_objects.append(Node(id=node_id2, point=point_2))
-            index_id2 = len(self.node_objects) - 1
+            self.node_objects.append(node)
+            self.node_map[node_id2] = node
 
         """
         Only one hinge per node. If not, the matrix cannot be solved.
         """
 
         if hinge == 1:
-            if self.node_objects[index_id1].hinge:
+            if self.node_map[node_id1].hinge:
+                hinge = None  # Ensure that there are not more than one hinge per node
+            else:
+                self.node_map[node_id1].hinge = True
+        elif hinge == 2:
+            if self.node_map[node_id2].hinge:
                 hinge = None
             else:
-                self.node_objects[index_id1].hinge = True
-        if hinge == 2:
-            if self.node_objects[index_id2].hinge:
-                hinge = None
-            else:
-                self.node_objects[index_id2].hinge = True
+                self.node_map[node_id2].hinge = True
 
         # determine the length of the elements
         point = point_2 - point_1
@@ -175,7 +176,6 @@ class SystemElements:
         else:
             raise ValueError("Can't determine the angle of the given element")
 
-        # aj = ai
         # add element
         element = Element(self.count, EA, EI, l, ai, point_1, point_2, hinge)
         element.node_ids.append(node_id1)
@@ -345,10 +345,8 @@ class SystemElements:
             print("Starting stiffness adaptation calculation.")
 
         for c in range(1500):
-            self.remainder_indexes = []
-            self.removed_indexes = []
-            self.system_matrix = None
             factors = []
+
             # update the elements stiffnesses
             for k, v in self.non_linear_elements.items():
                 el = self.element_map[k]
@@ -366,14 +364,17 @@ class SystemElements:
             if not np.allclose(factors, 1, 1e-3):
                 self.solve(True)
             else:
-
                 break
         if verbosity == 0:
             print("Solved in {} iterations".format(c))
 
     def solve(self, force_linear=False, verbosity=0):
+        self.remainder_indexes = []
+        self.removed_indexes = []
+        self.system_matrix = None
+
         if self.non_linear and not force_linear:
-            self._stiffness_adaptation(verbosity)
+            return self._stiffness_adaptation(verbosity)
 
         assert(self.system_force_vector is not None), "There are no forces on the structure"
         self.__assemble_system_matrix()
@@ -569,29 +570,29 @@ class SystemElements:
             # system force vector.
             self.set_force_vector([(node_id, 3, Ty)])
 
-    def show_structure(self, verbosity=0, figsize=None):
+    def show_structure(self, verbosity=0, scale=1, figsize=None):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.plot_structure(figsize, verbosity, plot_now=True)
+        self.plotter.plot_structure(figsize, verbosity, plot_now=True, scale=scale)
 
-    def show_bending_moment(self, verbosity=0, figsize=None):
+    def show_bending_moment(self, verbosity=0, scale=1, figsize=None):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.bending_moment(figsize, verbosity)
+        self.plotter.bending_moment(figsize, verbosity, scale)
 
-    def show_normal_force(self, verbosity=0, figsize=None):
+    def show_normal_force(self, verbosity=0, scale=1, figsize=None):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.normal_force(figsize, verbosity)
+        self.plotter.normal_force(figsize, verbosity, scale)
 
-    def show_shear_force(self, verbosity=0, figsize=None):
+    def show_shear_force(self, verbosity=0, scale=1, figsize=None):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.shear_force(figsize)
+        self.plotter.shear_force(figsize, verbosity, scale)
 
-    def show_reaction_force(self, verbosity=0, figsize=None):
+    def show_reaction_force(self, verbosity=0, scale=1, figsize=None):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.reaction_force(figsize, verbosity)
+        self.plotter.reaction_force(figsize, verbosity, scale)
 
-    def show_displacement(self, verbosity=0, figsize=None):
+    def show_displacement(self, verbosity=0, scale=1, figsize=None):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.displacements(figsize, verbosity)
+        self.plotter.displacements(figsize, verbosity, scale)
 
     def get_node_results_system(self, node_id=0):
         """
