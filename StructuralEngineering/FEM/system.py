@@ -352,10 +352,10 @@ class SystemElements:
             # update the elements stiffnesses
             for k, v in self.non_linear_elements.items():
                 el = self.element_map[k]
-                print("v", v)
+
                 for node_no, mp in v.items():
                     m_e = el.element_force_vector[node_no * 3 - 1]
-                    print(m_e, mp, node_no)
+
                     if abs(m_e) > mp:
                         el.nodes_plastic[node_no - 1] = True
                     if el.nodes_plastic[node_no - 1]:
@@ -363,7 +363,6 @@ class SystemElements:
                         factors.append(factor)
                         el.update_stiffness(factor, node_no)
 
-            print(factors, np.allclose(factors, 1, 1e-3))
             if not np.allclose(factors, 1, 1e-3):
                 self.solve(True)
             else:
