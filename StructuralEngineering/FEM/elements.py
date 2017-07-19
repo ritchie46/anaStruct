@@ -67,9 +67,9 @@ def constitutive_matrix(EA, EI, l, hinge=None):
     if hinge is None:
         return matrix
     elif hinge == 2:
-        matrix[1][2] = matrix[2][1] = matrix[2][2] = EI / 1e9
+        matrix[1][2] = matrix[2][1] = matrix[2][2] = 1e-14
     elif hinge == 1:
-        matrix[1][1] = matrix[1][2] = matrix[2][1] = EI / 1e9
+        matrix[1][1] = matrix[1][2] = matrix[2][1] = 1e-14
     return matrix
 
 

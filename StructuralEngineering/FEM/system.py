@@ -45,12 +45,14 @@ class SystemElements:
     def add_truss_element(self, location_list, EA):
         self.add_element(location_list, EA, 1e-14, type='truss')
 
-    def add_element(self, location_list, EA, EI, hinge=None, **kwargs):
+    def add_element(self, location_list, EA, EI, hinge=None, mp=None, type="general"):
         """
         :param location_list: [[x, z], [x, z]]
         :param EA: (float) EA
         :param EI: (float) EI
-        :param hinge: (integer) 1 or 2. Adds an hinge ad the first or second node.
+        :param hinge: (integer) 1 or 2. Adds an hinge at the first or second node.
+        :param mp: (dict) Set a maximum plastic moment capacity. Keys are integers representing the nodes. Values
+                          are the bending moment capacity.
         """
         # add the element number
         self.count += 1
@@ -163,7 +165,7 @@ class SystemElements:
         element.node_1 = Node(nodeID1)
         element.node_2 = Node(nodeID2)
 
-        element.type = kwargs.get('type', 'general')  # searches key 'type', otherwise set default value 'general'
+        element.type = type
 
         self.elements.append(element)
 
@@ -529,94 +531,86 @@ class SystemElements:
         :return:
                 if nodeID == 0: (list)
                     Returns a list containing tuples with the results
-                if nodeID > 0: (tuple)
-                    indexes:
-                    0: node's ID
-                    1: Fx
-                    2: Fz
-                    3: Ty
-                    4: ux
-                    5: uz
-                    6: phi_y
+                if nodeID > 0: (dict)
         """
         result_list = []
         for obj in self.node_objects:
             if obj.ID == nodeID:
-                return obj.ID, obj.Fx, obj.Fz, obj.Ty, obj.ux, obj.uz, obj.phi_y
+                return {
+                    "id": obj.ID,
+                    "Fx": obj.Fx,
+                    "Fz": obj.Fz,
+                    "Ty": obj.Ty,
+                    "ux": obj.ux,
+                    "uz": obj.uz,
+                    "phi_y": obj.phi_y
+                }
             else:
                 result_list.append((obj.ID, obj.Fx, obj.Fz, obj.Ty, obj.ux, obj.uz, obj.phi_y))
         return result_list
 
-    def get_element_results(self, elementID=0):
+    def get_element_results(self, elementID=0, verbose=False):
         """
         :param elementID: (int) representing the elements ID. If elementID = 0 the results of all elements are returned.
         :return:
                 if nodeID == 0: (list)
                     Returns a list containing tuples with the results
-                if nodeID > 0: (tuple)
-                    indexes:
-                    0: elements ID
-                    1: length of the element
-                    2: elements angle with the global x-axis is radians
-                    3: extension
-                    4: normal force
-                    5: absolute value of maximum deflection
-                    6: absolute value of maximum bending moment
-                    7: absolute value of maximum shear force
-                    8: q-load applying on the element
+                if nodeID > 0: (dict)
         """
         result_list = []
         for el in self.elements:
             if elementID == el.ID:
                 if el.type == "truss":
-                    return (el.ID,
-                        el.l,
-                        el.alpha,
-                        el.extension[0],
-                        el.N,
-                        None,
-                        None,
-                        None,
-                        None
-                            )
+                    return {
+                        "id": el.ID,
+                        "length": el.l,
+                        "alpha": el.alpha,
+                        "u": el.extension[0],
+                        "N": el.N
+                    }
                 else:
-                    return (el.ID,
-                            el.l,
-                            el.alpha,
-                            el.extension[0],
-                            el.N,
-                            max(abs(min(el.deflection)), abs(max(el.deflection))),
-                            max(abs(min(el.bending_moment)), abs(max(el.bending_moment))),
-                            max(abs(min(el.shear_force)), abs(max(el.shear_force))),
-                            el.q_load
-                            )
+                    return {
+                        "id": el.ID,
+                        "length": el.l,
+                        "alpha": el.alpha,
+                        "u": el.extension[0],
+                        "N": el.N,
+                        "wmax": np.min(el.deflection),
+                        "wmin": np.max(el.deflection),
+                        "w": el.deflection if verbose else None,
+                        "Mmin": np.min(el.bending_moment),
+                        "Mmax": np.max(el.bending_moment),
+                        "M": el.bending_moment if verbose else None,
+                        "q": el.q_load
+                    }
+
             else:
                 if el.type == "truss":
-                    result_list.append(
-                        (el.ID,
-                         el.l,
-                         el.alpha,
-                         el.extension[0],
-                         el.N,
-                         None,
-                         None,
-                         None,
-                         None
-                         )
+                    result_list.append({
+                        "id": el.ID,
+                        "length": el.l,
+                        "alpha": el.alpha,
+                        "u": el.extension[0],
+                        "N": el.N
+                    }
                     )
 
                 else:
-                    result_list.append((
-                        el.ID,
-                        el.l,
-                        el.alpha,
-                        el.extension[0],
-                        el.N,
-                        max(abs(min(el.deflection)), abs(max(el.deflection))),
-                        max(abs(min(el.bending_moment)), abs(max(el.bending_moment))),
-                        max(abs(min(el.shear_force)), abs(max(el.shear_force))),
-                        el.q_load
-                    )
+                    result_list.append(
+                        {
+                            "id": el.ID,
+                            "length": el.l,
+                            "alpha": el.alpha,
+                            "u": el.extension[0],
+                            "N": el.N,
+                            "wmax": np.min(el.deflection),
+                            "wmin": np.max(el.deflection),
+                            "w": el.deflection if verbose else np.abs(el.deflection),
+                            "Mmin": np.min(el.bending_moment),
+                            "Mmax": np.max(el.bending_moment),
+                            "M": el.bending_moment if verbose else None,
+                            "q": el.q_load
+                        }
                     )
         return result_list
 
