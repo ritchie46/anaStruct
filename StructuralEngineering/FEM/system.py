@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from StructuralEngineering.basic import converge, Vertex, BaseVertex
+from StructuralEngineering.basic import converge, Vertex, BaseVertex, angle_x_axis
 from StructuralEngineering.FEM.postprocess import SystemLevel as post_sl
 from StructuralEngineering.FEM.elements import Element
 from StructuralEngineering.FEM.node import Node
@@ -155,26 +155,7 @@ class SystemElements:
         delta_x = point_2.x - point_1.x
         delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
 
-        if math.isclose(delta_x, 0, rel_tol=1e-5, abs_tol=1e-9):  # element is vertical
-            if delta_z < 0:
-                ai = 1.5 * math.pi
-            else:
-                ai = 0.5 * math.pi
-        elif math.isclose(delta_z, 0, rel_tol=1e-5, abs_tol=1e-9):  # element is horizontal
-            if delta_x > 0:
-                ai = 0
-            else:
-                ai = math.pi
-        elif delta_x > 0 and delta_z > 0:  # quadrant 1 of unity circle
-            ai = math.atan(abs(delta_z) / abs(delta_x))
-        elif delta_x < 0 < delta_z:  # quadrant 2 of unity circle
-            ai = 0.5 * math.pi + math.atan(abs(delta_x) / abs(delta_z))
-        elif delta_x < 0 and delta_z < 0:  # quadrant 3 of unity circle
-            ai = math.pi + math.atan(abs(delta_z) / abs(delta_x))
-        elif delta_z < 0 < delta_x:  # quadrant 4 of unity circle
-            ai = 1.5 * math.pi + math.atan(abs(delta_x) / abs(delta_z))
-        else:
-            raise ValueError("Can't determine the angle of the given element")
+        ai = angle_x_axis(delta_x, delta_z)
 
         # add element
         element = Element(self.count, EA, EI, l, ai, point_1, point_2, hinge)
@@ -346,6 +327,9 @@ class SystemElements:
 
         for c in range(1500):
             factors = []
+            self.remainder_indexes = []
+            self.removed_indexes = []
+            self.system_matrix = None  # Note to self update system matrices for springs
 
             # update the elements stiffnesses
             for k, v in self.non_linear_elements.items():
@@ -369,9 +353,6 @@ class SystemElements:
             print("Solved in {} iterations".format(c))
 
     def solve(self, force_linear=False, verbosity=0):
-        self.remainder_indexes = []
-        self.removed_indexes = []
-        self.system_matrix = None
 
         if self.non_linear and not force_linear:
             return self._stiffness_adaptation(verbosity)
@@ -590,9 +571,9 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         self.plotter.reaction_force(figsize, verbosity, scale)
 
-    def show_displacement(self, verbosity=0, scale=1, figsize=None):
+    def show_displacement(self, verbosity=0, scale=1, figsize=None, linear=False):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.displacements(figsize, verbosity, scale)
+        self.plotter.displacements(figsize, verbosity, scale, linear)
 
     def get_node_results_system(self, node_id=0):
         """

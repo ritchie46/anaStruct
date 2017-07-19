@@ -347,3 +347,29 @@ def cross_product(a, b):
 class Vertex(BaseVertex):
     def __int__(self, x, z):
         BaseVertex.__init__(x, 0, z)
+
+
+def angle_x_axis(delta_x, delta_z):
+    if math.isclose(delta_x, 0, rel_tol=1e-5, abs_tol=1e-9):  # element is vertical
+        if delta_z < 0:
+            ai = 1.5 * math.pi
+        else:
+            ai = 0.5 * math.pi
+    elif math.isclose(delta_z, 0, rel_tol=1e-5, abs_tol=1e-9):  # element is horizontal
+        if delta_x > 0:
+            ai = 0
+        else:
+            ai = math.pi
+    elif delta_x > 0 and delta_z > 0:  # quadrant 1 of unity circle
+        ai = math.atan(abs(delta_z) / abs(delta_x))
+    elif delta_x < 0 < delta_z:  # quadrant 2 of unity circle
+        ai = 0.5 * math.pi + math.atan(abs(delta_x) / abs(delta_z))
+    elif delta_x < 0 and delta_z < 0:  # quadrant 3 of unity circle
+        ai = math.pi + math.atan(abs(delta_z) / abs(delta_x))
+    elif delta_z < 0 < delta_x:  # quadrant 4 of unity circle
+        ai = 1.5 * math.pi + math.atan(abs(delta_x) / abs(delta_z))
+    else:
+        raise ValueError("Can't determine the angle of the given element")
+
+    return ai
+

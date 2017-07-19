@@ -1,9 +1,8 @@
 import math
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from StructuralEngineering.basic import find_nearest
+from StructuralEngineering.basic import find_nearest, angle_x_axis
 
 
 class Plotter:
@@ -523,7 +522,7 @@ class Plotter:
                                   color='k', fontsize=9, zorder=10)
         plt.show()
 
-    def displacements(self, figsize, verbosity, scale):
+    def displacements(self, figsize, verbosity, scale, linear):
         self.plot_structure(figsize, 1, scale=scale)
         self.max_force = 0
 
@@ -536,7 +535,7 @@ class Plotter:
                 factor = self.__set_factor(u_node, 0)
 
         for el in self.system.elements:
-            axis_values = plot_values_deflection(el, factor)
+            axis_values = plot_values_deflection(el, factor, linear)
             self.plot_result(axis_values, node_results=False)
 
             if el.type == "general":
@@ -647,7 +646,7 @@ def plot_values_bending_moment(element, factor, con):
     return x_val, y_val
 
 
-def plot_values_deflection(element, factor):
+def plot_values_deflection(element, factor, linear=False):
     ux1 = element.node_1.ux * factor
     uz1 = -element.node_1.uz * factor
     ux2 = element.node_2.ux * factor
@@ -656,7 +655,7 @@ def plot_values_deflection(element, factor):
     x1 = element.point_1.x + ux1
     y1 = -element.point_1.z + uz1
 
-    if element.type == "general":
+    if element.type == "general" and not linear:
         n_val = len(element.deflection)
         x_val = np.empty(n_val)
         y_val = np.empty(n_val)

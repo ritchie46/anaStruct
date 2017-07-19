@@ -185,6 +185,7 @@ class ElementLevel:
         M = EI(-1/2qx^2/EI -c1x -c2)  ---> c2 = -M/EI
         V = EI(-qx/EI -c1)  ---> c1 = -V/EI
         """
+
         if element.type == 'general':
             c1 = -element.shear_force[0] / element.EI
             c2 = -element.bending_moment[0] / element.EI
