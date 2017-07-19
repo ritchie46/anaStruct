@@ -26,9 +26,9 @@ class SystemLevel:
         for node in self.system.node_objects:
             for el in self.system.elements:
                 # Minus sign, because the node force is opposite of the element force.
-                if el.node_1.ID == node.ID:
+                if el.node_1.id == node.id:
                     self.system.node_objects[count] -= el.node_1
-                elif el.node_2.ID == node.ID:
+                elif el.node_2.id == node.id:
                     self.system.node_objects[count] -= el.node_2
 
             # Loads that are applied on the node of the support. Moment at a hinged support may not lead to reaction
@@ -37,16 +37,16 @@ class SystemLevel:
                 """
                 tuple (nodeID, direction=3, Ty)
                 """
-                if F_tuple[0] == node.ID:
+                if F_tuple[0] == node.id:
                     self.system.node_objects[count].Ty += F_tuple[2]
 
                 # The displacements are not summarized. Therefore the displacements are set for every node 1.
                 # In order to ensure that every node is overwrote.
-                if el.node_1.ID == node.ID:
+                if el.node_1.id == node.id:
                     self.system.node_objects[count].ux = el.node_1.ux
                     self.system.node_objects[count].uz = el.node_1.uz
                     self.system.node_objects[count].phi_y = el.node_1.phi_y
-                if el.node_2.ID == node.ID:
+                if el.node_2.id == node.id:
                     self.system.node_objects[count].ux = el.node_2.ux
                     self.system.node_objects[count].uz = el.node_2.uz
                     self.system.node_objects[count].phi_y = el.node_2.phi_y
@@ -55,21 +55,21 @@ class SystemLevel:
     def reaction_forces(self):
         supports = []
         for node in self.system.supports_fixed:
-            supports.append(node.ID)
+            supports.append(node.id)
         for node in self.system.supports_hinged:
-            supports.append(node.ID)
+            supports.append(node.id)
         for node in self.system.supports_roll:
-            supports.append(node.ID)
+            supports.append(node.id)
         for node in self.system.supports_spring_x:
-            supports.append(node.ID)
+            supports.append(node.id)
         for node in self.system.supports_spring_z:
-            supports.append(node.ID)
+            supports.append(node.id)
         for node in self.system.supports_spring_y:
-            supports.append(node.ID)
+            supports.append(node.id)
 
         for nodeID in supports:
             for node in self.system.node_objects:
-                if nodeID == node.ID:
+                if nodeID == node.id:
                     node = copy.copy(node)
                     node.Fx *= -1
                     node.Fz *= -1
@@ -99,7 +99,7 @@ class ElementLevel:
         Determine node results on the element level.
         """
         element.node_1 = Node(
-            ID=element.node_ids[0],
+            id=element.node_ids[0],
             Fx=element.element_force_vector[0] + element.element_primary_force_vector[0],
             Fz=element.element_force_vector[1] + element.element_primary_force_vector[1],
             Ty=element.element_force_vector[2] + element.element_primary_force_vector[2],
@@ -109,7 +109,7 @@ class ElementLevel:
         )
 
         element.node_2 = Node(
-            ID=element.node_ids[1],
+            id=element.node_ids[1],
             Fx=element.element_force_vector[3] + element.element_primary_force_vector[3],
             Fz=element.element_force_vector[4] + element.element_primary_force_vector[4],
             Ty=element.element_force_vector[5] + element.element_primary_force_vector[5],

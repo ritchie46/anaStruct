@@ -171,7 +171,7 @@ class Plotter:
 
         for q_ID in self.system.loads_q:
             for el in self.system.elements:
-                if el.ID == q_ID:
+                if el.id == q_ID:
                     if el.q_load > 0:
                         direction = 1
                     else:
@@ -245,7 +245,7 @@ class Plotter:
 
         for F_tuple in self.system.loads_point:
             for node in self.system.node_objects:
-                if node.ID == F_tuple[0]:  # F_tuple[0] = ID
+                if node.id == F_tuple[0]:  # F_tuple[0] = ID
                     sol = self.__arrow_patch_values(F_tuple[1], F_tuple[2], node, h)
                     x = sol[0]
                     y = sol[1]
@@ -263,7 +263,7 @@ class Plotter:
 
         for F_tuple in self.system.loads_moment:
             for node in self.system.node_objects:
-                if node.ID == F_tuple[0]:
+                if node.id == F_tuple[0]:
                     if F_tuple[2] > 0:
                         self.one_fig.plot(node.point.x, -node.point.z, marker=r'$\circlearrowleft$', ms=25,
                                       color='orange')
@@ -327,7 +327,7 @@ class Plotter:
             x_val = (x_val[0] + x_val[-1]) / 2 - math.sin(el.alpha) * factor
             y_val = (y_val[0] + y_val[-1]) / 2 + math.cos(el.alpha) * factor
 
-            self.one_fig.text(x_val, y_val, "%d" % el.ID, color='r', fontsize=9, zorder=10)
+            self.one_fig.text(x_val, y_val, "%d" % el.id, color='r', fontsize=9, zorder=10)
 
         # add supports
         if supports:

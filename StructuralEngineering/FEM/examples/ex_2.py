@@ -10,8 +10,8 @@ def run():
     system.add_truss_element(location_list=[[5, -5], [5, 0]], EA=5000)
     system.add_truss_element(location_list=[[0, 0], [5, -5]], EA=5000 * math.sqrt(2))
 
-    system.add_support_hinged(nodeID=1)
-    system.add_support_hinged(nodeID=4)
+    system.add_support_hinged(node_id=1)
+    system.add_support_hinged(node_id=4)
 
     system.point_load(Fx=10, nodeID=2)
 

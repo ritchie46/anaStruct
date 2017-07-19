@@ -9,9 +9,9 @@ Shear deformation is not taken into account.
 
 
 class Element:
-    def __init__(self, ID, EA, EI, l, ai, point_1, point_2, hinge=None):
+    def __init__(self, id, EA, EI, l, ai, point_1, point_2, hinge=None):
         """
-        :param ID: integer representing the elements ID
+        :param id: integer representing the elements ID
         :param EA: Young's modulus * Area
         :param EI: Young's modulus * Moment of Inertia
         :param l: length
@@ -20,7 +20,7 @@ class Element:
         :param point_2: point object
         :param hinge: (integer) 1 or 2. Adds an hinge ad the first or second node.
         """
-        self.ID = ID
+        self.id = id
         self.type = None
         self.EA = EA
         self.EI = EI
@@ -30,7 +30,7 @@ class Element:
         self.alpha = ai
         self.kinematic_matrix = kinematic_matrix(ai, l)
         self.constitutive_matrix = constitutive_matrix(EA, EI, l, hinge)
-        self.stiffness_matrix = stiffness_matrix(self.constitutive_matrix, self.kinematic_matrix)
+        self.stiffness_matrix = None
         self.nodeID1 = None
         self.nodeID2 = None
         self.node_ids = []
@@ -47,19 +47,36 @@ class Element:
         self.extension = None
         self.max_deflection = None
 
+        self.compile_stifness_matrix()
+
     def determine_force_vector(self):
         self.element_force_vector = np.dot(self.stiffness_matrix, self.element_displacement_vector)
         return self.element_force_vector
 
+    def compile_stifness_matrix(self):
+        self.stiffness_matrix = stiffness_matrix(self.constitutive_matrix, self.kinematic_matrix)
+
 
 def kinematic_matrix(ai, l):
+    """
+    Kinematic matrix of an element dependent of the angle ai and the length of the element.
 
+    :param ai: (float) angle with respect to the x axis.
+    :param l: (float) Length
+    """
     return np.array([[-math.cos(ai), math.sin(ai), 0, math.cos(ai), -math.sin(ai), 0],
                      [math.sin(ai) / l, math.cos(ai) / l, -1, -math.sin(ai) / l, -math.cos(ai) / l, 0],
                      [-math.sin(ai) / l, -math.cos(ai) / l, 0, math.sin(ai) / l, math.cos(ai) / l, 1]])
 
 
 def constitutive_matrix(EA, EI, l, hinge=None):
+    """
+    :param EA: (float) Young's modules * Area
+    :param EI: (float) Young's modules * Moment of Inertia
+    :param l: (float) Length
+    :param hinge: (int) 1 or 2. Apply a hinge on the first of the second node.
+    :return: (array)
+    """
     matrix = np.array([[EA / l, 0, 0],
                       [0, 4 * EI / l, -2 * EI / l],
                       [0, -2 * EI / l, 4 * EI / l]])

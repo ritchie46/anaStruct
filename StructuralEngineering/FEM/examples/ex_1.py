@@ -6,10 +6,10 @@ def run():
     system.add_element(location_list=[[0, 0], [3, -4]], EA=5e9, EI=8000)
     system.add_element(location_list=[[3, -4], [8, -4]], EA=5e9, EI=4000)
 
-    system.q_load(elementID=2, q=10, direction=1)
+    system.q_load(element_id=2, q=10, direction=1)
 
-    system.add_support_hinged(nodeID=1)
-    system.add_support_fixed(nodeID=3)
+    system.add_support_hinged(node_id=1)
+    system.add_support_fixed(node_id=3)
 
     system.solve()
     system.show_structure()

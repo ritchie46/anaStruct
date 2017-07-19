@@ -43,6 +43,8 @@ class SystemElements:
         self.reaction_forces = []  # node objects
 
         self.non_linear = False
+        self.non_linear_elements = {}
+        self.element_map = {}
 
     def add_truss_element(self, location_list, EA):
         return self.add_element(location_list, EA, 1e-14, type='truss')
@@ -55,6 +57,10 @@ class SystemElements:
         :param hinge: (integer) 1 or 2. Adds an hinge at the first or second node.
         :param mp: (dict) Set a maximum plastic moment capacity. Keys are integers representing the nodes. Values
                           are the bending moment capacity.
+                          Example:
+                          { 1: 210e3,
+                            2: 180e3
+                          }
         :return element id: (int)
         """
         # add the element number
@@ -106,11 +112,11 @@ class SystemElements:
 
         if id1 is False:
             self.node_ids.append(node_id1)
-            self.node_objects.append(Node(ID=node_id1, point=point_1))
+            self.node_objects.append(Node(id=node_id1, point=point_1))
             index_id1 = len(self.node_objects) - 1
         if id2 is False:
             self.node_ids.append(node_id2)
-            self.node_objects.append(Node(ID=node_id2, point=point_2))
+            self.node_objects.append(Node(id=node_id2, point=point_2))
             index_id2 = len(self.node_objects) - 1
 
         """
@@ -171,6 +177,7 @@ class SystemElements:
         element.type = type
 
         self.elements.append(element)
+        self.element_map[self.count] = element
 
         """
         system matrix [K]
@@ -195,16 +202,16 @@ class SystemElements:
         """
         # starting row
         # node 1
-        row_index_n1 = (element.node_1.ID - 1) * 3
+        row_index_n1 = (element.node_1.id - 1) * 3
 
         # node 2
-        row_index_n2 = (element.node_2.ID - 1) * 3
+        row_index_n2 = (element.node_2.id - 1) * 3
         matrix_locations = []
 
         for _ in range(3):  # ux1, uz1, phi1
             full_row_locations = []
-            column_index_n1 = (element.node_1.ID - 1) * 3
-            column_index_n2 = (element.node_2.ID - 1) * 3
+            column_index_n1 = (element.node_1.id - 1) * 3
+            column_index_n2 = (element.node_2.id - 1) * 3
 
             for i in range(3):  # matrix row index 1, 2, 3
                 full_row_locations.append((row_index_n1, column_index_n1))
@@ -219,8 +226,8 @@ class SystemElements:
 
         for _ in range(3):  # ux3, uz3, phi3
             full_row_locations = []
-            column_index_n1 = (element.node_1.ID - 1) * 3
-            column_index_n2 = (element.node_2.ID - 1) * 3
+            column_index_n1 = (element.node_1.id - 1) * 3
+            column_index_n2 = (element.node_2.id - 1) * 3
 
             for i in range(3):  # matrix row index 1, 2, 3
                 full_row_locations.append((row_index_n2, column_index_n1))
@@ -233,6 +240,11 @@ class SystemElements:
             row_index_n2 += 1
             matrix_locations.append(full_row_locations)
         self.system_matrix_locations.append(matrix_locations)
+
+        if mp is not None:
+            self.non_linear_elements[self.count] = mp
+            self.non_linear = True
+
         return self.count
 
     def __assemble_system_matrix(self):
@@ -334,8 +346,8 @@ class SystemElements:
 
         # determine the displacement vector of the elements
         for el in self.elements:
-            index_node_1 = (el.node_1.ID - 1) * 3
-            index_node_2 = (el.node_2.ID - 1) * 3
+            index_node_1 = (el.node_1.id - 1) * 3
+            index_node_2 = (el.node_2.id - 1) * 3
 
             for i in range(3):  # node 1 ux, uz, phi
                 el.element_displacement_vector[i] = self.system_displacement_vector[index_node_1 + i]
@@ -350,73 +362,78 @@ class SystemElements:
         self.post_processor.reaction_forces()
         self.post_processor.element_results()
 
+        # start stiffness adaptation
+        if self.non_linear:
+            s
+
         # check the values in the displacement vector for extreme values, indicating a flawed calculation
-        for value in np.nditer(self.system_displacement_vector):
-            assert(value < 1e6), "The displacements of the structure exceed 1e6. Check your support conditions," \
-                                 "or your elements Young's modulus"
+        assert(np.any(self.system_displacement_vector < 1e6)), "The displacements of the structure exceed 1e6. " \
+                                                               "Check your support conditions," \
+                                                               "or your elements Young's modulus"
+
         return self.system_displacement_vector
 
     def _support_check(self, nodeID):
         if self.node_objects[nodeID - 1].hinge:
             raise Exception ("You cannot add a support to a hinged node.")
 
-    def add_support_hinged(self, nodeID):
+    def add_support_hinged(self, node_id):
         """
         adds a hinged support a the given node
-        :param nodeID: integer representing the nodes ID
+        :param node_id: integer representing the nodes ID
         """
-        self._support_check(nodeID)
-        self.set_displacement_vector([(nodeID, 1), (nodeID, 2)])
+        self._support_check(node_id)
+        self.set_displacement_vector([(node_id, 1), (node_id, 2)])
 
         # add the support to the support list for the plotter
         for obj in self.node_objects:
-            if obj.ID == nodeID:
+            if obj.id == node_id:
                 self.supports_hinged.append(obj)
                 break
 
-    def add_support_roll(self, nodeID, direction=2):
+    def add_support_roll(self, node_id, direction=2):
         """
         adds a rollable support at the given node
-        :param nodeID: integer representing the nodes ID
+        :param node_id: integer representing the nodes ID
         :param direction: integer representing the direction that is fixed: x = 1, z = 2
         """
-        self._support_check(nodeID)
-        self.set_displacement_vector([(nodeID, direction)])
+        self._support_check(node_id)
+        self.set_displacement_vector([(node_id, direction)])
 
         # add the support to the support list for the plotter
         for obj in self.node_objects:
-            if obj.ID == nodeID:
+            if obj.id == node_id:
                 self.supports_roll_direction.append(direction)
                 self.supports_roll.append(obj)
                 break
 
-    def add_support_fixed(self, nodeID):
+    def add_support_fixed(self, node_id):
         """
         adds a fixed support at the given node
-        :param nodeID: integer representing the nodes ID
+        :param node_id: integer representing the nodes ID
         """
-        self._support_check(nodeID)
-        self.set_displacement_vector([(nodeID, 1), (nodeID, 2), (nodeID, 3)])
+        self._support_check(node_id)
+        self.set_displacement_vector([(node_id, 1), (node_id, 2), (node_id, 3)])
 
         # add the support to the support list for the plotter
         for obj in self.node_objects:
-            if obj.ID == nodeID:
+            if obj.id == node_id:
                 self.supports_fixed.append(obj)
                 break
 
-    def add_support_spring(self, nodeID, translation, K):
+    def add_support_spring(self, node_id, translation, K):
         """
         :param translation: Integer representing prevented translation.
         1 = translation in x
         2 = translation in z
         3 = rotation in y
-        :param nodeID: Integer representing the nodes ID.
+        :param node_id: Integer representing the nodes ID.
         :param K: Stiffness of the spring
 
         The stiffness of the spring is added in the system matrix at the location that represents the node and the
         displacement.
         """
-        self._support_check(nodeID)
+        self._support_check(node_id)
         if self.system_matrix is None:
             shape = len(self.node_ids) * 3
             self.shape_system_matrix = shape
@@ -424,48 +441,48 @@ class SystemElements:
 
         # determine the location in the system matrix
         # row and column are the same
-        matrix_index = (nodeID - 1) * 3 + translation - 1
+        matrix_index = (node_id - 1) * 3 + translation - 1
 
         #  first index is row, second is column
         self.system_matrix[matrix_index][matrix_index] += K
 
         if translation == 1:  # translation spring in x-axis
-            self.set_displacement_vector([(nodeID, 2)])
+            self.set_displacement_vector([(node_id, 2)])
 
             # add the support to the support list for the plotter
             for obj in self.node_objects:
-                if obj.ID == nodeID:
+                if obj.id == node_id:
                     self.supports_spring_x.append(obj)
                     break
         elif translation == 2:  # translation spring in z-axis
-            self.set_displacement_vector([(nodeID, 1)])
+            self.set_displacement_vector([(node_id, 1)])
 
             # add the support to the support list for the plotter
             for obj in self.node_objects:
-                if obj.ID == nodeID:
+                if obj.id == node_id:
                     self.supports_spring_z.append(obj)
                     break
         elif translation == 3:  # rotational spring in y-axis
-            self.set_displacement_vector([(nodeID, 1), (nodeID, 2)])
+            self.set_displacement_vector([(node_id, 1), (node_id, 2)])
 
             # add the support to the support list for the plotter
             for obj in self.node_objects:
-                if obj.ID == nodeID:
+                if obj.id == node_id:
                     self.supports_spring_y.append(obj)
                     break
 
-    def q_load(self, q, elementID, direction=1):
+    def q_load(self, q, element_id, direction=1):
         """
-        :param elementID: integer representing the element ID
+        :param element_id: integer representing the element ID
         :param direction: 1 = towards the element, -1 = away from the element
         :param q: value of the q-load
         :return:
         """
 
-        self.loads_q.append(elementID)
+        self.loads_q.append(element_id)
 
         for obj in self.elements:
-            if obj.ID == elementID:
+            if obj.id == element_id:
                 element = obj
                 break
 
@@ -489,9 +506,9 @@ class SystemElements:
         # system force vector. System forces = element force * -1
         # first row are the moments
         # second and third row are the reacton forces. The direction
-        self.set_force_vector([(element.node_1.ID, 3, -left_moment), (element.node_2.ID, 3, -right_moment),
-                               (element.node_1.ID, 2, reaction_z), (element.node_2.ID, 2, reaction_z),
-                               (element.node_1.ID, 1, reaction_x), (element.node_2.ID, 1, reaction_x)])
+        self.set_force_vector([(element.node_1.id, 3, -left_moment), (element.node_2.id, 3, -right_moment),
+                               (element.node_1.id, 2, reaction_z), (element.node_2.id, 2, reaction_z),
+                               (element.node_1.id, 1, reaction_x), (element.node_2.id, 1, reaction_x)])
 
         return self.system_force_vector
 
@@ -539,9 +556,9 @@ class SystemElements:
         """
         result_list = []
         for obj in self.node_objects:
-            if obj.ID == nodeID:
+            if obj.id == nodeID:
                 return {
-                    "id": obj.ID,
+                    "id": obj.id,
                     "Fx": obj.Fx,
                     "Fz": obj.Fz,
                     "Ty": obj.Ty,
@@ -550,7 +567,7 @@ class SystemElements:
                     "phi_y": obj.phi_y
                 }
             else:
-                result_list.append((obj.ID, obj.Fx, obj.Fz, obj.Ty, obj.ux, obj.uz, obj.phi_y))
+                result_list.append((obj.id, obj.Fx, obj.Fz, obj.Ty, obj.ux, obj.uz, obj.phi_y))
         return result_list
 
     def get_element_results(self, elementID=0, verbose=False):
@@ -565,10 +582,10 @@ class SystemElements:
         """
         result_list = []
         for el in self.elements:
-            if elementID == el.ID:
+            if elementID == el.id:
                 if el.type == "truss":
                     return {
-                        "id": el.ID,
+                        "id": el.id,
                         "length": el.l,
                         "alpha": el.alpha,
                         "u": el.extension[0],
@@ -576,7 +593,7 @@ class SystemElements:
                     }
                 else:
                     return {
-                        "id": el.ID,
+                        "id": el.id,
                         "length": el.l,
                         "alpha": el.alpha,
                         "u": el.extension[0],
@@ -593,7 +610,7 @@ class SystemElements:
             else:
                 if el.type == "truss":
                     result_list.append({
-                        "id": el.ID,
+                        "id": el.id,
                         "length": el.l,
                         "alpha": el.alpha,
                         "u": el.extension[0],
@@ -604,7 +621,7 @@ class SystemElements:
                 else:
                     result_list.append(
                         {
-                            "id": el.ID,
+                            "id": el.id,
                             "length": el.l,
                             "alpha": el.alpha,
                             "u": el.extension[0],
