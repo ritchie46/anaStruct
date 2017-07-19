@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from StructuralEngineering.basic import converge
 from StructuralEngineering.FEM.postprocess import SystemLevel as post_sl
 from StructuralEngineering.FEM.elements import Element
 from StructuralEngineering.FEM.node import Node
@@ -251,15 +252,12 @@ class SystemElements:
         """
         Shape of the matrix = n nodes * n d.o.f.
         Shape = n * 3
-        :return:
         """
-        if self.system_matrix is None:
-            shape = len(self.node_ids) * 3
-            self.shape_system_matrix = shape
-            self.system_matrix = np.zeros((shape, shape))
+        shape = len(self.node_ids) * 3
+        self.shape_system_matrix = shape
+        self.system_matrix = np.zeros((shape, shape))
 
         for i in range(len(self.elements)):
-
             for row_index in range(len(self.system_matrix_locations[i])):
                 count = 0
                 for loc in self.system_matrix_locations[i][row_index]:
@@ -330,6 +328,7 @@ class SystemElements:
         self.system_matrix = original_system_matrix
 
     def solve(self):
+        self.remainder_indexes = []
         assert(self.system_force_vector is not None), "There are no forces on the structure"
         self.__assemble_system_matrix()
         self.__process_conditions()
@@ -364,8 +363,24 @@ class SystemElements:
 
         # start stiffness adaptation
         if self.non_linear:
-            for k, v in self.non_linear_elements:
-                self.element_map[k]
+
+            factors = []
+
+            # update the elements stiffnesses
+            for k, v in self.non_linear_elements.items():
+                el = self.element_map[k]
+                for node_no, mp in v.items():
+                    m_e = el.element_force_vector[node_no * 3 - 1]
+
+                    if m_e > mp:
+                        el.nodes_plastic[node_no - 1] = True
+                    if el.nodes_plastic[node_no - 1]:
+                        factor = converge(m_e, mp, 3)
+                        factors.append(factor)
+                        el.update_stiffness(factor, node_no)
+
+            if not np.allclose(factors, 1, 1e-3):
+                return self.solve()
 
         # check the values in the displacement vector for extreme values, indicating a flawed calculation
         assert(np.any(self.system_displacement_vector < 1e6)), "The displacements of the structure exceed 1e6. " \

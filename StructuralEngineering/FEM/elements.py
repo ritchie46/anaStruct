@@ -46,8 +46,8 @@ class Element:
         self.deflection = None
         self.extension = None
         self.max_deflection = None
-
         self.compile_stifness_matrix()
+        self.nodes_plastic = [False, False]
 
     def determine_force_vector(self):
         self.element_force_vector = np.dot(self.stiffness_matrix, self.element_displacement_vector)
@@ -55,6 +55,17 @@ class Element:
 
     def compile_stifness_matrix(self):
         self.stiffness_matrix = stiffness_matrix(self.constitutive_matrix, self.kinematic_matrix)
+
+    def update_stiffness(self, factor, node):
+        if node == 1:
+            self.constitutive_matrix[1][1] *= factor
+            self.constitutive_matrix[1][2] *= factor
+            self.constitutive_matrix[2][1] *= factor
+        elif node == 2:
+            self.constitutive_matrix[1][2] *= factor
+            self.constitutive_matrix[2][1] *= factor
+            self.constitutive_matrix[2][2] *= factor
+        self.compile_stifness_matrix()
 
 
 def kinematic_matrix(ai, l):

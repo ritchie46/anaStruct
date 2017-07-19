@@ -75,3 +75,14 @@ def find_nearest(array, value):
     index = (np.abs(array-value)).argmin()
     return array[index], index
 
+
+def converge(lhs, rhs, div=3):
+    """
+    Determine convergence factor.
+
+    :param lhs: (flt)
+    :param rhs: (flt)
+    :param div: (flt)
+    :return: multiplication factor (flt) ((lhs / rhs) - 1) / div + 1
+    """
+    return (np.abs(rhs) / np.abs(lhs) - 1) / div + 1
