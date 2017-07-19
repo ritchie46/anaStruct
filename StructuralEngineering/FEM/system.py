@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from StructuralEngineering.basic import converge
+from StructuralEngineering.basic import converge, Vertex
 from StructuralEngineering.FEM.postprocess import SystemLevel as post_sl
 from StructuralEngineering.FEM.elements import Element
 from StructuralEngineering.FEM.node import Node
@@ -9,7 +9,7 @@ from StructuralEngineering.FEM.plotter import Plotter
 
 
 class SystemElements:
-    def __init__(self, figsize=(12, 8)):
+    def __init__(self, figsize=(12, 8), invert_z=False):
         self.node_ids = []
         self.max_node_id = 2  # minimum is 2, being 1 element
         self.node_objects = []
@@ -25,6 +25,7 @@ class SystemElements:
         self.post_processor = post_sl(self)
         self.plotter = Plotter(self)
         self.figsize = figsize
+        self.invert_z = invert_z
         # list of removed indexes due to conditions
         self.removed_indexes = []
         # list of indexes that remain after conditions are applied
@@ -67,8 +68,17 @@ class SystemElements:
         """
         # add the element number
         self.count += 1
-        point_1 = Point(location_list[0][0], location_list[0][1])
-        point_2 = Point(location_list[1][0], location_list[1][1])
+
+        if isinstance(location_list[0], Vertex):
+            point_1 = Point(location_list[0].x, location_list[0].z)
+            point_2 = Point(location_list[1].x, location_list[1].z)
+        else:
+            point_1 = Point(location_list[0][0], location_list[0][1])
+            point_2 = Point(location_list[1][0], location_list[1][1])
+
+        if self.invert_z:
+            point_1.z *= -1
+            point_2.z *= -1
 
         node_id1 = 1
         node_id2 = 2
@@ -553,9 +563,9 @@ class SystemElements:
             # system force vector.
             self.set_force_vector([(node_id, 3, Ty)])
 
-    def show_structure(self, figsize=None):
+    def show_structure(self, verbosity=0, figsize=None):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.plot_structure(figsize, plot_now=True)
+        self.plotter.plot_structure(figsize, verbosity, plot_now=True)
 
     def show_bending_moment(self, figsize=None):
         figsize = self.figsize if figsize is None else figsize

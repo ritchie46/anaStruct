@@ -273,7 +273,7 @@ class Plotter:
                     self.one_fig.text(node.point.x + h * 0.2, -node.point.z + h * 0.2, "T=%d" % F_tuple[2], color='k',
                                       fontsize=9, zorder=10)
 
-    def plot_structure(self, figsize, plot_now=False, supports=True):
+    def plot_structure(self, figsize, verbosity, plot_now=False, supports=True):
         """
         :param plot_now: (boolean) if True, plt.figure will plot.
         :param supports: (boolean) if True, supports are plotted.
@@ -310,24 +310,25 @@ class Plotter:
 
         self.one_fig.axis([minxrange, plusxrange, minyrange, plusyrange])
 
-        for el in self.system.elements:
+        if verbosity == 0:
+            for el in self.system.elements:
 
-            axis_values = plot_values_element(el)
-            x_val = axis_values[0]
-            y_val = axis_values[1]
+                axis_values = plot_values_element(el)
+                x_val = axis_values[0]
+                y_val = axis_values[1]
 
-            # add node ID to plot
-            offset = max_val * 0.015
-            self.one_fig.text(x_val[0] + offset, y_val[0] + offset, '%d' % el.node_id1, color='g', fontsize=9, zorder=10)
-            self.one_fig.text(x_val[-1] + offset, y_val[-1] + offset, '%d' % el.node_id2, color='g', fontsize=9,
-                              zorder=10)
+                # add node ID to plot
+                offset = max_val * 0.015
+                self.one_fig.text(x_val[0] + offset, y_val[0] + offset, '%d' % el.node_id1, color='g', fontsize=9, zorder=10)
+                self.one_fig.text(x_val[-1] + offset, y_val[-1] + offset, '%d' % el.node_id2, color='g', fontsize=9,
+                                  zorder=10)
 
-            # add element ID to plot
-            factor = 0.02 * self.max_val
-            x_val = (x_val[0] + x_val[-1]) / 2 - math.sin(el.alpha) * factor
-            y_val = (y_val[0] + y_val[-1]) / 2 + math.cos(el.alpha) * factor
+                # add element ID to plot
+                factor = 0.02 * self.max_val
+                x_val = (x_val[0] + x_val[-1]) / 2 - math.sin(el.alpha) * factor
+                y_val = (y_val[0] + y_val[-1]) / 2 + math.cos(el.alpha) * factor
 
-            self.one_fig.text(x_val, y_val, "%d" % el.id, color='r', fontsize=9, zorder=10)
+                self.one_fig.text(x_val, y_val, "%d" % el.id, color='r', fontsize=9, zorder=10)
 
         # add supports
         if supports:
