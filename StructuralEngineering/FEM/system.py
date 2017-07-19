@@ -9,7 +9,7 @@ from StructuralEngineering.FEM.plotter import Plotter
 
 
 class SystemElements:
-    def __init__(self):
+    def __init__(self, figsize=(12, 8)):
         self.node_ids = []
         self.max_node_id = 2  # minimum is 2, being 1 element
         self.node_objects = []
@@ -24,6 +24,7 @@ class SystemElements:
         self.reduced_system_matrix = None
         self.post_processor = post_sl(self)
         self.plotter = Plotter(self)
+        self.figsize = figsize
         # list of removed indexes due to conditions
         self.removed_indexes = []
         # list of indexes that remain after conditions are applied
@@ -327,8 +328,35 @@ class SystemElements:
         self.system_force_vector = original_force_vector
         self.system_matrix = original_system_matrix
 
-    def solve(self):
-        self.remainder_indexes = []
+    def _stiffness_adaptation(self):
+        self.solve(True)
+
+        for _ in range(1500):
+            self.remainder_indexes = []
+            self.removed_indexes = []
+            factors = []
+            # update the elements stiffnesses
+            for k, v in self.non_linear_elements.items():
+                el = self.element_map[k]
+                for node_no, mp in v.items():
+                    m_e = el.element_force_vector[node_no * 3 - 1]
+
+                    if m_e > mp:
+                        el.nodes_plastic[node_no - 1] = True
+                    if el.nodes_plastic[node_no - 1]:
+                        factor = converge(m_e, mp, 3)
+                        factors.append(factor)
+                        el.update_stiffness(factor, node_no)
+
+            if not np.allclose(factors, 1, 1e-3):
+                self.solve(True)
+            else:
+                break
+
+    def solve(self, force_linear=False):
+        if self.non_linear and not force_linear:
+            self._stiffness_adaptation()
+
         assert(self.system_force_vector is not None), "There are no forces on the structure"
         self.__assemble_system_matrix()
         self.__process_conditions()
@@ -360,27 +388,6 @@ class SystemElements:
         self.post_processor.node_results()
         self.post_processor.reaction_forces()
         self.post_processor.element_results()
-
-        # start stiffness adaptation
-        if self.non_linear:
-
-            factors = []
-
-            # update the elements stiffnesses
-            for k, v in self.non_linear_elements.items():
-                el = self.element_map[k]
-                for node_no, mp in v.items():
-                    m_e = el.element_force_vector[node_no * 3 - 1]
-
-                    if m_e > mp:
-                        el.nodes_plastic[node_no - 1] = True
-                    if el.nodes_plastic[node_no - 1]:
-                        factor = converge(m_e, mp, 3)
-                        factors.append(factor)
-                        el.update_stiffness(factor, node_no)
-
-            if not np.allclose(factors, 1, 1e-3):
-                return self.solve()
 
         # check the values in the displacement vector for extreme values, indicating a flawed calculation
         assert(np.any(self.system_displacement_vector < 1e6)), "The displacements of the structure exceed 1e6. " \
@@ -544,23 +551,29 @@ class SystemElements:
             # system force vector.
             self.set_force_vector([(node_id, 3, Ty)])
 
-    def show_structure(self):
-        self.plotter.plot_structure(plot_now=True)
+    def show_structure(self, figsize=None):
+        figsize = self.figsize if figsize is None else figsize
+        self.plotter.plot_structure(figsize, plot_now=True)
 
-    def show_bending_moment(self):
-        self.plotter.bending_moment()
+    def show_bending_moment(self, figsize=None):
+        figsize = self.figsize if figsize is None else figsize
+        self.plotter.bending_moment(figsize)
 
-    def show_normal_force(self):
-        self.plotter.normal_force()
+    def show_normal_force(self, figsize=None):
+        figsize = self.figsize if figsize is None else figsize
+        self.plotter.normal_force(figsize)
 
-    def show_shear_force(self):
-        self.plotter.shear_force()
+    def show_shear_force(self, figsize=None):
+        figsize = self.figsize if figsize is None else figsize
+        self.plotter.shear_force(figsize)
 
-    def show_reaction_force(self):
-        self.plotter.reaction_force()
+    def show_reaction_force(self, figsize=None):
+        figsize = self.figsize if figsize is None else figsize
+        self.plotter.reaction_force(figsize)
 
-    def show_displacement(self):
-        self.plotter.displacements()
+    def show_displacement(self, figsize=None):
+        figsize = self.figsize if figsize is None else figsize
+        self.plotter.displacements(figsize)
 
     def get_node_results_system(self, node_id=0):
         """

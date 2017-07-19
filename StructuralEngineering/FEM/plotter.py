@@ -12,8 +12,8 @@ class Plotter:
         self.max_val = None
         self.max_force = 0
 
-    def __start_plot(self):
-        fig = plt.figure()
+    def __start_plot(self, figsize):
+        fig = plt.figure(figsize=figsize)
         self.one_fig = fig.add_subplot(111)
         plt.tight_layout()
 
@@ -273,13 +273,13 @@ class Plotter:
                     self.one_fig.text(node.point.x + h * 0.2, -node.point.z + h * 0.2, "T=%d" % F_tuple[2], color='k',
                                       fontsize=9, zorder=10)
 
-    def plot_structure(self, plot_now=False, supports=True):
+    def plot_structure(self, figsize, plot_now=False, supports=True):
         """
         :param plot_now: (boolean) if True, plt.figure will plot.
         :param supports: (boolean) if True, supports are plotted.
         :return:
         """
-        self.__start_plot()
+        self.__start_plot(figsize)
         max_x = 0
         max_z = 0
         min_x = 0
@@ -366,9 +366,9 @@ class Plotter:
         if node_results:
             self._add_node_values(x_val, y_val, force_1, force_2, digits)
 
-    def normal_force(self):
+    def normal_force(self, figsize):
         self.max_force = 0
-        self.plot_structure()
+        self.plot_structure(figsize)
 
         # determine max factor for scaling
         for el in self.system.elements:
@@ -394,8 +394,8 @@ class Plotter:
                                       fontsize=14, color='b')
         plt.show()
 
-    def bending_moment(self):
-        self.plot_structure()
+    def bending_moment(self, figsize):
+        self.plot_structure(figsize)
         self.max_force = 0
         con = len(self.system.elements[0].bending_moment)
 
@@ -431,8 +431,8 @@ class Plotter:
                                       fontsize=9)
         plt.show()
 
-    def shear_force(self):
-        self.plot_structure()
+    def shear_force(self, figsize):
+        self.plot_structure(figsize)
         self.max_force = 0
 
         # determine max factor for scaling
@@ -453,8 +453,8 @@ class Plotter:
                 self.plot_result(axis_values, shear_1, shear_2)
         plt.show()
 
-    def reaction_force(self):
-        self.plot_structure(supports=False)
+    def reaction_force(self, figsize):
+        self.plot_structure(figsize, supports=False)
 
         h = 0.2 * self.max_val
         max_force = 0
@@ -506,8 +506,8 @@ class Plotter:
                                   color='k', fontsize=9, zorder=10)
         plt.show()
 
-    def displacements(self):
-        self.plot_structure()
+    def displacements(self, figsize):
+        self.plot_structure(figsize)
         self.max_force = 0
 
         # determine max factor for scaling
