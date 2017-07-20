@@ -243,34 +243,31 @@ class Plotter:
         h = 0.1 * max_val
 
         for F_tuple in self.system.loads_point:
-            for node in self.system.node_objects:
-                if node.id == F_tuple[0]:  # F_tuple[0] = ID
-                    sol = self.__arrow_patch_values(F_tuple[1], F_tuple[2], node, h)
-                    x = sol[0]
-                    y = sol[1]
-                    len_x = sol[2]
-                    len_y = sol[3]
-                    F = sol[4]
+            node = self.system.node_map[F_tuple[0]]
+            sol = self.__arrow_patch_values(F_tuple[1], F_tuple[2], node, h)
+            x = sol[0]
+            y = sol[1]
+            len_x = sol[2]
+            len_y = sol[3]
+            F = sol[4]
 
-                    self.one_fig.arrow(x, y, len_x, len_y, head_width=h*0.15, head_length=0.2*h, ec='b', fc='orange',
-                                       zorder=11)
-                    self.one_fig.text(x, y, "F=%d" % F, color='k', fontsize=9, zorder=10)
+            self.one_fig.arrow(x, y, len_x, len_y, head_width=h*0.15, head_length=0.2*h, ec='b', fc='orange',
+                               zorder=11)
+            self.one_fig.text(x, y, "F=%d" % F, color='k', fontsize=9, zorder=10)
 
     def __moment_load_patch(self, max_val):
 
         h = 0.2 * max_val
-
         for F_tuple in self.system.loads_moment:
-            for node in self.system.node_objects:
-                if node.id == F_tuple[0]:
-                    if F_tuple[2] > 0:
-                        self.one_fig.plot(node.point.x, -node.point.z, marker=r'$\circlearrowleft$', ms=25,
-                                      color='orange')
-                    else:
-                        self.one_fig.plot(node.point.x, -node.point.z, marker=r'$\circlearrowright$', ms=25,
-                                      color='orange')
-                    self.one_fig.text(node.point.x + h * 0.2, -node.point.z + h * 0.2, "T=%d" % F_tuple[2], color='k',
-                                      fontsize=9, zorder=10)
+            node = self.system.node_map[F_tuple[0]]
+            if F_tuple[2] > 0:
+                self.one_fig.plot(node.point.x, -node.point.z, marker=r'$\circlearrowleft$', ms=25,
+                              color='orange')
+            else:
+                self.one_fig.plot(node.point.x, -node.point.z, marker=r'$\circlearrowright$', ms=25,
+                              color='orange')
+            self.one_fig.text(node.point.x + h * 0.2, -node.point.z + h * 0.2, "T=%d" % F_tuple[2], color='k',
+                              fontsize=9, zorder=10)
 
     def plot_structure(self, figsize, verbosity, plot_now=False, supports=True, scale=1):
         """
@@ -370,6 +367,8 @@ class Plotter:
         self.max_force = 0
         self.plot_structure(figsize, 1, scale=scale)
 
+        node_results = True if verbosity == 0 else False
+
         # determine max factor for scaling
         for el in self.system.elements:
             factor = self.__set_factor(el.N, el.N)
@@ -379,7 +378,7 @@ class Plotter:
                 pass
             else:
                 axis_values = plot_values_normal_force(el, factor)
-                self.plot_result(axis_values, el.N, el.N)
+                self.plot_result(axis_values, el.N, el.N, node_results=node_results)
 
                 point = (el.point_2 - el.point_1) / 2 + el.point_1
                 if el.N < 0:
@@ -473,11 +472,11 @@ class Plotter:
         h = 0.2 * self.max_val
         max_force = 0
 
-        for node in self.system.reaction_forces:
+        for node in self.system.reaction_forces.values():
             max_force = abs(node.Fx) if abs(node.Fx) > max_force else max_force
             max_force = abs(node.Fz) if abs(node.Fz) > max_force else max_force
 
-        for node in self.system.reaction_forces:
+        for node in self.system.reaction_forces.values():
             if not math.isclose(node.Fx, 0, rel_tol=1e-5, abs_tol=1e-9):
                 # x direction
                 scale = abs(node.Fx) / max_force * h
@@ -504,11 +503,12 @@ class Plotter:
 
                 self.one_fig.arrow(x, y, len_x, len_y, head_width=h * 0.15, head_length=0.2 * scale, ec='b', fc='orange',
                                    zorder=11)
-                self.one_fig.text(x, y, "R=%s" % round(node.Fz, 2), color='k', fontsize=9, zorder=10)
+
+                if verbosity == 0:
+                    self.one_fig.text(x, y, "R=%s" % round(node.Fz, 2), color='k', fontsize=9, zorder=10)
 
             if not math.isclose(node.Ty, 0, rel_tol=1e-5, abs_tol=1e-9):
                 """
-                'r: regex
                 '$...$': render the strings using mathtext
                 """
                 if node.Ty > 0:
@@ -518,7 +518,8 @@ class Plotter:
                     self.one_fig.plot(node.point.x, -node.point.z, marker=r'$\circlearrowright$', ms=25,
                                       color='orange')
 
-                self.one_fig.text(node.point.x + h * 0.2, -node.point.z + h * 0.2, "T=%s" % round(node.Ty, 2),
+                if verbosity == 0:
+                    self.one_fig.text(node.point.x + h * 0.2, -node.point.z + h * 0.2, "T=%s" % round(node.Ty, 2),
                                   color='k', fontsize=9, zorder=10)
         plt.show()
 

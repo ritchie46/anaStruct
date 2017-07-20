@@ -5,6 +5,7 @@ import numpy as np
 from StructuralEngineering.FEM.node import Node
 from StructuralEngineering.basic import is_moving_towards, integrate_array, angle_x_axis
 
+
 class SystemLevel:
     def __init__(self, system):
         self.system = system
@@ -22,13 +23,14 @@ class SystemLevel:
             self.post_el.node_results(el)
 
         count = 0
-        for node in self.system.node_objects:
+        for node in self.system.node_map.values():
+
             for el in self.system.elements:
                 # Minus sign, because the node force is opposite of the element force.
                 if el.node_1.id == node.id:
-                    self.system.node_objects[count] -= el.node_1
+                    self.system.node_map[node.id] -= el.node_1
                 elif el.node_2.id == node.id:
-                    self.system.node_objects[count] -= el.node_2
+                    self.system.node_map[node.id] -= el.node_2
 
             # Loads that are applied on the node of the support. Moment at a hinged support may not lead to reaction
             # moment
@@ -37,18 +39,18 @@ class SystemLevel:
                 tuple (nodeID, direction=3, Ty)
                 """
                 if F_tuple[0] == node.id:
-                    self.system.node_objects[count].Ty += F_tuple[2]
+                    self.system.node_map[node.id].Ty += F_tuple[2]
 
                 # The displacements are not summarized. Therefore the displacements are set for every node 1.
                 # In order to ensure that every node is overwrote.
                 if el.node_1.id == node.id:
-                    self.system.node_objects[count].ux = el.node_1.ux
-                    self.system.node_objects[count].uz = el.node_1.uz
-                    self.system.node_objects[count].phi_y = el.node_1.phi_y
+                    self.system.node_map[node.id].ux = el.node_1.ux
+                    self.system.node_map[node.id].uz = el.node_1.uz
+                    self.system.node_map[node.id].phi_y = el.node_1.phi_y
                 if el.node_2.id == node.id:
-                    self.system.node_objects[count].ux = el.node_2.ux
-                    self.system.node_objects[count].uz = el.node_2.uz
-                    self.system.node_objects[count].phi_y = el.node_2.phi_y
+                    self.system.node_map[node.id].ux = el.node_2.ux
+                    self.system.node_map[node.id].uz = el.node_2.uz
+                    self.system.node_map[node.id].phi_y = el.node_2.phi_y
             count += 1
 
     def reaction_forces(self):
@@ -66,17 +68,16 @@ class SystemLevel:
         for node in self.system.supports_spring_y:
             supports.append(node.id)
 
-        for nodeID in supports:
-            for node in self.system.node_objects:
-                if nodeID == node.id:
-                    node = copy.copy(node)
-                    node.Fx *= -1
-                    node.Fz *= -1
-                    node.Ty *= -1
-                    node.ux = None
-                    node.uz = None
-                    node.phi_y = None
-                    self.system.reaction_forces.append(node)
+        for node_id in supports:
+            node = self.system.node_map[node_id]
+            self.system.reaction_forces[node_id] = node
+            node = copy.copy(node)
+            node.Fx *= -1
+            node.Fz *= -1
+            node.Ty *= -1
+            node.ux = None
+            node.uz = None
+            node.phi_y = None
 
     def element_results(self):
         """
@@ -192,6 +193,7 @@ class ElementLevel:
             phi_neg = -integrate_array(element.bending_moment / element.EI, dx)
             w = integrate_array(phi_neg, dx)
 
+            # Angle between last w and elements axis. The w array will be corrected so that this angle == 0.
             alpha = math.atan(w[-1] / element.l)
 
             lx = np.linspace(0, element.l, con)
