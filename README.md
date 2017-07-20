@@ -31,12 +31,12 @@ system.add_element(location_list=[[0, -5], [5, -5]], EA=15000, EI=5000)
 system.add_element(location_list=[[5, -5], [5, 0]], EA=15000, EI=5000)
 
 # Add supports.
-system.add_support_fixed(nodeID=1)
+system.add_support_fixed(node_id=1)
 # Add a rotational spring at node 4.
-system.add_support_spring(nodeID=4, translation=3, K=4000)
+system.add_support_spring(node_id=4, translation=3, K=4000)
 
 # Add loads.
-system.point_load(Fx=30, nodeID=2)
+system.point_load(Fx=30, node_id=2)
 system.q_load(q=10, elementID=2)
 
 system.show_structure()

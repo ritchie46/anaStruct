@@ -22,8 +22,8 @@ class Node:
         self.point = point
         self.hinge = False
 
-    def show_result(self):
-        print("\nID = %s\n"
+    def __str__(self):
+        return ("\nid = %s\n"
               "Fx = %s\n"
               "Fz = %s\n"
               "Ty = %s\n"

@@ -12,7 +12,6 @@ class SystemElements:
     def __init__(self, figsize=(12, 8), invert_z=False):
         self.node_ids = []
         self.max_node_id = 2  # minimum is 2, being 1 element
-        self.node_objects = []
         self.elements = []
         self.count = 0
         self.system_matrix_locations = []
@@ -43,12 +42,13 @@ class SystemElements:
         self.loads_q = []  # element ids with a q-load
         self.loads_moment = []
         # results
-        self.reaction_forces = []  # node objects
+        self.reaction_forces = {}  # node objects
 
         self.non_linear = False
         self.non_linear_elements = {}  # keys are element ids, values are dicts: {node_index: max moment capacity}
         self.element_map = {}
         self.node_map = {}
+        self._spring_map = {}  # keys matrix index (for both row and columns), values K
 
     def add_truss_element(self, location_list, EA):
         return self.add_element(location_list, EA, 1e-14, type='truss')
@@ -124,12 +124,10 @@ class SystemElements:
         if id1 is False:
             node = Node(id=node_id1, point=point_1)
             self.node_ids.append(node_id1)
-            self.node_objects.append(node)
             self.node_map[node_id1] = node
         if id2 is False:
             node = Node(id=node_id2, point=point_2)
             self.node_ids.append(node_id2)
-            self.node_objects.append(node)
             self.node_map[node_id2] = node
 
         """
@@ -245,10 +243,14 @@ class SystemElements:
         Shape of the matrix = n nodes * n d.o.f.
         Shape = n * 3
         """
-        if self.system_matrix is None:
-            shape = len(self.node_ids) * 3
-            self.shape_system_matrix = shape
-            self.system_matrix = np.zeros((shape, shape))
+        # if self.system_matrix is None:
+        shape = len(self.node_ids) * 3
+        self.shape_system_matrix = shape
+        self.system_matrix = np.zeros((shape, shape))
+
+        for matrix_index, K in self._spring_map.items():
+            #  first index is row, second is column
+            self.system_matrix[matrix_index][matrix_index] += K
 
         for i in range(len(self.elements)):
             for row_index in range(len(self.system_matrix_locations[i])):
@@ -329,7 +331,6 @@ class SystemElements:
             factors = []
             self.remainder_indexes = []
             self.removed_indexes = []
-            self.system_matrix = None  # Note to self update system matrices for springs
 
             # update the elements stiffnesses
             for k, v in self.non_linear_elements.items():
@@ -397,7 +398,7 @@ class SystemElements:
         return self.system_displacement_vector
 
     def _support_check(self, node_id):
-        if self.node_objects[node_id - 1].hinge:
+        if self.node_map[node_id].hinge:
             raise Exception ("You cannot add a support to a hinged node.")
 
     def add_support_hinged(self, node_id):
@@ -409,10 +410,7 @@ class SystemElements:
         self.set_displacement_vector([(node_id, 1), (node_id, 2)])
 
         # add the support to the support list for the plotter
-        for obj in self.node_objects:
-            if obj.id == node_id:
-                self.supports_hinged.append(obj)
-                break
+        self.supports_hinged.append(self.node_map[node_id])
 
     def add_support_roll(self, node_id, direction=2):
         """
@@ -424,11 +422,8 @@ class SystemElements:
         self.set_displacement_vector([(node_id, direction)])
 
         # add the support to the support list for the plotter
-        for obj in self.node_objects:
-            if obj.id == node_id:
-                self.supports_roll_direction.append(direction)
-                self.supports_roll.append(obj)
-                break
+        self.supports_roll.append(self.node_map[node_id])
+        self.supports_roll_direction.append(direction)
 
     def add_support_fixed(self, node_id):
         """
@@ -439,10 +434,7 @@ class SystemElements:
         self.set_displacement_vector([(node_id, 1), (node_id, 2), (node_id, 3)])
 
         # add the support to the support list for the plotter
-        for obj in self.node_objects:
-            if obj.id == node_id:
-                self.supports_fixed.append(obj)
-                break
+        self.supports_fixed.append(self.node_map[node_id])
 
     def add_support_spring(self, node_id, translation, K):
         """
@@ -457,42 +449,33 @@ class SystemElements:
         displacement.
         """
         self._support_check(node_id)
-        if self.system_matrix is None:
-            shape = len(self.node_ids) * 3
-            self.shape_system_matrix = shape
-            self.system_matrix = np.zeros((shape, shape))
 
         # determine the location in the system matrix
         # row and column are the same
         matrix_index = (node_id - 1) * 3 + translation - 1
 
-        #  first index is row, second is column
-        self.system_matrix[matrix_index][matrix_index] += K
+        self._spring_map[matrix_index] = K
+
+        # #  first index is row, second is column
+        # self.system_matrix[matrix_index][matrix_index] += K
 
         if translation == 1:  # translation spring in x-axis
             self.set_displacement_vector([(node_id, 2)])
 
             # add the support to the support list for the plotter
-            for obj in self.node_objects:
-                if obj.id == node_id:
-                    self.supports_spring_x.append(obj)
-                    break
+            self.supports_spring_x.append(self.node_map[node_id])
+
         elif translation == 2:  # translation spring in z-axis
             self.set_displacement_vector([(node_id, 1)])
 
             # add the support to the support list for the plotter
-            for obj in self.node_objects:
-                if obj.id == node_id:
-                    self.supports_spring_z.append(obj)
-                    break
+            self.supports_spring_z.append(self.node_map[node_id])
+
         elif translation == 3:  # rotational spring in y-axis
             self.set_displacement_vector([(node_id, 1), (node_id, 2)])
 
             # add the support to the support list for the plotter
-            for obj in self.node_objects:
-                if obj.id == node_id:
-                    self.supports_spring_y.append(obj)
-                    break
+            self.supports_spring_y.append(self.node_map[node_id])
 
     def q_load(self, q, element_id, direction=1):
         """
@@ -584,19 +567,20 @@ class SystemElements:
                 if node_id > 0: (dict)
         """
         result_list = []
-        for obj in self.node_objects:
-            if obj.id == node_id:
-                return {
-                    "id": obj.id,
-                    "Fx": obj.Fx,
-                    "Fz": obj.Fz,
-                    "Ty": obj.Ty,
-                    "ux": obj.ux,
-                    "uz": obj.uz,
-                    "phi_y": obj.phi_y
-                }
-            else:
-                result_list.append((obj.id, obj.Fx, obj.Fz, obj.Ty, obj.ux, obj.uz, obj.phi_y))
+        if node_id != 0:
+            node = self.node_map[node_id]
+            return {
+                "id": node.id,
+                "Fx": node.Fx,
+                "Fz": node.Fz,
+                "Ty": node.Ty,
+                "ux": node.ux,
+                "uz": node.uz,
+                "phi_y": node.phi_y
+            }
+        else:
+            for node in self.node_map.values():
+                result_list.append((node.id, node.Fx, node.Fz, node.Ty, node.ux, node.uz, node.phi_y))
         return result_list
 
     def get_element_results(self, element_id=0, verbose=False):
