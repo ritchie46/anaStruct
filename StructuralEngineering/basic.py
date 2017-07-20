@@ -373,3 +373,12 @@ def angle_x_axis(delta_x, delta_z):
 
     return ai
 
+
+def integrate_array(y, dx):
+    """
+    integrate array y * dx
+    """
+    y_int = np.zeros(y.size)
+    for i in range(y.size - 1):
+        y_int[i + 1] = y_int[i] + y[i + 1] * dx
+    return y_int

@@ -3,8 +3,7 @@ import math
 import numpy as np
 
 from StructuralEngineering.FEM.node import Node
-from StructuralEngineering.basic import is_moving_towards
-
+from StructuralEngineering.basic import is_moving_towards, integrate_array, angle_x_axis
 
 class SystemLevel:
     def __init__(self, system):
@@ -175,34 +174,31 @@ class ElementLevel:
         Determines the displacement by integrating the bending moment.
         :param element: (object) of the Element class
 
-        deflection w =
-        EI * (d^4/dx^4 * w(x)) = q
+        w = -M''
 
-        solution of differential equation:
+        This gives you the formula
 
-        w = 1/24 qx^4 + 1/6 c1x^3 + 1/2 c2 x^2 + c3x + c4  ---> c4 = w(0)
-        phi = -1/6 qx^3/EI - 1/2c1x^2 -c2x -c3  ---> c3 = -phi
-        M = EI(-1/2qx^2/EI -c1x -c2)  ---> c2 = -M/EI
-        V = EI(-qx/EI -c1)  ---> c1 = -V/EI
+        w = -aMx +bx + c
+
+        a = already defined by the integral
+        b = Scale the slope of the parabola. This is the rotation of the deflection. You can think of this as
+            the angle of the deflection beam. By rotating the beam so that the last deflection w = 0 you get the correct
+            value for b. w[-1] = 0.
+        c = Translate the parabola. Translate it so that w[0] = 0
         """
 
         if element.type == 'general':
-            c1 = -element.shear_force[0] / element.EI
-            c2 = -element.bending_moment[0] / element.EI
-            c3 = element.node_1.phi_y
-            c4 = 0
-            w = np.empty(con)
-            dx = element.l / con
+            dx = element.l / (len(element.bending_moment) - 1)
+            phi_neg = -integrate_array(element.bending_moment / element.EI, dx)
+            w = integrate_array(phi_neg, dx)
 
-            for i in range(con):
-                x = (i + 1) * dx
-                w[i] = 1 / 6 * c1 * x**3 + 0.5 * c2 * x**2 + c3 * x + c4
-                if element.q_load:
-                    w[i] += 1 / 24 * -element.q_load * x**4 / element.EI
+            alpha = math.atan(w[-1] / element.l)
+
+            lx = np.linspace(0, element.l, con)
+
+            w = w - lx * np.sin(alpha)
             element.deflection = -w
-
-            # max deflection
-            element.max_deflection = max(abs(min(w)), abs(max(w)))
+            element.max_deflection = np.max(np.abs(w))
 
         """
         Extension

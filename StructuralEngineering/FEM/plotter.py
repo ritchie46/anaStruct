@@ -654,32 +654,20 @@ def plot_values_deflection(element, factor, linear=False):
 
     x1 = element.point_1.x + ux1
     y1 = -element.point_1.z + uz1
+    x2 = element.point_2.x + ux2
+    y2 = -element.point_2.z + uz2
 
     if element.type == "general" and not linear:
-        n_val = len(element.deflection)
-        x_val = np.empty(n_val)
-        y_val = np.empty(n_val)
+        n = len(element.deflection)
+        x_val = np.linspace(x1, x2, n)
+        y_val = np.linspace(y1, y2, n)
 
-        dl = element.l / n_val
-
-        for i in range(n_val):
-            dx = (element.deflection[i] * math.sin(element.alpha)
-                  + element.extension[i] * math.cos(element.alpha)) * factor
-            dy = (element.deflection[i] * -math.cos(element.alpha)
-                  + element.extension[i] * math.sin(element.alpha)) * factor
-
-            x = (i + 1) * dl * math.cos(element.alpha)
-            y = (i + 1) * dl * math.sin(element.alpha)
-
-            x_val[i] = x1 + x + dx
-            y_val[i] = y1 + y + dy
-
-        x_val = np.insert(x_val, 0, x1)
-        y_val = np.insert(y_val, 0, y1)
+        x_val = x_val + (element.deflection * math.sin(element.alpha)
+                         + element.extension * math.cos(element.alpha)) * factor
+        y_val = y_val + (element.deflection * -math.cos(element.alpha)
+                         + element.extension * math.sin(element.alpha)) * factor
 
     else:  # truss element has no bending
-        x2 = element.point_2.x + ux2
-        y2 = -element.point_2.z + uz2
         x_val = np.array([x1, x2])
         y_val = np.array([y1, y2])
 
