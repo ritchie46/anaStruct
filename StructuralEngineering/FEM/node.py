@@ -48,4 +48,7 @@ class Node:
 
         return Node(self.id, Fx, Fz, Ty, ux, uz, phi_y, self.point)
 
+    def reset(self):
+        self.Fx = self.Fz = self.Ty = self.ux = self.uz = self.phi_y = 0
+
 

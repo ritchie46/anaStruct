@@ -2,7 +2,7 @@ from StructuralEngineering.FEM import system as se
 
 
 def run():
-    system = se.SystemElements(invert_z=False)
+    system = se.SystemElements(xy_cs=False)
     system.add_element(location_list=[[0, 0], [5, 0]], EA=5e9, EI=8000)
     system.add_element(location_list=[[5, 0], [5, -5]], EA=5e9, EI=4000)
     system.moment_load(Ty=10, node_id=3)

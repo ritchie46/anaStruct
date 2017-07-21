@@ -25,6 +25,9 @@ class SystemLevel:
         count = 0
         for node in self.system.node_map.values():
 
+            # reset nodes in case of iterative calculation
+            self.system.node_map[node.id].reset()
+
             for el in self.system.elements:
                 # Minus sign, because the node force is opposite of the element force.
                 if el.node_1.id == node.id:

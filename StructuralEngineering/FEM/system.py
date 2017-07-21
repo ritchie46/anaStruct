@@ -9,7 +9,7 @@ from StructuralEngineering.FEM.plotter import Plotter
 
 
 class SystemElements:
-    def __init__(self, figsize=(12, 8), invert_z=True, EA=15e3, EI=5e3):
+    def __init__(self, figsize=(12, 8), xy_cs=True, EA=15e3, EI=5e3):
         # standard values if none provided
         self.EA = EA
         self.EI = EI
@@ -27,7 +27,7 @@ class SystemElements:
         self.post_processor = post_sl(self)
         self.plotter = Plotter(self)
         self.figsize = figsize
-        self.invert_z = invert_z
+        self.xy_cs = xy_cs
         # list of removed indexes due to conditions
         self.removed_indexes = []
         # list of indexes that remain after conditions are applied
@@ -83,7 +83,7 @@ class SystemElements:
             point_1 = Pointxz(location_list[0][0], location_list[0][1])
             point_2 = Pointxz(location_list[1][0], location_list[1][1])
 
-        if self.invert_z:
+        if self.xy_cs:
             point_1.z *= -1
             point_2.z *= -1
 
@@ -414,27 +414,37 @@ class SystemElements:
             print("Solved in {} iterations".format(c))
 
     def _gnl(self, verbosity):
-        last_deformation = self.solve(False)
+        print(self.node_map[2])
+
+        last_abs_u = np.abs(self.solve(False))
         if verbosity == 0:
             print("Starting geometrical non linear calculation")
 
-        for c in range(1500):
+        for c in range(10000):
             for el in self.element_map.values():
                 delta_x = el.point_2.x + el.node_2.ux - el.point_1.x - el.node_1.ux
                 # minus sign to work with an opposite z-axis
                 delta_z = -el.point_2.z - el.node_2.uz + el.point_1.z + el.node_1.uz
-                ai = angle_x_axis(delta_x, delta_z)
+                a_bar = angle_x_axis(delta_x, delta_z)
+                ai = a_bar #+ el.node_1.phi_y
+                aj = a_bar #+ el.node_2.phi_y
                 l = math.sqrt(delta_x**2 + delta_z**2)
-                el.compile_kinematic_matrix(ai, l)
+                el.compile_kinematic_matrix(ai, aj, l)
+                #el.compile_constitutive_matrix(el.EA, el.EI, l)
                 el.compile_stifness_matrix()
-                print(ai, el.node_2.ux)
 
-            current_deformation = self.solve(gnl=False)
-
-            if np.allclose(last_deformation, current_deformation):
+            current_abs_u = np.abs(self.solve(gnl=False))
+            global_increase = np.sum(current_abs_u) / np.sum(last_abs_u)
+            print(global_increase)
+            if global_increase < 0.9:
+                print(f"Divergence in {c} iterations")
+                break
+            if global_increase - 1 < 1e-9 and global_increase > 1:
                 print(f"Convergence in {c} iterations")
                 break
-            last_deformation = current_deformation
+
+
+            last_abs_u = current_abs_u
 
     def _support_check(self, node_id):
         if self.node_map[node_id].hinge:
@@ -595,11 +605,14 @@ class SystemElements:
 
     def get_node_results_system(self, node_id=0):
         """
+        These are the node results. These are the opposite of the forces and displacements working on the elements and
+        may seem counter intuitive.
+
         :param node_id: (integer) representing the node's ID. If integer = 0, the results of all nodes are returned
         :return:
                 if node_id == 0: (list)
                     Returns a list containing tuples with the results
-                    [(id, Fx, Fz, Ty, ux, uz), (id, Fx, Fz...), () .. ]
+                    [(id, Fx, Fz, Ty, ux, uz, phi_y), (id, Fx, Fz...), () .. ]
                 if node_id > 0: (dict)
         """
         result_list = []
@@ -617,6 +630,33 @@ class SystemElements:
         else:
             for node in self.node_map.values():
                 result_list.append((node.id, node.Fx, node.Fz, node.Ty, node.ux, node.uz, node.phi_y))
+        return result_list
+
+    def get_node_displacements(self, node_id=0):
+        """
+        :param node_id: (integer) representing the node's ID. If integer = 0, the results of all nodes are returned
+        :return:
+                if node_id == 0: (list)
+                    Returns a list containing tuples with the results
+                    [(id,  ux, uz, phi_y), (id, ux, uz), () .. ]
+                if node_id > 0: (dict)
+        """
+        if self.xy_cs:
+            a = -1
+        else:
+            a = 1
+        result_list = []
+        if node_id != 0:
+            node = self.node_map[node_id]
+            return {
+                "id": node.id,
+                "ux": -node.ux,
+                "uz": a * node.uz,
+                "phi_y": node.phi_y
+            }
+        else:
+            for node in self.node_map.values():
+                result_list.append((node.id, -node.ux, a * node.uz, node.phi_y))
         return result_list
 
     def get_element_results(self, element_id=0, verbose=False):

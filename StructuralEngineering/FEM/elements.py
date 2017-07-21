@@ -28,7 +28,7 @@ class Element:
         self.point_1 = point_1  # location
         self.point_2 = point_2  # location
         self.alpha = ai
-        self.kinematic_matrix = kinematic_matrix(ai, l)
+        self.kinematic_matrix = kinematic_matrix(ai, ai, l)
         self.constitutive_matrix = constitutive_matrix(EA, EI, l, hinge)
         self.stiffness_matrix = None
         self.node_id1 = None  # int
@@ -56,8 +56,11 @@ class Element:
     def compile_stifness_matrix(self):
         self.stiffness_matrix = stiffness_matrix(self.constitutive_matrix, self.kinematic_matrix)
 
-    def compile_kinematic_matrix(self, ai, l):
-        self.kinematic_matrix = kinematic_matrix(ai, l)
+    def compile_kinematic_matrix(self, ai, aj, l):
+        self.kinematic_matrix = kinematic_matrix(ai, aj, l)
+
+    def compile_constitutive_matrix(self, EA, EI, l):
+        self.constitutive_matrix = constitutive_matrix(EA, EI, l)
 
     def update_stiffness(self, factor, node):
         if node == 1:
@@ -71,16 +74,16 @@ class Element:
         self.compile_stifness_matrix()
 
 
-def kinematic_matrix(ai, l):
+def kinematic_matrix(ai, aj, l):
     """
     Kinematic matrix of an element dependent of the angle ai and the length of the element.
 
     :param ai: (float) angle with respect to the x axis.
     :param l: (float) Length
     """
-    return np.array([[-math.cos(ai), math.sin(ai), 0, math.cos(ai), -math.sin(ai), 0],
-                     [math.sin(ai) / l, math.cos(ai) / l, -1, -math.sin(ai) / l, -math.cos(ai) / l, 0],
-                     [-math.sin(ai) / l, -math.cos(ai) / l, 0, math.sin(ai) / l, math.cos(ai) / l, 1]])
+    return np.array([[-math.cos(ai), math.sin(ai), 0, math.cos(aj), -math.sin(aj), 0],
+                     [math.sin(ai) / l, math.cos(ai) / l, -1, -math.sin(aj) / l, -math.cos(aj) / l, 0],
+                     [-math.sin(ai) / l, -math.cos(ai) / l, 0, math.sin(aj) / l, math.cos(aj) / l, 1]])
 
 
 def constitutive_matrix(EA, EI, l, hinge=None):

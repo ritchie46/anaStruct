@@ -560,13 +560,15 @@ class Plotter:
 
             if el.type == "general":
                 # index of the max deflection
-                if max(abs(el.deflection)) > min(abs(el.deflection)):
-                    index = el.deflection.argmax()
-                else:
-                    index = el.deflection.argmin()
+                index = np.argmax(np.abs(el.deflection))
 
                 if verbosity == 0:
-                    self._add_element_values(axis_values[0], axis_values[1], el.deflection[index], index, 3)
+                    x = (el.node_1.ux + el.node_2.ux) / 2
+                    y = (-el.node_1.uz + -el.node_2.uz) / 2
+
+                    if index != 0 or index != el.deflection.size:
+                        self._add_element_values(axis_values[0], axis_values[1],
+                                                 el.deflection[index] + (x**2 + y**2)**0.5, index, 3)
         if show:
             plt.show()
         else:
