@@ -12,8 +12,8 @@ class Plotter:
         self.max_force = 0
 
     def __start_plot(self, figsize):
-        fig = plt.figure(figsize=figsize)
-        self.one_fig = fig.add_subplot(111)
+        self.fig = plt.figure(figsize=figsize)
+        self.one_fig = self.fig.add_subplot(111)
         plt.tight_layout()
 
     def __set_factor(self, value_1, value_2):
@@ -269,9 +269,9 @@ class Plotter:
             self.one_fig.text(node.point.x + h * 0.2, -node.point.z + h * 0.2, "T=%d" % F_tuple[2], color='k',
                               fontsize=9, zorder=10)
 
-    def plot_structure(self, figsize, verbosity, plot_now=False, supports=True, scale=1):
+    def plot_structure(self, figsize, verbosity, show=False, supports=True, scale=1, offset=(0, 0)):
         """
-        :param plot_now: (boolean) if True, plt.figure will plot.
+        :param show: (boolean) if True, plt.figure will plot.
         :param supports: (boolean) if True, supports are plotted.
         :return:
         """
@@ -288,21 +288,21 @@ class Plotter:
             self.one_fig.plot(x_val, y_val, color='black', marker='s')
 
             # determine max values for scaling the plotter
-            max_x = max([abs(x) for x in x_val]) if max([abs(x) for x in x_val]) > max_x else max_x
-            max_z = max([abs(x) for x in y_val]) if max([abs(x) for x in y_val]) > max_z else max_z
+            max_x = np.max(np.abs(x_val)) if np.max(np.abs(x_val)) > max_x else max_x
+            max_z = np.max(np.abs(y_val)) if np.max([abs(x) for x in y_val]) > max_z else max_z
 
-            min_x = min([abs(x) for x in x_val]) if min([abs(x) for x in x_val]) < min_x else min_x
-            min_z = min([abs(x) for x in y_val]) if min([abs(x) for x in y_val]) < min_z else min_z
-            center_x = (max_x - min_x) / 2 + min_x
-            center_z = (max_z - min_z) / 2 + min_x
+            min_x = np.min(np.abs(x_val)) if np.min(np.abs(x_val)) < min_x else min_x
+            min_z = np.min(np.abs(y_val)) if np.min(np.abs(y_val)) < min_z else min_z
 
+        center_x = (max_x - min_x) / 2 + min_x + -offset[0]
+        center_z = (max_z - min_z) / 2 + min_x + -offset[1]
         max_val = max(max_x, max_z)
         self.max_val = max_val
-        offset = max_val * scale
-        plusxrange = center_x + offset
-        plusyrange = center_z + offset
-        minxrange = center_x - offset
-        minyrange = center_z - offset
+        range = max_val * scale
+        plusxrange = center_x + range
+        plusyrange = center_z + range
+        minxrange = center_x - range
+        minyrange = center_z - range
 
         self.one_fig.axis([minxrange, plusxrange, minyrange, plusyrange])
 
@@ -314,9 +314,9 @@ class Plotter:
                 y_val = axis_values[1]
 
                 # add node ID to plot
-                offset = max_val * 0.015
-                self.one_fig.text(x_val[0] + offset, y_val[0] + offset, '%d' % el.node_id1, color='g', fontsize=9, zorder=10)
-                self.one_fig.text(x_val[-1] + offset, y_val[-1] + offset, '%d' % el.node_id2, color='g', fontsize=9,
+                range = max_val * 0.015
+                self.one_fig.text(x_val[0] + range, y_val[0] + range, '%d' % el.node_id1, color='g', fontsize=9, zorder=10)
+                self.one_fig.text(x_val[-1] + range, y_val[-1] + range, '%d' % el.node_id2, color='g', fontsize=9,
                                   zorder=10)
 
                 # add element ID to plot
@@ -334,12 +334,14 @@ class Plotter:
             self.__rotating_spring_support_patch(max_val)
             self.__spring_support_patch(max_val)
 
-        if plot_now:
+        if show:
             # add_loads
             self.__q_load_patch(max_val)
             self.__point_load_patch(max_val)
             self.__moment_load_patch(max_val)
             plt.show()
+
+        return self.fig
 
     def _add_node_values(self, x_val, y_val, value_1, value_2, digits):
         offset = self.max_val * 0.015
@@ -363,9 +365,9 @@ class Plotter:
         if node_results:
             self._add_node_values(x_val, y_val, force_1, force_2, digits)
 
-    def normal_force(self, figsize, verbosity, scale):
+    def normal_force(self, figsize, verbosity, scale, offset, show):
         self.max_force = 0
-        self.plot_structure(figsize, 1, scale=scale)
+        self.plot_structure(figsize, 1, scale=scale, offset=offset)
 
         node_results = True if verbosity == 0 else False
 
@@ -393,10 +395,12 @@ class Plotter:
                     if verbosity == 0:
                         self.one_fig.text(point.x, -point.z, "+", ha='center', va='center',
                                           fontsize=14, color='b')
-        plt.show()
 
-    def bending_moment(self, figsize, verbosity, scale):
-        self.plot_structure(figsize, 1, scale=scale)
+        if show:
+            plt.show()
+
+    def bending_moment(self, figsize, verbosity, scale, offset, show):
+        self.plot_structure(figsize, 1, scale=scale, offset=offset)
         self.max_force = 0
         con = len(self.system.elements[0].bending_moment)
 
@@ -436,10 +440,12 @@ class Plotter:
                     if verbosity == 0:
                         self.one_fig.text(x, y, "%s" % round(m_sag, 1),
                                           fontsize=9)
-        plt.show()
+        if show:
+            plt.show()
+        return self.fig
 
-    def shear_force(self, figsize, verbosity, scale):
-        self.plot_structure(figsize, 1, scale=scale)
+    def shear_force(self, figsize, verbosity, scale, offset, show):
+        self.plot_structure(figsize, 1, scale=scale, offset=offset)
         self.max_force = 0
 
         # determine max factor for scaling
@@ -464,10 +470,12 @@ class Plotter:
                     node_results = False
 
                 self.plot_result(axis_values, shear_1, shear_2, node_results=node_results)
-        plt.show()
+        if show:
+            plt.show()
+        return self.fig
 
-    def reaction_force(self, figsize, verbosity, scale):
-        self.plot_structure(figsize, 1, supports=False, scale=scale)
+    def reaction_force(self, figsize, verbosity, scale, offset, show):
+        self.plot_structure(figsize, 1, supports=False, scale=scale, offset=offset)
 
         h = 0.2 * self.max_val
         max_force = 0
@@ -521,10 +529,12 @@ class Plotter:
                 if verbosity == 0:
                     self.one_fig.text(node.point.x + h * 0.2, -node.point.z + h * 0.2, "T=%s" % round(node.Ty, 2),
                                   color='k', fontsize=9, zorder=10)
-        plt.show()
+        if show:
+            plt.show()
+        return self.fig
 
-    def displacements(self, figsize, verbosity, scale, linear):
-        self.plot_structure(figsize, 1, scale=scale)
+    def displacements(self, figsize, verbosity, scale, offset, show, linear):
+        self.plot_structure(figsize, 1, scale=scale, offset=offset)
         self.max_force = 0
 
         # determine max factor for scaling
@@ -548,8 +558,10 @@ class Plotter:
 
                 if verbosity == 0:
                     self._add_element_values(axis_values[0], axis_values[1], el.deflection[index], index, 3)
+        if show:
+            plt.show()
+        return self.fig
 
-        plt.show()
 
 """
 ### element functions ###

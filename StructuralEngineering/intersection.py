@@ -1,4 +1,4 @@
-from StructuralEngineering.trigonometry import Point
+from StructuralEngineering.trigonometry import Pointxz
 
 
 def on_segment(p, q, r):
@@ -55,10 +55,10 @@ def do_intersect(line_1, line_2):
     p2
     """
 
-    p1 = Point(x=line_1[0].x, z=line_1[0].z)
-    q1 = Point(x=line_1[1].x, z=line_1[1].z)
-    p2 = Point(x=line_2[0].x, z=line_2[0].z)
-    q2 = Point(x=line_2[1].x, z=line_2[1].z)
+    p1 = Pointxz(x=line_1[0].x, z=line_1[0].z)
+    q1 = Pointxz(x=line_1[1].x, z=line_1[1].z)
+    p2 = Pointxz(x=line_2[0].x, z=line_2[0].z)
+    q2 = Pointxz(x=line_2[1].x, z=line_2[1].z)
 
     # check which orientations occur, clockwise, counterclockwise and co-linear
     o1 = orientation(p1, q1, p2)

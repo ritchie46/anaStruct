@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from StructuralEngineering.intersection import do_intersect
-from StructuralEngineering.trigonometry import Point
+from StructuralEngineering.trigonometry import Pointxz
 
 
 class Epsilon:
@@ -45,7 +45,7 @@ class CrossSection:
 
         self.coordinate_list = []
         for i in range(len(coordinate_list)):
-            self.coordinate_list.append(Point(coordinate_list[i][0], coordinate_list[i][1]))
+            self.coordinate_list.append(Pointxz(coordinate_list[i][0], coordinate_list[i][1]))
 
         # Check the input
         self.valid_cross_section()
