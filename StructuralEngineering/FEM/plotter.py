@@ -340,8 +340,8 @@ class Plotter:
             self.__point_load_patch(max_val)
             self.__moment_load_patch(max_val)
             plt.show()
-
-        return self.fig
+        else:
+            return self.fig
 
     def _add_node_values(self, x_val, y_val, value_1, value_2, digits):
         offset = self.max_val * 0.015
@@ -398,6 +398,8 @@ class Plotter:
 
         if show:
             plt.show()
+        else:
+            return self.fig
 
     def bending_moment(self, figsize, verbosity, scale, offset, show):
         self.plot_structure(figsize, 1, scale=scale, offset=offset)
@@ -442,7 +444,8 @@ class Plotter:
                                           fontsize=9)
         if show:
             plt.show()
-        return self.fig
+        else:
+            return self.fig
 
     def shear_force(self, figsize, verbosity, scale, offset, show):
         self.plot_structure(figsize, 1, scale=scale, offset=offset)
@@ -472,7 +475,8 @@ class Plotter:
                 self.plot_result(axis_values, shear_1, shear_2, node_results=node_results)
         if show:
             plt.show()
-        return self.fig
+        else:
+            return self.fig
 
     def reaction_force(self, figsize, verbosity, scale, offset, show):
         self.plot_structure(figsize, 1, supports=False, scale=scale, offset=offset)
@@ -531,22 +535,25 @@ class Plotter:
                                   color='k', fontsize=9, zorder=10)
         if show:
             plt.show()
-        return self.fig
+        else:
+            return self.fig
 
-    def displacements(self, figsize, verbosity, scale, offset, show, linear):
+    def displacements(self, factor, figsize, verbosity, scale, offset, show, linear):
         self.plot_structure(figsize, 1, scale=scale, offset=offset)
         self.max_force = 0
 
         # determine max factor for scaling
-        for el in self.system.elements:
-            u_node = max(abs(el.node_1.ux), abs(el.node_1.uz))
-            if el.type == "general":
-                factor = self.__set_factor(el.max_deflection, u_node)
-            else:  # element is truss
-                factor = self.__set_factor(u_node, 0)
+        if factor is None:
+            for el in self.system.elements:
+                u_node = max(abs(el.node_1.ux), abs(el.node_1.uz))
+                if el.type == "general":
+                    factor = self.__set_factor(el.max_deflection, u_node)
+                else:  # element is truss
+                    factor = self.__set_factor(u_node, 0)
 
+        ax_range = self.one_fig.get_xlim()
         for el in self.system.elements:
-            axis_values = plot_values_deflection(el, factor, linear)
+            axis_values = plot_values_deflection(el, factor, ax_range, linear)
             self.plot_result(axis_values, node_results=False)
 
             if el.type == "general":
@@ -560,7 +567,8 @@ class Plotter:
                     self._add_element_values(axis_values[0], axis_values[1], el.deflection[index], index, 3)
         if show:
             plt.show()
-        return self.fig
+        else:
+            return self.fig
 
 
 """
@@ -659,7 +667,7 @@ def plot_values_bending_moment(element, factor, con):
     return x_val, y_val
 
 
-def plot_values_deflection(element, factor, linear=False):
+def plot_values_deflection(element, factor, ax_range, linear=False):
     ux1 = element.node_1.ux * factor
     uz1 = -element.node_1.uz * factor
     ux2 = element.node_2.ux * factor
@@ -684,5 +692,11 @@ def plot_values_deflection(element, factor, linear=False):
         x_val = np.array([x1, x2])
         y_val = np.array([y1, y2])
 
+    if np.max(x_val) > ax_range[1] \
+            or np.max(y_val) > ax_range[1] \
+            or np.min(x_val) < ax_range[0] \
+            or np.min(y_val) < ax_range[0]:
+        factor *= 0.01
+        return plot_values_deflection(element, factor, ax_range, linear)
     return x_val, y_val
 

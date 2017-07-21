@@ -407,7 +407,7 @@ class SystemElements:
                         el.update_stiffness(factor, node_no)
 
             if not np.allclose(factors, 1, 1e-3):
-                self.solve(True)
+                self.solve(force_linear=True)
             else:
                 break
         if verbosity == 0:
@@ -581,9 +581,9 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         self.plotter.reaction_force(figsize, verbosity, scale, offset, show)
 
-    def show_displacement(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True, linear=False):
+    def show_displacement(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True, linear=False):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.displacements(figsize, verbosity, scale, offset, show, linear)
+        self.plotter.displacements(factor, figsize, verbosity, scale, offset, show, linear)
 
     def get_node_results_system(self, node_id=0):
         """
@@ -591,6 +591,7 @@ class SystemElements:
         :return:
                 if node_id == 0: (list)
                     Returns a list containing tuples with the results
+                    [(id, Fx, Fz, Ty, ux, uz), (id, Fx, Fz...), () .. ]
                 if node_id > 0: (dict)
         """
         result_list = []
@@ -669,7 +670,7 @@ class SystemElements:
                             "N": el.N,
                             "wmax": np.min(el.deflection),
                             "wmin": np.max(el.deflection),
-                            "w": el.deflection if verbose else np.abs(el.deflection),
+                            "w": el.deflection if verbose else None,
                             "Mmin": np.min(el.bending_moment),
                             "Mmax": np.max(el.bending_moment),
                             "M": el.bending_moment if verbose else None,
