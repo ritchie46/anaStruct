@@ -84,8 +84,8 @@ class SystemElements:
             point_2 = Pointxz(location_list[1][0], location_list[1][1])
 
         if self.xy_cs:
-            point_1.z *= -1
-            point_2.z *= -1
+            point_1 = Pointxz(point_1.x, -point_1.z)
+            point_2 = Pointxz(point_2.x, -point_2.z)
 
         node_id1 = 1
         node_id2 = 2
@@ -414,8 +414,8 @@ class SystemElements:
             print("Solved in {} iterations".format(c))
 
     def _gnl(self, verbosity):
-        print(self.node_map[2])
-
+        div_c = 0
+        last_increase = 1e3
         last_abs_u = np.abs(self.solve(False))
         if verbosity == 0:
             print("Starting geometrical non linear calculation")
@@ -426,25 +426,32 @@ class SystemElements:
                 # minus sign to work with an opposite z-axis
                 delta_z = -el.point_2.z - el.node_2.uz + el.point_1.z + el.node_1.uz
                 a_bar = angle_x_axis(delta_x, delta_z)
-                ai = a_bar #+ el.node_1.phi_y
-                aj = a_bar #+ el.node_2.phi_y
+                ai = a_bar + el.node_1.phi_y
+                aj = a_bar + el.node_2.phi_y
                 l = math.sqrt(delta_x**2 + delta_z**2)
                 el.compile_kinematic_matrix(ai, aj, l)
+
                 #el.compile_constitutive_matrix(el.EA, el.EI, l)
                 el.compile_stifness_matrix()
 
             current_abs_u = np.abs(self.solve(gnl=False))
             global_increase = np.sum(current_abs_u) / np.sum(last_abs_u)
             print(global_increase)
-            if global_increase < 0.9:
+            if global_increase < 0.1:
                 print(f"Divergence in {c} iterations")
                 break
-            if global_increase - 1 < 1e-9 and global_increase > 1:
+            if global_increase - 1 < 1e-16 and global_increase > 1:
                 print(f"Convergence in {c} iterations")
                 break
+            if global_increase - last_increase > 0 and global_increase > 1:
+                div_c += 1
 
+                if div_c > 25:
+                    print(f"Divergence in {c} iterations")
+                    break
 
             last_abs_u = current_abs_u
+            last_increase = global_increase
 
     def _support_check(self, node_id):
         if self.node_map[node_id].hinge:
