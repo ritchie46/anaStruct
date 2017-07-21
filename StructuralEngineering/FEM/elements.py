@@ -56,6 +56,9 @@ class Element:
     def compile_stifness_matrix(self):
         self.stiffness_matrix = stiffness_matrix(self.constitutive_matrix, self.kinematic_matrix)
 
+    def compile_kinematic_matrix(self, ai, l):
+        self.kinematic_matrix = kinematic_matrix(ai, l)
+
     def update_stiffness(self, factor, node):
         if node == 1:
             self.constitutive_matrix[1][1] *= factor

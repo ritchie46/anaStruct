@@ -9,7 +9,7 @@ from StructuralEngineering.FEM.plotter import Plotter
 
 
 class SystemElements:
-    def __init__(self, figsize=(12, 8), invert_z=False, EA=1e8, EI=1e8):
+    def __init__(self, figsize=(12, 8), invert_z=True, EA=15e3, EI=5e3):
         # standard values if none provided
         self.EA = EA
         self.EI = EI
@@ -158,7 +158,6 @@ class SystemElements:
         # determine the angle of the element with the global x-axis
         delta_x = point_2.x - point_1.x
         delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
-
         ai = angle_x_axis(delta_x, delta_z)
 
         # add element
@@ -344,6 +343,8 @@ class SystemElements:
             return self._gnl(verbosity)
 
         assert(self.system_force_vector is not None), "There are no forces on the structure"
+        self.remainder_indexes = []
+        self.removed_indexes = []
         self.__assemble_system_matrix()
         self.__process_conditions()
 
@@ -353,6 +354,7 @@ class SystemElements:
         # add the solution of the reduced system in the complete system displacement vector
         self.system_displacement_vector = np.zeros(self.shape_system_matrix)
         count = 0
+
         for i in self.remainder_indexes:
             self.system_displacement_vector[i] = reduced_displacement_vector[count]
             count += 1
@@ -389,8 +391,6 @@ class SystemElements:
 
         for c in range(1500):
             factors = []
-            self.remainder_indexes = []
-            self.removed_indexes = []
 
             # update the elements stiffnesses
             for k, v in self.non_linear_elements.items():
@@ -414,20 +414,27 @@ class SystemElements:
             print("Solved in {} iterations".format(c))
 
     def _gnl(self, verbosity):
-        self.solve(False)
+        last_deformation = self.solve(False)
         if verbosity == 0:
             print("Starting geometrical non linear calculation")
 
-        for c in range(500):
+        for c in range(1500):
             for el in self.element_map.values():
-
-                # determine the angle of the element with the global x-axis
-                delta_x = dx
-                delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
-
+                delta_x = el.point_2.x + el.node_2.ux - el.point_1.x - el.node_1.ux
+                # minus sign to work with an opposite z-axis
+                delta_z = -el.point_2.z - el.node_2.uz + el.point_1.z + el.node_1.uz
                 ai = angle_x_axis(delta_x, delta_z)
+                l = math.sqrt(delta_x**2 + delta_z**2)
+                el.compile_kinematic_matrix(ai, l)
+                el.compile_stifness_matrix()
+                print(ai, el.node_2.ux)
 
-                pass
+            current_deformation = self.solve(gnl=False)
+
+            if np.allclose(last_deformation, current_deformation):
+                print(f"Convergence in {c} iterations")
+                break
+            last_deformation = current_deformation
 
     def _support_check(self, node_id):
         if self.node_map[node_id].hinge:
@@ -581,7 +588,8 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         self.plotter.reaction_force(figsize, verbosity, scale, offset, show)
 
-    def show_displacement(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True, linear=False):
+    def show_displacement(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
+                          linear=False, n_digits=2):
         figsize = self.figsize if figsize is None else figsize
         self.plotter.displacements(factor, figsize, verbosity, scale, offset, show, linear)
 

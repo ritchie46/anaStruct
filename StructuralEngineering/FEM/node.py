@@ -23,13 +23,8 @@ class Node:
         self.hinge = False
 
     def __str__(self):
-        return ("\nid = %s\n"
-              "Fx = %s\n"
-              "Fz = %s\n"
-              "Ty = %s\n"
-              "ux = %s\n"
-              "uz = %s\n"
-              "phi_y = %s" % (self.id, self.Fx, self.Fz, self.Ty, self.ux, self.uz, self.phi_y))
+        return ("[id = %s, Fx = %s, Fz = %s, Ty = %s, ux = %s, uz = %s, phi_y = %s]" %
+                (self.id, self.Fx, self.Fz, self.Ty, self.ux, self.uz, self.phi_y))
 
     def __add__(self, other):
         assert(self.id == other.id), "Cannot add nodes as the ID's don't match. The nodes positions don't match."

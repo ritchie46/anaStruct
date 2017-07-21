@@ -2,7 +2,7 @@ from StructuralEngineering.FEM import system as se
 
 
 def run():
-    system = se.SystemElements()
+    system = se.SystemElements(invert_z=False)
     system.add_element(location_list=[[0, 0], [3, -4]], EA=5e9, EI=8000)
     system.add_element(location_list=[[3, -4], [8, -4]], EA=5e9, EI=4000)
 

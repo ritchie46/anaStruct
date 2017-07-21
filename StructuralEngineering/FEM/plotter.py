@@ -550,8 +550,10 @@ class Plotter:
                     factor = self.__set_factor(el.max_deflection, u_node)
                 else:  # element is truss
                     factor = self.__set_factor(u_node, 0)
+                ax_range = self.one_fig.get_xlim()
+        else:
+            ax_range = None
 
-        ax_range = self.one_fig.get_xlim()
         for el in self.system.elements:
             axis_values = plot_values_deflection(el, factor, ax_range, linear)
             self.plot_result(axis_values, node_results=False)
@@ -692,11 +694,12 @@ def plot_values_deflection(element, factor, ax_range, linear=False):
         x_val = np.array([x1, x2])
         y_val = np.array([y1, y2])
 
-    if np.max(x_val) > ax_range[1] \
-            or np.max(y_val) > ax_range[1] \
-            or np.min(x_val) < ax_range[0] \
-            or np.min(y_val) < ax_range[0]:
-        factor *= 0.01
-        return plot_values_deflection(element, factor, ax_range, linear)
+    if ax_range is not None:
+        if np.max(x_val) > ax_range[1] \
+                or np.max(y_val) > ax_range[1]  \
+                or np.min(x_val) < ax_range[0]  \
+                or np.min(y_val) < ax_range[0]:
+            factor *= 0.1
+            return plot_values_deflection(element, factor, ax_range, linear)
     return x_val, y_val
 

@@ -6,7 +6,7 @@ import numpy as np
 class SimpleTest(unittest.TestCase):
 
     def test_example_1(self):
-        system = se.SystemElements()
+        system = se.SystemElements(invert_z=False)
         system.add_element(location_list=[[0, 0], [3, -4]], EA=5e9, EI=8000)
         system.add_element(location_list=[[3, -4], [8, -4]], EA=5e9, EI=4000)
         system.q_load(element_id=2, q=10, direction=1)
@@ -24,7 +24,7 @@ class SimpleTest(unittest.TestCase):
         system.show_shear_force(show=False)
 
     def test_example_2(self):
-        system = se.SystemElements()
+        system = se.SystemElements(invert_z=False)
         system.add_truss_element(location_list=[[0, 0], [0, -5]], EA=5000)
         system.add_truss_element(location_list=[[0, -5], [5, -5]], EA=5000)
         system.add_truss_element(location_list=[[5, -5], [5, 0]], EA=5000)
@@ -43,7 +43,7 @@ class SimpleTest(unittest.TestCase):
         system.show_shear_force(show=False)
 
     def test_example_3(self):
-        system = se.SystemElements()
+        system = se.SystemElements(invert_z=False)
         system.add_element(location_list=[[0, 0], [0, -5]], EA=15000, EI=5000)
         system.add_element(location_list=[[0, -5], [5, -5]], EA=15000, EI=5000)
         system.add_element(location_list=[[5, -5], [5, 0]], EA=15000, EI=5000)
@@ -61,7 +61,7 @@ class SimpleTest(unittest.TestCase):
         system.show_shear_force(show=False)
 
     def test_example_4(self):
-        system = se.SystemElements()
+        system = se.SystemElements(invert_z=False)
         system.add_element(location_list=[[0, 0], [5, 0]], EA=5e9, EI=8000, hinge=2)
         system.add_element(location_list=[[5, 0], [5, -5]], EA=5e9, EI=4000)
         system.moment_load(Ty=10, node_id=3)
@@ -78,7 +78,7 @@ class SimpleTest(unittest.TestCase):
         system.show_shear_force(show=False)
 
     def test_example_5(self):
-        system = se.SystemElements()
+        system = se.SystemElements(invert_z=False)
         system.add_element(location_list=[[0, 0], [5, 0]], EA=5e9, EI=8000)
         system.add_element(location_list=[[5, 0], [5, -5]], EA=5e9, EI=4000)
         system.moment_load(Ty=10, node_id=3)
