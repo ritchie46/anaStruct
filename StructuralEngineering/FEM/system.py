@@ -610,7 +610,7 @@ class SystemElements:
         self.plotter.reaction_force(figsize, verbosity, scale, offset, show)
 
     def show_displacement(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
-                          linear=False, n_digits=2):
+                          linear=False):
         figsize = self.figsize if figsize is None else figsize
         self.plotter.displacements(factor, figsize, verbosity, scale, offset, show, linear)
 

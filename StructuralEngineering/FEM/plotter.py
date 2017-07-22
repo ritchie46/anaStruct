@@ -688,10 +688,8 @@ def plot_values_deflection(element, factor, ax_range, linear=False):
         x_val = np.linspace(x1, x2, n)
         y_val = np.linspace(y1, y2, n)
 
-        x_val = x_val + (element.deflection * math.sin(element.alpha)
-                         + element.extension * math.cos(element.alpha)) * factor
-        y_val = y_val + (element.deflection * -math.cos(element.alpha)
-                         + element.extension * math.sin(element.alpha)) * factor
+        x_val = x_val + element.deflection * math.sin(element.alpha) * factor
+        y_val = y_val + element.deflection * -math.cos(element.alpha) * factor
 
     else:  # truss element has no bending
         x_val = np.array([x1, x2])
