@@ -243,18 +243,24 @@ class Plotter:
         h = 0.1 * max_val
 
         for F_tuple in self.system.loads_point:
+            for i in range(1, 3):
+                if i == 1:
+                    Fx = F_tuple[i]
+                    Fz = 0
+                else:
+                    Fx = 0
+                    Fz = F_tuple[i]
 
-            node = self.system.node_map[F_tuple[0]]
-            sol = self.__arrow_patch_values(F_tuple[1], F_tuple[2], node, h)
-            x = sol[0]
-            y = sol[1]
-            len_x = sol[2]
-            len_y = sol[3]
-            F = sol[4]
-
-            self.one_fig.arrow(x, y, len_x, len_y, head_width=h*0.15, head_length=0.2*h, ec='b', fc='orange',
-                               zorder=11)
-            self.one_fig.text(x, y, "F=%d" % F, color='k', fontsize=9, zorder=10)
+                node = self.system.node_map[F_tuple[0]]
+                sol = self.__arrow_patch_values(Fx, Fz, node, h)
+                x = sol[0]
+                y = sol[1]
+                len_x = sol[2]
+                len_y = sol[3]
+                F = sol[4]
+                self.one_fig.arrow(x, y, len_x, len_y, head_width=h*0.15, head_length=0.2*h, ec='b', fc='orange',
+                                   zorder=11)
+                self.one_fig.text(x, y, "F=%d" % F, color='k', fontsize=9, zorder=10)
 
     def __moment_load_patch(self, max_val):
 
