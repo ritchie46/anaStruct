@@ -101,6 +101,7 @@ class ElementLevel:
         """
         Determine node results on the element level.
         """
+
         element.node_1 = Node(
             id=element.node_ids[0],
             Fx=element.element_force_vector[0] + element.element_primary_force_vector[0],

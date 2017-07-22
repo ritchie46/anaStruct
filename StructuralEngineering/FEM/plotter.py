@@ -168,7 +168,7 @@ class Plotter:
         """
         h = 0.05 * max_val
 
-        for q_ID in self.system.loads_q:
+        for q_ID, _, _ in self.system.loads_q:
             for el in self.system.elements:
                 if el.id == q_ID:
                     if el.q_load > 0:
@@ -243,6 +243,7 @@ class Plotter:
         h = 0.1 * max_val
 
         for F_tuple in self.system.loads_point:
+
             node = self.system.node_map[F_tuple[0]]
             sol = self.__arrow_patch_values(F_tuple[1], F_tuple[2], node, h)
             x = sol[0]

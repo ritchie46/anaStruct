@@ -1,28 +1,25 @@
 from StructuralEngineering.FEM.system import SystemElements, Pointxz
-import math
-EI = 5000
 
-l = 3
-fk = EI * math.pi**2 / ((2 * 3)**2)
-
-print(fk)
 
 p1 = Pointxz(0, 0)
-p2 = p1 + [0,  1]
-p3 = p2 + [0, 1]
-p4 = p3 + [0, 1]
+p2 = p1 + [1, 1]
+p3 = p2 + [1, 1/3]
+p4 = p3 + [1, 0]
+p5 = p4 + [1, -1/3]
+p6 = p5 + [1, -1]
+
+points = [p1, p2, p3, p4, p5, p6]
+
+ss = SystemElements(xy_cs=1)
+for i in range(5):
+    ss.add_element(points[i:i + 2])
+
+    if i < 2:
+        ss.point_load(Fz=10, Fx=1, node_id=i + 2)
 
 
-print(p1, p2, p3, p4)
-ss = SystemElements(EA=1e9, EI=EI, xy_cs=1)
-ss.add_element([p1, p2])
-ss.add_element([p2, p3])
-ss.add_element([p3, p4])
 ss.add_support_fixed(1)
+ss.add_support_fixed(6)
+ss.show_structure()
 
-# ss.show_structure()
-ss.point_load(Fz=fk * 0.5, Fx=0.00001, node_id=4)
-ss.solve(gnl=1)
-
-print(ss.element_map[3].node_2)
-ss.show_displacement(factor=1)
+ss.solve()

@@ -335,6 +335,13 @@ class SystemElements:
         :param verbosity: (int) 0. get calculation outputs. 1. silence.
         :return: (array) Displacements vector.
         """
+        # (Re)set force vectors
+        for el in self.element_map.values():
+            el.reset()
+        self.system_force_vector = None
+        self._apply_q_load()
+        self._apply_point_load()
+        self._apply_moment_load()
 
         if self.non_linear and not force_linear:
             return self._stiffness_adaptation(verbosity)
@@ -420,27 +427,25 @@ class SystemElements:
         if verbosity == 0:
             print("Starting geometrical non linear calculation")
 
-        for c in range(10000):
+        for c in range(1500):
             for el in self.element_map.values():
                 delta_x = el.point_2.x + el.node_2.ux - el.point_1.x - el.node_1.ux
                 # minus sign to work with an opposite z-axis
                 delta_z = -el.point_2.z - el.node_2.uz + el.point_1.z + el.node_1.uz
                 a_bar = angle_x_axis(delta_x, delta_z)
-                ai = a_bar + el.node_1.phi_y
-                aj = a_bar + el.node_2.phi_y
+                ai = a_bar
                 l = math.sqrt(delta_x**2 + delta_z**2)
-                el.compile_kinematic_matrix(ai, aj, l)
-
+                el.compile_kinematic_matrix(ai, ai, l)
                 #el.compile_constitutive_matrix(el.EA, el.EI, l)
                 el.compile_stifness_matrix()
 
             current_abs_u = np.abs(self.solve(gnl=False))
             global_increase = np.sum(current_abs_u) / np.sum(last_abs_u)
-            print(global_increase)
+
             if global_increase < 0.1:
                 print(f"Divergence in {c} iterations")
                 break
-            if global_increase - 1 < 1e-16 and global_increase > 1:
+            if global_increase - 1 < 1e-16 and global_increase >= 1:
                 print(f"Convergence in {c} iterations")
                 break
             if global_increase - last_increase > 0 and global_increase > 1:
@@ -540,49 +545,48 @@ class SystemElements:
         :param q: value of the q-load
         :return:
         """
+        self.loads_q.append((element_id, q, direction))
 
-        self.loads_q.append(element_id)
-        element = self.element_map[element_id]
-        element.q_load = q * direction
+    def _apply_q_load(self):
+        for element_id, q, direction in self.loads_q:
+            element = self.element_map[element_id]
+            element.q_load = q * direction
 
-        # determine the left point for the direction of the primary moment
-        left_moment = 1 / 12 * q * element.l**2 * direction
-        right_moment = -1 / 12 * q * element.l**2 * direction
-        reaction_x = 0.5 * q * element.l * direction * math.sin(element.alpha)
-        reaction_z = 0.5 * q * element.l * direction * math.cos(element.alpha)
+            # determine the left point for the direction of the primary moment
+            left_moment = 1 / 12 * q * element.l ** 2 * direction
+            right_moment = -1 / 12 * q * element.l ** 2 * direction
+            reaction_x = 0.5 * q * element.l * direction * math.sin(element.alpha)
+            reaction_z = 0.5 * q * element.l * direction * math.cos(element.alpha)
 
-        # place the primary forces in the 6*6 primary force matrix
-        element.element_primary_force_vector[2] += left_moment
-        element.element_primary_force_vector[5] += right_moment
+            # place the primary forces in the 6*6 primary force matrix
+            element.element_primary_force_vector[2] += left_moment
+            element.element_primary_force_vector[5] += right_moment
 
-        element.element_primary_force_vector[1] -= reaction_z
-        element.element_primary_force_vector[4] -= reaction_z
-        element.element_primary_force_vector[0] -= reaction_x
-        element.element_primary_force_vector[3] -= reaction_x
+            element.element_primary_force_vector[1] -= reaction_z
+            element.element_primary_force_vector[4] -= reaction_z
+            element.element_primary_force_vector[0] -= reaction_x
+            element.element_primary_force_vector[3] -= reaction_x
 
-        # system force vector. System forces = element force * -1
-        # first row are the moments
-        # second and third row are the reacton forces. The direction
-        self.set_force_vector([(element.node_1.id, 3, -left_moment), (element.node_2.id, 3, -right_moment),
-                               (element.node_1.id, 2, reaction_z), (element.node_2.id, 2, reaction_z),
-                               (element.node_1.id, 1, reaction_x), (element.node_2.id, 1, reaction_x)])
+            # system force vector. System forces = element force * -1
+            # first row are the moments
+            # second and third row are the reacton forces. The direction
+            self.set_force_vector([(element.node_1.id, 3, -left_moment), (element.node_2.id, 3, -right_moment),
+                                   (element.node_1.id, 2, reaction_z), (element.node_2.id, 2, reaction_z),
+                                   (element.node_1.id, 1, reaction_x), (element.node_2.id, 1, reaction_x)])
 
-        return self.system_force_vector
-
-    def point_load(self, Fx=0, Fz=0, node_id=None):
+    def point_load(self, node_id, Fx=0, Fz=0):
         self.loads_point.append((node_id, Fx, Fz))
 
-        if node_id is not None:
+    def _apply_point_load(self):
+        for node_id, Fx, Fz in self.loads_point:
             # system force vector.
             self.set_force_vector([(node_id, 1, Fx), (node_id, 2, Fz)])
 
-        return self.system_force_vector
-
-    def moment_load(self, Ty=0, node_id=None):
+    def moment_load(self, node_id, Ty):
         self.loads_moment.append((node_id, 3, Ty))
 
-        if node_id is not None:
-            # system force vector.
+    def _apply_moment_load(self):
+        for node_id, _, Ty in self.loads_moment:
             self.set_force_vector([(node_id, 3, Ty)])
 
     def show_structure(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True, supports=True):

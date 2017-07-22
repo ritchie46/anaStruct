@@ -2,7 +2,7 @@ from StructuralEngineering.FEM import system as se
 
 
 def run():
-    system = se.SystemElements()
+    system = se.SystemElements(xy_cs=False)
 
     # Add beams to the system. Positive z-axis is down, positive x-axis is the right.
     system.add_element(location_list=[[0, 0], [0, -5]], EA=15000, EI=5000)
@@ -16,7 +16,7 @@ def run():
     system.point_load(Fx=30, node_id=2)
     system.q_load(q=10, element_id=2)
     system.solve()
-    print(system.get_node_results_system(3))
+
     system.show_structure()
     system.show_reaction_force()
     system.show_normal_force()

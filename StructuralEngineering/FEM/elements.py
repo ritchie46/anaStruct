@@ -73,6 +73,10 @@ class Element:
             self.constitutive_matrix[2][2] *= factor
         self.compile_stifness_matrix()
 
+    def reset(self):
+        self.element_displacement_vector = np.zeros(6)
+        self.element_primary_force_vector = np.zeros(6)
+
 
 def kinematic_matrix(ai, aj, l):
     """
