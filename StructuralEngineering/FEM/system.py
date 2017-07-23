@@ -613,6 +613,10 @@ class SystemElements:
             node_id = (node_id,)
             Fx = (Fx,)
             Fz = (Fz,)
+        elif Fx == 0:
+            Fx = [0 for a in Fz]
+        elif Fz == 0:
+            Fz = [0 for a in Fx]
 
         for i in range(len(node_id)):
             self.loads_point.append((node_id[i], Fx[i], Fz[i]))

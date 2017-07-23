@@ -227,12 +227,14 @@ class Plotter:
             len_x = 0
             len_y = -0.8 * h
             F = Fz
-        else:  # Fz is negative
+        elif Fz < 0:  # Fz is negative
             x = node.point.x
             y = -node.point.z - h
             len_x = 0
             len_y = 0.8 * h
             F = Fz
+        else:
+            return None
 
         return x, y, len_x, len_y, F
 
@@ -253,14 +255,15 @@ class Plotter:
 
                 node = self.system.node_map[F_tuple[0]]
                 sol = self.__arrow_patch_values(Fx, Fz, node, h)
-                x = sol[0]
-                y = sol[1]
-                len_x = sol[2]
-                len_y = sol[3]
-                F = sol[4]
-                self.one_fig.arrow(x, y, len_x, len_y, head_width=h*0.15, head_length=0.2*h, ec='b', fc='orange',
-                                   zorder=11)
-                self.one_fig.text(x, y, "F=%d" % F, color='k', fontsize=9, zorder=10)
+                if sol is not None:
+                    x = sol[0]
+                    y = sol[1]
+                    len_x = sol[2]
+                    len_y = sol[3]
+                    F = sol[4]
+                    self.one_fig.arrow(x, y, len_x, len_y, head_width=h*0.15, head_length=0.2*h, ec='b', fc='orange',
+                                       zorder=11)
+                    self.one_fig.text(x, y, "F=%d" % F, color='k', fontsize=9, zorder=10)
 
     def __moment_load_patch(self, max_val):
 
