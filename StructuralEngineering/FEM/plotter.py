@@ -12,6 +12,7 @@ class Plotter:
         self.max_force = 0
 
     def __start_plot(self, figsize):
+        plt.close("all")
         self.fig = plt.figure(figsize=figsize)
         self.one_fig = self.fig.add_subplot(111)
         plt.tight_layout()

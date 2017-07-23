@@ -53,6 +53,9 @@ class SystemElements:
         self.node_map = {}
         self._spring_map = {}  # keys matrix index (for both row and columns), values K
 
+        # previous point of element
+        self._previous_point = None
+
     def add_truss_element(self, location_list, EA):
         return self.add_element(location_list, EA, 1e-14, type='truss')
 
@@ -76,12 +79,19 @@ class SystemElements:
         # add the element number
         self.count += 1
 
-        if isinstance(location_list[0], Pointxz):
+        if len(location_list) == 1:
+            point_1 = self._previous_point
+            point_2 = Pointxz(location_list[0][0], location_list[0][1])
+        elif isinstance(location_list[0], (int, float)):
+            point_1 = self._previous_point
+            point_2 = Pointxz(location_list[0], location_list[1])
+        elif isinstance(location_list[0], Pointxz):
             point_1 = location_list[0]
             point_2 = location_list[1]
         else:
             point_1 = Pointxz(location_list[0][0], location_list[0][1])
             point_2 = Pointxz(location_list[1][0], location_list[1][1])
+        self._previous_point = point_2
 
         if self.xy_cs:
             point_1 = Pointxz(point_1.x, -point_1.z)
@@ -343,11 +353,11 @@ class SystemElements:
         self._apply_point_load()
         self._apply_moment_load()
 
-        if self.non_linear and not force_linear:
-            return self._stiffness_adaptation(verbosity)
-
         if gnl:
             return self._gnl(verbosity)
+
+        if self.non_linear and not force_linear:
+            return self._stiffness_adaptation(verbosity)
 
         assert(self.system_force_vector is not None), "There are no forces on the structure"
         self.remainder_indexes = []
@@ -420,6 +430,8 @@ class SystemElements:
         if verbosity == 0:
             print("Solved in {} iterations".format(c))
 
+        return self.system_displacement_vector
+
     def _gnl(self, verbosity):
         div_c = 0
         last_increase = 1e3
@@ -439,7 +451,7 @@ class SystemElements:
                 #el.compile_constitutive_matrix(el.EA, el.EI, l)
                 el.compile_stifness_matrix()
 
-            current_abs_u = np.abs(self.solve(gnl=False))
+            current_abs_u = np.abs(self.solve(gnl=False, verbosity=1))
             global_increase = np.sum(current_abs_u) / np.sum(last_abs_u)
 
             if global_increase < 0.1:
@@ -467,11 +479,15 @@ class SystemElements:
         adds a hinged support a the given node
         :param node_id: integer representing the nodes ID
         """
-        self._support_check(node_id)
-        self.set_displacement_vector([(node_id, 1), (node_id, 2)])
+        if not isinstance(node_id, (tuple, list)):
+            node_id = (node_id,)
 
-        # add the support to the support list for the plotter
-        self.supports_hinged.append(self.node_map[node_id])
+        for id_ in node_id:
+            self._support_check(id_)
+            self.set_displacement_vector([(id_, 1), (id_, 2)])
+
+            # add the support to the support list for the plotter
+            self.supports_hinged.append(self.node_map[id_])
 
     def add_support_roll(self, node_id, direction=2):
         """
@@ -479,64 +495,76 @@ class SystemElements:
         :param node_id: integer representing the nodes ID
         :param direction: integer representing the direction that is fixed: x = 1, z = 2
         """
-        self._support_check(node_id)
-        self.set_displacement_vector([(node_id, direction)])
+        if not isinstance(node_id, (tuple, list)):
+            node_id = (node_id,)
 
-        # add the support to the support list for the plotter
-        self.supports_roll.append(self.node_map[node_id])
-        self.supports_roll_direction.append(direction)
+        for id_ in node_id:
+            self._support_check(id_)
+            self.set_displacement_vector([(id_, direction)])
+
+            # add the support to the support list for the plotter
+            self.supports_roll.append(self.node_map[id_])
+            self.supports_roll_direction.append(direction)
 
     def add_support_fixed(self, node_id):
         """
         adds a fixed support at the given node
-        :param node_id: integer representing the nodes ID
+        :param node_id: (int/ list) integer representing the nodes ID
         """
-        self._support_check(node_id)
-        self.set_displacement_vector([(node_id, 1), (node_id, 2), (node_id, 3)])
+        if not isinstance(node_id, (tuple, list)):
+            node_id = (node_id,)
 
-        # add the support to the support list for the plotter
-        self.supports_fixed.append(self.node_map[node_id])
+        for id_ in node_id:
+            self._support_check(id_)
+            self.set_displacement_vector([(id_, 1), (id_, 2), (id_, 3)])
+
+            # add the support to the support list for the plotter
+            self.supports_fixed.append(self.node_map[id_])
 
     def add_support_spring(self, node_id, translation, K):
         """
-        :param translation: Integer representing prevented translation.
+        :param translation: (int) Integer representing prevented translation.
         1 = translation in x
         2 = translation in z
         3 = rotation in y
-        :param node_id: Integer representing the nodes ID.
-        :param K: Stiffness of the spring
+        :param node_id: (int/ list) Integer representing the nodes ID.
+        :param K: (flt) Stiffness of the spring
 
         The stiffness of the spring is added in the system matrix at the location that represents the node and the
         displacement.
         """
-        self._support_check(node_id)
+        if not isinstance(node_id, (tuple, list)):
+            node_id = (node_id,)
 
-        # determine the location in the system matrix
-        # row and column are the same
-        matrix_index = (node_id - 1) * 3 + translation - 1
+        for id_ in node_id:
+            self._support_check(id_)
 
-        self._spring_map[matrix_index] = K
+            # determine the location in the system matrix
+            # row and column are the same
+            matrix_index = (id_ - 1) * 3 + translation - 1
 
-        # #  first index is row, second is column
-        # self.system_matrix[matrix_index][matrix_index] += K
+            self._spring_map[matrix_index] = K
 
-        if translation == 1:  # translation spring in x-axis
-            self.set_displacement_vector([(node_id, 2)])
+            # #  first index is row, second is column
+            # self.system_matrix[matrix_index][matrix_index] += K
 
-            # add the support to the support list for the plotter
-            self.supports_spring_x.append(self.node_map[node_id])
+            if translation == 1:  # translation spring in x-axis
+                self.set_displacement_vector([(id_, 2)])
 
-        elif translation == 2:  # translation spring in z-axis
-            self.set_displacement_vector([(node_id, 1)])
+                # add the support to the support list for the plotter
+                self.supports_spring_x.append(self.node_map[id_])
 
-            # add the support to the support list for the plotter
-            self.supports_spring_z.append(self.node_map[node_id])
+            elif translation == 2:  # translation spring in z-axis
+                self.set_displacement_vector([(id_, 1)])
 
-        elif translation == 3:  # rotational spring in y-axis
-            self.set_displacement_vector([(node_id, 1), (node_id, 2)])
+                # add the support to the support list for the plotter
+                self.supports_spring_z.append(self.node_map[id_])
 
-            # add the support to the support list for the plotter
-            self.supports_spring_y.append(self.node_map[node_id])
+            elif translation == 3:  # rotational spring in y-axis
+                self.set_displacement_vector([(id_, 1), (id_, 2)])
+
+                # add the support to the support list for the plotter
+                self.supports_spring_y.append(self.node_map[id_])
 
     def q_load(self, q, element_id, direction=1):
         """
