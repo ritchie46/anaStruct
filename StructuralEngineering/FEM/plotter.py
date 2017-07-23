@@ -411,21 +411,22 @@ class Plotter:
         else:
             return self.fig
 
-    def bending_moment(self, figsize, verbosity, scale, offset, show):
+    def bending_moment(self, factor, figsize, verbosity, scale, offset, show):
         self.plot_structure(figsize, 1, scale=scale, offset=offset)
         self.max_force = 0
         con = len(self.system.elements[0].bending_moment)
 
         # determine max factor for scaling
-        factor = 0
-        for el in self.system.elements:
-            if el.q_load:
-                m_sag = (el.node_1.Ty - el.node_2.Ty) * 0.5 - 1 / 8 * el.q_load * el.l**2
-                value_1 = max(abs(el.node_1.Ty), abs(m_sag))
-                value_2 = max(value_1, abs(el.node_2.Ty))
-                factor = self.__set_factor(value_1, value_2)
-            else:
-                factor = self.__set_factor(el.node_1.Ty, el.node_2.Ty)
+        if factor is None:
+            factor = 0
+            for el in self.system.elements:
+                if el.q_load:
+                    m_sag = (el.node_1.Ty - el.node_2.Ty) * 0.5 - 1 / 8 * el.q_load * el.l**2
+                    value_1 = max(abs(el.node_1.Ty), abs(m_sag))
+                    value_2 = max(value_1, abs(el.node_2.Ty))
+                    factor = self.__set_factor(value_1, value_2)
+                else:
+                    factor = self.__set_factor(el.node_1.Ty, el.node_2.Ty)
 
         # determine the axis values
         for el in self.system.elements:

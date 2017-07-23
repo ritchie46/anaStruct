@@ -2,9 +2,9 @@ import math
 import numpy as np
 from StructuralEngineering.basic import converge, angle_x_axis
 from StructuralEngineering.FEM.postprocess import SystemLevel as post_sl
-from StructuralEngineering.FEM.elements import Element
+from StructuralEngineering.FEM.elements import Element, det_moment, det_shear
 from StructuralEngineering.FEM.node import Node
-from StructuralEngineering.trigonometry import Pointxz, Pointxy
+from StructuralEngineering.trigonometry import Pointxz
 from StructuralEngineering.FEM.plotter import Plotter
 
 
@@ -586,27 +586,36 @@ class SystemElements:
         for element_id, q, direction in self.loads_q:
             element = self.element_map[element_id]
 
-            # determine the left point for the direction of the primary moment
-            left_moment = 1 / 12 * q * element.l ** 2 * direction
-            right_moment = -1 / 12 * q * element.l ** 2 * direction
-            reaction_x = 0.5 * q * element.l * direction * math.sin(element.alpha)
-            reaction_z = 0.5 * q * element.l * direction * math.cos(element.alpha)
+            kl = element.constitutive_matrix[1][1] * 1e6
+            kr = element.constitutive_matrix[2][2] * 1e6
+            # minus because of systems positive rotation
+            left_moment = -det_moment(kl, kr, q * direction, 0, element.EI, element.l)
+            right_moment = det_moment(kl, kr, q * direction, element.l, element.EI, element.l)
+
+            rleft = det_shear(kl, kr, q * direction, 0, element.EI, element.l)
+            rright = -det_shear(kl, kr, q * direction, element.l, element.EI, element.l)
+
+            rleft_x = rleft * math.sin(element.alpha)
+            rright_x = rright * math.sin(element.alpha)
+
+            rleft_z = rleft * math.cos(element.alpha)
+            rright_z = rright * math.cos(element.alpha)
 
             # place the primary forces in the 6*6 primary force matrix
             element.element_primary_force_vector[2] += left_moment
             element.element_primary_force_vector[5] += right_moment
 
-            element.element_primary_force_vector[1] -= reaction_z
-            element.element_primary_force_vector[4] -= reaction_z
-            element.element_primary_force_vector[0] -= reaction_x
-            element.element_primary_force_vector[3] -= reaction_x
+            element.element_primary_force_vector[1] -= rleft_z
+            element.element_primary_force_vector[4] -= rright_z
+            element.element_primary_force_vector[0] -= rleft_x
+            element.element_primary_force_vector[3] -= rright_x
 
             # system force vector. System forces = element force * -1
             # first row are the moments
             # second and third row are the reacton forces. The direction
             self.set_force_vector([(element.node_1.id, 3, -left_moment), (element.node_2.id, 3, -right_moment),
-                                   (element.node_1.id, 2, reaction_z), (element.node_2.id, 2, reaction_z),
-                                   (element.node_1.id, 1, reaction_x), (element.node_2.id, 1, reaction_x)])
+                                   (element.node_1.id, 2, rleft_z), (element.node_2.id, 2, rright_z),
+                                   (element.node_1.id, 1, rleft_x), (element.node_2.id, 1, rright_x)])
 
     def point_load(self, node_id, Fx=0, Fz=0):
         if not isinstance(node_id, (tuple, list)):
@@ -642,9 +651,9 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         return self.plotter.plot_structure(figsize, verbosity, show, supports, scale, offset)
 
-    def show_bending_moment(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+    def show_bending_moment(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.bending_moment(figsize, verbosity, scale, offset, show)
+        self.plotter.bending_moment(factor, figsize, verbosity, scale, offset, show)
 
     def show_normal_force(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
         figsize = self.figsize if figsize is None else figsize

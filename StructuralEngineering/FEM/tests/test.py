@@ -93,3 +93,16 @@ class SimpleTest(unittest.TestCase):
         system.show_normal_force(show=False)
         system.show_reaction_force(show=False)
         system.show_shear_force(show=False)
+
+    def test_ex_6_fixed_hinge(self):
+        """
+        Test the primary force vector when applying a q_load at a hinged element.
+        """
+
+        ss = se.SystemElements()
+        ss.add_element([[0, 0], [7, 0]], hinge=2)
+        ss.add_element([7.1, 0])
+        ss.add_support_fixed([1, 3])
+        ss.q_load(10, 1)
+        ss.solve()
+        self.assertAlmostEqual(-61.25, ss.get_node_results_system(1)["Ty"], places=2)
