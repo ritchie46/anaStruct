@@ -573,12 +573,18 @@ class SystemElements:
         :param q: value of the q-load
         :return:
         """
-        self.loads_q.append((element_id, q, direction))
+        if not isinstance(element_id, (tuple, list)):
+            element_id = (element_id,)
+            q = (q,)
+            direction = (direction,)
+
+        for i in range(len(element_id)):
+            self.loads_q.append((element_id[i], q[i], direction[i]))
+            self.element_map[element_id[i]].q_load = q[i] * direction[i]
 
     def _apply_q_load(self):
         for element_id, q, direction in self.loads_q:
             element = self.element_map[element_id]
-            element.q_load = q * direction
 
             # determine the left point for the direction of the primary moment
             left_moment = 1 / 12 * q * element.l ** 2 * direction
@@ -603,7 +609,13 @@ class SystemElements:
                                    (element.node_1.id, 1, reaction_x), (element.node_2.id, 1, reaction_x)])
 
     def point_load(self, node_id, Fx=0, Fz=0):
-        self.loads_point.append((node_id, Fx, Fz))
+        if not isinstance(node_id, (tuple, list)):
+            node_id = (node_id,)
+            Fx = (Fx,)
+            Fz = (Fz,)
+
+        for i in range(len(node_id)):
+            self.loads_point.append((node_id[i], Fx[i], Fz[i]))
 
     def _apply_point_load(self):
         for node_id, Fx, Fz in self.loads_point:
@@ -611,7 +623,12 @@ class SystemElements:
             self.set_force_vector([(node_id, 1, Fx), (node_id, 2, Fz)])
 
     def moment_load(self, node_id, Ty):
-        self.loads_moment.append((node_id, 3, Ty))
+        if not isinstance(node_id, (tuple, list)):
+            node_id = (node_id,)
+            Ty = (Ty,)
+
+        for i in range(len(node_id)):
+            self.loads_moment.append((node_id[i], 3, Ty[i]))
 
     def _apply_moment_load(self):
         for node_id, _, Ty in self.loads_moment:

@@ -170,34 +170,33 @@ class Plotter:
         h = 0.05 * max_val
 
         for q_ID, _, _ in self.system.loads_q:
-            for el in self.system.elements:
-                if el.id == q_ID:
-                    if el.q_load > 0:
-                        direction = 1
-                    else:
-                        direction = -1
+            el = self.system.element_map[q_ID]
+            if el.q_load > 0:
+                direction = 1
+            else:
+                direction = -1
 
-                    x1 = el.point_1.x
-                    y1 = -el.point_1.z
-                    x2 = el.point_2.x
-                    y2 = -el.point_2.z
-                    # - value, because the positive z of the system is opposite of positive y of the plotter
-                    xn1 = x1 + math.sin(-el.alpha) * h * direction
-                    yn1 = y1 + math.cos(-el.alpha) * h * direction
-                    xn2 = x2 + math.sin(-el.alpha) * h * direction
-                    yn2 = y2 + math.cos(-el.alpha) * h * direction
-                    self.one_fig.plot([x1, xn1, xn2, x2], [y1, yn1, yn2, y2], color='g')
+            x1 = el.point_1.x
+            y1 = -el.point_1.z
+            x2 = el.point_2.x
+            y2 = -el.point_2.z
+            # - value, because the positive z of the system is opposite of positive y of the plotter
+            xn1 = x1 + math.sin(-el.alpha) * h * direction
+            yn1 = y1 + math.cos(-el.alpha) * h * direction
+            xn2 = x2 + math.sin(-el.alpha) * h * direction
+            yn2 = y2 + math.cos(-el.alpha) * h * direction
+            self.one_fig.plot([x1, xn1, xn2, x2], [y1, yn1, yn2, y2], color='g')
 
-                    # arrow
-                    xa_1 = (x2 - x1) * 0.2 + x1 + math.sin(-el.alpha) * 0.8 * h * direction
-                    ya_1 = (y2 - y1) * 0.2 + y1 + math.cos(-el.alpha) * 0.8 * h * direction
-                    len_x = math.sin(-el.alpha - math.pi) * 0.6 * h * direction
-                    len_y = math.cos(-el.alpha - math.pi) * 0.6 * h * direction
-                    xt = xa_1 + math.sin(-el.alpha) * 0.4 * h * direction
-                    yt = ya_1 + math.cos(-el.alpha) * 0.4 * h * direction
-                    # fc = face color, ec = edge color
-                    self.one_fig.arrow(xa_1, ya_1, len_x, len_y, head_width=h*0.25, head_length=0.2*h, ec='g', fc='g')
-                    self.one_fig.text(xt, yt, "q=%d" % el.q_load, color='k', fontsize=9, zorder=10)
+            # arrow
+            xa_1 = (x2 - x1) * 0.2 + x1 + math.sin(-el.alpha) * 0.8 * h * direction
+            ya_1 = (y2 - y1) * 0.2 + y1 + math.cos(-el.alpha) * 0.8 * h * direction
+            len_x = math.sin(-el.alpha - math.pi) * 0.6 * h * direction
+            len_y = math.cos(-el.alpha - math.pi) * 0.6 * h * direction
+            xt = xa_1 + math.sin(-el.alpha) * 0.4 * h * direction
+            yt = ya_1 + math.cos(-el.alpha) * 0.4 * h * direction
+            # fc = face color, ec = edge color
+            self.one_fig.arrow(xa_1, ya_1, len_x, len_y, head_width=h*0.25, head_length=0.2*h, ec='g', fc='g')
+            self.one_fig.text(xt, yt, "q=%d" % el.q_load, color='k', fontsize=9, zorder=10)
 
     def __arrow_patch_values(self, Fx, Fz, node, h):
         """
