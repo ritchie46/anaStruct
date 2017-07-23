@@ -102,15 +102,6 @@ class SystemElements:
         delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
         ai = angle_x_axis(delta_x, delta_z)
 
-        if 0.5 * math.pi < ai < 1.5 * math.pi:
-            # switch points
-            p = point_1
-            point_1 = point_2
-            point_2 = p
-            delta_x = point_2.x - point_1.x
-            delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
-            ai = angle_x_axis(delta_x, delta_z)
-
         node_id1 = 1
         node_id2 = 2
         existing_node1 = False
@@ -141,6 +132,30 @@ class SystemElements:
                     self.max_node_id += 1
                     node_id2 = self.max_node_id
                 count += 1
+
+            if 0.5 * math.pi < ai < 1.5 * math.pi:
+                # switch points
+                p = point_1
+                point_1 = point_2
+                point_2 = p
+                delta_x = point_2.x - point_1.x
+                delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
+                ai = angle_x_axis(delta_x, delta_z)
+
+                id = node_id1
+                node_id1 = node_id2
+                node_id2 = id
+
+                if hinge == 1:
+                    hinge = 2
+                elif hinge == 2:
+                    hinge = 1
+
+                if mp is not None:
+                    if 1 in mp:
+                        mp[1] = 2
+                    elif 2 in mp:
+                        mp[2] = 1
 
         # append the nodes to the system nodes list
         id1 = False
@@ -604,12 +619,6 @@ class SystemElements:
 
             rleft = det_shear(kl, kr, q * direction, 0, element.EI, element.l)
             rright = -det_shear(kl, kr, q * direction, element.l, element.EI, element.l)
-
-            if 0.5 * math.pi < element.alpha < 1.5 * math.pi:
-                rleft *= -1
-                rright *= -1
-                left_moment *= -1
-                right_moment *= -1
 
             rleft_x = rleft * math.sin(element.alpha)
             rright_x = rright * math.sin(element.alpha)
