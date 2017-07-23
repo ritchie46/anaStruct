@@ -10,5 +10,6 @@ ss.add_element([7.1, 0])
 ss.add_support_fixed([1, 3])
 ss.q_load(10, 1)
 ss.solve()
+ss.show_reaction_force()
 ss.show_bending_moment()
 

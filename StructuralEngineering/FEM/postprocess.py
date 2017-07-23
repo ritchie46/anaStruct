@@ -73,8 +73,8 @@ class SystemLevel:
 
         for node_id in supports:
             node = self.system.node_map[node_id]
-            self.system.reaction_forces[node_id] = node
             node = copy.copy(node)
+            self.system.reaction_forces[node_id] = node
             node.Fx *= -1
             node.Fz *= -1
             node.Ty *= -1

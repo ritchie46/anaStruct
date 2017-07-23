@@ -97,6 +97,20 @@ class SystemElements:
             point_1 = Pointxz(point_1.x, -point_1.z)
             point_2 = Pointxz(point_2.x, -point_2.z)
 
+        # determine the angle of the element with the global x-axis
+        delta_x = point_2.x - point_1.x
+        delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
+        ai = angle_x_axis(delta_x, delta_z)
+
+        if 0.5 * math.pi < ai < 1.5 * math.pi:
+            # switch points
+            p = point_1
+            point_1 = point_2
+            point_2 = p
+            delta_x = point_2.x - point_1.x
+            delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
+            ai = angle_x_axis(delta_x, delta_z)
+
         node_id1 = 1
         node_id2 = 2
         existing_node1 = False
@@ -164,11 +178,6 @@ class SystemElements:
         # determine the length of the elements
         point = point_2 - point_1
         l = point.modulus()
-
-        # determine the angle of the element with the global x-axis
-        delta_x = point_2.x - point_1.x
-        delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
-        ai = angle_x_axis(delta_x, delta_z)
 
         # add element
         element = Element(self.count, EA, EI, l, ai, point_1, point_2, hinge)
@@ -579,6 +588,7 @@ class SystemElements:
             direction = (direction,)
 
         for i in range(len(element_id)):
+
             self.loads_q.append((element_id[i], q[i], direction[i]))
             self.element_map[element_id[i]].q_load = q[i] * direction[i]
 
@@ -594,6 +604,12 @@ class SystemElements:
 
             rleft = det_shear(kl, kr, q * direction, 0, element.EI, element.l)
             rright = -det_shear(kl, kr, q * direction, element.l, element.EI, element.l)
+
+            if 0.5 * math.pi < element.alpha < 1.5 * math.pi:
+                rleft *= -1
+                rright *= -1
+                left_moment *= -1
+                right_moment *= -1
 
             rleft_x = rleft * math.sin(element.alpha)
             rright_x = rright * math.sin(element.alpha)
@@ -655,9 +671,9 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         self.plotter.bending_moment(factor, figsize, verbosity, scale, offset, show)
 
-    def show_normal_force(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+    def show_normal_force(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.normal_force(figsize, verbosity, scale, offset, show)
+        self.plotter.normal_force(factor, figsize, verbosity, scale, offset, show)
 
     def show_shear_force(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
         figsize = self.figsize if figsize is None else figsize

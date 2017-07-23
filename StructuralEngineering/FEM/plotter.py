@@ -375,17 +375,18 @@ class Plotter:
         if node_results:
             self._add_node_values(x_val, y_val, force_1, force_2, digits)
 
-    def normal_force(self, figsize, verbosity, scale, offset, show):
+    def normal_force(self, factor, figsize, verbosity, scale, offset, show):
         self.max_force = 0
         self.plot_structure(figsize, 1, scale=scale, offset=offset)
 
         node_results = True if verbosity == 0 else False
 
-        # determine max factor for scaling
-        for el in self.system.elements:
-            factor = self.__set_factor(el.N, el.N)
+        if factor is None:
+            # determine max factor for scaling
+            for el in self.system.element_map.values():
+                factor = self.__set_factor(el.N, el.N)
 
-        for el in self.system.elements:
+        for el in self.system.element_map.values():
             if math.isclose(el.N, 0, rel_tol=1e-5, abs_tol=1e-9):
                 pass
             else:
