@@ -9,7 +9,7 @@ from StructuralEngineering.FEM.plotter import Plotter
 
 
 class SystemElements:
-    def __init__(self, figsize=(12, 8), xy_cs=True, EA=15e3, EI=5e3):
+    def __init__(self, figsize=(12, 8), xy_cs=True, EA=15e3, EI=5e3, load_factor=1):
         # standard values if none provided
         self.EA = EA
         self.EI = EI
@@ -51,15 +51,16 @@ class SystemElements:
         self.non_linear_elements = {}  # keys are element ids, values are dicts: {node_index: max moment capacity}
         self.element_map = {}
         self.node_map = {}
-        self._spring_map = {}  # keys matrix index (for both row and columns), values K
+        self.system_spring_map = {}  # keys matrix index (for both row and columns), values K
 
         # previous point of element
-        self._previous_point = None
+        self._previous_point = Pointxz(0, 0)
+        self.load_factor = load_factor
 
     def add_truss_element(self, location_list, EA):
         return self.add_element(location_list, EA, 1e-14, type='truss')
 
-    def add_element(self, location_list, EA=None, EI=None, hinge=None, mp=None, type="general"):
+    def add_element(self, location_list, EA=None, EI=None, hinge=None, mp=None, spring=None, type="general"):
         """
         :param location_list: [[x, z], [x, z]] or [Pointxz, Pointxz]
         :param EA: (float) EA
@@ -71,6 +72,19 @@ class SystemElements:
                           { 1: 210e3,
                             2: 180e3
                           }
+        :param spring: (dict) Set a spring at node 1 or node 2.
+                            {
+                              1: { direction: 1
+                                   k: 5e3
+                                 }
+                              2: { direction: 1
+                                   k: 5e3
+                                 }
+                            }
+
+                        direction 1: ux
+                        direction 2: uz
+                        direction 3: phi_y
         :return element id: (int)
         """
         EA = self.EA if EA is None else EA
@@ -195,7 +209,7 @@ class SystemElements:
         l = point.modulus()
 
         # add element
-        element = Element(self.count, EA, EI, l, ai, point_1, point_2, hinge)
+        element = Element(self.count, EA, EI, l, ai, point_1, point_2, hinge, spring)
         element.node_ids.append(node_id1)
         element.node_ids.append(node_id2)
         element.node_id1 = node_id1
@@ -287,7 +301,7 @@ class SystemElements:
         self.shape_system_matrix = shape
         self.system_matrix = np.zeros((shape, shape))
 
-        for matrix_index, K in self._spring_map.items():
+        for matrix_index, K in self.system_spring_map.items():
             #  first index is row, second is column
             self.system_matrix[matrix_index][matrix_index] += K
 
@@ -473,7 +487,7 @@ class SystemElements:
                 l = math.sqrt(delta_x**2 + delta_z**2)
                 el.compile_kinematic_matrix(ai, ai, l)
                 #el.compile_constitutive_matrix(el.EA, el.EI, l)
-                el.compile_stifness_matrix()
+                el.compile_stiffness_matrix()
 
             current_abs_u = np.abs(self.solve(gnl=False, verbosity=1))
             global_increase = np.sum(current_abs_u) / np.sum(last_abs_u)
@@ -567,10 +581,7 @@ class SystemElements:
             # row and column are the same
             matrix_index = (id_ - 1) * 3 + translation - 1
 
-            self._spring_map[matrix_index] = K
-
-            # #  first index is row, second is column
-            # self.system_matrix[matrix_index][matrix_index] += K
+            self.system_spring_map[matrix_index] = K
 
             if translation == 1:  # translation spring in x-axis
                 self.set_displacement_vector([(id_, 2)])
@@ -609,6 +620,7 @@ class SystemElements:
 
     def _apply_q_load(self):
         for element_id, q, direction in self.loads_q:
+            q *= self.load_factor
             element = self.element_map[element_id]
 
             kl = element.constitutive_matrix[1][1] * 1e6
@@ -648,9 +660,9 @@ class SystemElements:
             Fx = (Fx,)
             Fz = (Fz,)
         elif Fx == 0:
-            Fx = [0 for a in Fz]
+            Fx = [0 for _ in Fz]
         elif Fz == 0:
-            Fz = [0 for a in Fx]
+            Fz = [0 for _ in Fx]
 
         for i in range(len(node_id)):
             self.loads_point.append((node_id[i], Fx[i], Fz[i]))
@@ -658,7 +670,7 @@ class SystemElements:
     def _apply_point_load(self):
         for node_id, Fx, Fz in self.loads_point:
             # system force vector.
-            self.set_force_vector([(node_id, 1, Fx), (node_id, 2, Fz)])
+            self.set_force_vector([(node_id, 1, Fx * self.load_factor), (node_id, 2, Fz * self.load_factor)])
 
     def moment_load(self, node_id, Ty):
         if not isinstance(node_id, (tuple, list)):
@@ -670,7 +682,7 @@ class SystemElements:
 
     def _apply_moment_load(self):
         for node_id, _, Ty in self.loads_moment:
-            self.set_force_vector([(node_id, 3, Ty)])
+            self.set_force_vector([(node_id, 3, Ty * self.load_factor)])
 
     def show_structure(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True, supports=True):
         figsize = self.figsize if figsize is None else figsize

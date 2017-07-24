@@ -9,7 +9,7 @@ Shear deformation is not taken into account.
 
 
 class Element:
-    def __init__(self, id, EA, EI, l, ai, point_1, point_2, hinge=None):
+    def __init__(self, id, EA, EI, l, ai, point_1, point_2, hinge=None, spring=None):
         """
         :param id: integer representing the elements ID
         :param EA: Young's modulus * Area
@@ -19,6 +19,15 @@ class Element:
         :param point_1: point object
         :param point_2: point object
         :param hinge: (integer) 1 or 2. Adds an hinge ad the first or second node.
+        :param spring: (dict) Set a spring at node 1 or node 2.
+                            {
+                              1: { direction: 1
+                                   k: 5e3
+                                 }
+                              2: { direction: 1
+                                   k: 5e3
+                                 }
+                            }
         """
         self.id = id
         self.type = None
@@ -46,15 +55,19 @@ class Element:
         self.deflection = None
         self.extension = None
         self.max_deflection = None
-        self.compile_stifness_matrix()
         self.nodes_plastic = [False, False]
+        self.springs = spring
+        self.compile_stiffness_matrix()
 
     def determine_force_vector(self):
         self.element_force_vector = np.dot(self.stiffness_matrix, self.element_displacement_vector)
         return self.element_force_vector
 
-    def compile_stifness_matrix(self):
+    def compile_stiffness_matrix(self):
         self.stiffness_matrix = stiffness_matrix(self.constitutive_matrix, self.kinematic_matrix)
+        if self.springs is not None:
+            for node_id, param in self.springs.items():
+                self.add_spring(node_id, param["k"], param["direction"])
 
     def compile_kinematic_matrix(self, ai, aj, l):
         self.kinematic_matrix = kinematic_matrix(ai, aj, l)
@@ -71,11 +84,31 @@ class Element:
             self.constitutive_matrix[1][2] *= factor
             self.constitutive_matrix[2][1] *= factor
             self.constitutive_matrix[2][2] *= factor
-        self.compile_stifness_matrix()
+        self.compile_stiffness_matrix()
 
     def reset(self):
         self.element_displacement_vector = np.zeros(6)
         self.element_primary_force_vector = np.zeros(6)
+
+    def add_spring(self, node_id, k, direction):
+        """
+        Update stiffness matrix with spring.
+
+        :param node_id: (int) 1 or 2.
+        :param k: (flt) Spring stiffness.
+        :param direction: (int) 1: ux
+                           2: uz
+                           3: phi_y
+        """
+
+        index = node_id * direction - 1
+
+        if k < self.stiffness_matrix[index][index]:
+            # divide by the absolute value to keep the signed information.
+            self.stiffness_matrix[index][index] *= (1 / abs(self.stiffness_matrix[index][index]) * k * 2)
+            self.stiffness_matrix[index][index - 1] = 0
+            self.stiffness_matrix[index][index + 2] = 0
+            self.stiffness_matrix[index][index + 3] = 0
 
 
 def kinematic_matrix(ai, aj, l):
@@ -104,9 +137,9 @@ def constitutive_matrix(EA, EI, l, hinge=None):
     if hinge is None:
         return matrix
     elif hinge == 2:
-        matrix[1][2] = matrix[2][1] = matrix[2][2] = 1e-14
+        matrix[1][2] = matrix[2][1] = matrix[2][2] = 0
     elif hinge == 1:
-        matrix[1][1] = matrix[1][2] = matrix[2][1] = 1e-14
+        matrix[1][1] = matrix[1][2] = matrix[2][1] = 0
     return matrix
 
 

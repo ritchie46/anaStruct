@@ -338,11 +338,11 @@ class Plotter:
 
         # add supports
         if supports:
-            self.__fixed_support_patch(max_val)
-            self.__hinged_support_patch(max_val)
-            self.__roll_support_patch(max_val)
-            self.__rotating_spring_support_patch(max_val)
-            self.__spring_support_patch(max_val)
+            self.__fixed_support_patch(max_val * scale)
+            self.__hinged_support_patch(max_val * scale)
+            self.__roll_support_patch(max_val * scale)
+            self.__rotating_spring_support_patch(max_val * scale)
+            self.__spring_support_patch(max_val * scale)
 
         if show:
             # add_loads
