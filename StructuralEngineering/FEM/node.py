@@ -31,22 +31,16 @@ class Node:
         Fx = self.Fx + other.Fx
         Fz = self.Fz + other.Fz
         Ty = self.Ty + other.Ty
-        ux = self.ux + other.ux
-        uz = self.uz + other.uz
-        phi_y = self.phi_y + other.phi_y
 
-        return Node(self.id, Fx, Fz, Ty, ux, uz, phi_y, self.point)
+        return Node(self.id, Fx, Fz, Ty, self.ux, self.uz, self.phi_y, self.point)
 
     def __sub__(self, other):
         assert (self.id == other.id), "Cannot subtract nodes as the ID's don't match. The nodes positions don't match."
         Fx = self.Fx - other.Fx
         Fz = self.Fz - other.Fz
         Ty = self.Ty - other.Ty
-        ux = self.ux - other.ux
-        uz = self.uz - other.uz
-        phi_y = self.phi_y - other.phi_y
 
-        return Node(self.id, Fx, Fz, Ty, ux, uz, phi_y, self.point)
+        return Node(self.id, Fx, Fz, Ty, self.ux, self.uz, self.phi_y, self.point)
 
     def reset(self):
         self.Fx = self.Fz = self.Ty = self.ux = self.uz = self.phi_y = 0

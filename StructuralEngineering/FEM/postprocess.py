@@ -24,7 +24,6 @@ class SystemLevel:
 
         count = 0
         for node in self.system.node_map.values():
-
             # reset nodes in case of iterative calculation
             self.system.node_map[node.id].reset()
 
@@ -32,8 +31,14 @@ class SystemLevel:
                 # Minus sign, because the node force is opposite of the element force.
                 if el.node_1.id == node.id:
                     self.system.node_map[node.id] -= el.node_1
+                    self.system.node_map[node.id].ux = -el.node_1.ux
+                    self.system.node_map[node.id].uz = -el.node_1.uz
+                    self.system.node_map[node.id].phi_y = -el.node_1.phi_y
                 elif el.node_2.id == node.id:
                     self.system.node_map[node.id] -= el.node_2
+                    self.system.node_map[node.id].ux = -el.node_2.ux
+                    self.system.node_map[node.id].uz = -el.node_2.uz
+                    self.system.node_map[node.id].phi_y = -el.node_2.phi_y
 
             # Loads that are applied on the node of the support. Moment at a hinged support may not lead to reaction
             # moment

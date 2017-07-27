@@ -59,6 +59,7 @@ class SimpleTest(unittest.TestCase):
         system.show_normal_force(show=False)
         system.show_reaction_force(show=False)
         system.show_shear_force(show=False)
+        self.assertAlmostEqual(system.get_node_displacements(3)["ux"], 0.0575402011335)
 
     def test_example_4(self):
         system = se.SystemElements(xy_cs=False)

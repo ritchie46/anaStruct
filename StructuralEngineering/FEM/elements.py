@@ -144,7 +144,6 @@ def constitutive_matrix(EA, EI, l, hinge=None):
 
 
 def stiffness_matrix(var_constitutive_matrix, var_kinematic_matrix):
-
     kinematic_transposed_times_constitutive = np.dot(var_kinematic_matrix.transpose(), var_constitutive_matrix)
     return np.dot(kinematic_transposed_times_constitutive, var_kinematic_matrix)
 
