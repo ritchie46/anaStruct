@@ -497,16 +497,16 @@ class SystemElements:
             global_increase = np.sum(current_abs_u) / np.sum(last_abs_u)
 
             if global_increase < 0.1:
-                print(f"Divergence in {c} iterations")
+                print("Divergence in {} iterations".format(c))
                 break
             if global_increase - 1 < 1e-8 and global_increase >= 1:
-                print(f"Convergence in {c} iterations")
+                print("Convergence in {} iterations".format(c))
                 break
             if global_increase - last_increase > 0 and global_increase > 1:
                 div_c += 1
 
                 if div_c > 25:
-                    print(f"Divergence in {c} iterations")
+                    print("Divergence in {} iterations".format(c))
                     break
 
             last_abs_u = current_abs_u
