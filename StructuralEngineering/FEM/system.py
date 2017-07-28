@@ -57,7 +57,7 @@ class SystemElements:
         self._previous_point = Pointxz(0, 0)
         self.load_factor = load_factor
 
-    def add_truss_element(self, location_list, EA):
+    def add_truss_element(self, location_list, EA=None):
         return self.add_element(location_list, EA, 1e-14, type='truss')
 
     def add_element(self, location_list, EA=None, EI=None, hinge=None, mp=None, spring=None, type="general"):
@@ -452,7 +452,10 @@ class SystemElements:
                 el = self.element_map[k]
 
                 for node_no, mp in v.items():
-                    m_e = el.element_force_vector[node_no * 3 - 1]
+                    if node_no == 1:
+                        m_e = el.node_1.Ty
+                    else:
+                        m_e = el.node_2.Ty
 
                     if abs(m_e) > mp:
                         el.nodes_plastic[node_no - 1] = True
@@ -484,8 +487,8 @@ class SystemElements:
                 delta_z = -el.point_2.z - el.node_2.uz + el.point_1.z + el.node_1.uz
                 a_bar = angle_x_axis(delta_x, delta_z)
                 l = math.sqrt(delta_x**2 + delta_z**2)
-                ai = el.node_1.phi_y + a_bar
-                aj = el.node_2.phi_y + a_bar
+                ai = a_bar + el.node_1.phi_y
+                aj = a_bar + el.node_2.phi_y
                 el.compile_kinematic_matrix(ai, aj, l)
                 #el.compile_constitutive_matrix(el.EA, el.EI, l)
                 el.compile_stiffness_matrix()
@@ -496,7 +499,7 @@ class SystemElements:
             if global_increase < 0.1:
                 print(f"Divergence in {c} iterations")
                 break
-            if global_increase - 1 < 1e-16 and global_increase >= 1:
+            if global_increase - 1 < 1e-8 and global_increase >= 1:
                 print(f"Convergence in {c} iterations")
                 break
             if global_increase - last_increase > 0 and global_increase > 1:
