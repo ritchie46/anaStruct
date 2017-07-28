@@ -33,8 +33,8 @@ class SimpleTest(unittest.TestCase):
         system.add_support_hinged(node_id=4)
         system.point_load(Fx=10, node_id=2)
         sol = np.fromstring("""0.00000000e+00   0.00000000e+00  -7.50739186e-03   4.00000000e-02
-   2.44055338e-18  -4.95028396e-03   3.00000000e-02   1.00000000e-02
-  -2.69147231e-03   0.00000000e+00   0.00000000e+00  -7.65426385e-03""", float, sep=" ")
+        2.44055338e-18  -4.95028396e-03   3.00000000e-02   1.00000000e-02
+        -2.69147231e-03   0.00000000e+00   0.00000000e+00  -7.65426385e-03""", float, sep=" ")
         self.assertTrue(np.allclose(system.solve(), sol))
         system.show_structure(show=False)
         system.show_bending_moment(show=False)
@@ -52,7 +52,7 @@ class SimpleTest(unittest.TestCase):
         system.point_load(Fx=30, node_id=2)
         system.q_load(q=10, element_id=2)
         sol = np.fromstring("""0.          0.          0.          0.06264607  0.00379285 -0.0128231
-  0.0575402   0.01287382 -0.00216051  0.          0.         -0.0080909""", float, sep=" ")
+        0.0575402   0.01287382 -0.00216051  0.          0.         -0.0080909""", float, sep=" ")
         self.assertTrue(np.allclose(system.solve(), sol, 1e-3))
         system.show_structure(show=False)
         system.show_bending_moment(show=False)
@@ -60,6 +60,9 @@ class SimpleTest(unittest.TestCase):
         system.show_reaction_force(show=False)
         system.show_shear_force(show=False)
         self.assertAlmostEqual(system.get_node_displacements(3)["ux"], 0.0575402011335)
+        sol = system.get_node_results_system(3)
+        self.assertAlmostEqual(sol["uz"], -0.012873819793265455)
+        self.assertAlmostEqual(sol["phi_y"], 0.0021605118130397583)
 
     def test_example_4(self):
         system = se.SystemElements(xy_cs=False)
@@ -69,8 +72,8 @@ class SimpleTest(unittest.TestCase):
         system.add_support_hinged(node_id=1)
         system.add_support_hinged(node_id=3)
         sol = np.fromstring("""0.00000000e+00   0.00000000e+00  -3.25525753e-21   2.00000000e-09
-   2.49096026e-25  -2.08333293e-03   0.00000000e+00   0.00000000e+00
-   4.16666707e-03""", float, sep=" ")
+        2.49096026e-25  -2.08333293e-03   0.00000000e+00   0.00000000e+00
+        4.16666707e-03""", float, sep=" ")
         self.assertTrue(np.allclose(system.solve(), sol))
         system.show_structure(show=False)
         system.show_bending_moment(show=False)
@@ -86,8 +89,8 @@ class SimpleTest(unittest.TestCase):
         system.add_support_hinged(node_id=1)
         system.add_support_hinged(node_id=3)
         sol = np.fromstring("""0.00000000e+00   0.00000000e+00   3.47221978e-04   2.66666645e-09
-   6.66666453e-10  -6.94444356e-04   0.00000000e+00   0.00000000e+00
-   3.47222298e-03""", float, sep=" ")
+        6.66666453e-10  -6.94444356e-04   0.00000000e+00   0.00000000e+00
+        3.47222298e-03""", float, sep=" ")
         self.assertTrue(np.allclose(system.solve(), sol))
         system.show_structure(show=False)
         system.show_bending_moment(show=False)
@@ -107,3 +110,12 @@ class SimpleTest(unittest.TestCase):
         ss.q_load(10, 1)
         ss.solve()
         self.assertAlmostEqual(-61.25, ss.get_node_results_system(1)["Ty"], places=2)
+
+    def test_ex_8(self):
+        """
+        Plastic hinges test
+        """
+        from StructuralEngineering.FEM.examples.ex_8_non_linear_portal import u4
+        self.assertAlmostEqual(u4, 105.288412424)
+
+
