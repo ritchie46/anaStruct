@@ -1,15 +1,27 @@
 # StructuralEngineering 2D Frames and Trusses
 Solve 2D Frames and Trusses calculations. Determine the bending moment, shear force, normal force and displacements.
 
+## Note!
+
+I am currently updating quite frequently adding non linear supports, better plotting options, numerical results and
+unit tests. The syntax isn't backward compatible. When I think I'll keep the current syntax, I will update the blog
+posts.
+
+
 ### Take a look at my blog for some examples.
 
 * __[code examples!](https://ritchievink.com/blog/2017/01/12/python-1d-fem-example-1/)__
 
 ## Installation
 
-For the latest version download this repository and unzip the file. Open the command box in the unzipped file location and run:
+For the 'old' release candidate:
 ```
-$ python setup.py install
+$ pip install StructuralEngineering
+```
+
+For the current actively development version:
+```
+$ pip install git+https://github.com/ritchie46/structural_engineering.git
 ```
 
 ## 2D FEM Frames and Trusses
