@@ -1,8 +1,15 @@
 import math
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from StructuralEngineering.basic import find_nearest, angle_x_axis
+from StructuralEngineering.basic import find_nearest
+import os
+
+# Needed for Travis unit testing
+if os.environ.get('DISPLAY', '') == '':
+    print('no display found. Using non-interactive Agg backend')
+    matplotlib.use('Agg')
 
 
 class Plotter:

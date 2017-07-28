@@ -119,6 +119,4 @@ class SimpleTest(unittest.TestCase):
         self.assertAlmostEqual(u4, 105.288412424)
 
 if __name__ == "__main__":
-    import matplotlib
-    matplotlib.use('Agg')
     unittest.main()
