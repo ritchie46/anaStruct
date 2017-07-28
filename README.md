@@ -1,4 +1,5 @@
 # StructuralEngineering 2D Frames and Trusses
+[![Build Status](https://travis-ci.org/ritchie46/structural_engineering.svg?branch=master)](https://travis-ci.org/ritchie46/structural_engineering)
 Solve 2D Frames and Trusses calculations. Determine the bending moment, shear force, normal force and displacements.
 
 ## Note!
