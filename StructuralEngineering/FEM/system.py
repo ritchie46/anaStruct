@@ -483,9 +483,10 @@ class SystemElements:
                 # minus sign to work with an opposite z-axis
                 delta_z = -el.point_2.z - el.node_2.uz + el.point_1.z + el.node_1.uz
                 a_bar = angle_x_axis(delta_x, delta_z)
-                ai = a_bar
                 l = math.sqrt(delta_x**2 + delta_z**2)
-                el.compile_kinematic_matrix(ai, ai, l)
+                ai = el.node_1.phi_y + a_bar
+                aj = el.node_2.phi_y + a_bar
+                el.compile_kinematic_matrix(ai, aj, l)
                 #el.compile_constitutive_matrix(el.EA, el.EI, l)
                 el.compile_stiffness_matrix()
 

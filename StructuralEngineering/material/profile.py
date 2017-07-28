@@ -1,14 +1,17 @@
+import csv
 
-HEA = {100: {'A': 2120,
-             'Iy': 349e4,
-             'Wy,el': 73e3,
-             "Wy,pl": 83e3},
-       200: {'A': 5380,
-             'Iy': 3692e4,
-             'Wy,el': 389e3,
-             "Wy,pl": 430e3},
-       300: {'A': 11250,
-              "Iy": 18263e4,
-              "Wy,el": 1260e3}
-}
+with open("hea.csv") as f:
+    r = csv.reader(f)
+    HEA = {}
+
+    headers = next(r)
+    next(r)  # units not needed
+    for row in r:
+        params = {}
+
+        for i in range(1, len(row)):
+            params[headers[i]] = float(row[i])
+
+        HEA[int(row[0])] = params
+
 
