@@ -14,7 +14,7 @@ setup(
     url='https://ritchievink.com',
     license='MIT License',
     packages=['StructuralEngineering', 'StructuralEngineering.FEM', "StructuralEngineering.FEM.examples",
-              "StructuralEngineering.FEM.material"],
+              "StructuralEngineering.material"],
     install_requires=[
         "matplotlib",
         "numpy",
