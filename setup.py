@@ -13,7 +13,8 @@ setup(
     author_email='ritchie46@gmail.com',
     url='https://ritchievink.com',
     license='MIT License',
-    packages=['StructuralEngineering', 'StructuralEngineering.FEM', "StructuralEngineering.FEM.examples"],
+    packages=['StructuralEngineering', 'StructuralEngineering.FEM', "StructuralEngineering.FEM.examples",
+              "StructuralEngineering.FEM.material"],
     install_requires=[
         "matplotlib",
         "numpy",
