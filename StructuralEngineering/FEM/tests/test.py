@@ -1,5 +1,3 @@
-import sys
-sys.path.append(".")
 import unittest
 from StructuralEngineering.FEM import system as se
 import numpy as np

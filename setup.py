@@ -11,9 +11,9 @@ setup(
     description='structural engineering package',
     author='Ritchie Vink',
     author_email='ritchie46@gmail.com',
-    url='http://laizen.nl',
+    url='https://ritchievink.com',
     license='MIT License',
-    packages=['StructuralEngineering', 'StructuralEngineering.FEM'],
+    packages=['StructuralEngineering', 'StructuralEngineering.FEM', "StructuralEngineering.FEM.examples"],
     install_requires=[
         "matplotlib",
         "numpy",
