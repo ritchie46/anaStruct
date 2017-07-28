@@ -118,4 +118,5 @@ class SimpleTest(unittest.TestCase):
         from StructuralEngineering.FEM.examples.ex_8_non_linear_portal import u4
         self.assertAlmostEqual(u4, 105.288412424)
 
-
+if __name__ == "__main__":
+    unittest.main()
