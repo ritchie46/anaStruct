@@ -72,15 +72,13 @@ class SystemElements:
                           { 1: 210e3,
                             2: 180e3
                           }
-        :param spring: (dict) Set a spring at node 1 or node 2.
+        :param spring: (dict) Set a rotational spring at node 1 or node 2.
                             {
-                              1: { direction: 1
-                                   k: 5e3
-                                 }
-                              2: { direction: 1
-                                   k: 5e3
-                                 }
+                              1: k
+                              2: k
                             }
+                            When a hinge is required at node 1 for instance:
+                            {1: 0}
 
                         direction 1: ux
                         direction 2: uz
@@ -165,11 +163,25 @@ class SystemElements:
                 elif hinge == 2:
                     hinge = 1
 
+                if spring is not None:
+                    if 1 in spring and 2 in spring:
+                        k1 = spring[1]
+                        spring[1] = spring[2]
+                        spring[2] = k1
+                    elif 1 in spring:
+                        spring[2] = spring.pop(1)
+                    elif 2 in spring:
+                        spring[1] = spring.pop(2)
+
                 if mp is not None:
-                    if 1 in mp:
-                        mp[1] = 2
+                    if 1 in mp and 2 in mp:
+                        m1 = mp[1]
+                        mp[1] = mp[2]
+                        mp[2] = m1
+                    elif 1 in mp:
+                        mp[2] = mp.pop(1)
                     elif 2 in mp:
-                        mp[2] = 1
+                        mp[1] = mp.pop(2)
 
         # append the nodes to the system nodes list
         id1 = False

@@ -34,11 +34,13 @@ class Element:
         self.EA = EA
         self.EI = EI
         self.l = l
+        self.hinge = hinge
+        self.springs = spring
         self.point_1 = point_1  # location
         self.point_2 = point_2  # location
         self.alpha = ai
         self.kinematic_matrix = kinematic_matrix(ai, ai, l)
-        self.constitutive_matrix = constitutive_matrix(EA, EI, l, hinge)
+        self.constitutive_matrix = None
         self.stiffness_matrix = None
         self.node_id1 = None  # int
         self.node_id2 = None  # int
@@ -56,7 +58,7 @@ class Element:
         self.extension = None
         self.max_deflection = None
         self.nodes_plastic = [False, False]
-        self.springs = spring
+        self.compile_constitutive_matrix(self.EA, self.EI, l)
         self.compile_stiffness_matrix()
 
     def determine_force_vector(self):
@@ -65,15 +67,12 @@ class Element:
 
     def compile_stiffness_matrix(self):
         self.stiffness_matrix = stiffness_matrix(self.constitutive_matrix, self.kinematic_matrix)
-        if self.springs is not None:
-            for node_id, param in self.springs.items():
-                self.add_spring(node_id, param["k"], param["direction"])
 
     def compile_kinematic_matrix(self, ai, aj, l):
         self.kinematic_matrix = kinematic_matrix(ai, aj, l)
 
     def compile_constitutive_matrix(self, EA, EI, l):
-        self.constitutive_matrix = constitutive_matrix(EA, EI, l)
+        self.constitutive_matrix = constitutive_matrix(EA, EI, l, self.hinge, self.springs)
 
     def update_stiffness(self, factor, node):
         if node == 1:
@@ -123,7 +122,7 @@ def kinematic_matrix(ai, aj, l):
                      [-math.sin(ai) / l, -math.cos(ai) / l, 0, math.sin(aj) / l, math.cos(aj) / l, 1]])
 
 
-def constitutive_matrix(EA, EI, l, hinge=None):
+def constitutive_matrix(EA, EI, l, hinge=None, spring=None):
     """
     :param EA: (float) Young's modules * Area
     :param EI: (float) Young's modules * Moment of Inertia
@@ -134,12 +133,30 @@ def constitutive_matrix(EA, EI, l, hinge=None):
     matrix = np.array([[EA / l, 0, 0],
                       [0, 4 * EI / l, -2 * EI / l],
                       [0, -2 * EI / l, 4 * EI / l]])
-    if hinge is None:
-        return matrix
+
+    if hinge == 1:
+        matrix[1][1] = matrix[1][2] = matrix[2][1] = 0
     elif hinge == 2:
         matrix[1][2] = matrix[2][1] = matrix[2][2] = 0
-    elif hinge == 1:
-        matrix[1][1] = matrix[1][2] = matrix[2][1] = 0
+
+    if spring is not None:
+        """
+        stiffness matrix K: 
+        [[ k, k ]
+        [ k, k ]]
+        
+        flexibility matrix C:
+        [[ c, c ]    =   [[ 1/k, 1/k ]
+        `[ c, c ]]       [  1/k, 1/k ]]
+        
+        flexibility matrix c + springs on both sides:
+        [[ c11 + 1/k1, c12       ]
+        [  c21      , c21 + 1/k2 ]]
+        """
+        if 1 in spring:
+            matrix[1][1] = 1 / (1 / matrix[1][1] + 1 / spring[1]['k'])
+        if 2 in spring:
+            matrix[2][2] = 1 / (1 / matrix[2][2] + 1 / spring[2]['k'])
     return matrix
 
 
