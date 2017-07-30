@@ -17,11 +17,11 @@ def run():
     system.q_load(q=10, element_id=2)
     system.solve()
 
-    # system.show_structure()
-    # system.show_reaction_force()
-    # system.show_normal_force()
-    # system.show_shear_force()
-    # system.show_bending_moment()
+    system.show_structure()
+    system.show_reaction_force()
+    system.show_normal_force()
+    system.show_shear_force()
+    system.show_bending_moment()
     system.show_displacement(factor=1)
 
 if __name__ == "__main__":

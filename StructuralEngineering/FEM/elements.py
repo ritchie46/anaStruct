@@ -9,7 +9,7 @@ Shear deformation is not taken into account.
 
 
 class Element:
-    def __init__(self, id, EA, EI, l, ai, point_1, point_2, hinge=None, spring=None):
+    def __init__(self, id, EA, EI, l, ai, point_1, point_2, spring=None):
         """
         :param id: integer representing the elements ID
         :param EA: Young's modulus * Area
@@ -34,7 +34,6 @@ class Element:
         self.EA = EA
         self.EI = EI
         self.l = l
-        self.hinge = hinge
         self.springs = spring
         self.point_1 = point_1  # location
         self.point_2 = point_2  # location
@@ -72,7 +71,7 @@ class Element:
         self.kinematic_matrix = kinematic_matrix(ai, aj, l)
 
     def compile_constitutive_matrix(self, EA, EI, l):
-        self.constitutive_matrix = constitutive_matrix(EA, EI, l, self.hinge, self.springs)
+        self.constitutive_matrix = constitutive_matrix(EA, EI, l, self.springs)
 
     def update_stiffness(self, factor, node):
         if node == 1:
@@ -122,7 +121,7 @@ def kinematic_matrix(ai, aj, l):
                      [-math.sin(ai) / l, -math.cos(ai) / l, 0, math.sin(aj) / l, math.cos(aj) / l, 1]])
 
 
-def constitutive_matrix(EA, EI, l, hinge=None, spring=None):
+def constitutive_matrix(EA, EI, l, spring=None):
     """
     :param EA: (float) Young's modules * Area
     :param EI: (float) Young's modules * Moment of Inertia
@@ -133,11 +132,6 @@ def constitutive_matrix(EA, EI, l, hinge=None, spring=None):
     matrix = np.array([[EA / l, 0, 0],
                       [0, 4 * EI / l, -2 * EI / l],
                       [0, -2 * EI / l, 4 * EI / l]])
-
-    if hinge == 1:
-        matrix[1][1] = matrix[1][2] = matrix[2][1] = 0
-    elif hinge == 2:
-        matrix[1][2] = matrix[2][1] = matrix[2][2] = 0
 
     if spring is not None:
         """
@@ -154,9 +148,15 @@ def constitutive_matrix(EA, EI, l, hinge=None, spring=None):
         [  c21      , c21 + 1/k2 ]]
         """
         if 1 in spring:
-            matrix[1][1] = 1 / (1 / matrix[1][1] + 1 / spring[1]['k'])
+            if spring[1] == 0:  # hinge
+                matrix[1][1] = matrix[1][2] = matrix[2][1] = 0
+            else:
+                matrix[1][1] = 1 / (1 / matrix[1][1] + 1 / spring[1])
         if 2 in spring:
-            matrix[2][2] = 1 / (1 / matrix[2][2] + 1 / spring[2]['k'])
+            if spring[2] == 0:  # hinge
+                matrix[1][2] = matrix[2][1] = matrix[2][2] = 0
+            else:
+                matrix[2][2] = 1 / (1 / matrix[2][2] + 1 / spring[2])
     return matrix
 
 

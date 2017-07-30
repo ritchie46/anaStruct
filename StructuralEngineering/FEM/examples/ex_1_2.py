@@ -9,7 +9,7 @@ def run():
 
     system.q_load(element_id=2, q=10, direction=1)
 
-    system.add_support_hinged(node_id=1)
+    system.add_support_hinged(node_id=2)
     system.add_support_fixed(node_id=3)
 
     system.solve()

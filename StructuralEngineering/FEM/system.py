@@ -10,9 +10,50 @@ from StructuralEngineering.FEM.plotter import Plotter
 
 class SystemElements:
     def __init__(self, figsize=(12, 8), xy_cs=True, EA=15e3, EI=5e3, load_factor=1):
+        # init object
+        self.post_processor = post_sl(self)
+        self.plotter = Plotter(self)
+
         # standard values if none provided
         self.EA = EA
         self.EI = EI
+        self.figsize = figsize
+        self.xy_cs = xy_cs
+
+        # structure system
+        self.element_map = {}  # maps element ids to the Element objects.
+        self.node_map = {}  # maps node ids to the Node objects.
+        self.system_spring_map = {}  # keys matrix index (for both row and columns), values K
+
+        # list of removed indexes due to conditions
+        self.removed_indexes = []
+        # list of indexes that remain after conditions are applied
+        self.remainder_indexes = []
+
+        # keep track of the node_id of the supports
+        self.supports_fixed = []
+        self.supports_hinged = []
+        self.supports_roll = []
+        self.supports_spring_x = []
+        self.supports_spring_z = []
+        self.supports_spring_y = []
+        self.supports_roll_direction = []
+
+        # keep track of the loads
+        self.loads_point = []  # node ids with a point load
+        self.loads_q = []  # element ids with a q-load
+        self.loads_moment = []
+
+        # results
+        self.reaction_forces = {}  # node objects
+        self.non_linear = False
+        self.non_linear_elements = {}  # keys are element ids, values are dicts: {node_index: max moment capacity}
+
+        # previous point of element
+        self._previous_point = Pointxz(0, 0)
+        self.load_factor = load_factor
+
+        # Objects state
         self.max_node_id = 2  # minimum is 2, being 1 element
         self.count = 0
         self.system_matrix_locations = []
@@ -22,67 +63,35 @@ class SystemElements:
         self.shape_system_matrix = None
         self.reduced_force_vector = None
         self.reduced_system_matrix = None
-        self.post_processor = post_sl(self)
-        self.plotter = Plotter(self)
-        self.figsize = figsize
-        self.xy_cs = xy_cs
-        # list of removed indexes due to conditions
-        self.removed_indexes = []
-        # list of indexes that remain after conditions are applied
-        self.remainder_indexes = []
-        # keep track of the node_id of the supports
-        self.supports_fixed = []
-        self.supports_hinged = []
-        self.supports_roll = []
-        self.supports_spring_x = []
-        self.supports_spring_z = []
-        self.supports_spring_y = []
-        self.supports_roll_direction = []
-        # keep track of the loads
-        self.loads_point = []  # node ids with a point load
-        self.loads_q = []  # element ids with a q-load
-        self.loads_moment = []
-        # results
-        self.reaction_forces = {}  # node objects
-        self.non_linear = False
-        self.non_linear_elements = {}  # keys are element ids, values are dicts: {node_index: max moment capacity}
-        self.element_map = {}
-        self.node_map = {}
-        self.node_elements = {}
-        self.system_spring_map = {}  # keys matrix index (for both row and columns), values K
-
-        # previous point of element
-        self._previous_point = Pointxz(0, 0)
-        self.load_factor = load_factor
 
     def add_truss_element(self, location_list, EA=None):
-        return self.add_element(location_list, EA, 1e-14, type='truss')
+        return self.add_element(location_list, EA, 1e-14, element_type='truss')
 
-    def add_element(self, location_list, EA=None, EI=None, hinge=None, mp=None, spring=None, type="general"):
+    def add_element(self, location_list, EA=None, EI=None, mp=None, spring=None, **kwargs):
         """
         :param location_list: [[x, z], [x, z]] or [Pointxz, Pointxz]
         :param EA: (float) EA
         :param EI: (float) EI
-        :param hinge: (integer) 1 or 2. Adds an hinge at the first or second node.
         :param mp: (dict) Set a maximum plastic moment capacity. Keys are integers representing the nodes. Values
                           are the bending moment capacity.
                           Example:
                           { 1: 210e3,
                             2: 180e3
                           }
-        :param spring: (dict) Set a rotational spring at node 1 or node 2.
-                            {
-                              1: k
-                              2: k
-                            }
-                            When a hinge is required at node 1 for instance:
-                            {1: 0}
+        :param spring: (dict) Set a rotational spring or a hinge (k=0) at node 1 or node 2.
+                            { 1: k
+                              2: k }
+
+                             Set a hinged node:
+                             {1: 0}
 
                         direction 1: ux
                         direction 2: uz
                         direction 3: phi_y
         :return element id: (int)
         """
+        element_type = kwargs.get("type", "general")
+
         EA = self.EA if EA is None else EA
         EI = self.EI if EI is None else EI
 
@@ -156,11 +165,6 @@ class SystemElements:
                 node_id1 = node_id2
                 node_id2 = id_
 
-                if hinge == 1:
-                    hinge = 2
-                elif hinge == 2:
-                    hinge = 1
-
                 if spring is not None:
                     if 1 in spring and 2 in spring:
                         k1 = spring[1]
@@ -197,27 +201,34 @@ class SystemElements:
             node = Node(id=node_id2, point=point_2)
             self.node_map[node_id2] = node
 
-        """
-        Only one hinge per node. If not, the matrix cannot be solved.
-        """
+        if spring is not None and 0 in spring:
+            """
+            Must be one rotational fixed element per node. Thus keep track of the hinges (k == 0).
+            """
 
-        if hinge == 1:
-            if self.node_map[node_id1].hinge:
-                hinge = None  # Ensure that there are not more than one hinge per node
-            else:
-                self.node_map[node_id1].hinge = True
-        elif hinge == 2:
-            if self.node_map[node_id2].hinge:
-                hinge = None
-            else:
-                self.node_map[node_id2].hinge = True
+            for node in range(1, 3):
+
+                if spring[node] == 0:  # node is a hinged node
+                    if node == 1:
+                        node_id = node_id1
+                    else:
+                        node_id = node_id2
+
+                    self.node_map[node_id].hinge = True
+
+                    if len(self.node_map[node_id].elements) > 0:
+                        pass_hinge = not all([el.hinge == node for el in self.node_map[node_id].elements.values()])
+                    else:
+                        pass_hinge = True
+                    if not pass_hinge:
+                        del spring[node]  # too many hinges at that element.
 
         # determine the length of the elements
         point = point_2 - point_1
         l = point.modulus()
 
         # add element
-        element = Element(self.count, EA, EI, l, ai, point_1, point_2, hinge, spring)
+        element = Element(self.count, EA, EI, l, ai, point_1, point_2, spring)
         element.node_ids.append(node_id1)
         element.node_ids.append(node_id2)
         element.node_id1 = node_id1
@@ -225,11 +236,20 @@ class SystemElements:
 
         element.node_1 = self.node_map[node_id1]
         element.node_2 = self.node_map[node_id2]
-        element.type = type
+        element.type = element_type
 
         self.element_map[self.count] = element
 
+        # Register the elements per node
+        for node_id in (node_id1, node_id2):
+            self.node_map[node_id].elements[element.id] = element
+
+        if mp is not None:
+            self.non_linear_elements[self.count] = mp
+            self.non_linear = True
+
         """
+        Determine the elements location in the stiffness matrix.
         system matrix [K]
 
         [fx 1] [K         |  \ node 1 starts at row 1
@@ -290,10 +310,6 @@ class SystemElements:
             row_index_n2 += 1
             matrix_locations.append(full_row_locations)
         self.system_matrix_locations.append(matrix_locations)
-
-        if mp is not None:
-            self.non_linear_elements[self.count] = mp
-            self.non_linear = True
 
         return self.count
 

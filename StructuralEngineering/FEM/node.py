@@ -21,6 +21,7 @@ class Node:
         self.phi_y = phi_y
         self.point = point
         self.hinge = False
+        self.elements = {}
 
     def __str__(self):
         return ("[id = %s, Fx = %s, Fz = %s, Ty = %s, ux = %s, uz = %s, phi_y = %s]" %

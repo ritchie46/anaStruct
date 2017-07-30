@@ -51,7 +51,7 @@ class SimpleTest(unittest.TestCase):
 
     def test_example_4(self):
         system = se.SystemElements(xy_cs=False)
-        system.add_element(location_list=[[0, 0], [5, 0]], EA=5e9, EI=8000, hinge=2)
+        system.add_element(location_list=[[0, 0], [5, 0]], EA=5e9, EI=8000, spring={2: 0})
         system.add_element(location_list=[[5, 0], [5, -5]], EA=5e9, EI=4000)
         system.moment_load(Ty=10, node_id=3)
         system.add_support_hinged(node_id=1)
@@ -79,7 +79,7 @@ class SimpleTest(unittest.TestCase):
         """
 
         ss = se.SystemElements()
-        ss.add_element([[0, 0], [7, 0]], hinge=2)
+        ss.add_element([[0, 0], [7, 0]], spring={2: 0})
         ss.add_element([7.1, 0])
         ss.add_support_fixed([1, 3])
         ss.q_load(10, 1)
