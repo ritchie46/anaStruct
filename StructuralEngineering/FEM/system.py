@@ -48,6 +48,7 @@ class SystemElements:
         self.non_linear_elements = {}  # keys are element ids, values are dicts: {node_index: max moment capacity}
         self.element_map = {}
         self.node_map = {}
+        self.node_elements = {}
         self.system_spring_map = {}  # keys matrix index (for both row and columns), values K
 
         # previous point of element
@@ -151,9 +152,9 @@ class SystemElements:
                 delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
                 ai = angle_x_axis(delta_x, delta_z)
 
-                id = node_id1
+                id_ = node_id1
                 node_id1 = node_id2
-                node_id2 = id
+                node_id2 = id_
 
                 if hinge == 1:
                     hinge = 2
@@ -222,8 +223,8 @@ class SystemElements:
         element.node_id1 = node_id1
         element.node_id2 = node_id2
 
-        element.node_1 = Node(node_id1)
-        element.node_2 = Node(node_id2)
+        element.node_1 = self.node_map[node_id1]
+        element.node_2 = self.node_map[node_id2]
         element.type = type
 
         self.element_map[self.count] = element

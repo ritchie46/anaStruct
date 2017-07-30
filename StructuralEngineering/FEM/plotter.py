@@ -297,7 +297,7 @@ class Plotter:
         max_z = 0
         min_x = 0
         min_z = 0
-        for el in self.system.elements:
+        for el in self.system.element_map.values():
             # plot structure
             axis_values = plot_values_element(el)
             x_val = axis_values[0]
@@ -324,7 +324,7 @@ class Plotter:
         self.one_fig.axis([minxrange, plusxrange, minyrange, plusyrange])
 
         if verbosity == 0:
-            for el in self.system.elements:
+            for el in self.system.element_map.values():
 
                 axis_values = plot_values_element(el)
                 x_val = axis_values[0]
@@ -422,12 +422,12 @@ class Plotter:
     def bending_moment(self, factor, figsize, verbosity, scale, offset, show):
         self.plot_structure(figsize, 1, scale=scale, offset=offset)
         self.max_force = 0
-        con = len(self.system.elements[0].bending_moment)
+        con = len(self.system.element_map[1].bending_moment)
 
         # determine max factor for scaling
         if factor is None:
             factor = 0
-            for el in self.system.elements:
+            for el in self.system.element_map.values():
                 if el.q_load:
                     m_sag = (el.node_1.Ty - el.node_2.Ty) * 0.5 - 1 / 8 * el.q_load * el.l**2
                     value_1 = max(abs(el.node_1.Ty), abs(m_sag))
@@ -437,7 +437,7 @@ class Plotter:
                     factor = self.__set_factor(el.node_1.Ty, el.node_2.Ty)
 
         # determine the axis values
-        for el in self.system.elements:
+        for el in self.system.element_map.values():
             if math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and \
                     math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and el.q_load is None:
                 # If True there is no bending moment, so no need for plotting.
@@ -471,12 +471,12 @@ class Plotter:
         self.max_force = 0
 
         # determine max factor for scaling
-        for el in self.system.elements:
+        for el in self.system.element_map.values():
             shear_1 = max(el.shear_force)
             shear_2 = min(el.shear_force)
             factor = self.__set_factor(shear_1, shear_2)
 
-        for el in self.system.elements:
+        for el in self.system.element_map.values():
             if math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and \
                     math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and el.q_load is None:
                 # If True there is no bending moment, thus no shear force, so no need for plotting.
@@ -563,7 +563,7 @@ class Plotter:
 
         # determine max factor for scaling
         if factor is None:
-            for el in self.system.elements:
+            for el in self.system.element_map.values():
                 u_node = max(abs(el.node_1.ux), abs(el.node_1.uz))
                 if el.type == "general":
                     factor = self.__set_factor(el.max_deflection, u_node)
@@ -573,7 +573,7 @@ class Plotter:
         else:
             ax_range = None
 
-        for el in self.system.elements:
+        for el in self.system.element_map.values():
             axis_values = plot_values_deflection(el, factor, ax_range, linear)
             self.plot_result(axis_values, node_results=False)
 
