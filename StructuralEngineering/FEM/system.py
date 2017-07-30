@@ -13,9 +13,7 @@ class SystemElements:
         # standard values if none provided
         self.EA = EA
         self.EI = EI
-        self.node_ids = []
         self.max_node_id = 2  # minimum is 2, being 1 element
-        self.elements = []
         self.count = 0
         self.system_matrix_locations = []
         self.system_matrix = None
@@ -46,7 +44,6 @@ class SystemElements:
         self.loads_moment = []
         # results
         self.reaction_forces = {}  # node objects
-
         self.non_linear = False
         self.non_linear_elements = {}  # keys are element ids, values are dicts: {node_index: max moment capacity}
         self.element_map = {}
@@ -121,7 +118,7 @@ class SystemElements:
 
         if len(self.element_map) != 0:
             count = 1
-            for el in self.elements:
+            for el in self.element_map.values():
                 # check if node 1 of the element meets another node. If so, both have the same node_id
                 if el.point_1 == point_1:
                     node_id1 = el.node_id1
@@ -194,11 +191,9 @@ class SystemElements:
 
         if id1 is False:
             node = Node(id=node_id1, point=point_1)
-            self.node_ids.append(node_id1)
             self.node_map[node_id1] = node
         if id2 is False:
             node = Node(id=node_id2, point=point_2)
-            self.node_ids.append(node_id2)
             self.node_map[node_id2] = node
 
         """
@@ -229,10 +224,8 @@ class SystemElements:
 
         element.node_1 = Node(node_id1)
         element.node_2 = Node(node_id2)
-
         element.type = type
 
-        self.elements.append(element)
         self.element_map[self.count] = element
 
         """
@@ -309,7 +302,7 @@ class SystemElements:
         Shape = n * 3
         """
         # if self.system_matrix is None:
-        shape = len(self.node_ids) * 3
+        shape = len(self.node_map) * 3
         self.shape_system_matrix = shape
         self.system_matrix = np.zeros((shape, shape))
 
@@ -317,11 +310,11 @@ class SystemElements:
             #  first index is row, second is column
             self.system_matrix[matrix_index][matrix_index] += K
 
-        for i in range(len(self.elements)):
+        for i in range(len(self.element_map)):
             for row_index in range(len(self.system_matrix_locations[i])):
                 count = 0
                 for loc in self.system_matrix_locations[i][row_index]:
-                    self.system_matrix[loc[0]][loc[1]] += self.elements[i].stiffness_matrix[row_index][count]
+                    self.system_matrix[loc[0]][loc[1]] += self.element_map[i + 1].stiffness_matrix[row_index][count]
                     count += 1
 
         # returns True if symmetrical.
@@ -427,7 +420,7 @@ class SystemElements:
             count += 1
 
         # determine the displacement vector of the elements
-        for el in self.elements:
+        for el in self.element_map.values():
             index_node_1 = (el.node_1.id - 1) * 3
             index_node_2 = (el.node_2.id - 1) * 3
 

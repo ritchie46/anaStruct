@@ -18,7 +18,7 @@ class SystemLevel:
         Results placed in SystemElements class: self.node_objects (list).
         """
 
-        for el in self.system.elements:
+        for el in self.system.element_map.values():
             # post processor element level
             self.post_el.node_results(el)
 
@@ -27,7 +27,7 @@ class SystemLevel:
             # reset nodes in case of iterative calculation
             self.system.node_map[node.id].reset()
 
-            for el in self.system.elements:
+            for el in self.system.element_map.values():
                 # Minus sign, because the node force is opposite of the element force.
                 if el.node_1.id == node.id:
                     self.system.node_map[node.id] -= el.node_1
@@ -91,7 +91,7 @@ class SystemLevel:
         """
         Determines the element results for al elements in the system on element level.
         """
-        for el in self.system.elements:
+        for el in self.system.element_map.values():
             con = 100
             self.post_el.determine_bending_moment(el, con)
             self.post_el.determine_shear_force(el, con)
