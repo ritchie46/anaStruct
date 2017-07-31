@@ -13,13 +13,14 @@ if os.environ.get('DISPLAY', '') == '':
 
 
 class Plotter:
-    def __init__(self, system, mesh):
+    def __init__(self, system, mesh, backend):
         self.system = system
         self.max_val = None
         self.max_force = 0
 
         self.max_system_point_load = 0
         self.mesh = max(3, mesh)
+        self.backend = backend
 
     def __start_plot(self, figsize):
         plt.close("all")
@@ -219,10 +220,10 @@ class Plotter:
         """
 
         F = (Fx**2 + Fz**2)**0.5
-        len_x = Fx / F * 0.8 * h
-        len_y = -Fz / F * 0.8 * h
-        x = node.point.x - len_x
-        y = -node.point.z - len_y
+        len_x = Fx / F * h
+        len_y = -Fz / F * h
+        x = node.point.x - len_x * 1.2
+        y = -node.point.z - len_y * 1.2
 
         return x, y, len_x, len_y, F
 

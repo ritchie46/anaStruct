@@ -9,10 +9,10 @@ from StructuralEngineering.FEM.plotter import Plotter
 
 
 class SystemElements:
-    def __init__(self, figsize=(12, 8), xy_cs=True, EA=15e3, EI=5e3, load_factor=1, mesh=50):
+    def __init__(self, figsize=(12, 8), xy_cs=True, EA=15e3, EI=5e3, load_factor=1, mesh=50, plot_backend='mpl'):
         # init object
         self.post_processor = post_sl(self)
-        self.plotter = Plotter(self, mesh)
+        self.plotter = Plotter(self, mesh, plot_backend)
 
         # standard values if none provided
         self.EA = EA
@@ -69,7 +69,12 @@ class SystemElements:
 
     def add_element(self, location_list, EA=None, EI=None, mp=None, spring=None, **kwargs):
         """
-        :param location_list: [[x, z], [x, z]] or [Pointxz, Pointxz]
+        :param location_list: (list/ Pointxz) The two nodes of the element or the next node of the element.
+                                Examples:
+                                    [[x, z], [x, z]]
+                                    [Pointxz, Pointxz]
+                                    [x, z]
+                                    Pointxz
         :param EA: (float) EA
         :param EI: (float) EI
         :param mp: (dict) Set a maximum plastic moment capacity. Keys are integers representing the nodes. Values
@@ -98,7 +103,10 @@ class SystemElements:
         # add the element number
         self.count += 1
 
-        if len(location_list) == 1:
+        if isinstance(location_list, Pointxz):
+            point_1 = self._previous_point
+            point_2 = location_list
+        elif len(location_list) == 1:
             point_1 = self._previous_point
             point_2 = Pointxz(location_list[0][0], location_list[0][1])
         elif isinstance(location_list[0], (int, float)):
