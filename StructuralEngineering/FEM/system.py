@@ -9,10 +9,10 @@ from StructuralEngineering.FEM.plotter import Plotter
 
 
 class SystemElements:
-    def __init__(self, figsize=(12, 8), xy_cs=True, EA=15e3, EI=5e3, load_factor=1):
+    def __init__(self, figsize=(12, 8), xy_cs=True, EA=15e3, EI=5e3, load_factor=1, mesh=50):
         # init object
         self.post_processor = post_sl(self)
-        self.plotter = Plotter(self)
+        self.plotter = Plotter(self, mesh)
 
         # standard values if none provided
         self.EA = EA

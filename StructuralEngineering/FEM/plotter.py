@@ -13,12 +13,13 @@ if os.environ.get('DISPLAY', '') == '':
 
 
 class Plotter:
-    def __init__(self, system):
+    def __init__(self, system, mesh):
         self.system = system
         self.max_val = None
         self.max_force = 0
 
         self.max_system_point_load = 0
+        self.mesh = max(3, mesh)
 
     def __start_plot(self, figsize):
         plt.close("all")
@@ -426,10 +427,10 @@ class Plotter:
                     m_sag = min(el.bending_moment)
                     index = find_nearest(el.bending_moment, m_sag)[1]
                     offset = -self.max_val * 0.05
-                    x = axis_values[0][index] + math.sin(-el.alpha) * offset
-                    y = axis_values[1][index] + math.cos(-el.alpha) * offset
 
                     if verbosity == 0:
+                        x = axis_values[0][index] + math.sin(-el.alpha) * offset
+                        y = axis_values[1][index] + math.cos(-el.alpha) * offset
                         self.one_fig.text(x, y, "%s" % round(m_sag, 1),
                                           fontsize=9)
         if show:

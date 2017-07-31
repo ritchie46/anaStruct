@@ -92,7 +92,7 @@ class SystemLevel:
         Determines the element results for al elements in the system on element level.
         """
         for el in self.system.element_map.values():
-            con = 100
+            con = self.system.plotter.mesh
             self.post_el.determine_bending_moment(el, con)
             self.post_el.determine_shear_force(el, con)
             self.post_el.determine_displacements(el, con)
