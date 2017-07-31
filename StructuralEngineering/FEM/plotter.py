@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from StructuralEngineering.basic import find_nearest
 import os
+from plotly.offline import plot_mpl
 
 # Needed for Travis unit testing
 if os.environ.get('DISPLAY', '') == '':
@@ -63,11 +64,22 @@ class Plotter:
         """
         :param max_val: max scale of the plot
         """
-        radius = 0.04 * max_val
-        for node in self.system.supports_hinged:
-            support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius),
-                                                    numVertices=3, radius=radius, color='r', zorder=9)
-            self.one_fig.add_patch(support_patch)
+        if self.backend == "mpl":
+            radius = 0.04 * max_val
+            for node in self.system.supports_hinged:
+                support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - radius),
+                                                        numVertices=3, radius=radius, color='r', zorder=9)
+                self.one_fig.add_patch(support_patch)
+
+        else:  # backend is plotly
+            x = []
+            y = []
+            s = 20 * max_val
+
+            for node in self.system.supports_hinged:
+                x.append(node.point.x)
+                y.append(-node.point.z - s / 1000)
+            self.one_fig.scatter(x, y, color='r', zorder=9, marker='^', s=s)
 
     def __roll_support_patch(self, max_val):
         """
@@ -136,38 +148,62 @@ class Plotter:
         """
         :param max_val: max scale of the plot
         """
-        h = 0.04 * max_val
+        h = 0.03 * max_val
         left = -0.5 * h
         right = 0.5 * h
         dh = 0.2 * h
 
+        # plotly
+        x = []
+        y = []
+        s = 20 * max_val
+
         for node in self.system.supports_spring_z:
-            yval = np.arange(0, -9, -1)
+            yval = np.arange(0, -9, -1, dtype=float)
             yval = yval * dh
             xval = np.array([0, 0, left, right, left, right, left, 0, 0])
 
             yval = yval - node.point.z
             xval = xval + node.point.x
-            # Triangle
-            support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - h * 2.6),
-                                                    numVertices=3, radius=h * 0.9, color='r', zorder=10)
 
             self.one_fig.plot(xval, yval, color='r', zorder=10)
-            self.one_fig.add_patch(support_patch)
+
+            if self.backend == "mpl":
+                # Triangle
+                support_patch = mpatches.RegularPolygon((node.point.x, -node.point.z - h * 2.6),
+                                                        numVertices=3, radius=h * 0.9, color='r', zorder=10)
+                self.one_fig.add_patch(support_patch)
+            else:
+                x.append(node.point.x)
+                y.append(min(yval))
+
+        if self.backend == "plotly":
+            self.one_fig.scatter(x, y, color='r', zorder=9, marker='^', s=s)
+            # reset
+            x = []
+            y = []
 
         for node in self.system.supports_spring_x:
-            xval = np.arange(0, 9, 1)
+            xval = np.arange(0, 9, 1, dtype=float)
             xval *= dh
             yval = np.array([0, 0, left, right, left, right, left, 0, 0])
 
             xval += node.point.x
             yval -= node.point.z
-            # Triangle
-            support_patch = mpatches.RegularPolygon((node.point.x + h * 1.7, -node.point.z - h ),
-                                                    numVertices=3, radius=h * 0.9, color='r', zorder=10)
-
             self.one_fig.plot(xval, yval, color='r', zorder=10)
-            self.one_fig.add_patch(support_patch)
+
+            if self.backend == "mpl":
+                # Triangle
+                support_patch = mpatches.RegularPolygon((node.point.x + h * 1.7, -node.point.z - h),
+                                                        numVertices=3, radius=h * 0.9, color='r', zorder=10)
+                self.one_fig.add_patch(support_patch)
+            else:
+                x.append(node.point.x + h * 1.7)
+                y.append(-node.point.z - s / 2000)
+
+            if self.backend == "plotly":
+                verts = [(0, 0), (-1, -1), (1, -1)]
+                self.one_fig.scatter(x, y, color='r', zorder=9, marker=verts, s=s)
 
     def __q_load_patch(self, max_val):
         """
@@ -329,7 +365,12 @@ class Plotter:
             self.__q_load_patch(max_plot_range)
             self.__point_load_patch(max_plot_range, verbosity)
             self.__moment_load_patch(max_plot_range)
-            plt.show()
+
+            if self.backend == "mpl":
+                plt.show()
+            else:
+                from plotly.offline import plot_mpl
+                plot_mpl(self.fig)
         else:
             return self.fig
 
@@ -354,6 +395,12 @@ class Plotter:
 
         if node_results:
             self._add_node_values(x_val, y_val, force_1, force_2, digits)
+
+    def plot(self):
+        if self.backend == "mpl":
+            plt.show()
+        else:
+            plot_mpl(self.fig)
 
     def normal_force(self, factor, figsize, verbosity, scale, offset, show):
         self.max_force = 0
@@ -388,7 +435,7 @@ class Plotter:
                                           fontsize=14, color='b')
 
         if show:
-            plt.show()
+            self.plot()
         else:
             return self.fig
 
@@ -435,7 +482,7 @@ class Plotter:
                         self.one_fig.text(x, y, "%s" % round(m_sag, 1),
                                           fontsize=9)
         if show:
-            plt.show()
+            self.plot()
         else:
             return self.fig
 
@@ -466,7 +513,7 @@ class Plotter:
 
                 self.plot_result(axis_values, shear_1, shear_2, node_results=node_results)
         if show:
-            plt.show()
+            self.plot()
         else:
             return self.fig
 
@@ -526,7 +573,7 @@ class Plotter:
                     self.one_fig.text(node.point.x + h * 0.2, -node.point.z + h * 0.2, "T=%s" % round(node.Ty, 2),
                                   color='k', fontsize=9, zorder=10)
         if show:
-            plt.show()
+            self.plot()
         else:
             return self.fig
 
@@ -562,7 +609,7 @@ class Plotter:
                         self._add_element_values(axis_values[0], axis_values[1],
                                                  el.deflection[index] + (x**2 + y**2)**0.5, index, 3)
         if show:
-            plt.show()
+            self.plot()
         else:
             return self.fig
 
