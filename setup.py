@@ -18,5 +18,6 @@ setup(
     install_requires=[
         "matplotlib",
         "numpy",
+        "plotly"
     ]
 )
