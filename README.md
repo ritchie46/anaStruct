@@ -21,7 +21,7 @@ For the 'old' release candidate:
 $ pip install StructuralEngineering
 ```
 
-For the current actively development version:
+For the actively developed version:
 ```
 $ pip install git+https://github.com/ritchie46/structural_engineering.git
 ```

@@ -1,4 +1,4 @@
-from StructuralEngineering.trigonometry import Pointxz
+from StructuralEngineering.vertex import Pointxz
 
 
 def on_segment(p, q, r):

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from StructuralEngineering.intersection import do_intersect
-from StructuralEngineering.trigonometry import Pointxz
+from StructuralEngineering.vertex import Pointxz
 
 
 class Epsilon:

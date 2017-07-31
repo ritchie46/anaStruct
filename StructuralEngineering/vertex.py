@@ -16,6 +16,9 @@ class Pointxz:
     def modulus(self):
         return math.sqrt(self.x**2 + self.z**2)
 
+    def unit(self):
+        return 1 / self.modulus() * self
+
     def displace_polar(self, alpha, radius, inverse_z_axis=False):
         if inverse_z_axis:
             self.x += math.cos(alpha) * radius
@@ -51,6 +54,20 @@ class Pointxz:
 
     def __rsub__(self, other):
         return self.__sub__(other)
+
+    def __mul__(self, other):
+        if type(other) is list:
+            other = Pointxz(other)
+        if isinstance(other, (float, int)):
+            x = self.x * other
+            z = self.z * other
+        else:
+            x = self.x * other.x
+            z = self.z * other.z
+        return Pointxz(x, z)
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
 
     def __truediv__(self, other):
         if type(other) is Pointxz:

@@ -18,6 +18,8 @@ class Plotter:
         self.max_val = None
         self.max_force = 0
 
+        self.max_system_point_load = 0
+
     def __start_plot(self, figsize):
         plt.close("all")
         self.fig = plt.figure(figsize=figsize)
@@ -205,72 +207,41 @@ class Plotter:
             self.one_fig.arrow(xa_1, ya_1, len_x, len_y, head_width=h*0.25, head_length=0.2*h, ec='g', fc='g')
             self.one_fig.text(xt, yt, "q=%d" % el.q_load, color='k', fontsize=9, zorder=10)
 
-    def __arrow_patch_values(self, Fx, Fz, node, h):
+    @staticmethod
+    def __arrow_patch_values(Fx, Fz, node, h):
         """
         :param Fx: (float)
         :param Fz: (float)
-
-        -- One of the above must be zero. The function created to find the non-zero F-direction.
-
         :param node: (Node object)
         :param h: (float) Is a scale variable
         :return: Variables for the matplotlib plotter
         """
-        if Fx > 0:  # Fx is positive
-            x = node.point.x - h
-            y = -node.point.z
-            len_x = 0.8 * h
-            len_y = 0
-            F = Fx
-        elif Fx < 0:  # Fx is negative
-            x = node.point.x + h
-            y = -node.point.z
-            len_x = -0.8 * h
-            len_y = 0
-            F = Fx
-        elif Fz > 0:  # Fz is positive
-            x = node.point.x
-            y = -node.point.z + h
-            len_x = 0
-            len_y = -0.8 * h
-            F = Fz
-        elif Fz < 0:  # Fz is negative
-            x = node.point.x
-            y = -node.point.z - h
-            len_x = 0
-            len_y = 0.8 * h
-            F = Fz
-        else:
-            return None
+
+        F = (Fx**2 + Fz**2)**0.5
+        len_x = Fx / F * 0.8 * h
+        len_y = -Fz / F * 0.8 * h
+        x = node.point.x - len_x
+        y = -node.point.z - len_y
 
         return x, y, len_x, len_y, F
 
-    def __point_load_patch(self, max_val):
+    def __point_load_patch(self, max_plot_range, verbosity=0):
         """
-        :param max_val: max scale of the plot
+        :param max_plot_range: max scale of the plot
         """
-        h = 0.1 * max_val
 
         for F_tuple in self.system.loads_point:
-            for i in range(1, 3):
-                if i == 1:
-                    Fx = F_tuple[i]
-                    Fz = 0
-                else:
-                    Fx = 0
-                    Fz = F_tuple[i]
+            Fx = F_tuple[1]
+            Fz = F_tuple[2]
+            F = (Fx**2 + Fz**2)**0.5
+            node = self.system.node_map[F_tuple[0]]
+            h = 0.1 * max_plot_range * F / self.max_system_point_load
+            x, y, len_x, len_y, F = self.__arrow_patch_values(Fx, Fz, node, h)
 
-                node = self.system.node_map[F_tuple[0]]
-                sol = self.__arrow_patch_values(Fx, Fz, node, h)
-                if sol is not None:
-                    x = sol[0]
-                    y = sol[1]
-                    len_x = sol[2]
-                    len_y = sol[3]
-                    F = sol[4]
-                    self.one_fig.arrow(x, y, len_x, len_y, head_width=h*0.15, head_length=0.2*h, ec='b', fc='orange',
-                                       zorder=11)
-                    self.one_fig.text(x, y, "F=%d" % F, color='k', fontsize=9, zorder=10)
+            self.one_fig.arrow(x, y, len_x, len_y, head_width=h*0.15, head_length=0.2*h, ec='b', fc='orange',
+                               zorder=11)
+            if verbosity == 0:
+                self.one_fig.text(x, y, "F=%d" % F, color='k', fontsize=9, zorder=10)
 
     def __moment_load_patch(self, max_val):
 
@@ -313,9 +284,9 @@ class Plotter:
 
         center_x = (max_x - min_x) / 2 + min_x + -offset[0]
         center_z = (max_z - min_z) / 2 + min_x + -offset[1]
-        max_val = max(max_x, max_z)
-        self.max_val = max_val
-        range = max_val * scale
+        max_plot_range = max(max_x, max_z)
+        self.max_val = max_plot_range
+        range = max_plot_range * scale
         plusxrange = center_x + range
         plusyrange = center_z + range
         minxrange = center_x - range
@@ -331,7 +302,7 @@ class Plotter:
                 y_val = axis_values[1]
 
                 # add node ID to plot
-                range = max_val * 0.015
+                range = max_plot_range * 0.015
                 self.one_fig.text(x_val[0] + range, y_val[0] + range, '%d' % el.node_id1, color='g', fontsize=9, zorder=10)
                 self.one_fig.text(x_val[-1] + range, y_val[-1] + range, '%d' % el.node_id2, color='g', fontsize=9,
                                   zorder=10)
@@ -341,21 +312,21 @@ class Plotter:
                 x_val = (x_val[0] + x_val[-1]) / 2 - math.sin(el.alpha) * factor
                 y_val = (y_val[0] + y_val[-1]) / 2 + math.cos(el.alpha) * factor
 
-                self.one_fig.text(x_val, y_val, "%d" % el.id, color='r', fontsize=9, zorder=10)
+                self.one_fig.text(x_val, y_val, str(el.id), color='r', fontsize=9, zorder=10)
 
         # add supports
         if supports:
-            self.__fixed_support_patch(max_val * scale)
-            self.__hinged_support_patch(max_val * scale)
-            self.__roll_support_patch(max_val * scale)
-            self.__rotating_spring_support_patch(max_val * scale)
-            self.__spring_support_patch(max_val * scale)
+            self.__fixed_support_patch(max_plot_range * scale)
+            self.__hinged_support_patch(max_plot_range * scale)
+            self.__roll_support_patch(max_plot_range * scale)
+            self.__rotating_spring_support_patch(max_plot_range * scale)
+            self.__spring_support_patch(max_plot_range * scale)
 
         if show:
             # add_loads
-            self.__q_load_patch(max_val)
-            self.__point_load_patch(max_val)
-            self.__moment_load_patch(max_val)
+            self.__q_load_patch(max_plot_range)
+            self.__point_load_patch(max_plot_range, verbosity)
+            self.__moment_load_patch(max_plot_range)
             plt.show()
         else:
             return self.fig
