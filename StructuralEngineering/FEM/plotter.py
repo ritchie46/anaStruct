@@ -1,16 +1,9 @@
 import math
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from StructuralEngineering.basic import find_nearest
-import os
-from plotly.offline import plot_mpl
-
-# Needed for Travis unit testing
-if os.environ.get('DISPLAY', '') == '':
-    print('no display found. Using non-interactive Agg backend')
-    matplotlib.use('Agg')
+from plotly.offline import plot_mpl, iplot_mpl, init_notebook_mode
 
 
 class Plotter:
@@ -22,6 +15,9 @@ class Plotter:
         self.max_system_point_load = 0
         self.mesh = max(3, mesh)
         self.backend = backend
+
+        # if backend == "ipt":
+        #     init_notebook_mode(connected=True)
 
     def __start_plot(self, figsize):
         plt.close("all")
@@ -177,7 +173,7 @@ class Plotter:
                 x.append(node.point.x)
                 y.append(min(yval))
 
-        if self.backend == "plotly":
+        if self.backend != "mpl":
             self.one_fig.scatter(x, y, color='r', zorder=9, marker='^', s=s)
             # reset
             x = []
@@ -201,7 +197,7 @@ class Plotter:
                 x.append(node.point.x + h * 1.7)
                 y.append(-node.point.z - s / 2000)
 
-            if self.backend == "plotly":
+            if self.backend != "mpl":
                 verts = [(0, 0), (-1, -1), (1, -1)]
                 self.one_fig.scatter(x, y, color='r', zorder=9, marker=verts, s=s)
 
@@ -365,12 +361,7 @@ class Plotter:
             self.__q_load_patch(max_plot_range)
             self.__point_load_patch(max_plot_range, verbosity)
             self.__moment_load_patch(max_plot_range)
-
-            if self.backend == "mpl":
-                plt.show()
-            else:
-                from plotly.offline import plot_mpl
-                plot_mpl(self.fig)
+            self.plot()
         else:
             return self.fig
 
@@ -399,6 +390,8 @@ class Plotter:
     def plot(self):
         if self.backend == "mpl":
             plt.show()
+        elif self.backend == "ipt":
+            iplot_mpl(self.fig)
         else:
             plot_mpl(self.fig)
 
