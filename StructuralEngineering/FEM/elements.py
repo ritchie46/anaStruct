@@ -9,15 +9,15 @@ Shear deformation is not taken into account.
 
 
 class Element:
-    def __init__(self, id, EA, EI, l, ai, point_1, point_2, spring=None):
+    def __init__(self, id, EA, EI, l, ai, vertex_1, vertex_2, spring=None):
         """
         :param id: integer representing the elements ID
         :param EA: Young's modulus * Area
         :param EI: Young's modulus * Moment of Inertia
         :param l: length
         :param ai: angle between element and x-axis
-        :param point_1: point object
-        :param point_2: point object
+        :param vertex_1: point object
+        :param vertex_2: point object
         :param hinge: (integer) 1 or 2. Adds an hinge ad the first or second node.
         :param spring: (dict) Set a spring at node 1 or node 2.
                             {
@@ -35,8 +35,8 @@ class Element:
         self.EI = EI
         self.l = l
         self.springs = spring
-        self.point_1 = point_1  # location
-        self.point_2 = point_2  # location
+        self.vertex_1 = vertex_1  # location
+        self.vertex_2 = vertex_2  # location
         self.alpha = ai
         self.kinematic_matrix = kinematic_matrix(ai, ai, l)
         self.constitutive_matrix = None

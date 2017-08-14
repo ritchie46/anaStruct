@@ -1,7 +1,7 @@
-from StructuralEngineering.FEM.system import SystemElements, Pointxz
+from StructuralEngineering.FEM.system import SystemElements, Vertex_xz
 
 
-p1 = Pointxz(0, 0)
+p1 = Vertex_xz(0, 0)
 p2 = p1 + [1, 2]
 p3 = p2 + [1, 1/3]
 p4 = p3 + [1, 0]

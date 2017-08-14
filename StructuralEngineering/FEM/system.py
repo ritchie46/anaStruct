@@ -4,7 +4,7 @@ from StructuralEngineering.basic import converge, angle_x_axis
 from StructuralEngineering.FEM.postprocess import SystemLevel as post_sl
 from StructuralEngineering.FEM.elements import Element, det_moment, det_shear
 from StructuralEngineering.FEM.node import Node
-from StructuralEngineering.vertex import Pointxz
+from StructuralEngineering.vertex import Vertex_xz
 from StructuralEngineering.FEM.plotter import Plotter
 
 
@@ -62,7 +62,7 @@ class SystemElements:
         self.non_linear_elements = {}  # keys are element ids, values are dicts: {node_index: max moment capacity}
 
         # previous point of element
-        self._previous_point = Pointxz(0, 0)
+        self._previous_point = Vertex_xz(0, 0)
         self.load_factor = load_factor
 
         # Objects state
@@ -115,26 +115,26 @@ class SystemElements:
         # add the element number
         self.count += 1
 
-        if isinstance(location_list, Pointxz):
+        if isinstance(location_list, Vertex_xz):
             point_1 = self._previous_point
             point_2 = location_list
         elif len(location_list) == 1:
             point_1 = self._previous_point
-            point_2 = Pointxz(location_list[0][0], location_list[0][1])
+            point_2 = Vertex_xz(location_list[0][0], location_list[0][1])
         elif isinstance(location_list[0], (int, float)):
             point_1 = self._previous_point
-            point_2 = Pointxz(location_list[0], location_list[1])
-        elif isinstance(location_list[0], Pointxz):
+            point_2 = Vertex_xz(location_list[0], location_list[1])
+        elif isinstance(location_list[0], Vertex_xz):
             point_1 = location_list[0]
             point_2 = location_list[1]
         else:
-            point_1 = Pointxz(location_list[0][0], location_list[0][1])
-            point_2 = Pointxz(location_list[1][0], location_list[1][1])
+            point_1 = Vertex_xz(location_list[0][0], location_list[0][1])
+            point_2 = Vertex_xz(location_list[1][0], location_list[1][1])
         self._previous_point = point_2
 
         if self.xy_cs:
-            point_1 = Pointxz(point_1.x, -point_1.z)
-            point_2 = Pointxz(point_2.x, -point_2.z)
+            point_1 = Vertex_xz(point_1.x, -point_1.z)
+            point_2 = Vertex_xz(point_2.x, -point_2.z)
 
         # determine the angle of the element with the global x-axis
         delta_x = point_2.x - point_1.x
@@ -150,10 +150,10 @@ class SystemElements:
             count = 1
             for el in self.element_map.values():
                 # check if node 1 of the element meets another node. If so, both have the same node_id
-                if el.point_1 == point_1:
+                if el.vertex_1 == point_1:
                     node_id1 = el.node_id1
                     existing_node1 = True
-                elif el.point_2 == point_1:
+                elif el.vertex_2 == point_1:
                     node_id1 = el.node_id2
                     existing_node1 = True
                 elif count == len(self.element_map) and existing_node1 is False:
@@ -161,10 +161,10 @@ class SystemElements:
                     node_id1 = self.max_node_id
 
                 # check for node 2
-                if el.point_1 == point_2:
+                if el.vertex_1 == point_2:
                     node_id2 = el.node_id1
                     existing_node2 = True
-                elif el.point_2 == point_2:
+                elif el.vertex_2 == point_2:
                     node_id2 = el.node_id2
                     existing_node2 = True
                 elif count == len(self.element_map) and existing_node2 is False:
@@ -215,10 +215,10 @@ class SystemElements:
             id2 = True  # node_id1 already in system
 
         if id1 is False:
-            node = Node(id=node_id1, point=point_1)
+            node = Node(id=node_id1, vertex=point_1)
             self.node_map[node_id1] = node
         if id2 is False:
-            node = Node(id=node_id2, point=point_2)
+            node = Node(id=node_id2, vertex=point_2)
             self.node_map[node_id2] = node
 
         if spring is not None and 0 in spring:
@@ -524,9 +524,9 @@ class SystemElements:
 
         for c in range(1500):
             for el in self.element_map.values():
-                delta_x = el.point_2.x + el.node_2.ux - el.point_1.x - el.node_1.ux
+                delta_x = el.vertex_2.x + el.node_2.ux - el.vertex_1.x - el.node_1.ux
                 # minus sign to work with an opposite z-axis
-                delta_z = -el.point_2.z - el.node_2.uz + el.point_1.z + el.node_1.uz
+                delta_z = -el.vertex_2.z - el.node_2.uz + el.vertex_1.z + el.node_1.uz
                 a_bar = angle_x_axis(delta_x, delta_z)
                 l = math.sqrt(delta_x**2 + delta_z**2)
                 ai = a_bar + el.node_1.phi_y

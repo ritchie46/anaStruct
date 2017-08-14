@@ -1,5 +1,5 @@
 class Node:
-    def __init__(self, id, Fx=0, Fz=0, Ty=0, ux=0, uz=0, phi_y=0, point=None):
+    def __init__(self, id, Fx=0, Fz=0, Ty=0, ux=0, uz=0, phi_y=0, vertex=None):
         """
         :param id: ID of the node, integer
         :param Fx: Value of Fx
@@ -8,7 +8,7 @@ class Node:
         :param ux: Value of ux
         :param uz: Value of uz
         :param phi_y: Value of phi
-        :param point: Point object
+        :param vertex: Point object
         """
         self.id = id
         # forces
@@ -19,13 +19,13 @@ class Node:
         self.ux = ux
         self.uz = uz
         self.phi_y = phi_y
-        self.point = point
+        self.vertex = vertex
         self.hinge = False
         self.elements = {}
 
     def __str__(self):
-        return ("[id = %s, Fx = %s, Fz = %s, Ty = %s, ux = %s, uz = %s, phi_y = %s]" %
-                (self.id, self.Fx, self.Fz, self.Ty, self.ux, self.uz, self.phi_y))
+        return "[id = {}, Fx = {}, Fz = {}, Ty = {}, ux = {}, uz = {}, phi_y = {}, x = {}, y = {}]".format(
+            self.id, self.Fx, self.Fz, self.Ty, self.ux, self.uz, self.phi_y, self.vertex.x, self.vertex.y)
 
     def __add__(self, other):
         assert(self.id == other.id), "Cannot add nodes as the ID's don't match. The nodes positions don't match."
@@ -33,7 +33,7 @@ class Node:
         Fz = self.Fz + other.Fz
         Ty = self.Ty + other.Ty
 
-        return Node(self.id, Fx, Fz, Ty, self.ux, self.uz, self.phi_y, self.point)
+        return Node(self.id, Fx, Fz, Ty, self.ux, self.uz, self.phi_y, self.vertex)
 
     def __sub__(self, other):
         assert (self.id == other.id), "Cannot subtract nodes as the ID's don't match. The nodes positions don't match."
@@ -41,7 +41,7 @@ class Node:
         Fz = self.Fz - other.Fz
         Ty = self.Ty - other.Ty
 
-        return Node(self.id, Fx, Fz, Ty, self.ux, self.uz, self.phi_y, self.point)
+        return Node(self.id, Fx, Fz, Ty, self.ux, self.uz, self.phi_y, self.vertex)
 
     def reset(self):
         self.Fx = self.Fz = self.Ty = self.ux = self.uz = self.phi_y = 0
