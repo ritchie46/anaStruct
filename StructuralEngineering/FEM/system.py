@@ -880,3 +880,20 @@ class SystemElements:
                     )
             return result_list
 
+    def find_node_id(self, vertex):
+        """
+        :param vertex: (Vertex/ list/ tpl) Vertex_xz, [x, z], (x, z)
+        :return: (int/ None) id of the node at the location of the vertex
+        """
+        if isinstance(vertex, (list, tuple)):
+            vertex = Vertex_xz(vertex)
+
+        try:
+            tol = 1e-9
+            return next(filter(lambda x: math.isclose(x.vertex.x, vertex.x, abs_tol=tol)
+                               and math.isclose(x.vertex.z, vertex.z, abs_tol=tol),
+                               self.node_map.values())).id
+        except StopIteration:
+            return None
+
+
