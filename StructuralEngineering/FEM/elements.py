@@ -88,25 +88,25 @@ class Element:
         self.element_displacement_vector = np.zeros(6)
         self.element_primary_force_vector = np.zeros(6)
 
-    def add_spring(self, node_id, k, direction):
-        """
-        Update stiffness matrix with spring.
-
-        :param node_id: (int) 1 or 2.
-        :param k: (flt) Spring stiffness.
-        :param direction: (int) 1: ux
-                           2: uz
-                           3: phi_y
-        """
-
-        index = node_id * direction - 1
-
-        if k < self.stiffness_matrix[index][index]:
-            # divide by the absolute value to keep the signed information.
-            self.stiffness_matrix[index][index] *= (1 / abs(self.stiffness_matrix[index][index]) * k * 2)
-            self.stiffness_matrix[index][index - 1] = 0
-            self.stiffness_matrix[index][index + 2] = 0
-            self.stiffness_matrix[index][index + 3] = 0
+    # def add_spring(self, node_id, k, direction):
+    #     """
+    #     Update stiffness matrix with spring.
+    #
+    #     :param node_id: (int) 1 or 2.
+    #     :param k: (flt) Spring stiffness.
+    #     :param direction: (int) 1: ux
+    #                        2: uz
+    #                        3: phi_y
+    #     """
+    #
+    #     index = node_id * direction - 1
+    #
+    #     if k < self.stiffness_matrix[index][index]:
+    #         # divide by the absolute value to keep the signed information.
+    #         self.stiffness_matrix[index][index] *= (1 / abs(self.stiffness_matrix[index][index]) * k * 2)
+    #         self.stiffness_matrix[index][index - 1] = 0
+    #         self.stiffness_matrix[index][index + 2] = 0
+    #         self.stiffness_matrix[index][index + 3] = 0
 
 
 def kinematic_matrix(ai, aj, l):
@@ -152,10 +152,12 @@ def constitutive_matrix(EA, EI, l, spring=None):
                 matrix[1][1] = matrix[1][2] = matrix[2][1] = 0
             else:
                 matrix[1][1] = 1 / (1 / matrix[1][1] + 1 / spring[1])
+                matrix[1][2] = 1 / (1 / matrix[1][2] + 1 / spring[1])
         if 2 in spring:
             if spring[2] == 0:  # hinge
                 matrix[1][2] = matrix[2][1] = matrix[2][2] = 0
             else:
+                matrix[2][1] = 1 / (1 / matrix[2][1] + 1 / spring[2])
                 matrix[2][2] = 1 / (1 / matrix[2][2] + 1 / spring[2])
     return matrix
 

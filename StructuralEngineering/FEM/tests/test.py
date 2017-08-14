@@ -39,7 +39,7 @@ class SimpleTest(unittest.TestCase):
         system.add_element(location_list=[[0, -5], [5, -5]], EA=15000, EI=5000)
         system.add_element(location_list=[[5, -5], [5, 0]], EA=15000, EI=5000)
         system.add_support_fixed(node_id=1)
-        system.add_support_spring(node_id=4, translation=3, K=4000)
+        system.add_support_spring(node_id=4, translation=3, k=4000)
         system.point_load(Fx=30, node_id=2)
         system.q_load(q=10, element_id=2)
         sol = np.fromstring("""0.          0.          0.          0.06264607  0.00379285 -0.0128231
@@ -86,6 +86,15 @@ class SimpleTest(unittest.TestCase):
         ss.q_load(10, 1)
         ss.solve()
         self.assertAlmostEqual(-61.25, ss.get_node_results_system(1)["Ty"], places=2)
+
+    def test_ex_7_rotational_spring(self):
+        """
+        Test the rotational springs
+        """
+        from StructuralEngineering.FEM.examples.ex_7_rotational_spring import ss
+        sol = np.fromstring("""0.          0.          0.          0.          0.23558645 -0.09665875
+        0.          0.          0.149295""", float, sep=" ")
+        self.assertTrue(np.allclose(ss.solve(), sol))
 
     def test_ex_8(self):
         """

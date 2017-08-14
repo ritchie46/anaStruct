@@ -605,14 +605,14 @@ class SystemElements:
             # add the support to the support list for the plotter
             self.supports_fixed.append(self.node_map[id_])
 
-    def add_support_spring(self, node_id, translation, K):
+    def add_support_spring(self, node_id, translation, k):
         """
         :param translation: (int) Integer representing prevented translation.
         1 = translation in x
         2 = translation in z
         3 = rotation in y
         :param node_id: (int/ list) Integer representing the nodes ID.
-        :param K: (flt) Stiffness of the spring
+        :param k: (flt) Stiffness of the spring
 
         The stiffness of the spring is added in the system matrix at the location that represents the node and the
         displacement.
@@ -627,7 +627,7 @@ class SystemElements:
             # row and column are the same
             matrix_index = (id_ - 1) * 3 + translation - 1
 
-            self.system_spring_map[matrix_index] = K
+            self.system_spring_map[matrix_index] = k
 
             if translation == 1:  # translation spring in x-axis
                 self.set_displacement_vector([(id_, 2)])

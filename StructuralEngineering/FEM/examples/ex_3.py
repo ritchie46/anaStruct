@@ -11,7 +11,7 @@ def run():
 
     system.add_support_fixed(node_id=1)
     # Add a rotational spring at node 4.
-    system.add_support_spring(node_id=4, translation=3, K=4000)
+    system.add_support_spring(node_id=4, translation=3, k=4000)
 
     system.point_load(Fx=30, node_id=2)
     system.q_load(q=10, element_id=2)

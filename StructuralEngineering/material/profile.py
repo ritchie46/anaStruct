@@ -77,10 +77,12 @@ def load(st):
 
     return profile
 
+HEA = load(s_hea)
+IPE = load(s_ipe)
 
 if __name__ == "__main__":
     from pprint import pprint
     print("HEA")
-    pprint(load(s_hea))
+    pprint(HEA)
     print("IPE")
-    pprint(load(s_ipe))
+    pprint(IPE)
