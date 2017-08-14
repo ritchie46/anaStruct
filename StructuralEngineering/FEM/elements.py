@@ -152,13 +152,13 @@ def constitutive_matrix(EA, EI, l, spring=None):
                 matrix[1][1] = matrix[1][2] = matrix[2][1] = 0
             else:
                 matrix[1][1] = 1 / (1 / matrix[1][1] + 1 / spring[1])
-                matrix[1][2] = 1 / (1 / matrix[1][2] + 1 / spring[1])
+                matrix[2][1] = 1 / (1 / matrix[2][1] + 1 / spring[1])
         if 2 in spring:
             if spring[2] == 0:  # hinge
                 matrix[1][2] = matrix[2][1] = matrix[2][2] = 0
             else:
                 matrix[2][1] = 1 / (1 / matrix[2][1] + 1 / spring[2])
-                matrix[2][2] = 1 / (1 / matrix[2][2] + 1 / spring[2])
+                matrix[1][2] = 1 / (1 / matrix[1][2] + 1 / spring[2])
     return matrix
 
 

@@ -417,12 +417,13 @@ class SystemElements:
         self.system_force_vector = original_force_vector
         self.system_matrix = original_system_matrix
 
-    def solve(self, gnl=False, force_linear=False, verbosity=0):
+    def solve(self, gnl=False, force_linear=False, verbosity=0, max_iter=1000):
         """
 
         :param gnl: (bool) Toggle geometrical non linear calculation.
         :param force_linear: (bool) Force a linear calculation. Even when the system has non linear nodes.
         :param verbosity: (int) 0. get calculation outputs. 1. silence.
+        :param max_iter: (int) maximum allowed iterations.
         :return: (array) Displacements vector.
         """
         # (Re)set force vectors
@@ -437,7 +438,7 @@ class SystemElements:
             return self._gnl(verbosity)
 
         if self.non_linear and not force_linear:
-            return self._stiffness_adaptation(verbosity)
+            return self._stiffness_adaptation(verbosity, max_iter)
 
         assert(self.system_force_vector is not None), "There are no forces on the structure"
         self.remainder_indexes = []
@@ -481,12 +482,12 @@ class SystemElements:
 
         return self.system_displacement_vector
 
-    def _stiffness_adaptation(self, verbosity):
+    def _stiffness_adaptation(self, verbosity, max_iter):
         self.solve(False, True)
         if verbosity == 0:
             print("Starting stiffness adaptation calculation.")
 
-        for c in range(1500):
+        for c in range(max_iter):
             factors = []
 
             # update the elements stiffnesses
@@ -849,7 +850,7 @@ class SystemElements:
                 }
         else:
             result_list = []
-            for el in self.elements:
+            for el in self.element_map.values():
 
                 if el.type == "truss":
                     result_list.append({

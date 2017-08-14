@@ -93,7 +93,7 @@ class SimpleTest(unittest.TestCase):
         """
         from StructuralEngineering.FEM.examples.ex_7_rotational_spring import ss
         sol = np.fromstring("""0.          0.          0.          0.          0.23558645 -0.09665875
-        0.          0.          0.149295""", float, sep=" ")
+  0.          0.          0.06433688""", float, sep=" ")
         self.assertTrue(np.allclose(ss.solve(), sol))
 
     def test_ex_8(self):
