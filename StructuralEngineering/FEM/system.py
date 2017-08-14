@@ -887,11 +887,11 @@ class SystemElements:
         """
         if isinstance(vertex, (list, tuple)):
             vertex = Vertex_xz(vertex)
-
         try:
+            a = -1 if self.xy_cs else 1
             tol = 1e-9
             return next(filter(lambda x: math.isclose(x.vertex.x, vertex.x, abs_tol=tol)
-                               and math.isclose(x.vertex.z, vertex.z, abs_tol=tol),
+                               and math.isclose(x.vertex.z, vertex.z * a, abs_tol=tol),
                                self.node_map.values())).id
         except StopIteration:
             return None

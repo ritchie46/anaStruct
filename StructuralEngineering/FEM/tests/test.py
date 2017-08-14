@@ -1,6 +1,7 @@
 import unittest
 from StructuralEngineering.FEM import system as se
 import numpy as np
+from StructuralEngineering.FEM.examples.ex_8_non_linear_portal import u4, ss as SS_8
 
 
 class SimpleTest(unittest.TestCase):
@@ -90,8 +91,11 @@ class SimpleTest(unittest.TestCase):
         """
         Plastic hinges test
         """
-        from StructuralEngineering.FEM.examples.ex_8_non_linear_portal import u4
         self.assertAlmostEqual(u4, 105.288412424)
+
+    def test_find_node_id(self):
+        self.assertEqual(SS_8.find_node_id([4, 4]), 6)
+        self.assertEqual(SS_8.find_node_id([3, -3]), None)
 
 if __name__ == "__main__":
     unittest.main()
