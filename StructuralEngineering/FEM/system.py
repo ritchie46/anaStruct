@@ -672,18 +672,15 @@ class SystemElements:
             direction = (direction,)
 
         for i in range(len(element_id)):
+            self.plotter.max_q = max(self.plotter.max_q, q[i])
             self.loads_q[element_id[i]] = (q[i], direction[i])
             self.element_map[element_id[i]].q_load = q[i] * direction[i]
 
     def _apply_q_load(self):
         for element_id, g, direction in self.loads_dead_load:
-            if element_id in self.loads_q:
-                q, direction = self.loads_q[element_id]
-                q = g * direction + q * direction
-            elif g == 0:
+            q = self.element_map[element_id].all_q_load
+            if q == 0:
                 continue
-            else:
-                q = g
 
             q *= self.load_factor
             element = self.element_map[element_id]

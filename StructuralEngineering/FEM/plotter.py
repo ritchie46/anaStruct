@@ -11,6 +11,7 @@ class Plotter:
         self.system = system
         self.max_val = None
         self.max_force = 0
+        self.max_q = 0
 
         self.max_system_point_load = 0
         self.mesh = max(3, mesh)
@@ -210,7 +211,6 @@ class Plotter:
         |__________________|
         x1;y1  element    x2;y2
         """
-        h = 0.05 * max_val
 
         for q_id in self.system.loads_q.keys():
             el = self.system.element_map[q_id]
@@ -219,6 +219,7 @@ class Plotter:
             else:
                 direction = -1
 
+            h = 0.05 * max_val * abs(el.q_load) / self.max_q
             x1 = el.vertex_1.x
             y1 = -el.vertex_1.z
             x2 = el.vertex_2.x
