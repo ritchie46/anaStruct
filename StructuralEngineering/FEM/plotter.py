@@ -212,8 +212,8 @@ class Plotter:
         """
         h = 0.05 * max_val
 
-        for q_ID, _, _ in self.system.loads_q:
-            el = self.system.element_map[q_ID]
+        for q_id in self.system.loads_q.keys():
+            el = self.system.element_map[q_id]
             if el.q_load > 0:
                 direction = 1
             else:
@@ -452,7 +452,7 @@ class Plotter:
         # determine the axis values
         for el in self.system.element_map.values():
             if math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and \
-                    math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and el.q_load is None:
+                    math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and not el.all_q_load:
                 # If True there is no bending moment, so no need for plotting.
                 pass
 
@@ -464,7 +464,7 @@ class Plotter:
                     node_results = False
                 self.plot_result(axis_values, abs(el.node_1.Ty), abs(el.node_2.Ty), node_results=node_results)
 
-                if el.q_load:
+                if el.all_q_load:
                     m_sag = min(el.bending_moment)
                     index = find_nearest(el.bending_moment, m_sag)[1]
                     offset = -self.max_val * 0.05
@@ -687,9 +687,10 @@ def plot_values_bending_moment(element, factor, con):
         x_val[count] = x1 + i * dx
         y_val[count] = y1 + i * dy
 
-        if element.q_load:
+        if element.q_load or element.dead_load:
+            q = element.q_load + element.dead_load if element.q_load else element.dead_load
             x = i * element.l
-            q_part = (-0.5 * -element.q_load * x**2 + 0.5 * -element.q_load * element.l * x)
+            q_part = (-0.5 * -q * x**2 + 0.5 * -q * element.l * x)
 
             x_val[count] += math.sin(-element.alpha) * q_part * factor
             y_val[count] += math.cos(-element.alpha) * q_part * factor

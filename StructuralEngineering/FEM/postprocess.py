@@ -156,8 +156,9 @@ class ElementLevel:
             x_val[count] = x
             m_val[count] = element.node_1.Ty + i * dT
 
-            if element.q_load:
-                q_part = (-0.5 * -element.q_load * x**2 + 0.5 * -element.q_load * element.l * x)
+            if element.all_q_load:
+                q = element.all_q_load
+                q_part = (-0.5 * -q * x**2 + 0.5 * -q * element.l * x)
                 m_val[count] += q_part
             count += 1
         element.bending_moment = m_val

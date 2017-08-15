@@ -50,6 +50,7 @@ class Element:
         self.element_primary_force_vector = np.zeros(6)  # acting external forces
         self.element_force_vector = None
         self.q_load = None
+        self.dead_load = None
         self.N = None
         self.bending_moment = None
         self.shear_force = None
@@ -88,25 +89,13 @@ class Element:
         self.element_displacement_vector = np.zeros(6)
         self.element_primary_force_vector = np.zeros(6)
 
-    # def add_spring(self, node_id, k, direction):
-    #     """
-    #     Update stiffness matrix with spring.
-    #
-    #     :param node_id: (int) 1 or 2.
-    #     :param k: (flt) Spring stiffness.
-    #     :param direction: (int) 1: ux
-    #                        2: uz
-    #                        3: phi_y
-    #     """
-    #
-    #     index = node_id * direction - 1
-    #
-    #     if k < self.stiffness_matrix[index][index]:
-    #         # divide by the absolute value to keep the signed information.
-    #         self.stiffness_matrix[index][index] *= (1 / abs(self.stiffness_matrix[index][index]) * k * 2)
-    #         self.stiffness_matrix[index][index - 1] = 0
-    #         self.stiffness_matrix[index][index + 2] = 0
-    #         self.stiffness_matrix[index][index + 3] = 0
+    @property
+    def all_q_load(self):
+        if self.q_load is None:
+            q = 0
+        else:
+            q = self.q_load
+        return q + self.dead_load
 
 
 def kinematic_matrix(ai, aj, l):

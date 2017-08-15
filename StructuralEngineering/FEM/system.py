@@ -53,8 +53,9 @@ class SystemElements:
 
         # keep track of the loads
         self.loads_point = []  # node ids with a point load
-        self.loads_q = []  # element ids with a q-load
+        self.loads_q = {}  # element ids with a q-load
         self.loads_moment = []
+        self.loads_dead_load = []  # element ids with q-load due to dead load
 
         # results
         self.reaction_forces = {}  # node objects
@@ -79,7 +80,7 @@ class SystemElements:
     def add_truss_element(self, location_list, EA=None):
         return self.add_element(location_list, EA, 1e-14, element_type='truss')
 
-    def add_element(self, location_list, EA=None, EI=None, mp=None, spring=None, **kwargs):
+    def add_element(self, location_list, EA=None, EI=None, g=0, mp=None, spring=None, **kwargs):
         """
         :param location_list: (list/ Pointxz) The two nodes of the element or the next node of the element.
                                 Examples:
@@ -87,8 +88,9 @@ class SystemElements:
                                     [Pointxz, Pointxz]
                                     [x, z]
                                     Pointxz
-        :param EA: (float) EA
-        :param EI: (float) EI
+        :param EA: (flt) EA
+        :param EI: (flt) EI
+        :param g: (flt) Weight per meter. [kN/m] / [N/m]
         :param mp: (dict) Set a maximum plastic moment capacity. Keys are integers representing the nodes. Values
                           are the bending moment capacity.
                           Example:
@@ -268,28 +270,35 @@ class SystemElements:
             self.non_linear_elements[self.count] = mp
             self.non_linear = True
 
+        self._det_system_matrix_location(element)
+        self._dead_load(g, ai, element.id)
+        return self.count
+
+    def _det_system_matrix_location(self, element):
         """
-        Determine the elements location in the stiffness matrix.
-        system matrix [K]
+        :param element (Element)
 
-        [fx 1] [K         |  \ node 1 starts at row 1
-        |fz 1] |  K       |  /
-        |Ty 1] |   K      | /
-        |fx 2] |    K     |  \ node 2 starts at row 4
-        |fz 2] |     K    |  /
-        |Ty 2] |      K   | /
-        |fx 3] |       K  |  \ node 3 starts at row 7
-        |fz 3] |        K |  /
-        [Ty 3] [         K] /
+         Determine the elements location in the stiffness matrix.
+         system matrix [K]
 
-                n   n  n
-                o   o  o
-                d   d  d
-                e   e  e
-                1   2  3
+         [fx 1] [K         |  \ node 1 starts at row 1
+         |fz 1] |  K       |  /
+         |Ty 1] |   K      | /
+         |fx 2] |    K     |  \ node 2 starts at row 4
+         |fz 2] |     K    |  /
+         |Ty 2] |      K   | /
+         |fx 3] |       K  |  \ node 3 starts at row 7
+         |fz 3] |        K |  /
+         [Ty 3] [         K] /
 
-        thus with appending numbers in the system matrix: column = row
-        """
+                 n   n  n
+                 o   o  o
+                 d   d  d
+                 e   e  e
+                 1   2  3
+
+         thus with appending numbers in the system matrix: column = row
+         """
         # starting row
         # node 1
         row_index_n1 = (element.node_1.id - 1) * 3
@@ -330,8 +339,6 @@ class SystemElements:
             row_index_n2 += 1
             matrix_locations.append(full_row_locations)
         self.system_matrix_locations.append(matrix_locations)
-
-        return self.count
 
     def __assemble_system_matrix(self):
         """
@@ -648,12 +655,17 @@ class SystemElements:
                 # add the support to the support list for the plotter
                 self.supports_spring_y.append(self.node_map[id_])
 
+    def _dead_load(self, g, ai, element_id):
+        g *= math.cos(ai)
+        self.loads_dead_load.append((element_id, g, 1))
+        self.element_map[element_id].dead_load = g
+
     def q_load(self, q, element_id, direction=1):
         """
         :param element_id: integer representing the element ID
         :param direction: 1 = towards the element, -1 = away from the element
         :param q: value of the q-load
-        :return:
+        :return: None
         """
         if not isinstance(element_id, (tuple, list)):
             element_id = (element_id,)
@@ -661,12 +673,19 @@ class SystemElements:
             direction = (direction,)
 
         for i in range(len(element_id)):
-
-            self.loads_q.append((element_id[i], q[i], direction[i]))
+            self.loads_q[element_id[i]] = (q[i], direction[i])
             self.element_map[element_id[i]].q_load = q[i] * direction[i]
 
     def _apply_q_load(self):
-        for element_id, q, direction in self.loads_q:
+        for element_id, g, direction in self.loads_dead_load:
+            if element_id in self.loads_q:
+                q, direction = self.loads_q[element_id]
+                q = g * direction + q * direction
+            elif g == 0:
+                continue
+            else:
+                q = g
+
             q *= self.load_factor
             element = self.element_map[element_id]
 
