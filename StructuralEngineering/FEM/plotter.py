@@ -406,26 +406,26 @@ class Plotter:
         if factor is None:
             # determine max factor for scaling
             for el in self.system.element_map.values():
-                factor = self.__set_factor(el.N, el.N)
+                factor = self.__set_factor(el.N_1, el.N_2)
 
         for el in self.system.element_map.values():
-            if math.isclose(el.N, 0, rel_tol=1e-5, abs_tol=1e-9):
+            if math.isclose(el.N_1, 0, rel_tol=1e-5, abs_tol=1e-9):
                 pass
             else:
                 axis_values = plot_values_axial_force(el, factor)
-                N1 = el.N - math.sin(el.ai) * el.dead_load
-                N2 = el.N + math.sin(el.ai) * el.dead_load
+                N1 = el.N_1 - math.sin(el.ai) * el.dead_load
+                N2 = el.N_2 + math.sin(el.ai) * el.dead_load
                 self.plot_result(axis_values, N1, N2, node_results=node_results)
 
                 point = (el.vertex_2 - el.vertex_1) / 2 + el.vertex_1
-                if el.N < 0:
-                    point.displace_polar(alpha=el.ai + 0.5 * math.pi, radius=0.5 * el.N * factor, inverse_z_axis=True)
+                if el.N_1 < 0:
+                    point.displace_polar(alpha=el.ai + 0.5 * math.pi, radius=0.5 * el.N_1 * factor, inverse_z_axis=True)
 
                     if verbosity == 0:
                         self.one_fig.text(point.x, -point.z, "-", ha='center', va='center',
                                           fontsize=20, color='b')
-                if el.N > 0:
-                    point.displace_polar(alpha=el.ai + 0.5 * math.pi, radius=0.5 * el.N * factor, inverse_z_axis=True)
+                if el.N_1 > 0:
+                    point.displace_polar(alpha=el.ai + 0.5 * math.pi, radius=0.5 * el.N_1 * factor, inverse_z_axis=True)
 
                     if verbosity == 0:
                         self.one_fig.text(point.x, -point.z, "+", ha='center', va='center',
@@ -648,8 +648,8 @@ def plot_values_axial_force(element, factor):
     x2 = element.vertex_2.x
     y2 = -element.vertex_2.z
 
-    N1 = element.N - math.sin(element.ai) * element.dead_load
-    N2 = element.N + math.sin(element.ai) * element.dead_load
+    N1 = element.N_1 - math.sin(element.ai) * element.dead_load
+    N2 = element.N_2 + math.sin(element.ai) * element.dead_load
 
     x_1 = x1 + N1 * math.cos(0.5 * math.pi + element.ai) * factor
     y_1 = y1 + N1 * math.sin(0.5 * math.pi + element.ai) * factor

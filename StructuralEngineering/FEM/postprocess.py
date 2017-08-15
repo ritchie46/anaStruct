@@ -135,12 +135,14 @@ class ElementLevel:
         displacement = np.array([element.node_2.ux - element.node_1.ux, element.node_2.uz - element.node_1.uz])
 
         force_towards = is_moving_towards(test_node, node_position, displacement)
-        N = abs(math.sin(element.ai) * element.node_1.Fz) + abs(math.cos(element.ai) * element.node_1.Fx)
-
+        N_1 = abs(math.sin(element.ai) * element.node_1.Fz) + abs(math.cos(element.ai) * element.node_1.Fx)
+        N_2 = abs(math.sin(element.ai) * element.node_2.Fz) + abs(math.cos(element.ai) * element.node_2.Fx)
         if force_towards:
-            element.N = -N
+            element.N_1 = -N_1
+            element.N_2 = -N_2
         else:
-            element.N = N
+            element.N_1 = N_1
+            element.N_2 = N_2
 
     @staticmethod
     def determine_bending_moment(element, con):
@@ -216,7 +218,7 @@ class ElementLevel:
         Extension
         """
 
-        u = element.N / element.EA * element.l
+        u = 0.5 * (element.N_1 + element.N_2) / element.EA * element.l
         du = u / con
 
         element.extension = np.empty(con)

@@ -50,8 +50,10 @@ class Element:
         self.element_primary_force_vector = np.zeros(6)  # acting external forces
         self.element_force_vector = None
         self.q_load = None
+        self.q_direction = None
         self.dead_load = None
-        self.N = None
+        self.N_1 = None
+        self.N_2 = None
         self.bending_moment = None
         self.shear_force = None
         self.deflection = None
@@ -66,7 +68,14 @@ class Element:
         if self.q_load is None:
             q = 0
         else:
-            q = self.q_load
+            if self.q_direction == "x":
+                q_factor = math.sin(self.ai)
+            elif self.q_direction == "y":
+                q_factor = math.cos(self.ai)
+            else:
+                q_factor = 1
+            q = self.q_load * q_factor
+
         return q + self.dead_load * math.cos(self.ai)
 
     def determine_force_vector(self):

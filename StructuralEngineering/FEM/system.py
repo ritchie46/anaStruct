@@ -659,12 +659,12 @@ class SystemElements:
         self.loads_dead_load.append((element_id, g))
         self.element_map[element_id].dead_load = g
 
-    def q_load(self, q, element_id):
+    def q_load(self, q, element_id, direction="element"):
         """
-        :param element_id: integer representing the element ID
-        :param direction: 1 = towards the element, -1 = away from the element
-        :param q: value of the q-load
-        :return: None
+        :param element_id: (int) representing the element ID
+        :param q: (flt) value of the q-load
+        :param direction: (str) "element", "x", "y"
+        :return: (None)
         """
         if not isinstance(element_id, (tuple, list)):
             element_id = (element_id,)
@@ -673,15 +673,27 @@ class SystemElements:
         for i in range(len(element_id)):
             self.plotter.max_q = max(self.plotter.max_q, q[i])
             self.loads_q[element_id[i]] = q[i]
-            self.element_map[element_id[i]].q_load = q[i]
+            el = self.element_map[element_id[i]]
+            el.q_load = q[i]
+            el.q_direction = direction
 
     def _apply_q_load(self):
         for element_id, g in self.loads_dead_load:
-            q = self.element_map[element_id].all_q_load
+            el = self.element_map[element_id]
+            q = el.all_q_load
             if q == 0:
                 continue
 
+            direction = el.q_direction
+            if direction == "x":
+                factor = math.cos(el.ai)
+            elif direction == "y":
+                factor = math.sin(el.ai)
+            else:
+                factor = 0
+
             q *= self.load_factor
+
             element = self.element_map[element_id]
 
             kl = element.constitutive_matrix[1][1] * 1e6
@@ -693,11 +705,14 @@ class SystemElements:
             rleft = det_shear(kl, kr, q, 0, element.EI, element.l)
             rright = -det_shear(kl, kr, q, element.l, element.EI, element.l)
 
-            rleft_x = rleft * math.sin(element.ai)
-            rright_x = rright * math.sin(element.ai)
+            # q_load working at parallel to the elements x-axis
+            q_element = (el.q_load + el.dead_load) * factor
 
-            rleft_z = rleft * math.cos(element.ai)
-            rright_z = rright * math.cos(element.ai)
+            rleft_x = rleft * math.sin(element.ai) + q_element * math.cos(el.ai) * el.l * 0.5
+            rright_x = rright * math.sin(element.ai) + q_element * math.cos(el.ai) * el.l * 0.5
+
+            rleft_z = rleft * math.cos(element.ai) + q_element * el.l * 0.5 * math.sin(el.ai)
+            rright_z = rright * math.cos(element.ai) + q_element * el.l * 0.5 * math.sin(el.ai)
 
             # place the primary forces in the 6*6 primary force matrix
             element.element_primary_force_vector[2] += left_moment
@@ -710,7 +725,7 @@ class SystemElements:
 
             # system force vector. System forces = element force * -1
             # first row are the moments
-            # second and third row are the reacton forces. The direction
+            # second and third row are the reaction forces. The direction
             self.set_force_vector([(element.node_1.id, 3, -left_moment), (element.node_2.id, 3, -right_moment),
                                    (element.node_1.id, 2, rleft_z), (element.node_2.id, 2, rright_z),
                                    (element.node_1.id, 1, rleft_x), (element.node_2.id, 1, rright_x)])
@@ -883,7 +898,8 @@ class SystemElements:
                             "length": el.l,
                             "alpha": el.ai,
                             "u": el.extension[0],
-                            "N": el.N,
+                            "N_1": el.N_1,
+                            "N_2": el.N_2,
                             "wmax": np.min(el.deflection),
                             "wmin": np.max(el.deflection),
                             "w": el.deflection if verbose else None,
