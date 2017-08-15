@@ -897,4 +897,16 @@ class SystemElements:
         except StopIteration:
             return None
 
+    def nodes_range(self, coordinate):
+        """
+        Retrieve a list with coordinates x or z (y).
 
+        :param coordinate: (str) "both", 'x', 'y' or 'z'
+        :return: (list)
+        """
+        return list(
+            map(
+                lambda x: x.vertex.x if coordinate == 'x'
+                else x.vertex.z if coordinate == 'z' else -x.vertex.z if coordinate == 'y'
+                else None,
+                self.node_map.values()))
