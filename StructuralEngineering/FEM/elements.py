@@ -37,7 +37,7 @@ class Element:
         self.springs = spring
         self.vertex_1 = vertex_1  # location
         self.vertex_2 = vertex_2  # location
-        self.alpha = ai
+        self.ai = ai
         self.kinematic_matrix = kinematic_matrix(ai, ai, l)
         self.constitutive_matrix = None
         self.stiffness_matrix = None
@@ -60,6 +60,14 @@ class Element:
         self.nodes_plastic = [False, False]
         self.compile_constitutive_matrix(self.EA, self.EI, l)
         self.compile_stiffness_matrix()
+
+    @property
+    def all_q_load(self):
+        if self.q_load is None:
+            q = 0
+        else:
+            q = self.q_load
+        return q + self.dead_load * math.cos(self.ai)
 
     def determine_force_vector(self):
         self.element_force_vector = np.dot(self.stiffness_matrix, self.element_displacement_vector)
@@ -88,14 +96,6 @@ class Element:
     def reset(self):
         self.element_displacement_vector = np.zeros(6)
         self.element_primary_force_vector = np.zeros(6)
-
-    @property
-    def all_q_load(self):
-        if self.q_load is None:
-            q = 0
-        else:
-            q = self.q_load
-        return q + self.dead_load
 
 
 def kinematic_matrix(ai, aj, l):

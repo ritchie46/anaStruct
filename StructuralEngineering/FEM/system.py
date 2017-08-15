@@ -271,7 +271,7 @@ class SystemElements:
             self.non_linear = True
 
         self._det_system_matrix_location(element)
-        self._dead_load(g, ai, element.id)
+        self._dead_load(g, element.id)
         return self.count
 
     def _det_system_matrix_location(self, element):
@@ -655,8 +655,7 @@ class SystemElements:
                 # add the support to the support list for the plotter
                 self.supports_spring_y.append(self.node_map[id_])
 
-    def _dead_load(self, g, ai, element_id):
-        g *= math.cos(ai)
+    def _dead_load(self, g, element_id):
         self.loads_dead_load.append((element_id, g, 1))
         self.element_map[element_id].dead_load = g
 
@@ -698,11 +697,11 @@ class SystemElements:
             rleft = det_shear(kl, kr, q * direction, 0, element.EI, element.l)
             rright = -det_shear(kl, kr, q * direction, element.l, element.EI, element.l)
 
-            rleft_x = rleft * math.sin(element.alpha)
-            rright_x = rright * math.sin(element.alpha)
+            rleft_x = rleft * math.sin(element.ai)
+            rright_x = rright * math.sin(element.ai)
 
-            rleft_z = rleft * math.cos(element.alpha)
-            rright_z = rright * math.cos(element.alpha)
+            rleft_z = rleft * math.cos(element.ai)
+            rright_z = rright * math.cos(element.ai)
 
             # place the primary forces in the 6*6 primary force matrix
             element.element_primary_force_vector[2] += left_moment
@@ -848,7 +847,7 @@ class SystemElements:
                 return {
                     "id": el.id,
                     "length": el.l,
-                    "alpha": el.alpha,
+                    "alpha": el.ai,
                     "u": el.extension[0],
                     "N": el.N
                 }
@@ -856,7 +855,7 @@ class SystemElements:
                 return {
                     "id": el.id,
                     "length": el.l,
-                    "alpha": el.alpha,
+                    "alpha": el.ai,
                     "u": el.extension[0],
                     "N": el.N,
                     "wmax": np.min(el.deflection),
@@ -875,7 +874,7 @@ class SystemElements:
                     result_list.append({
                         "id": el.id,
                         "length": el.l,
-                        "alpha": el.alpha,
+                        "alpha": el.ai,
                         "u": el.extension[0],
                         "N": el.N
                     }
@@ -886,7 +885,7 @@ class SystemElements:
                         {
                             "id": el.id,
                             "length": el.l,
-                            "alpha": el.alpha,
+                            "alpha": el.ai,
                             "u": el.extension[0],
                             "N": el.N,
                             "wmax": np.min(el.deflection),

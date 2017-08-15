@@ -135,7 +135,7 @@ class ElementLevel:
         displacement = np.array([element.node_2.ux - element.node_1.ux, element.node_2.uz - element.node_1.uz])
 
         force_towards = is_moving_towards(test_node, node_position, displacement)
-        N = abs(math.sin(element.alpha) * element.node_1.Fz) + abs(math.cos(element.alpha) * element.node_1.Fx)
+        N = abs(math.sin(element.ai) * element.node_1.Fz) + abs(math.cos(element.ai) * element.node_1.Fx)
 
         if force_towards:
             element.N = -N

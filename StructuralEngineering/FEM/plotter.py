@@ -224,20 +224,20 @@ class Plotter:
             x2 = el.vertex_2.x
             y2 = -el.vertex_2.z
             # - value, because the positive z of the system is opposite of positive y of the plotter
-            xn1 = x1 + math.sin(-el.alpha) * h * direction
-            yn1 = y1 + math.cos(-el.alpha) * h * direction
-            xn2 = x2 + math.sin(-el.alpha) * h * direction
-            yn2 = y2 + math.cos(-el.alpha) * h * direction
+            xn1 = x1 + math.sin(-el.ai) * h * direction
+            yn1 = y1 + math.cos(-el.ai) * h * direction
+            xn2 = x2 + math.sin(-el.ai) * h * direction
+            yn2 = y2 + math.cos(-el.ai) * h * direction
             self.one_fig.plot([x1, xn1, xn2, x2], [y1, yn1, yn2, y2], color='g')
 
             if verbosity == 0:
                 # arrow
-                xa_1 = (x2 - x1) * 0.2 + x1 + math.sin(-el.alpha) * 0.8 * h * direction
-                ya_1 = (y2 - y1) * 0.2 + y1 + math.cos(-el.alpha) * 0.8 * h * direction
-                len_x = math.sin(-el.alpha - math.pi) * 0.6 * h * direction
-                len_y = math.cos(-el.alpha - math.pi) * 0.6 * h * direction
-                xt = xa_1 + math.sin(-el.alpha) * 0.4 * h * direction
-                yt = ya_1 + math.cos(-el.alpha) * 0.4 * h * direction
+                xa_1 = (x2 - x1) * 0.2 + x1 + math.sin(-el.ai) * 0.8 * h * direction
+                ya_1 = (y2 - y1) * 0.2 + y1 + math.cos(-el.ai) * 0.8 * h * direction
+                len_x = math.sin(-el.ai - math.pi) * 0.6 * h * direction
+                len_y = math.cos(-el.ai - math.pi) * 0.6 * h * direction
+                xt = xa_1 + math.sin(-el.ai) * 0.4 * h * direction
+                yt = ya_1 + math.cos(-el.ai) * 0.4 * h * direction
                 # fc = face color, ec = edge color
                 self.one_fig.arrow(xa_1, ya_1, len_x, len_y, head_width=h*0.25, head_length=0.2*h, ec='g', fc='g')
                 self.one_fig.text(xt, yt, "q=%d" % el.q_load, color='k', fontsize=9, zorder=10)
@@ -344,8 +344,8 @@ class Plotter:
 
                 # add element ID to plot
                 factor = 0.02 * self.max_val
-                x_val = (x_val[0] + x_val[-1]) / 2 - math.sin(el.alpha) * factor
-                y_val = (y_val[0] + y_val[-1]) / 2 + math.cos(el.alpha) * factor
+                x_val = (x_val[0] + x_val[-1]) / 2 - math.sin(el.ai) * factor
+                y_val = (y_val[0] + y_val[-1]) / 2 + math.cos(el.ai) * factor
 
                 self.one_fig.text(x_val, y_val, str(el.id), color='r', fontsize=9, zorder=10)
 
@@ -412,17 +412,19 @@ class Plotter:
                 pass
             else:
                 axis_values = plot_values_axial_force(el, factor)
-                self.plot_result(axis_values, el.N, el.N, node_results=node_results)
+                N1 = el.N - math.sin(el.ai) * el.dead_load
+                N2 = el.N + math.sin(el.ai) * el.dead_load
+                self.plot_result(axis_values, N1, N2, node_results=node_results)
 
                 point = (el.vertex_2 - el.vertex_1) / 2 + el.vertex_1
                 if el.N < 0:
-                    point.displace_polar(alpha=el.alpha + 0.5 * math.pi, radius=0.5 * el.N * factor, inverse_z_axis=True)
+                    point.displace_polar(alpha=el.ai + 0.5 * math.pi, radius=0.5 * el.N * factor, inverse_z_axis=True)
 
                     if verbosity == 0:
                         self.one_fig.text(point.x, -point.z, "-", ha='center', va='center',
                                           fontsize=20, color='b')
                 if el.N > 0:
-                    point.displace_polar(alpha=el.alpha + 0.5 * math.pi, radius=0.5 * el.N * factor, inverse_z_axis=True)
+                    point.displace_polar(alpha=el.ai + 0.5 * math.pi, radius=0.5 * el.N * factor, inverse_z_axis=True)
 
                     if verbosity == 0:
                         self.one_fig.text(point.x, -point.z, "+", ha='center', va='center',
@@ -471,8 +473,8 @@ class Plotter:
                     offset = -self.max_val * 0.05
 
                     if verbosity == 0:
-                        x = axis_values[0][index] + math.sin(-el.alpha) * offset
-                        y = axis_values[1][index] + math.cos(-el.alpha) * offset
+                        x = axis_values[0][index] + math.sin(-el.ai) * offset
+                        y = axis_values[1][index] + math.cos(-el.ai) * offset
                         self.one_fig.text(x, y, "%s" % round(m_sag, 1),
                                           fontsize=9)
         if show:
@@ -629,10 +631,10 @@ def plot_values_shear_force(element, factor=1):
     shear_2 = element.shear_force[-1]
 
     # apply angle ai
-    x_1 = x1 + shear_1 * math.sin(-element.alpha) * factor
-    y_1 = y1 + shear_1 * math.cos(-element.alpha) * factor
-    x_2 = x2 + shear_2 * math.sin(-element.alpha) * factor
-    y_2 = y2 + shear_2 * math.cos(-element.alpha) * factor
+    x_1 = x1 + shear_1 * math.sin(-element.ai) * factor
+    y_1 = y1 + shear_1 * math.cos(-element.ai) * factor
+    x_2 = x2 + shear_2 * math.sin(-element.ai) * factor
+    y_2 = y2 + shear_2 * math.cos(-element.ai) * factor
 
     x_val = np.array([x1, x_1, x_2, x2])
     y_val = np.array([y1, y_1, y_2, y2])
@@ -645,10 +647,13 @@ def plot_values_axial_force(element, factor):
     x2 = element.vertex_2.x
     y2 = -element.vertex_2.z
 
-    x_1 = x1 + element.N * math.cos(0.5 * math.pi + element.alpha) * factor
-    y_1 = y1 + element.N * math.sin(0.5 * math.pi + element.alpha) * factor
-    x_2 = x2 + element.N * math.cos(0.5 * math.pi + element.alpha) * factor
-    y_2 = y2 + element.N * math.sin(0.5 * math.pi + element.alpha) * factor
+    N1 = element.N - math.sin(element.ai) * element.dead_load
+    N2 = element.N + math.sin(element.ai) * element.dead_load
+
+    x_1 = x1 + N1 * math.cos(0.5 * math.pi + element.ai) * factor
+    y_1 = y1 + N1 * math.sin(0.5 * math.pi + element.ai) * factor
+    x_2 = x2 + N2 * math.cos(0.5 * math.pi + element.ai) * factor
+    y_2 = y2 + N2 * math.sin(0.5 * math.pi + element.ai) * factor
 
     x_val = [x1, x_1, x_2, x2]
     y_val = [y1, y_1, y_2, y2]
@@ -672,10 +677,10 @@ def plot_values_bending_moment(element, factor, con):
     T_right = -element.node_2.Ty
 
     # apply angle ai
-    x1 += T_left * math.sin(-element.alpha) * factor
-    y1 += T_left * math.cos(-element.alpha) * factor
-    x2 += T_right * math.sin(-element.alpha) * factor
-    y2 += T_right * math.cos(-element.alpha) * factor
+    x1 += T_left * math.sin(-element.ai) * factor
+    y1 += T_left * math.cos(-element.ai) * factor
+    x2 += T_right * math.sin(-element.ai) * factor
+    y2 += T_right * math.cos(-element.ai) * factor
 
     x_val = np.linspace(0, 1, con)
     y_val = np.empty(con)
@@ -693,8 +698,8 @@ def plot_values_bending_moment(element, factor, con):
             x = i * element.l
             q_part = (-0.5 * -q * x**2 + 0.5 * -q * element.l * x)
 
-            x_val[count] += math.sin(-element.alpha) * q_part * factor
-            y_val[count] += math.cos(-element.alpha) * q_part * factor
+            x_val[count] += math.sin(-element.ai) * q_part * factor
+            y_val[count] += math.cos(-element.ai) * q_part * factor
         count += 1
 
     x_val = np.append(x_val, element.vertex_2.x)
@@ -721,8 +726,8 @@ def plot_values_deflection(element, factor, ax_range, linear=False):
         x_val = np.linspace(x1, x2, n)
         y_val = np.linspace(y1, y2, n)
 
-        x_val = x_val + element.deflection * math.sin(element.alpha) * factor
-        y_val = y_val + element.deflection * -math.cos(element.alpha) * factor
+        x_val = x_val + element.deflection * math.sin(element.ai) * factor
+        y_val = y_val + element.deflection * -math.cos(element.ai) * factor
 
     else:  # truss element has no bending
         x_val = np.array([x1, x2])
