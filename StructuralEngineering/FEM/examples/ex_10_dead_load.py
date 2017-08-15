@@ -1,11 +1,11 @@
 from StructuralEngineering.FEM.system import SystemElements
 
 """
-Test dead loads on the structure
+Test dead loads on the structure. TO DO! Distributed axial force
 """
 
 ss = SystemElements()
-ss.add_element([[0, 0], [14, 0]], g=100)
+ss.add_element([[0, 0], [14, 14]], g=100)
 ss.add_support_hinged([1, 2])
 
 ss.solve()
