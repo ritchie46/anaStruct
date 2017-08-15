@@ -656,10 +656,10 @@ class SystemElements:
                 self.supports_spring_y.append(self.node_map[id_])
 
     def _dead_load(self, g, element_id):
-        self.loads_dead_load.append((element_id, g, 1))
+        self.loads_dead_load.append((element_id, g))
         self.element_map[element_id].dead_load = g
 
-    def q_load(self, q, element_id, direction=1):
+    def q_load(self, q, element_id):
         """
         :param element_id: integer representing the element ID
         :param direction: 1 = towards the element, -1 = away from the element
@@ -669,15 +669,14 @@ class SystemElements:
         if not isinstance(element_id, (tuple, list)):
             element_id = (element_id,)
             q = (q,)
-            direction = (direction,)
 
         for i in range(len(element_id)):
             self.plotter.max_q = max(self.plotter.max_q, q[i])
-            self.loads_q[element_id[i]] = (q[i], direction[i])
-            self.element_map[element_id[i]].q_load = q[i] * direction[i]
+            self.loads_q[element_id[i]] = q[i]
+            self.element_map[element_id[i]].q_load = q[i]
 
     def _apply_q_load(self):
-        for element_id, g, direction in self.loads_dead_load:
+        for element_id, g in self.loads_dead_load:
             q = self.element_map[element_id].all_q_load
             if q == 0:
                 continue
@@ -688,11 +687,11 @@ class SystemElements:
             kl = element.constitutive_matrix[1][1] * 1e6
             kr = element.constitutive_matrix[2][2] * 1e6
             # minus because of systems positive rotation
-            left_moment = -det_moment(kl, kr, q * direction, 0, element.EI, element.l)
-            right_moment = det_moment(kl, kr, q * direction, element.l, element.EI, element.l)
+            left_moment = -det_moment(kl, kr, q, 0, element.EI, element.l)
+            right_moment = det_moment(kl, kr, q, element.l, element.EI, element.l)
 
-            rleft = det_shear(kl, kr, q * direction, 0, element.EI, element.l)
-            rright = -det_shear(kl, kr, q * direction, element.l, element.EI, element.l)
+            rleft = det_shear(kl, kr, q, 0, element.EI, element.l)
+            rright = -det_shear(kl, kr, q, element.l, element.EI, element.l)
 
             rleft_x = rleft * math.sin(element.ai)
             rright_x = rright * math.sin(element.ai)
