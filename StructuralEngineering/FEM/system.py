@@ -377,12 +377,12 @@ class SystemElements:
         if self.system_force_vector is None:
             self.system_force_vector = np.zeros(self.max_node_id * 3)
 
-        for i in force_list:
+        for id_, direction, force in force_list:
             # index = number of the node-1 * nd.o.f. + x, or z, or y
             # (x = 1 * i[1], y = 2 * i[1]
-            index = (i[0] - 1) * 3 + i[1] - 1
+            index = (id_ - 1) * 3 + direction - 1
             # force = i[2]
-            self.system_force_vector[index] += i[2]
+            self.system_force_vector[index] += force
         return self.system_force_vector
 
     def set_displacement_vector(self, nodes_list):
