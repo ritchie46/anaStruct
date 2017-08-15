@@ -198,3 +198,16 @@ def det_shear(kl, kr, q, x, EI, L):
     """
     return EI*(L*q*(12*EI**2 + 5*EI*L*kl + 3*EI*L*kr + L**2*kl*kr) /
                (2*EI*(12*EI**2 + 4*EI*L*kl + 4*EI*L*kr + L**2*kl*kr)) - q*x/EI)
+
+
+def det_axial(EA, L, q, x):
+    """
+    See notebook in: StructuralEngineering/FEM/background/distributed_ax_force.ipynb
+
+    :param q: (flt)
+    :param x: (flt) Location of the axial force
+    :param EA: (flt)
+    :param L: (flt) Length of the beam
+    :return: (flt)
+    """
+    EA * (L * q / (2 * EA) - q * x / EA)

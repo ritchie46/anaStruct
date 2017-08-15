@@ -740,9 +740,9 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         self.plotter.bending_moment(factor, figsize, verbosity, scale, offset, show)
 
-    def show_normal_force(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+    def show_axial_force(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.normal_force(factor, figsize, verbosity, scale, offset, show)
+        self.plotter.axial_force(factor, figsize, verbosity, scale, offset, show)
 
     def show_shear_force(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
         figsize = self.figsize if figsize is None else figsize

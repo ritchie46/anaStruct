@@ -15,7 +15,7 @@ class SimpleTest(unittest.TestCase):
         system.solve()
         system.show_structure(show=False)
         system.show_bending_moment(show=False)
-        system.show_normal_force(show=False)
+        system.show_axial_force(show=False)
         system.show_reaction_force(show=False)
         system.show_shear_force(show=False)
 
@@ -31,7 +31,7 @@ class SimpleTest(unittest.TestCase):
         system.solve()
         system.show_structure(show=False)
         system.show_bending_moment(show=False)
-        system.show_normal_force(show=False)
+        system.show_axial_force(show=False)
         system.show_reaction_force(show=False)
         system.show_shear_force(show=False)
 
@@ -47,7 +47,7 @@ class SimpleTest(unittest.TestCase):
         system.solve()
         system.show_structure(show=False)
         system.show_bending_moment(show=False)
-        system.show_normal_force(show=False)
+        system.show_axial_force(show=False)
         system.show_reaction_force(show=False)
         system.show_shear_force(show=False)
 
@@ -61,7 +61,7 @@ class SimpleTest(unittest.TestCase):
         system.show_structure(show=False)
         system.solve()
         system.show_bending_moment(show=False)
-        system.show_normal_force(show=False)
+        system.show_axial_force(show=False)
         system.show_reaction_force(show=False)
         system.show_shear_force(show=False)
 
@@ -75,7 +75,7 @@ class SimpleTest(unittest.TestCase):
         system.solve()
         system.show_structure(show=False)
         system.show_bending_moment(show=False)
-        system.show_normal_force(show=False)
+        system.show_axial_force(show=False)
         system.show_reaction_force(show=False)
         system.show_shear_force(show=False)
 

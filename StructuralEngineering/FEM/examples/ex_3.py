@@ -19,7 +19,7 @@ def run():
 
     system.show_structure()
     system.show_reaction_force()
-    system.show_normal_force()
+    system.show_axial_force()
     system.show_shear_force()
     system.show_bending_moment()
     system.show_displacement(factor=1)

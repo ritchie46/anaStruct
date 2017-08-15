@@ -395,7 +395,7 @@ class Plotter:
         else:
             plot_mpl(self.fig)
 
-    def normal_force(self, factor, figsize, verbosity, scale, offset, show):
+    def axial_force(self, factor, figsize, verbosity, scale, offset, show):
         self.max_force = 0
         self.plot_structure(figsize, 1, scale=scale, offset=offset)
 
@@ -410,7 +410,7 @@ class Plotter:
             if math.isclose(el.N, 0, rel_tol=1e-5, abs_tol=1e-9):
                 pass
             else:
-                axis_values = plot_values_normal_force(el, factor)
+                axis_values = plot_values_axial_force(el, factor)
                 self.plot_result(axis_values, el.N, el.N, node_results=node_results)
 
                 point = (el.vertex_2 - el.vertex_1) / 2 + el.vertex_1
@@ -638,7 +638,7 @@ def plot_values_shear_force(element, factor=1):
     return x_val, y_val, shear_1, shear_2
 
 
-def plot_values_normal_force(element, factor):
+def plot_values_axial_force(element, factor):
     x1 = element.vertex_1.x
     y1 = -element.vertex_1.z
     x2 = element.vertex_2.x
