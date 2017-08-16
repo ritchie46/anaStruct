@@ -224,19 +224,27 @@ class Plotter:
             y1 = -el.vertex_1.z
             x2 = el.vertex_2.x
             y2 = -el.vertex_2.z
+
+            if el.q_direction == "y":
+                ai = 0
+            elif el.q_direction == "x":
+                ai = 0.5 * math.pi
+            else:
+                ai = -el.ai
+
             # - value, because the positive z of the system is opposite of positive y of the plotter
-            xn1 = x1 + math.sin(-el.ai) * h * direction
-            yn1 = y1 + math.cos(-el.ai) * h * direction
-            xn2 = x2 + math.sin(-el.ai) * h * direction
-            yn2 = y2 + math.cos(-el.ai) * h * direction
+            xn1 = x1 + math.sin(ai) * h * direction
+            yn1 = y1 + math.cos(ai) * h * direction
+            xn2 = x2 + math.sin(ai) * h * direction
+            yn2 = y2 + math.cos(ai) * h * direction
             self.one_fig.plot([x1, xn1, xn2, x2], [y1, yn1, yn2, y2], color='g')
 
             if verbosity == 0:
                 # arrow
-                xa_1 = (x2 - x1) * 0.2 + x1 + math.sin(-el.ai) * 0.8 * h * direction
-                ya_1 = (y2 - y1) * 0.2 + y1 + math.cos(-el.ai) * 0.8 * h * direction
-                len_x = math.sin(-el.ai - math.pi) * 0.6 * h * direction
-                len_y = math.cos(-el.ai - math.pi) * 0.6 * h * direction
+                xa_1 = (x2 - x1) * 0.2 + x1 + math.sin(ai) * 0.8 * h * direction
+                ya_1 = (y2 - y1) * 0.2 + y1 + math.cos(ai) * 0.8 * h * direction
+                len_x = math.sin(ai - math.pi) * 0.6 * h * direction
+                len_y = math.cos(ai - math.pi) * 0.6 * h * direction
                 xt = xa_1 + math.sin(-el.ai) * 0.4 * h * direction
                 yt = ya_1 + math.cos(-el.ai) * 0.4 * h * direction
                 # fc = face color, ec = edge color
