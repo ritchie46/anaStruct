@@ -680,21 +680,22 @@ class SystemElements:
     def _apply_perpendicular_q_load(self):
         for element_id, g in self.loads_dead_load:
             element = self.element_map[element_id]
-            q = element.all_q_load
-            if q == 0:
+            q_perpendicular = element.all_q_load
+
+            if q_perpendicular == 0:
                 continue
-            elif element.q_direction == "x" or element.q_direction == "y":
+            elif element.q_direction == "x" or element.q_direction == "y" or element.dead_load:
                 self._apply_parallel_q_load(element)
 
-            q *= self.load_factor
+            q_perpendicular *= self.load_factor
             kl = element.constitutive_matrix[1][1] * 1e6
             kr = element.constitutive_matrix[2][2] * 1e6
             # minus because of systems positive rotation
-            left_moment = -det_moment(kl, kr, q, 0, element.EI, element.l)
-            right_moment = det_moment(kl, kr, q, element.l, element.EI, element.l)
+            left_moment = -det_moment(kl, kr, q_perpendicular, 0, element.EI, element.l)
+            right_moment = det_moment(kl, kr, q_perpendicular, element.l, element.EI, element.l)
 
-            rleft = det_shear(kl, kr, q, 0, element.EI, element.l)
-            rright = -det_shear(kl, kr, q, element.l, element.EI, element.l)
+            rleft = det_shear(kl, kr, q_perpendicular, 0, element.EI, element.l)
+            rright = -det_shear(kl, kr, q_perpendicular, element.l, element.EI, element.l)
 
             rleft_x = rleft * math.sin(element.ai)
             rright_x = rright * math.sin(element.ai)
@@ -723,10 +724,10 @@ class SystemElements:
             factor = abs(math.cos(element.ai))
         elif direction == "y":
             factor = abs(math.sin(element.ai))
-        else:
-            raise Exception("Implement")
+        else:  # element has got only dead load
+            factor = abs(math.sin(element.ai))
 
-        # # q_load working at parallel to the elements x-axis
+        # q_load working at parallel to the elements x-axis
         q_element = (element.q_load + element.dead_load) * factor * self.load_factor
 
         Fx = q_element * math.cos(element.ai) * element.l * 0.5
@@ -736,6 +737,8 @@ class SystemElements:
         element.element_primary_force_vector[1] -= Fz
         element.element_primary_force_vector[3] -= Fx
         element.element_primary_force_vector[4] -= Fz
+
+        print(Fx, Fz)
 
         self.set_force_vector([
             (element.node_1.id, 2, Fz), (element.node_2.id, 2, Fz),

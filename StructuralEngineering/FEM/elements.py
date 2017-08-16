@@ -49,9 +49,9 @@ class Element:
         self.element_displacement_vector = np.empty(6)
         self.element_primary_force_vector = np.zeros(6)  # acting external forces
         self.element_force_vector = None
-        self.q_load = None
+        self.q_load = 0
         self.q_direction = None
-        self.dead_load = None
+        self.dead_load = 0
         self.N_1 = None
         self.N_2 = None
         self.bending_moment = None

@@ -421,8 +421,8 @@ class Plotter:
                 pass
             else:
                 axis_values = plot_values_axial_force(el, factor)
-                N1 = el.N_1 - math.sin(el.ai) * el.dead_load
-                N2 = el.N_2 + math.sin(el.ai) * el.dead_load
+                N1 = el.N_1
+                N2 = el.N_2
 
                 self.plot_result(axis_values, N1, N2, node_results=node_results)
 
@@ -657,8 +657,8 @@ def plot_values_axial_force(element, factor):
     x2 = element.vertex_2.x
     y2 = -element.vertex_2.z
 
-    N1 = element.N_1 - math.sin(element.ai) * element.dead_load
-    N2 = element.N_2 + math.sin(element.ai) * element.dead_load
+    N1 = element.N_1
+    N2 = element.N_2
 
     x_1 = x1 + N1 * math.cos(0.5 * math.pi + element.ai) * factor
     y_1 = y1 + N1 * math.sin(0.5 * math.pi + element.ai) * factor
