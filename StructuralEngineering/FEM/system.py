@@ -728,23 +728,18 @@ class SystemElements:
 
         # # q_load working at parallel to the elements x-axis
         q_element = (element.q_load + element.dead_load) * factor * self.load_factor
-        q_element_x = q_element * math.cos(element.ai) * element.l * 0.5
-        q_element_z = q_element * math.sin(element.ai) * element.l * 0.5
 
-        if 0 < element.ai < 0.5 * math.pi:
-            q_element_x *= -1
-        elif 1.5 * math.pi < element.ai < 2 * math.pi:
-            q_element_z *= -1
+        Fx = q_element * math.cos(element.ai) * element.l * 0.5
+        Fz = q_element * math.sin(element.ai) * element.l * -0.5
 
-        element.element_primary_force_vector[0] -= q_element_x
-        element.element_primary_force_vector[1] -= q_element_z
-        element.element_primary_force_vector[3] -= q_element_x
-        element.element_primary_force_vector[4] -= q_element_z
-
+        element.element_primary_force_vector[0] -= Fx
+        element.element_primary_force_vector[1] -= Fz
+        element.element_primary_force_vector[3] -= Fx
+        element.element_primary_force_vector[4] -= Fz
 
         self.set_force_vector([
-            (element.node_1.id, 2, q_element_z), (element.node_2.id, 2, q_element_z),
-            (element.node_1.id, 1, q_element_x), (element.node_2.id, 1, q_element_x)])
+            (element.node_1.id, 2, Fz), (element.node_2.id, 2, Fz),
+            (element.node_1.id, 1, Fx), (element.node_2.id, 1, Fx)])
 
     def point_load(self, node_id, Fx=0, Fz=0):
         if not isinstance(node_id, (tuple, list)):

@@ -91,6 +91,7 @@ class SystemLevel:
         """
         Determines the element results for al elements in the system on element level.
         """
+
         for el in self.system.element_map.values():
             con = self.system.plotter.mesh
             self.post_el.determine_bending_moment(el, con)
@@ -126,7 +127,9 @@ class ElementLevel:
             uz=element.element_displacement_vector[4],
             phi_y=element.element_displacement_vector[5]
         )
+
         self._determine_normal_force(element)
+
 
     @staticmethod
     def _determine_normal_force(element):
@@ -135,8 +138,8 @@ class ElementLevel:
         displacement = np.array([element.node_2.ux - element.node_1.ux, element.node_2.uz - element.node_1.uz])
 
         force_towards = is_moving_towards(test_node, node_position, displacement)
-        N_1 = abs(math.sin(element.ai) * element.node_1.Fz) + abs(math.cos(element.ai) * element.node_1.Fx)
-        N_2 = abs(math.sin(element.ai) * element.node_2.Fz) + abs(math.cos(element.ai) * element.node_2.Fx)
+        N_1 = (math.sin(element.ai) * element.node_1.Fz) + -(math.cos(element.ai) * element.node_1.Fx)
+        N_2 = -(math.sin(element.ai) * element.node_2.Fz) + (math.cos(element.ai) * element.node_2.Fx)
 
         if force_towards:
             element.N_1 = -N_1

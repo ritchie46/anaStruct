@@ -102,6 +102,13 @@ class SimpleTest(unittest.TestCase):
         """
         self.assertAlmostEqual(u4, 105.288412424)
 
+    def test_ex_11(self):
+        from StructuralEngineering.FEM.examples.ex_11 import ss
+        ss.solve()
+        el = ss.element_map[1]
+        self.assertAlmostEqual(el.N_1, 27.8833333333)
+        self.assertAlmostEqual(el.N_2, 17.8833333333)
+
     def test_find_node_id(self):
         self.assertEqual(SS_8.find_node_id([4, 4]), 6)
         self.assertEqual(SS_8.find_node_id([3, -3]), None)
