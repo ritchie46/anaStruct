@@ -137,6 +137,7 @@ class ElementLevel:
         force_towards = is_moving_towards(test_node, node_position, displacement)
         N_1 = abs(math.sin(element.ai) * element.node_1.Fz) + abs(math.cos(element.ai) * element.node_1.Fx)
         N_2 = abs(math.sin(element.ai) * element.node_2.Fz) + abs(math.cos(element.ai) * element.node_2.Fx)
+
         if force_towards:
             element.N_1 = -N_1
             element.N_2 = -N_2

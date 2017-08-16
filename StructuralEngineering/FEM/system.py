@@ -437,7 +437,7 @@ class SystemElements:
         for el in self.element_map.values():
             el.reset()
         self.system_force_vector = None
-        self._apply_q_load()
+        self._apply_perpendicular_q_load()
         self._apply_point_load()
         self._apply_moment_load()
 
@@ -677,25 +677,16 @@ class SystemElements:
             el.q_load = q[i]
             el.q_direction = direction
 
-    def _apply_q_load(self):
+    def _apply_perpendicular_q_load(self):
         for element_id, g in self.loads_dead_load:
-            el = self.element_map[element_id]
-            q = el.all_q_load
+            element = self.element_map[element_id]
+            q = element.all_q_load
             if q == 0:
                 continue
-
-            direction = el.q_direction
-            if direction == "x":
-                factor = math.cos(el.ai)
-            elif direction == "y":
-                factor = math.sin(el.ai)
-            else:
-                factor = 0
+            elif element.q_direction == "x" or element.q_direction == "y":
+                self._apply_parallel_q_load(element)
 
             q *= self.load_factor
-
-            element = self.element_map[element_id]
-
             kl = element.constitutive_matrix[1][1] * 1e6
             kr = element.constitutive_matrix[2][2] * 1e6
             # minus because of systems positive rotation
@@ -705,23 +696,19 @@ class SystemElements:
             rleft = det_shear(kl, kr, q, 0, element.EI, element.l)
             rright = -det_shear(kl, kr, q, element.l, element.EI, element.l)
 
-            # q_load working at parallel to the elements x-axis
-            q_element = (el.q_load + el.dead_load) * factor
+            rleft_x = rleft * math.sin(element.ai)
+            rright_x = rright * math.sin(element.ai)
 
-            rleft_x = rleft * math.sin(element.ai) + q_element * math.cos(el.ai) * el.l * 0.5
-            rright_x = rright * math.sin(element.ai) + q_element * math.cos(el.ai) * el.l * 0.5
-
-            rleft_z = rleft * math.cos(element.ai) + q_element * el.l * 0.5 * math.sin(el.ai)
-            rright_z = rright * math.cos(element.ai) + q_element * el.l * 0.5 * math.sin(el.ai)
+            rleft_z = rleft * math.cos(element.ai)
+            rright_z = rright * math.cos(element.ai)
 
             # place the primary forces in the 6*6 primary force matrix
-            element.element_primary_force_vector[2] += left_moment
-            element.element_primary_force_vector[5] += right_moment
-
-            element.element_primary_force_vector[1] -= rleft_z
-            element.element_primary_force_vector[4] -= rright_z
             element.element_primary_force_vector[0] -= rleft_x
+            element.element_primary_force_vector[1] -= rleft_z
+            element.element_primary_force_vector[2] += left_moment
             element.element_primary_force_vector[3] -= rright_x
+            element.element_primary_force_vector[4] -= rright_z
+            element.element_primary_force_vector[5] += right_moment
 
             # system force vector. System forces = element force * -1
             # first row are the moments
@@ -729,6 +716,35 @@ class SystemElements:
             self.set_force_vector([(element.node_1.id, 3, -left_moment), (element.node_2.id, 3, -right_moment),
                                    (element.node_1.id, 2, rleft_z), (element.node_2.id, 2, rright_z),
                                    (element.node_1.id, 1, rleft_x), (element.node_2.id, 1, rright_x)])
+
+    def _apply_parallel_q_load(self, element):
+        direction = element.q_direction
+        if direction == "x":
+            factor = abs(math.cos(element.ai))
+        elif direction == "y":
+            factor = abs(math.sin(element.ai))
+        else:
+            raise Exception("Implement")
+
+        # # q_load working at parallel to the elements x-axis
+        q_element = (element.q_load + element.dead_load) * factor * self.load_factor
+        q_element_x = q_element * math.cos(element.ai) * element.l * 0.5
+        q_element_z = q_element * math.sin(element.ai) * element.l * 0.5
+
+        if 0 < element.ai < 0.5 * math.pi:
+            q_element_x *= -1
+        elif 1.5 * math.pi < element.ai < 2 * math.pi:
+            q_element_z *= -1
+
+        element.element_primary_force_vector[0] -= q_element_x
+        element.element_primary_force_vector[1] -= q_element_z
+        element.element_primary_force_vector[3] -= q_element_x
+        element.element_primary_force_vector[4] -= q_element_z
+
+
+        self.set_force_vector([
+            (element.node_1.id, 2, q_element_z), (element.node_2.id, 2, q_element_z),
+            (element.node_1.id, 1, q_element_x), (element.node_2.id, 1, q_element_x)])
 
     def point_load(self, node_id, Fx=0, Fz=0):
         if not isinstance(node_id, (tuple, list)):

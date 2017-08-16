@@ -415,6 +415,7 @@ class Plotter:
                 axis_values = plot_values_axial_force(el, factor)
                 N1 = el.N_1 - math.sin(el.ai) * el.dead_load
                 N2 = el.N_2 + math.sin(el.ai) * el.dead_load
+
                 self.plot_result(axis_values, N1, N2, node_results=node_results)
 
                 point = (el.vertex_2 - el.vertex_1) / 2 + el.vertex_1
