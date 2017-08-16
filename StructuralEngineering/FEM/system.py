@@ -613,7 +613,7 @@ class SystemElements:
             # add the support to the support list for the plotter
             self.supports_fixed.append(self.node_map[id_])
 
-    def add_support_spring(self, node_id, translation, k):
+    def add_support_spring(self, node_id, translation, k, roll=False):
         """
         :param translation: (int) Integer representing prevented translation.
         1 = translation in x
@@ -621,6 +621,7 @@ class SystemElements:
         3 = rotation in y
         :param node_id: (int/ list) Integer representing the nodes ID.
         :param k: (flt) Stiffness of the spring
+        :param roll: If set to True, only the translation of the spring is controlled.
 
         The stiffness of the spring is added in the system matrix at the location that represents the node and the
         displacement.
@@ -637,23 +638,21 @@ class SystemElements:
 
             self.system_spring_map[matrix_index] = k
 
-            if translation == 1:  # translation spring in x-axis
-                self.set_displacement_vector([(id_, 2)])
-
-                # add the support to the support list for the plotter
+            # add the support to the support list for the plotter
+            if translation == 1:
                 self.supports_spring_x.append(self.node_map[id_])
-
-            elif translation == 2:  # translation spring in z-axis
-                self.set_displacement_vector([(id_, 1)])
-
-                # add the support to the support list for the plotter
+            elif translation == 2:
                 self.supports_spring_z.append(self.node_map[id_])
-
-            elif translation == 3:  # rotational spring in y-axis
-                self.set_displacement_vector([(id_, 1), (id_, 2)])
-
-                # add the support to the support list for the plotter
+            else:
                 self.supports_spring_y.append(self.node_map[id_])
+
+            if not roll:  # fix the other d.o.f.
+                if translation == 1:  # translation spring in x-axis
+                    self.set_displacement_vector([(id_, 2)])
+                elif translation == 2:  # translation spring in z-axis
+                    self.set_displacement_vector([(id_, 1)])
+                elif translation == 3:  # rotational spring in y-axis
+                    self.set_displacement_vector([(id_, 1), (id_, 2)])
 
     def _dead_load(self, g, element_id):
         self.loads_dead_load.append((element_id, g))
@@ -737,8 +736,6 @@ class SystemElements:
         element.element_primary_force_vector[1] -= Fz
         element.element_primary_force_vector[3] -= Fx
         element.element_primary_force_vector[4] -= Fz
-
-        print(Fx, Fz)
 
         self.set_force_vector([
             (element.node_1.id, 2, Fz), (element.node_2.id, 2, Fz),
@@ -874,7 +871,8 @@ class SystemElements:
                     "length": el.l,
                     "alpha": el.ai,
                     "u": el.extension[0],
-                    "N": el.N
+                    "N_1": el.N_1,
+                    "N_2": el.N_2
                 }
             else:
                 return {
@@ -882,7 +880,8 @@ class SystemElements:
                     "length": el.l,
                     "alpha": el.ai,
                     "u": el.extension[0],
-                    "N": el.N,
+                    "N_1": el.N_1,
+                    "N_2": el.N_2,
                     "wmax": np.min(el.deflection),
                     "wmin": np.max(el.deflection),
                     "w": el.deflection if verbose else None,
@@ -901,7 +900,8 @@ class SystemElements:
                         "length": el.l,
                         "alpha": el.ai,
                         "u": el.extension[0],
-                        "N": el.N
+                        "N_1": el.N_1,
+                        "N_2": el.N_2
                     }
                     )
 
@@ -924,6 +924,10 @@ class SystemElements:
                         }
                     )
             return result_list
+
+    def get_element_result_range(self, unit):
+        if unit == "shear":
+            return [el.shear_force[0] for el in self.element_map.values()]
 
     def find_node_id(self, vertex):
         """
