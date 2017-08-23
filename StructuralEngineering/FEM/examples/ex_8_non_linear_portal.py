@@ -22,10 +22,10 @@ ss.add_truss_element([[0, 4], [4, 4]])
 ss.add_support_hinged(1)
 ss.add_support_fixed(7)
 
-ss.q_load(20, 3)
-ss.q_load(20, 4)
-ss.q_load(1, 1)
-ss.q_load(1, 2)
+ss.q_load(-20, 3)
+ss.q_load(-20, 4)
+ss.q_load(-1, 1)
+ss.q_load(-1, 2)
 ss.solve()
 
 u4 = (ss.get_node_displacements(4)["uz"]**2 + ss.get_node_displacements(4)["ux"]**2)**0.5 * 1000

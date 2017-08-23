@@ -83,7 +83,7 @@ class SimpleTest(unittest.TestCase):
         ss.add_element([[0, 0], [7, 0]], spring={2: 0})
         ss.add_element([7.1, 0])
         ss.add_support_fixed([1, 3])
-        ss.q_load(10, 1)
+        ss.q_load(-10, 1)
         ss.solve()
         self.assertAlmostEqual(-61.25, ss.get_node_results_system(1)["Ty"], places=2)
 

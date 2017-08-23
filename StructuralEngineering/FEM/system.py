@@ -32,6 +32,11 @@ class SystemElements:
         self.figsize = figsize
         self.xy_cs = xy_cs
 
+        if xy_cs:
+            self.direction_factor = -1
+        else:
+            self.direction_factor = 1
+
         # structure system
         self.element_map = {}  # maps element ids to the Element objects.
         self.node_map = {}  # maps node ids to the Node objects.
@@ -109,7 +114,7 @@ class SystemElements:
                         direction 3: phi_y
         :return element id: (int)
         """
-        element_type = kwargs.get("type", "general")
+        element_type = kwargs.get("element_type", "general")
 
         EA = self.EA if EA is None else EA
         EI = self.EI if EI is None else EI
@@ -153,7 +158,7 @@ class SystemElements:
         self._dead_load(g, element.id)
         return self.count
 
-    def _det_vertices(self, location_list):
+    def _det_vertices(self, location_list, original=False):
         if isinstance(location_list, Vertex_xz):
             point_1 = self._previous_point
             point_2 = location_list
@@ -171,7 +176,7 @@ class SystemElements:
             point_2 = Vertex_xz(location_list[1][0], location_list[1][1])
         self._previous_point = point_2
 
-        if self.xy_cs:
+        if self.xy_cs and not original:
             point_1 = Vertex_xz(point_1.x, -point_1.z)
             point_2 = Vertex_xz(point_2.x, -point_2.z)
         return point_1, point_2
@@ -283,8 +288,68 @@ class SystemElements:
                     if not pass_hinge:
                         del spring[node]  # too many hinges at that element.
 
-    def add_multiple_elements(self, location_list, n=None, dl=None):
-        pass
+    def add_multiple_elements(self, location_list, n=None, dl=None, EA=None, EI=None, g=0, mp=None, spring=None,
+                              **kwargs):
+        """
+        Add multiple elements defined by the first and the last point.
+
+        :param location_list: See 'add_element' method
+        :param n: (int) Number of elements.
+        :param dl: (flt) Distance between the elements nodes.
+        :param EA: See 'add_element' method
+        :param EI: See 'add_element' method
+        :param g: See 'add_element' method
+        :param mp: See 'add_element' method
+        :param spring: See 'add_element' method
+        :param kwargs:
+                element_type: (str) See 'add_element' method
+                first: (dict) Different arguments for the first element
+                last: (dict) Different arguments for the last element
+                     Example:
+                     last = {'EA': 1e3, 'mp': 290}
+        :return: (list) Element id's
+        """
+
+        first = kwargs.get("first", {})
+        last = kwargs.get("last", {})
+        element_type = kwargs.get("element_type", "general")
+
+        for el in (first, last):
+            if "EA" not in el:
+                el["EA"] = EA
+            if "EI" not in el:
+                el["EI"] = EI
+            if "g" not in el:
+                el["g"] = g
+            if "mp" not in el:
+                el["mp"] = mp
+            if "spring" not in el:
+                el["spring"] = spring
+            if "element_type" not in el:
+                el["element_type"] = element_type
+
+        point_1, point_2 = self._det_vertices(location_list, original=True)
+        length = (point_2 - point_1).modulus()
+        direction = (point_2 - point_1).unit()
+
+        if type(n) == type(dl):
+            raise FEMException("Wrong parameters", "One, and only one, of n and dl should be passed as argument.")
+        elif n:
+            dl = length / n
+
+        point = point_1 + direction * dl
+        elements = [self.add_element([point_1, point], first["EA"], first["EI"], first["g"], first["mp"], first["spring"],
+                         element_type=first["element_type"])]
+
+        l = 2 * dl
+        while l < length:
+            point += direction * dl
+            elements.append(self.add_element(point, EA, EI, g, mp, spring, element_type=element_type))
+            l += dl
+
+        elements.append(self.add_element(point_2, last["EA"], last["EI"], last["g"], last["mp"], last["spring"],
+                         element_type=last["element_type"]))
+        return elements
 
     def _det_system_matrix_location(self, element):
         """
@@ -672,7 +737,7 @@ class SystemElements:
 
     def q_load(self, q, element_id, direction="element"):
         """
-        :param element_id: (int) representing the element ID
+        :param element_id: (int/ list) representing the element ID
         :param q: (flt) value of the q-load
         :param direction: (str) "element", "x", "y"
         :return: (None)
@@ -681,11 +746,14 @@ class SystemElements:
             element_id = (element_id,)
             q = (q,)
 
+        if type(q) != type(element_id):  # arguments should be q, [id_1, [id_2]
+            q = [q for _ in element_id]
+
         for i in range(len(element_id)):
-            self.plotter.max_q = max(self.plotter.max_q, q[i])
-            self.loads_q[element_id[i]] = q[i]
+            self.plotter.max_q = max(self.plotter.max_q, abs(q[i]))
+            self.loads_q[element_id[i]] = q[i] * self.direction_factor
             el = self.element_map[element_id[i]]
-            el.q_load = q[i]
+            el.q_load = q[i] * self.direction_factor
             el.q_direction = direction
 
     def _apply_perpendicular_q_load(self):
@@ -847,22 +915,18 @@ class SystemElements:
                     [(id,  ux, uz, phi_y), (id, ux, uz), () .. ]
                 if node_id > 0: (dict)
         """
-        if self.xy_cs:
-            a = -1
-        else:
-            a = 1
         result_list = []
         if node_id != 0:
             node = self.node_map[node_id]
             return {
                 "id": node.id,
                 "ux": -node.ux,
-                "uz": a * node.uz,
+                "uz": self.direction_factor * node.uz,
                 "phi_y": node.phi_y
             }
         else:
             for node in self.node_map.values():
-                result_list.append((node.id, -node.ux, a * node.uz, node.phi_y))
+                result_list.append((node.id, -node.ux, self.direction_factor * node.uz, node.phi_y))
         return result_list
 
     def get_element_results(self, element_id=0, verbose=False):
@@ -949,10 +1013,9 @@ class SystemElements:
         if isinstance(vertex, (list, tuple)):
             vertex = Vertex_xz(vertex)
         try:
-            a = -1 if self.xy_cs else 1
             tol = 1e-9
             return next(filter(lambda x: math.isclose(x.vertex.x, vertex.x, abs_tol=tol)
-                               and math.isclose(x.vertex.z, vertex.z * a, abs_tol=tol),
+                               and math.isclose(x.vertex.z, vertex.z * self.direction_factor, abs_tol=tol),
                                self.node_map.values())).id
         except StopIteration:
             return None
