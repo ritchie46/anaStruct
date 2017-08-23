@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from StructuralEngineering.basic import converge, angle_x_axis
+from StructuralEngineering.basic import converge, angle_x_axis, FEMException
 from StructuralEngineering.FEM.postprocess import SystemLevel as post_sl
 from StructuralEngineering.FEM.elements import Element, det_moment, det_shear
 from StructuralEngineering.FEM.node import Node
@@ -117,133 +117,12 @@ class SystemElements:
         # add the element number
         self.count += 1
 
-        if isinstance(location_list, Vertex_xz):
-            point_1 = self._previous_point
-            point_2 = location_list
-        elif len(location_list) == 1:
-            point_1 = self._previous_point
-            point_2 = Vertex_xz(location_list[0][0], location_list[0][1])
-        elif isinstance(location_list[0], (int, float)):
-            point_1 = self._previous_point
-            point_2 = Vertex_xz(location_list[0], location_list[1])
-        elif isinstance(location_list[0], Vertex_xz):
-            point_1 = location_list[0]
-            point_2 = location_list[1]
-        else:
-            point_1 = Vertex_xz(location_list[0][0], location_list[0][1])
-            point_2 = Vertex_xz(location_list[1][0], location_list[1][1])
-        self._previous_point = point_2
-
-        if self.xy_cs:
-            point_1 = Vertex_xz(point_1.x, -point_1.z)
-            point_2 = Vertex_xz(point_2.x, -point_2.z)
-
-        # determine the angle of the element with the global x-axis
-        delta_x = point_2.x - point_1.x
-        delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
-        ai = angle_x_axis(delta_x, delta_z)
-
-        node_id1 = 1
-        node_id2 = 2
-        existing_node1 = False
-        existing_node2 = False
-
-        if len(self.element_map) != 0:
-            count = 1
-            for el in self.element_map.values():
-                # check if node 1 of the element meets another node. If so, both have the same node_id
-                if el.vertex_1 == point_1:
-                    node_id1 = el.node_id1
-                    existing_node1 = True
-                elif el.vertex_2 == point_1:
-                    node_id1 = el.node_id2
-                    existing_node1 = True
-                elif count == len(self.element_map) and existing_node1 is False:
-                    self.max_node_id += 1
-                    node_id1 = self.max_node_id
-
-                # check for node 2
-                if el.vertex_1 == point_2:
-                    node_id2 = el.node_id1
-                    existing_node2 = True
-                elif el.vertex_2 == point_2:
-                    node_id2 = el.node_id2
-                    existing_node2 = True
-                elif count == len(self.element_map) and existing_node2 is False:
-                    self.max_node_id += 1
-                    node_id2 = self.max_node_id
-                count += 1
-
-            if 0.5 * math.pi < ai < 1.5 * math.pi:
-                # switch points
-                p = point_1
-                point_1 = point_2
-                point_2 = p
-                delta_x = point_2.x - point_1.x
-                delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
-                ai = angle_x_axis(delta_x, delta_z)
-
-                id_ = node_id1
-                node_id1 = node_id2
-                node_id2 = id_
-
-                if spring is not None:
-                    if 1 in spring and 2 in spring:
-                        k1 = spring[1]
-                        spring[1] = spring[2]
-                        spring[2] = k1
-                    elif 1 in spring:
-                        spring[2] = spring.pop(1)
-                    elif 2 in spring:
-                        spring[1] = spring.pop(2)
-
-                if mp is not None:
-                    if 1 in mp and 2 in mp:
-                        m1 = mp[1]
-                        mp[1] = mp[2]
-                        mp[2] = m1
-                    elif 1 in mp:
-                        mp[2] = mp.pop(1)
-                    elif 2 in mp:
-                        mp[1] = mp.pop(2)
-
-        # append the nodes to the system nodes list
-        id1 = False
-        id2 = False
-
-        if node_id1 in self.node_map:
-            id1 = True  # node_id1 already in system
-        if node_id2 in self.node_map:
-            id2 = True  # node_id1 already in system
-
-        if id1 is False:
-            node = Node(id=node_id1, vertex=point_1)
-            self.node_map[node_id1] = node
-        if id2 is False:
-            node = Node(id=node_id2, vertex=point_2)
-            self.node_map[node_id2] = node
-
-        if spring is not None and 0 in spring:
-            """
-            Must be one rotational fixed element per node. Thus keep track of the hinges (k == 0).
-            """
-
-            for node in range(1, 3):
-
-                if spring[node] == 0:  # node is a hinged node
-                    if node == 1:
-                        node_id = node_id1
-                    else:
-                        node_id = node_id2
-
-                    self.node_map[node_id].hinge = True
-
-                    if len(self.node_map[node_id].elements) > 0:
-                        pass_hinge = not all([el.hinge == node for el in self.node_map[node_id].elements.values()])
-                    else:
-                        pass_hinge = True
-                    if not pass_hinge:
-                        del spring[node]  # too many hinges at that element.
+        point_1, point_2 = self._det_vertices(location_list)
+        node_id1, node_id2 = self._det_node_ids(point_1, point_2)
+        point_1, point_2, node_id1, node_id2, spring, mp, ai = \
+            self._force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp)
+        self._append_node_id(point_1, point_2, node_id1, node_id2)
+        self._ensure_single_hinge(spring, node_id1, node_id2)
 
         # determine the length of the elements
         point = point_2 - point_1
@@ -273,6 +152,139 @@ class SystemElements:
         self._det_system_matrix_location(element)
         self._dead_load(g, element.id)
         return self.count
+
+    def _det_vertices(self, location_list):
+        if isinstance(location_list, Vertex_xz):
+            point_1 = self._previous_point
+            point_2 = location_list
+        elif len(location_list) == 1:
+            point_1 = self._previous_point
+            point_2 = Vertex_xz(location_list[0][0], location_list[0][1])
+        elif isinstance(location_list[0], (int, float)):
+            point_1 = self._previous_point
+            point_2 = Vertex_xz(location_list[0], location_list[1])
+        elif isinstance(location_list[0], Vertex_xz):
+            point_1 = location_list[0]
+            point_2 = location_list[1]
+        else:
+            point_1 = Vertex_xz(location_list[0][0], location_list[0][1])
+            point_2 = Vertex_xz(location_list[1][0], location_list[1][1])
+        self._previous_point = point_2
+
+        if self.xy_cs:
+            point_1 = Vertex_xz(point_1.x, -point_1.z)
+            point_2 = Vertex_xz(point_2.x, -point_2.z)
+        return point_1, point_2
+
+    def _det_node_ids(self, point_1, point_2):
+        existing_node1 = False
+        existing_node2 = False
+
+        if len(self.element_map) != 0:
+            count = 1
+            for el in self.element_map.values():
+                # check if node 1 of the element meets another node. If so, both have the same node_id
+                if el.vertex_1 == point_1:
+                    node_id1 = el.node_id1
+                    existing_node1 = True
+                elif el.vertex_2 == point_1:
+                    node_id1 = el.node_id2
+                    existing_node1 = True
+                elif count == len(self.element_map) and existing_node1 is False:
+                    self.max_node_id += 1
+                    node_id1 = self.max_node_id
+
+                # check for node 2
+                if el.vertex_1 == point_2:
+                    node_id2 = el.node_id1
+                    existing_node2 = True
+                elif el.vertex_2 == point_2:
+                    node_id2 = el.node_id2
+                    existing_node2 = True
+                elif count == len(self.element_map) and existing_node2 is False:
+                    self.max_node_id += 1
+                    node_id2 = self.max_node_id
+
+                count += 1
+        else:
+            node_id1 = 1
+            node_id2 = 2
+        return node_id1, node_id2
+
+    @staticmethod
+    def _force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp):
+        """
+        :return: point_1, point_2, node_id1, node_id2, spring, mp, ai
+        """
+        # determine the angle of the element with the global x-axis
+        delta_x = point_2.x - point_1.x
+        delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
+        ai = angle_x_axis(delta_x, delta_z)
+
+        if 0.5 * math.pi < ai < 1.5 * math.pi:
+            # switch points
+            p = point_1
+            point_1 = point_2
+            point_2 = p
+            delta_x = point_2.x - point_1.x
+            delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
+            ai = angle_x_axis(delta_x, delta_z)
+
+            id_ = node_id1
+            node_id1 = node_id2
+            node_id2 = id_
+
+            if spring is not None:
+                if 1 in spring and 2 in spring:
+                    k1 = spring[1]
+                    spring[1] = spring[2]
+                    spring[2] = k1
+                elif 1 in spring:
+                    spring[2] = spring.pop(1)
+                elif 2 in spring:
+                    spring[1] = spring.pop(2)
+
+            if mp is not None:
+                if 1 in mp and 2 in mp:
+                    m1 = mp[1]
+                    mp[1] = mp[2]
+                    mp[2] = m1
+                elif 1 in mp:
+                    mp[2] = mp.pop(1)
+                elif 2 in mp:
+                    mp[1] = mp.pop(2)
+        return point_1, point_2, node_id1, node_id2, spring, mp, ai
+
+    def _append_node_id(self, point_1, point_2, node_id1, node_id2):
+        if node_id1 not in self.node_map:
+            self.node_map[node_id1] = Node(node_id1, vertex=point_1)
+        if node_id2 not in self.node_map:
+            self.node_map[node_id2] = Node(node_id2, vertex=point_2)
+
+    def _ensure_single_hinge(self, spring, node_id1, node_id2):
+        if spring is not None and 0 in spring:
+            """
+            Must be one rotational fixed element per node. Thus keep track of the hinges (k == 0).
+            """
+
+            for node in range(1, 3):
+                if spring[node] == 0:  # node is a hinged node
+                    if node == 1:
+                        node_id = node_id1
+                    else:
+                        node_id = node_id2
+
+                    self.node_map[node_id].hinge = True
+
+                    if len(self.node_map[node_id].elements) > 0:
+                        pass_hinge = not all([el.hinge == node for el in self.node_map[node_id].elements.values()])
+                    else:
+                        pass_hinge = True
+                    if not pass_hinge:
+                        del spring[node]  # too many hinges at that element.
+
+    def add_multiple_elements(self, location_list, n=None, dl=None):
+        pass
 
     def _det_system_matrix_location(self, element):
         """

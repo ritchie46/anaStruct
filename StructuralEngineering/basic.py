@@ -382,3 +382,9 @@ def integrate_array(y, dx):
     for i in range(y.size - 1):
         y_int[i + 1] = y_int[i] + y[i + 1] * dx
     return y_int
+
+
+class FEMException(Exception):
+    def __init__(self, type_, message):
+        self.type = type_
+        self.message = message

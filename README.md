@@ -29,6 +29,25 @@ $ pip install git+https://github.com/ritchie46/structural_engineering.git
 ## 2D FEM Frames and Trusses
 ![](images/rand/structure.png)
 
+## Development version
+
+* trusses :heavy_check_mark:
+* beams :heavy_check_mark:
+* moment lines :heavy_check_mark:
+* axial force lines :heavy_check_mark:
+* shear force lines :heavy_check_mark:
+* displacement lines :heavy_check_mark:
+* hinged supports :heavy_check_mark:
+* fixed supports :heavy_check_mark:
+* spring supports :heavy_check_mark:
+* q-load in elements direction :heavy_check_mark:
+* point loads in global x, y directions on nodes :heavy_check_mark:
+* dead load :heavy_check_mark:
+* q-loads in global y direction :heavy_check_mark:
+* hinged elements :heavy_check_mark:
+* rotational springs :heavy_check_mark:
+* non-linear nodes :heavy_check_mark:
+* geometrical non linearity :heavy_multiplication_x:
 
 ```python
 # if using ipython notebook
