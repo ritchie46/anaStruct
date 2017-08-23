@@ -833,7 +833,7 @@ class SystemElements:
 
         for i in range(len(node_id)):
             self.plotter.max_system_point_load = max(self.plotter.max_system_point_load, (Fx[i]**2 + Fz[i]**2)**0.5)
-            self.loads_point.append((node_id[i], Fx[i], Fz[i]))
+            self.loads_point.append((node_id[i], Fx[i], Fz[i] * self.direction_factor))
 
     def _apply_point_load(self):
         for node_id, Fx, Fz in self.loads_point:
