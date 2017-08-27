@@ -29,8 +29,8 @@ ss.q_load(-1, 2)
 
 if __name__ == "__main__":
     ss.solve()
-    ss.show_structure()
-    ss.show_displacement()
-    ss.show_bending_moment()
+    # ss.show_structure()
+    # ss.show_displacement()
+    # ss.show_bending_moment()
 
 

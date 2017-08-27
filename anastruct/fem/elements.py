@@ -44,8 +44,7 @@ class Element:
         self.node_id1 = None  # int
         self.node_id2 = None  # int
         self.node_ids = []
-        self.node_1 = None  # node object
-        self.node_2 = None  # node object
+        self.node_map = None
         self.element_displacement_vector = np.empty(6)
         self.element_primary_force_vector = np.zeros(6)  # acting external forces
         self.element_force_vector = None
@@ -77,6 +76,14 @@ class Element:
             q = self.q_load * q_factor
 
         return q + self.dead_load * math.cos(self.ai)
+
+    @property
+    def node_1(self):
+        return self.node_map[self.node_id1]
+
+    @property
+    def node_2(self):
+        return self.node_map[self.node_id2]
 
     def determine_force_vector(self):
         self.element_force_vector = np.dot(self.stiffness_matrix, self.element_displacement_vector)

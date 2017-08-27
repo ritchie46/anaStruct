@@ -3,7 +3,7 @@ import time
 import os
 import subprocess
 
-save = True
+save = False
 min_ = 1e8
 n = 25
 

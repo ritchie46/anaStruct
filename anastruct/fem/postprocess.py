@@ -22,44 +22,27 @@ class SystemLevel:
             # post processor element level
             self.post_el.node_results(el)
 
-        count = 0
-        for node in self.system.node_map.values():
-            # reset nodes in case of iterative calculation
-            self.system.node_map[node.id].reset()
+            for node in (el.node_1, el.node_2):
+                # reset nodes in case of iterative calculation
+                self.system.node_map[node.id].reset()
+                self.system.node_map[node.id] -= node
+                self.system.node_map[node.id].ux = -node.ux
+                self.system.node_map[node.id].uz = -node.uz
+                self.system.node_map[node.id].phi_y = -node.phi_y
 
-            for el in self.system.element_map.values():
-                # Minus sign, because the node force is opposite of the element force.
-                if el.node_1.id == node.id:
-                    self.system.node_map[node.id] -= el.node_1
-                    self.system.node_map[node.id].ux = -el.node_1.ux
-                    self.system.node_map[node.id].uz = -el.node_1.uz
-                    self.system.node_map[node.id].phi_y = -el.node_1.phi_y
-                elif el.node_2.id == node.id:
-                    self.system.node_map[node.id] -= el.node_2
-                    self.system.node_map[node.id].ux = -el.node_2.ux
-                    self.system.node_map[node.id].uz = -el.node_2.uz
-                    self.system.node_map[node.id].phi_y = -el.node_2.phi_y
+        for node_id, _, m in self.system.loads_moment:
+            """
+            tuple (nodeID, direction=3, Ty)
+            """
 
-            # Loads that are applied on the node of the support. Moment at a hinged support may not lead to reaction
-            # moment
-            for F_tuple in self.system.loads_moment:
-                """
-                tuple (nodeID, direction=3, Ty)
-                """
-                if F_tuple[0] == node.id:
-                    self.system.node_map[node.id].Ty += F_tuple[2]
+            self.system.node_map[node_id].Ty += m
 
-                # The displacements are not summarized. Therefore the displacements are set for every node 1.
-                # In order to ensure that every node is overwrote.
-                if el.node_1.id == node.id:
-                    self.system.node_map[node.id].ux = el.node_1.ux
-                    self.system.node_map[node.id].uz = el.node_1.uz
-                    self.system.node_map[node.id].phi_y = el.node_1.phi_y
-                if el.node_2.id == node.id:
-                    self.system.node_map[node.id].ux = el.node_2.ux
-                    self.system.node_map[node.id].uz = el.node_2.uz
-                    self.system.node_map[node.id].phi_y = el.node_2.phi_y
-            count += 1
+            # The displacements are not summarized. Therefore the displacements are set for every node 1.
+            # In order to ensure that every node is overwrote.
+            for el in self.system.node_element_map[node_id]:
+                self.system.node_map[node_id].ux = el.node_map[node_id].ux
+                self.system.node_map[node_id].uz = el.node_map[node_id].uz
+                self.system.node_map[node_id].phi_y = el.node_map[node_id].phi_y
 
     def reaction_forces(self):
         supports = []
@@ -108,8 +91,8 @@ class ElementLevel:
         Determine node results on the element level.
         """
 
-        element.node_1 = Node(
-            id=element.node_ids[0],
+        element.node_map[element.node_id1] = Node(
+            id=element.node_id1,
             Fx=element.element_force_vector[0] + element.element_primary_force_vector[0],
             Fz=element.element_force_vector[1] + element.element_primary_force_vector[1],
             Ty=element.element_force_vector[2] + element.element_primary_force_vector[2],
@@ -118,8 +101,8 @@ class ElementLevel:
             phi_y=element.element_displacement_vector[2],
         )
 
-        element.node_2 = Node(
-            id=element.node_ids[1],
+        element.node_map[element.node_id2] = Node(
+            id=element.node_id2,
             Fx=element.element_force_vector[3] + element.element_primary_force_vector[3],
             Fz=element.element_force_vector[4] + element.element_primary_force_vector[4],
             Ty=element.element_force_vector[5] + element.element_primary_force_vector[5],

@@ -32,7 +32,7 @@ if __name__ == "__main__":
     from copy import deepcopy
     ELEMENT_MAP = deepcopy(ss.element_map)
     min_ = 1e8
-    n = 10
+    n = 25
     save = True
 
     for i in range(n):

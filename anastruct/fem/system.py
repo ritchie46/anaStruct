@@ -40,6 +40,7 @@ class SystemElements:
         # structure system
         self.element_map = {}  # maps element ids to the Element objects.
         self.node_map = {}  # maps node ids to the Node objects.
+        self.node_element_map = {}  # maps node ids to Element objects
         self.system_spring_map = {}  # keys matrix index (for both row and columns), values K
 
         # list of removed indexes due to conditions
@@ -135,16 +136,20 @@ class SystemElements:
 
         # add element
         element = Element(self.count, EA, EI, l, ai, point_1, point_2, spring)
-        element.node_ids.append(node_id1)
-        element.node_ids.append(node_id2)
         element.node_id1 = node_id1
         element.node_id2 = node_id2
+        element.node_map = {node_id1: self.node_map[node_id1],
+                            node_id2: self.node_map[node_id2]}
 
-        element.node_1 = self.node_map[node_id1]
-        element.node_2 = self.node_map[node_id2]
         element.type = element_type
 
         self.element_map[self.count] = element
+
+        for node in (node_id1, node_id2):
+            if node in self.node_element_map:
+                self.node_element_map[node].append(element)
+            else:
+                self.node_element_map[node] = [element]
 
         # Register the elements per node
         for node_id in (node_id1, node_id2):
@@ -517,6 +522,7 @@ class SystemElements:
         # (Re)set force vectors
         for el in self.element_map.values():
             el.reset()
+
         self.system_force_vector = None
         self._apply_perpendicular_q_load()
         self._apply_point_load()
