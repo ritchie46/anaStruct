@@ -12,7 +12,7 @@ setup(
     author='Ritchie Vink',
     author_email='ritchie46@gmail.com',
     url='https://ritchievink.com',
-    license='MIT License',
+    license='GPL-3.0',
     packages=['anastruct', 'anastruct.fem', "anastruct.fem.examples",
               "anastruct.material"],
     install_requires=[

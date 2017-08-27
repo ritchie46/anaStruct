@@ -9,9 +9,9 @@ Shear deformation is not taken into account.
 
 
 class Element:
-    def __init__(self, id, EA, EI, l, ai, vertex_1, vertex_2, spring=None):
+    def __init__(self, id_, EA, EI, l, ai, vertex_1, vertex_2, spring=None):
         """
-        :param id: integer representing the elements ID
+        :param id_: integer representing the elements ID
         :param EA: Young's modulus * Area
         :param EI: Young's modulus * Moment of Inertia
         :param l: length
@@ -29,7 +29,7 @@ class Element:
                                  }
                             }
         """
-        self.id = id
+        self.id = id_
         self.type = None
         self.EA = EA
         self.EI = EI
