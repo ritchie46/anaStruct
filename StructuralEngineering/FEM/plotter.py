@@ -53,7 +53,7 @@ class Plotter:
         height = 0.05 * max_val
         for node in self.system.supports_fixed:
 
-            support_patch = mpatches.Rectangle((node.vertex.x - width * 0.5, - node.vertex.z - width * 0.5),
+            support_patch = mpatches.Rectangle((node.vertex.x - width * 0.5, - node.vertex.y - width * 0.5),
                                                width, height, color='r', zorder=9)
             self.one_fig.add_patch(support_patch)
 
@@ -64,7 +64,7 @@ class Plotter:
         if self.backend == "mpl":
             radius = 0.04 * max_val
             for node in self.system.supports_hinged:
-                support_patch = mpatches.RegularPolygon((node.vertex.x, -node.vertex.z - radius),
+                support_patch = mpatches.RegularPolygon((node.vertex.x, -node.vertex.y - radius),
                                                         numVertices=3, radius=radius, color='r', zorder=9)
                 self.one_fig.add_patch(support_patch)
 
@@ -75,7 +75,7 @@ class Plotter:
 
             for node in self.system.supports_hinged:
                 x.append(node.vertex.x)
-                y.append(-node.vertex.z - s / 1000)
+                y.append(-node.vertex.y - s / 1000)
             self.one_fig.scatter(x, y, color='r', zorder=9, marker='^', s=s)
 
     def __roll_support_patch(self, max_val):
@@ -89,19 +89,19 @@ class Plotter:
             direction = self.system.supports_roll_direction[count]
 
             if direction == 2:  # horizontal roll
-                support_patch = mpatches.RegularPolygon((node.vertex.x, -node.vertex.z - radius),
+                support_patch = mpatches.RegularPolygon((node.vertex.x, -node.vertex.y - radius),
                                                         numVertices=3, radius=radius, color='r', zorder=9)
                 self.one_fig.add_patch(support_patch)
-                y = -node.vertex.z - 2 * radius
+                y = -node.vertex.y - 2 * radius
                 self.one_fig.plot([node.vertex.x - radius, node.vertex.x + radius], [y, y], color='r')
             elif direction == 1:  # vertical roll
                 center = 0
                 x1 = center + math.cos(math.pi) * radius + node.vertex.x + radius
-                z1 = center + math.sin(math.pi) * radius - node.vertex.z
+                z1 = center + math.sin(math.pi) * radius - node.vertex.y
                 x2 = center + math.cos(math.radians(90)) * radius + node.vertex.x + radius
-                z2 = center + math.sin(math.radians(90)) * radius - node.vertex.z
+                z2 = center + math.sin(math.radians(90)) * radius - node.vertex.y
                 x3 = center + math.cos(math.radians(270)) * radius + node.vertex.x + radius
-                z3 = center + math.sin(math.radians(270)) * radius - node.vertex.z
+                z3 = center + math.sin(math.radians(270)) * radius - node.vertex.y
 
                 triangle = np.array([[x1, z1], [x2, z2], [x3, z3]])
                 # translate the support to the node
@@ -109,7 +109,7 @@ class Plotter:
                 support_patch = mpatches.Polygon(triangle, color='r', zorder=9)
                 self.one_fig.add_patch(support_patch)
 
-                y = -node.vertex.z - radius
+                y = -node.vertex.y - radius
                 self.one_fig.plot([node.vertex.x + radius * 1.5, node.vertex.x + radius * 1.5], [y, y + 2 * radius],
                                   color='r')
             count += 1
@@ -129,7 +129,7 @@ class Plotter:
             count = 0
             for angle in theta:
                 x = math.cos(angle) * r[count] + node.vertex.x
-                y = math.sin(angle) * r[count] - radius - node.vertex.z
+                y = math.sin(angle) * r[count] - radius - node.vertex.y
                 x_val.append(x)
                 y_val.append(y)
                 count += 1
@@ -137,7 +137,7 @@ class Plotter:
             self.one_fig.plot(x_val, y_val, color='r', zorder=9)
 
             # Triangle
-            support_patch = mpatches.RegularPolygon((node.vertex.x, -node.vertex.z - radius * 3),
+            support_patch = mpatches.RegularPolygon((node.vertex.x, -node.vertex.y - radius * 3),
                                                     numVertices=3, radius=radius * 0.9, color='r', zorder=9)
             self.one_fig.add_patch(support_patch)
 
@@ -160,14 +160,14 @@ class Plotter:
             yval = yval * dh
             xval = np.array([0, 0, left, right, left, right, left, 0, 0])
 
-            yval = yval - node.vertex.z
+            yval = yval - node.vertex.y
             xval = xval + node.vertex.x
 
             self.one_fig.plot(xval, yval, color='r', zorder=10)
 
             if self.backend == "mpl":
                 # Triangle
-                support_patch = mpatches.RegularPolygon((node.vertex.x, -node.vertex.z - h * 2.6),
+                support_patch = mpatches.RegularPolygon((node.vertex.x, -node.vertex.y - h * 2.6),
                                                         numVertices=3, radius=h * 0.9, color='r', zorder=10)
                 self.one_fig.add_patch(support_patch)
             else:
@@ -186,17 +186,17 @@ class Plotter:
             yval = np.array([0, 0, left, right, left, right, left, 0, 0])
 
             xval += node.vertex.x
-            yval -= node.vertex.z
+            yval -= node.vertex.y
             self.one_fig.plot(xval, yval, color='r', zorder=10)
 
             if self.backend == "mpl":
                 # Triangle
-                support_patch = mpatches.RegularPolygon((node.vertex.x + h * 1.7, -node.vertex.z - h),
+                support_patch = mpatches.RegularPolygon((node.vertex.x + h * 1.7, -node.vertex.y - h),
                                                         numVertices=3, radius=h * 0.9, color='r', zorder=10)
                 self.one_fig.add_patch(support_patch)
             else:
                 x.append(node.vertex.x + h * 1.7)
-                y.append(-node.vertex.z - s / 2000)
+                y.append(-node.vertex.y - s / 2000)
 
             if self.backend != "mpl":
                 verts = [(0, 0), (-1, -1), (1, -1)]
@@ -221,9 +221,9 @@ class Plotter:
 
             h = 0.05 * max_val * abs(el.q_load) / self.max_q
             x1 = el.vertex_1.x
-            y1 = -el.vertex_1.z
+            y1 = -el.vertex_1.y
             x2 = el.vertex_2.x
-            y2 = -el.vertex_2.z
+            y2 = -el.vertex_2.y
 
             if el.q_direction == "y":
                 ai = 0
@@ -265,7 +265,7 @@ class Plotter:
         len_x = Fx / F * h
         len_y = -Fz / F * h
         x = node.vertex.x - len_x * 1.2
-        y = -node.vertex.z - len_y * 1.2
+        y = -node.vertex.y - len_y * 1.2
 
         return x, y, len_x, len_y, F
 
@@ -293,12 +293,12 @@ class Plotter:
         for F_tuple in self.system.loads_moment:
             node = self.system.node_map[F_tuple[0]]
             if F_tuple[2] > 0:
-                self.one_fig.plot(node.vertex.x, -node.vertex.z, marker=r'$\circlearrowleft$', ms=25,
+                self.one_fig.plot(node.vertex.x, -node.vertex.y, marker=r'$\circlearrowleft$', ms=25,
                               color='orange')
             else:
-                self.one_fig.plot(node.vertex.x, -node.vertex.z, marker=r'$\circlearrowright$', ms=25,
+                self.one_fig.plot(node.vertex.x, -node.vertex.y, marker=r'$\circlearrowright$', ms=25,
                               color='orange')
-            self.one_fig.text(node.vertex.x + h * 0.2, -node.vertex.z + h * 0.2, "T=%d" % F_tuple[2], color='k',
+            self.one_fig.text(node.vertex.x + h * 0.2, -node.vertex.y + h * 0.2, "T=%d" % F_tuple[2], color='k',
                               fontsize=9, zorder=10)
 
     def plot_structure(self, figsize, verbosity, show=False, supports=True, scale=1, offset=(0, 0)):
@@ -431,13 +431,13 @@ class Plotter:
                     point.displace_polar(alpha=el.ai + 0.5 * math.pi, radius=0.5 * el.N_1 * factor, inverse_z_axis=True)
 
                     if verbosity == 0:
-                        self.one_fig.text(point.x, -point.z, "-", ha='center', va='center',
+                        self.one_fig.text(point.x, -point.y, "-", ha='center', va='center',
                                           fontsize=20, color='b')
                 if el.N_1 > 0:
                     point.displace_polar(alpha=el.ai + 0.5 * math.pi, radius=0.5 * el.N_1 * factor, inverse_z_axis=True)
 
                     if verbosity == 0:
-                        self.one_fig.text(point.x, -point.z, "+", ha='center', va='center',
+                        self.one_fig.text(point.x, -point.y, "+", ha='center', va='center',
                                           fontsize=14, color='b')
 
         if show:
@@ -569,14 +569,14 @@ class Plotter:
                 '$...$': render the strings using mathtext
                 """
                 if node.Ty > 0:
-                    self.one_fig.plot(node.vertex.x, -node.vertex.z, marker=r'$\circlearrowleft$', ms=25,
+                    self.one_fig.plot(node.vertex.x, -node.vertex.y, marker=r'$\circlearrowleft$', ms=25,
                                       color='orange')
                 if node.Ty < 0:
-                    self.one_fig.plot(node.vertex.x, -node.vertex.z, marker=r'$\circlearrowright$', ms=25,
+                    self.one_fig.plot(node.vertex.x, -node.vertex.y, marker=r'$\circlearrowright$', ms=25,
                                       color='orange')
 
                 if verbosity == 0:
-                    self.one_fig.text(node.vertex.x + h * 0.2, -node.vertex.z + h * 0.2, "T=%s" % round(node.Ty, 2),
+                    self.one_fig.text(node.vertex.x + h * 0.2, -node.vertex.y + h * 0.2, "T=%s" % round(node.Ty, 2),
                                   color='k', fontsize=9, zorder=10)
         if show:
             self.plot()
@@ -627,15 +627,15 @@ class Plotter:
 
 def plot_values_element(element):
     x_val = [element.vertex_1.x, element.vertex_2.x]
-    y_val = [-element.vertex_1.z, -element.vertex_2.z]
+    y_val = [-element.vertex_1.y, -element.vertex_2.y]
     return x_val, y_val
 
 
 def plot_values_shear_force(element, factor=1):
     x1 = element.vertex_1.x
-    y1 = -element.vertex_1.z
+    y1 = -element.vertex_1.y
     x2 = element.vertex_2.x
-    y2 = -element.vertex_2.z
+    y2 = -element.vertex_2.y
 
     shear_1 = element.shear_force[0]
     shear_2 = element.shear_force[-1]
@@ -653,9 +653,9 @@ def plot_values_shear_force(element, factor=1):
 
 def plot_values_axial_force(element, factor):
     x1 = element.vertex_1.x
-    y1 = -element.vertex_1.z
+    y1 = -element.vertex_1.y
     x2 = element.vertex_2.x
-    y2 = -element.vertex_2.z
+    y2 = -element.vertex_2.y
 
     N1 = element.N_1
     N2 = element.N_2
@@ -678,9 +678,9 @@ def plot_values_bending_moment(element, factor, con):
     :return:
     """
     x1 = element.vertex_1.x
-    y1 = -element.vertex_1.z
+    y1 = -element.vertex_1.y
     x2 = element.vertex_2.x
-    y2 = -element.vertex_2.z
+    y2 = -element.vertex_2.y
 
     # Determine forces for horizontal element ai = 0
     T_left = element.node_1.Ty
@@ -713,9 +713,9 @@ def plot_values_bending_moment(element, factor, con):
         count += 1
 
     x_val = np.append(x_val, element.vertex_2.x)
-    y_val = np.append(y_val, -element.vertex_2.z)
+    y_val = np.append(y_val, -element.vertex_2.y)
     x_val = np.insert(x_val, 0, element.vertex_1.x)
-    y_val = np.insert(y_val, 0, -element.vertex_1.z)
+    y_val = np.insert(y_val, 0, -element.vertex_1.y)
 
     return x_val, y_val
 
@@ -727,9 +727,9 @@ def plot_values_deflection(element, factor, ax_range, linear=False):
     uz2 = -element.node_2.uz * factor
 
     x1 = element.vertex_1.x + ux1
-    y1 = -element.vertex_1.z + uz1
+    y1 = -element.vertex_1.y + uz1
     x2 = element.vertex_2.x + ux2
-    y2 = -element.vertex_2.z + uz2
+    y2 = -element.vertex_2.y + uz2
 
     if element.type == "general" and not linear:
         n = len(element.deflection)

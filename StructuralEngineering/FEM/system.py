@@ -4,7 +4,7 @@ from StructuralEngineering.basic import converge, angle_x_axis, FEMException
 from StructuralEngineering.FEM.postprocess import SystemLevel as post_sl
 from StructuralEngineering.FEM.elements import Element, det_moment, det_shear
 from StructuralEngineering.FEM.node import Node
-from StructuralEngineering.vertex import Vertex_xz
+from StructuralEngineering.vertex import Vertex
 from StructuralEngineering.FEM.plotter import Plotter
 
 
@@ -68,7 +68,7 @@ class SystemElements:
         self.non_linear_elements = {}  # keys are element ids, values are dicts: {node_index: max moment capacity}
 
         # previous point of element
-        self._previous_point = Vertex_xz(0, 0)
+        self._previous_point = Vertex(0, 0)
         self.load_factor = load_factor
 
         # Objects state
@@ -159,26 +159,26 @@ class SystemElements:
         return self.count
 
     def _det_vertices(self, location_list, original=False):
-        if isinstance(location_list, Vertex_xz):
+        if isinstance(location_list, Vertex):
             point_1 = self._previous_point
             point_2 = location_list
         elif len(location_list) == 1:
             point_1 = self._previous_point
-            point_2 = Vertex_xz(location_list[0][0], location_list[0][1])
+            point_2 = Vertex(location_list[0][0], location_list[0][1])
         elif isinstance(location_list[0], (int, float)):
             point_1 = self._previous_point
-            point_2 = Vertex_xz(location_list[0], location_list[1])
-        elif isinstance(location_list[0], Vertex_xz):
+            point_2 = Vertex(location_list[0], location_list[1])
+        elif isinstance(location_list[0], Vertex):
             point_1 = location_list[0]
             point_2 = location_list[1]
         else:
-            point_1 = Vertex_xz(location_list[0][0], location_list[0][1])
-            point_2 = Vertex_xz(location_list[1][0], location_list[1][1])
+            point_1 = Vertex(location_list[0][0], location_list[0][1])
+            point_2 = Vertex(location_list[1][0], location_list[1][1])
         self._previous_point = point_2
 
         if self.xy_cs and not original:
-            point_1 = Vertex_xz(point_1.x, -point_1.z)
-            point_2 = Vertex_xz(point_2.x, -point_2.z)
+            point_1 = Vertex(point_1.x, -point_1.y)
+            point_2 = Vertex(point_2.x, -point_2.y)
         return point_1, point_2
 
     def _det_node_ids(self, point_1, point_2):
@@ -223,7 +223,7 @@ class SystemElements:
         """
         # determine the angle of the element with the global x-axis
         delta_x = point_2.x - point_1.x
-        delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
+        delta_z = -point_2.y - -point_1.y  # minus sign to work with an opposite z-axis
         ai = angle_x_axis(delta_x, delta_z)
 
         if 0.5 * math.pi < ai < 1.5 * math.pi:
@@ -1011,11 +1011,11 @@ class SystemElements:
         :return: (int/ None) id of the node at the location of the vertex
         """
         if isinstance(vertex, (list, tuple)):
-            vertex = Vertex_xz(vertex)
+            vertex = Vertex(vertex)
         try:
             tol = 1e-9
             return next(filter(lambda x: math.isclose(x.vertex.x, vertex.x, abs_tol=tol)
-                               and math.isclose(x.vertex.z, vertex.z * self.direction_factor, abs_tol=tol),
+                               and math.isclose(x.vertex.y, vertex.y * self.direction_factor, abs_tol=tol),
                                self.node_map.values())).id
         except StopIteration:
             return None
@@ -1030,6 +1030,6 @@ class SystemElements:
         return list(
             map(
                 lambda x: x.vertex.x if coordinate == 'x'
-                else x.vertex.z if coordinate == 'z' else -x.vertex.z if coordinate == 'y'
+                else x.vertex.y if coordinate == 'z' else -x.vertex.y if coordinate == 'y'
                 else None,
                 self.node_map.values()))
