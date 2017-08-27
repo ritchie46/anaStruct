@@ -1,18 +1,18 @@
-from anastruct.fem.examples.ex_8_non_linear_portal import ss
-from copy import deepcopy
+from anastruct.fem.system import SystemElements
 import time
-import subprocess
 import os
+import subprocess
 
-ELEMENT_MAP = deepcopy(ss.element_map)
+save = True
 min_ = 1e8
 n = 25
-save = True
 
 for i in range(n):
     t0 = time.time()
-    ss.solve(verbosity=1)
-    ss.element_map = deepcopy(ELEMENT_MAP)
+    ss = SystemElements()
+    el = ss.add_multiple_elements([[0, 0], [10, 10]], n=500)
+    ss.point_load(ss.node_map.values(), Fz=1)
+    ss.q_load(1, el)
     t = time.time() - t0
     print(t)
     min_ = min(min_, t)
@@ -20,7 +20,7 @@ for i in range(n):
 print(f"Best of {n} = {min_} s.")
 
 if save:
-    with open("benchmark/non-linear-solve.csv", "a") as f:
+    with open("system-creation.csv", "a") as f:
         os.chdir("../../..")
         git_label = str(subprocess.check_output(["git", "describe", "--tags"])).replace('\\n', '').replace("'", "")[1:]
         f.write(f"{git_label}, {min_}\n")

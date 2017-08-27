@@ -501,15 +501,19 @@ class SystemElements:
         self.system_force_vector = original_force_vector
         self.system_matrix = original_system_matrix
 
-    def solve(self, gnl=False, force_linear=False, verbosity=0, max_iter=1000):
+    def solve(self, gnl=False, force_linear=False, verbosity=0, max_iter=1000, **kwargs):
         """
 
         :param gnl: (bool) Toggle geometrical non linear calculation.
         :param force_linear: (bool) Force a linear calculation. Even when the system has non linear nodes.
         :param verbosity: (int) 0. get calculation outputs. 1. silence.
         :param max_iter: (int) maximum allowed iterations.
+        :param kwargs: arguments for the iterative solver callers such as the _stiffness_adaptation method.
+                       naked (bool) Default = False, if True force lines won't be computed.
         :return: (array) Displacements vector.
         """
+        naked = kwargs.get("naked", False)
+
         # (Re)set force vectors
         for el in self.element_map.values():
             el.reset()
@@ -554,10 +558,13 @@ class SystemElements:
 
             el.determine_force_vector()
 
-        # determining the node results in post processing class
-        self.post_processor.node_results()
-        self.post_processor.reaction_forces()
-        self.post_processor.element_results()
+        if naked:
+            self.post_processor.node_results()
+        else:
+            # determining the node results in post processing class
+            self.post_processor.node_results()
+            self.post_processor.reaction_forces()
+            self.post_processor.element_results()
 
         # check the values in the displacement vector for extreme values, indicating a flawed calculation
         assert(np.any(self.system_displacement_vector < 1e6)), "The displacements of the structure exceed 1e6. " \
@@ -567,7 +574,7 @@ class SystemElements:
         return self.system_displacement_vector
 
     def _stiffness_adaptation(self, verbosity, max_iter):
-        self.solve(False, True)
+        self.solve(False, True, naked=True)
         if verbosity == 0:
             print("Starting stiffness adaptation calculation.")
 
@@ -592,8 +599,10 @@ class SystemElements:
                         el.update_stiffness(factor, node_no)
 
             if not np.allclose(factors, 1, 1e-3):
-                self.solve(force_linear=True)
+                self.solve(force_linear=True, naked=True)
             else:
+                self.post_processor.reaction_forces()
+                self.post_processor.element_results()
                 break
         if verbosity == 0:
             print("Solved in {} iterations".format(c))
