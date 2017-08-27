@@ -5,5 +5,5 @@ python:
 install: 
   - python setup.py install
 script:
-  - python ./StructuralEngineering/FEM/tests/test.py
+  - python ./anastruct/fem/tests/test.py
 

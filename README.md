@@ -1,7 +1,7 @@
-# StructuralEngineering 2D Frames and Trusses
+# anaStruct 2D Frames and Trusses
 [![Build Status](https://travis-ci.org/ritchie46/structural_engineering.svg?branch=master)](https://travis-ci.org/ritchie46/structural_engineering)
 
-Compute 2D Frames and trusses for slender structures. Determine the bending moment, shear force, normal force and displacements.
+Analise 2D Frames and trusses for slender structures. Determine the bending moment, shear force, normal force and displacements.
 
 ## Note!
 
@@ -23,7 +23,7 @@ $ pip install StructuralEngineering
 
 For the actively developed version:
 ```
-$ pip install git+https://github.com/ritchie46/structural_engineering.git
+$ pip install git+https://github.com/ritchie46/anaStruct.git
 ```
 
 ## 2D FEM Frames and Trusses
