@@ -1,5 +1,5 @@
 import unittest
-from StructuralEngineering.FEM import system as se
+from anastruct.fem import system as se
 import numpy as np
 
 

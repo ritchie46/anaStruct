@@ -1,4 +1,4 @@
-from StructuralEngineering.FEM.system import SystemElements
+from anastruct.fem.system import SystemElements
 
 """
 Test the primary force vector when applying a q_load at a hinged element.

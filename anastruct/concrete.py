@@ -2,8 +2,8 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
-from StructuralEngineering.basic import find_closest_index
-from StructuralEngineering.cross_section import CrossSection, Epsilon
+from anastruct.basic import find_closest_index
+from anastruct.cross_section import CrossSection, Epsilon
 
 
 class MaterialConcrete:

@@ -1,4 +1,4 @@
-from StructuralEngineering.FEM.system import SystemElements
+from anastruct.fem.system import SystemElements
 
 ss = SystemElements(plot_backend="plotly")
 ss.add_element([[0, 0], [1, 0]])

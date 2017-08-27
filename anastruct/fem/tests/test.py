@@ -1,7 +1,7 @@
 import unittest
-from StructuralEngineering.FEM import system as se
+from anastruct.fem import system as se
 import numpy as np
-from StructuralEngineering.FEM.examples.ex_8_non_linear_portal import u4, ss as SS_8
+from anastruct.fem.examples.ex_8_non_linear_portal import u4, ss as SS_8
 
 
 class SimpleTest(unittest.TestCase):
@@ -91,7 +91,7 @@ class SimpleTest(unittest.TestCase):
         """
         Test the rotational springs
         """
-        from StructuralEngineering.FEM.examples.ex_7_rotational_spring import ss
+        from anastruct.fem.examples.ex_7_rotational_spring import ss
         sol = np.fromstring("""0.          0.          0.          0.          0.23558645 -0.09665875
         0.          0.          0.06433688""", float, sep=" ")
         self.assertTrue(np.allclose(ss.solve(), sol))
@@ -103,7 +103,7 @@ class SimpleTest(unittest.TestCase):
         self.assertAlmostEqual(u4, 105.288412424)
 
     def test_ex_11(self):
-        from StructuralEngineering.FEM.examples.ex_11 import ss
+        from anastruct.fem.examples.ex_11 import ss
         ss.solve()
         el = ss.element_map[1]
         self.assertAlmostEqual(el.N_1, 27.8833333333)

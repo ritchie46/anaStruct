@@ -1,4 +1,4 @@
-from StructuralEngineering.FEM import system as se
+from anastruct.fem import system as se
 
 
 def run():

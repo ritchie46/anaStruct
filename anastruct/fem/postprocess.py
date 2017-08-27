@@ -2,8 +2,8 @@ import copy
 import math
 import numpy as np
 
-from StructuralEngineering.FEM.node import Node
-from StructuralEngineering.basic import is_moving_towards, integrate_array, angle_x_axis
+from anastruct.fem.node import Node
+from anastruct.basic import is_moving_towards, integrate_array, angle_x_axis
 
 
 class SystemLevel:

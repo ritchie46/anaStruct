@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from StructuralEngineering.intersection import do_intersect
-from StructuralEngineering.vertex import Vertex
+from anastruct.intersection import do_intersect
+from anastruct.vertex import Vertex
 
 
 class Epsilon:

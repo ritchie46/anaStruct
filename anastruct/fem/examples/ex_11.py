@@ -1,4 +1,4 @@
-from StructuralEngineering.FEM.system import SystemElements
+from anastruct.fem.system import SystemElements
 """
 Test dead loads on the structure. TO DO! Distributed axial force
 """

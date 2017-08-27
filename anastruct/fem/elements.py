@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from StructuralEngineering.FEM.node import Node
+from anastruct.fem.node import Node
 
 """
 The matrices underneath are for slender beams, where the most deformation occurs due to bending.
@@ -167,7 +167,7 @@ def stiffness_matrix(var_constitutive_matrix, var_kinematic_matrix):
 
 def det_moment(kl, kr, q, x, EI, L):
     """
-    See notebook in: StructuralEngineering/FEM/background/primary_m_v.ipynb
+    See notebook in: anastruct/fem/background/primary_m_v.ipynb
 
     :param kl: (flt) rotational stiffness left
     :param kr: (flt) rotational stiffness right
@@ -184,7 +184,7 @@ def det_moment(kl, kr, q, x, EI, L):
 
 def det_shear(kl, kr, q, x, EI, L):
     """
-    See notebook in: StructuralEngineering/FEM/background/primary_m_v.ipynb
+    See notebook in: anastruct/fem/background/primary_m_v.ipynb
 
     :param kl: (flt) rotational stiffness left
     :param kr: (flt) rotational stiffness right
@@ -200,7 +200,7 @@ def det_shear(kl, kr, q, x, EI, L):
 
 def det_axial(EA, L, q, x):
     """
-    See notebook in: StructuralEngineering/FEM/background/distributed_ax_force.ipynb
+    See notebook in: anastruct/fem/background/distributed_ax_force.ipynb
 
     :param q: (flt)
     :param x: (flt) Location of the axial force

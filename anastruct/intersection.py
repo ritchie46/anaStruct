@@ -1,4 +1,4 @@
-from StructuralEngineering.vertex import Vertex
+from anastruct.vertex import Vertex
 
 
 def on_segment(p, q, r):

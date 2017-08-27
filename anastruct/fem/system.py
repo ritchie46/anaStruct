@@ -1,11 +1,11 @@
 import math
 import numpy as np
-from StructuralEngineering.basic import converge, angle_x_axis, FEMException
-from StructuralEngineering.FEM.postprocess import SystemLevel as post_sl
-from StructuralEngineering.FEM.elements import Element, det_moment, det_shear
-from StructuralEngineering.FEM.node import Node
-from StructuralEngineering.vertex import Vertex
-from StructuralEngineering.FEM.plotter import Plotter
+from anastruct.basic import converge, angle_x_axis, FEMException
+from anastruct.fem.postprocess import SystemLevel as post_sl
+from anastruct.fem.elements import Element, det_moment, det_shear
+from anastruct.fem.node import Node
+from anastruct.vertex import Vertex
+from anastruct.fem.plotter import Plotter
 
 
 class SystemElements:

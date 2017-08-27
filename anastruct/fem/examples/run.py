@@ -1,6 +1,6 @@
-from StructuralEngineering.FEM.system import SystemElements
-from StructuralEngineering.material.profile import HEA
-from StructuralEngineering.material.units import to_kNm2, to_kN
+from anastruct.fem.system import SystemElements
+from anastruct.material.profile import HEA
+from anastruct.material.units import to_kNm2, to_kN
 import time
 
 

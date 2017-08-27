@@ -2,7 +2,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from StructuralEngineering.basic import find_nearest
+from anastruct.basic import find_nearest
 from plotly.offline import plot_mpl, iplot_mpl, init_notebook_mode
 
 
