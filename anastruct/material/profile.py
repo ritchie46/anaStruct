@@ -59,10 +59,8 @@ def load(st):
 
         headers = next(r)
         next(r)  # units not needed
-        print(headers)
         for row in r:
             params = {}
-            print(row)
             for i in range(1, len(row)):
                 k = headers[i]
                 v = float(row[i])

@@ -26,12 +26,9 @@ ss.q_load(-20, 3)
 ss.q_load(-20, 4)
 ss.q_load(-1, 1)
 ss.q_load(-1, 2)
-ss.solve()
-
-u4 = (ss.get_node_displacements(4)["uz"]**2 + ss.get_node_displacements(4)["ux"]**2)**0.5 * 1000
 
 if __name__ == "__main__":
-    print(u4)
+    ss.solve()
     ss.show_structure()
     ss.show_displacement()
     ss.show_bending_moment()

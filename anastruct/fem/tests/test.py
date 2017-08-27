@@ -1,7 +1,7 @@
 import unittest
 from anastruct.fem import system as se
 import numpy as np
-from anastruct.fem.examples.ex_8_non_linear_portal import u4, ss as SS_8
+from anastruct.fem.examples.ex_8_non_linear_portal import ss as SS_8
 
 
 class SimpleTest(unittest.TestCase):
@@ -100,6 +100,8 @@ class SimpleTest(unittest.TestCase):
         """
         Plastic hinges test
         """
+        SS_8.solve()
+        u4 = (SS_8.get_node_displacements(4)["uz"] ** 2 + SS_8.get_node_displacements(4)["ux"] ** 2) ** 0.5 * 1000
         self.assertAlmostEqual(u4, 105.288412424)
 
     def test_ex_11(self):

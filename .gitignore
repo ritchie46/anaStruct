@@ -75,7 +75,7 @@ ehthumbs.db
 Thumbs.db
 /StructuralEngineering.egg-info
 /dist
-
+MANIFEST
 
 /__pycache__
 *.pyc
