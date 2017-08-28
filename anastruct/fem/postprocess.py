@@ -23,27 +23,25 @@ class SystemLevel:
             self.post_el.node_results(el)
 
         for k, v in self.system.node_element_map.items():
-            node = v[0].node_map[k]
             # reset nodes in case of iterative calculation
             self.system.node_map[k].reset()
-            self.system.node_map[k] -= node
-            self.system.node_map[k].ux = -node.ux
-            self.system.node_map[k].uz = -node.uz
-            self.system.node_map[k].phi_y = -node.phi_y
 
-        for node_id, _, m in self.system.loads_moment:
-            """
-            tuple (nodeID, direction=3, Ty)
-            """
+            if k in self.system.loads_moment:
+                self.system.node_map[k].Ty += self.system.loads_moment[k]
 
-            self.system.node_map[node_id].Ty += m
+            if k in self.system.loads_point:
+                Fx, Fz = self.system.loads_point[k]
+                self.system.node_map[k].Fx += Fx
+                self.system.node_map[k].Fz += Fz
 
-            # The displacements are not summarized. Therefore the displacements are set for every node 1.
-            # In order to ensure that every node is overwrote.
-            for el in self.system.node_element_map[node_id]:
-                self.system.node_map[node_id].ux = el.node_map[node_id].ux
-                self.system.node_map[node_id].uz = el.node_map[node_id].uz
-                self.system.node_map[node_id].phi_y = el.node_map[node_id].phi_y
+            for i in range(len(v)):
+                node = v[i].node_map[k]
+                self.system.node_map[k] -= node
+
+                # The displacements are not summarized. Should be assigned only once
+                self.system.node_map[k].ux = -node.ux
+                self.system.node_map[k].uz = -node.uz
+                self.system.node_map[k].phi_y = -node.phi_y
 
     def reaction_forces(self):
         supports = []

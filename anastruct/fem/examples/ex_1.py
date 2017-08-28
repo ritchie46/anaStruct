@@ -12,6 +12,7 @@ def run():
     system.add_support_fixed(node_id=3)
 
     system.solve()
+    print(system.get_node_results_system())
     system.show_structure()
     system.show_reaction_force()
     system.show_axial_force()

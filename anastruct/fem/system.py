@@ -58,9 +58,9 @@ class SystemElements:
         self.supports_roll_direction = []
 
         # keep track of the loads
-        self.loads_point = []  # node ids with a point load
+        self.loads_point = {} # node ids with a point loads
         self.loads_q = {}  # element ids with a q-load
-        self.loads_moment = []
+        self.loads_moment = {}
         self.loads_dead_load = []  # element ids with q-load due to dead load
 
         # results
@@ -848,10 +848,11 @@ class SystemElements:
 
         for i in range(len(node_id)):
             self.plotter.max_system_point_load = max(self.plotter.max_system_point_load, (Fx[i]**2 + Fz[i]**2)**0.5)
-            self.loads_point.append((node_id[i], Fx[i], Fz[i] * self.direction_factor))
+            self.loads_point[node_id[i]] = (Fx[i], Fz[i] * self.direction_factor)
 
     def _apply_point_load(self):
-        for node_id, Fx, Fz in self.loads_point:
+        for node_id in self.loads_point:
+            Fx, Fz = self.loads_point[node_id]
             # system force vector.
             self.set_force_vector([(node_id, 1, Fx * self.load_factor), (node_id, 2, Fz * self.load_factor)])
 
@@ -861,10 +862,10 @@ class SystemElements:
             Ty = (Ty,)
 
         for i in range(len(node_id)):
-            self.loads_moment.append((node_id[i], 3, Ty[i]))
+            self.loads_moment[node_id[i]] = Ty[i]
 
     def _apply_moment_load(self):
-        for node_id, _, Ty in self.loads_moment:
+        for node_id, Ty in self.loads_moment.items():
             self.set_force_vector([(node_id, 3, Ty * self.load_factor)])
 
     def show_structure(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True, supports=True):

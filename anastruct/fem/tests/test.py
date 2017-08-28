@@ -111,6 +111,28 @@ class SimpleTest(unittest.TestCase):
         self.assertAlmostEqual(el.N_1, 27.8833333333)
         self.assertAlmostEqual(el.N_2, 17.8833333333)
 
+    def test_ex_12(self):
+        """
+        System nodes Ty equal to 0
+        """
+        from anastruct.fem.examples.ex_12 import ss
+        ss.solve()
+
+        sol = [6.6666666666666679, 3.5527136788005009e-15, -3.5527136788005009e-15, -6.6666666666666679]
+        sssol = [a[3] for a in ss.get_node_results_system()]
+        self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, sssol)]))
+
+    def test_ex_13(self):
+        """
+        System nodes Fx equal to 0
+        """
+        from anastruct.fem.examples.ex_13 import ss
+        ss.solve()
+
+        sol = [6.6666666666666661, 1.7763568394002505e-15, -8.8817841970012523e-16, -6.666666666666667]
+        sssol = [a[1] for a in ss.get_node_results_system()]
+        self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, sssol)]))
+
     def test_find_node_id(self):
         self.assertEqual(SS_8.find_node_id([4, 4]), 6)
         self.assertEqual(SS_8.find_node_id([3, -3]), None)
