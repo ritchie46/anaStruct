@@ -274,11 +274,10 @@ class Plotter:
         :param max_plot_range: max scale of the plot
         """
 
-        for F_tuple in self.system.loads_point:
-            Fx = F_tuple[1]
-            Fz = F_tuple[2]
+        for k in self.system.loads_point:
+            Fx, Fz = self.system.loads_point[k]
             F = (Fx**2 + Fz**2)**0.5
-            node = self.system.node_map[F_tuple[0]]
+            node = self.system.node_map[k]
             h = 0.1 * max_plot_range * F / self.max_system_point_load
             x, y, len_x, len_y, F = self.__arrow_patch_values(Fx, Fz, node, h)
 

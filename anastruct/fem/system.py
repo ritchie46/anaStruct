@@ -56,7 +56,7 @@ class SystemElements:
         self.supports_roll_direction = []
 
         # keep track of the loads
-        self.loads_point = {} # node ids with a point loads
+        self.loads_point = {}  # node ids with a point loads
         self.loads_q = {}  # element ids with a q-load
         self.loads_moment = {}
         self.loads_dead_load = []  # element ids with q-load due to dead load
