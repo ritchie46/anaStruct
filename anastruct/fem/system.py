@@ -560,9 +560,7 @@ class SystemElements:
 
             el.determine_force_vector()
 
-        if naked:
-            self.post_processor.node_results_elements()
-        else:
+        if not naked:
             # determining the node results in post processing class
             self.post_processor.node_results_elements()
             self.post_processor.node_results_system()
@@ -590,9 +588,11 @@ class SystemElements:
 
                 for node_no, mp in v.items():
                     if node_no == 1:
-                        m_e = el.node_1.Ty
+                        # Fast Ty
+                        m_e = el.element_force_vector[2] + el.element_primary_force_vector[2]
                     else:
-                        m_e = el.node_2.Ty
+                        # Fast Ty
+                        m_e = el.element_force_vector[5] + el.element_primary_force_vector[5]
 
                     if abs(m_e) > mp:
                         el.nodes_plastic[node_no - 1] = True
@@ -604,6 +604,7 @@ class SystemElements:
             if not np.allclose(factors, 1, 1e-3):
                 self.solve(force_linear=True, naked=True)
             else:
+                self.post_processor.node_results_elements()
                 self.post_processor.node_results_system()
                 self.post_processor.reaction_forces()
                 self.post_processor.element_results()
