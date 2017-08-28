@@ -22,13 +22,14 @@ class SystemLevel:
             # post processor element level
             self.post_el.node_results(el)
 
-            for node in (el.node_1, el.node_2):
-                # reset nodes in case of iterative calculation
-                self.system.node_map[node.id].reset()
-                self.system.node_map[node.id] -= node
-                self.system.node_map[node.id].ux = -node.ux
-                self.system.node_map[node.id].uz = -node.uz
-                self.system.node_map[node.id].phi_y = -node.phi_y
+        for k, v in self.system.node_element_map.items():
+            node = v[0].node_map[k]
+            # reset nodes in case of iterative calculation
+            self.system.node_map[k].reset()
+            self.system.node_map[k] -= node
+            self.system.node_map[k].ux = -node.ux
+            self.system.node_map[k].uz = -node.uz
+            self.system.node_map[k].phi_y = -node.phi_y
 
         for node_id, _, m in self.system.loads_moment:
             """
