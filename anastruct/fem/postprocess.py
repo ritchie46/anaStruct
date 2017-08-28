@@ -76,6 +76,7 @@ class SystemLevel:
         """
 
         for el in self.system.element_map.values():
+            self.post_el.determine_axial_force(el)
             con = self.system.plotter.mesh
             self.post_el.determine_bending_moment(el, con)
             self.post_el.determine_shear_force(el, con)
@@ -86,9 +87,11 @@ class ElementLevel:
     def __init__(self, system):
         self.system = system
 
-    def node_results(self, element):
+    @staticmethod
+    def node_results(element):
         """
         Determine node results on the element level.
+
         """
 
         element.node_map[element.node_id1] = Node(
@@ -111,10 +114,8 @@ class ElementLevel:
             phi_y=element.element_displacement_vector[5]
         )
 
-        self._determine_normal_force(element)
-
     @staticmethod
-    def _determine_normal_force(element):
+    def determine_axial_force(element):
         test_node = np.array([element.vertex_1.x, element.vertex_1.y])
         node_position = np.array([element.vertex_2.x, element.vertex_2.y])
         displacement = np.array([element.node_2.ux - element.node_1.ux, element.node_2.uz - element.node_1.uz])

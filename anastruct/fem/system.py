@@ -425,7 +425,6 @@ class SystemElements:
         Shape of the matrix = n nodes * n d.o.f.
         Shape = n * 3
         """
-        # if self.system_matrix is None:
         shape = len(self.node_map) * 3
         self.shape_system_matrix = shape
         self.system_matrix = np.zeros((shape, shape))
