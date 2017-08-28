@@ -71,7 +71,6 @@ class SystemElements:
         self.load_factor = load_factor
 
         # Objects state
-        self.max_node_id = 2  # minimum is 2, being 1 element
         self.count = 0
         self.system_matrix_locations = []
         self.system_matrix = None
@@ -80,6 +79,7 @@ class SystemElements:
         self.shape_system_matrix = None
         self.reduced_force_vector = None
         self.reduced_system_matrix = None
+        self._vertices = {}  # maps vertices to node ids
 
     def add_truss_element(self, location_list, EA=None):
         return self.add_element(location_list, EA, 1e-14, element_type='truss')
@@ -123,6 +123,7 @@ class SystemElements:
 
         point_1, point_2 = self._det_vertices(location_list)
         node_id1, node_id2 = self._det_node_ids(point_1, point_2)
+
         point_1, point_2, node_id1, node_id2, spring, mp, ai = \
             self._force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp)
         self._append_node_id(point_1, point_2, node_id1, node_id2)
@@ -185,39 +186,16 @@ class SystemElements:
         return point_1, point_2
 
     def _det_node_ids(self, point_1, point_2):
-        existing_node1 = False
-        existing_node2 = False
-
-        if len(self.element_map) != 0:
-            count = 1
-            for el in self.element_map.values():
-                # check if node 1 of the element meets another node. If so, both have the same node_id
-                if el.vertex_1 == point_1:
-                    node_id1 = el.node_id1
-                    existing_node1 = True
-                elif el.vertex_2 == point_1:
-                    node_id1 = el.node_id2
-                    existing_node1 = True
-                elif count == len(self.element_map) and existing_node1 is False:
-                    self.max_node_id += 1
-                    node_id1 = self.max_node_id
-
-                # check for node 2
-                if el.vertex_1 == point_2:
-                    node_id2 = el.node_id1
-                    existing_node2 = True
-                elif el.vertex_2 == point_2:
-                    node_id2 = el.node_id2
-                    existing_node2 = True
-                elif count == len(self.element_map) and existing_node2 is False:
-                    self.max_node_id += 1
-                    node_id2 = self.max_node_id
-
-                count += 1
-        else:
-            node_id1 = 1
-            node_id2 = 2
-        return node_id1, node_id2
+        node_ids = []
+        for p in (point_1, point_2):
+            k = str(p)
+            if k in self._vertices:
+                node_id = self._vertices[k]
+            else:
+                node_id = len(self._vertices) + 1
+                self._vertices[k] = node_id
+            node_ids.append(node_id)
+        return node_ids
 
     @staticmethod
     def _force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp):
@@ -454,7 +432,7 @@ class SystemElements:
         :return: Vector with forces on the nodes
         """
         if self.system_force_vector is None:
-            self.system_force_vector = np.zeros(self.max_node_id * 3)
+            self.system_force_vector = np.zeros(len(self._vertices) * 3)
 
         for id_, direction, force in force_list:
             # index = number of the node-1 * nd.o.f. + x, or z, or y
@@ -473,7 +451,7 @@ class SystemElements:
         to NaN)
         """
         if self.system_displacement_vector is None:
-            self.system_displacement_vector = np.empty(self.max_node_id * 3)
+            self.system_displacement_vector = np.empty(len(self._vertices) * 3)
             self.system_displacement_vector[:] = np.NaN
 
         for i in nodes_list:
