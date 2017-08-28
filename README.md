@@ -1,5 +1,5 @@
 # anaStruct 2D Frames and Trusses
-[![Build Status](https://travis-ci.org/ritchie46/structural_engineering.svg?branch=master)](https://travis-ci.org/ritchie46/structural_engineering)
+[![Build Status](https://travis-ci.org/ritchie46/anaStruct.svg?branch=master)](https://travis-ci.org/ritchie46/anaStruct)
 
 Analise 2D Frames and trusses for slender structures. Determine the bending moment, shear force, normal force and displacements.
 

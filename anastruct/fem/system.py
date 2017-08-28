@@ -43,10 +43,8 @@ class SystemElements:
         self.node_element_map = {}  # maps node ids to Element objects
         self.system_spring_map = {}  # keys matrix index (for both row and columns), values K
 
-        # list of removed indexes due to conditions
-        self.removed_indexes = []
         # list of indexes that remain after conditions are applied
-        self.remainder_indexes = []
+        self._remainder_indexes = []
 
         # keep track of the node_id of the supports
         self.supports_fixed = []
@@ -488,19 +486,19 @@ class SystemElements:
         original_force_vector = np.array(self.system_force_vector)
         original_system_matrix = np.array(self.system_matrix)
 
-        remove_count = 0
+        indexes = []
         # remove the unsolvable values from the matrix and vectors
         for i in range(self.shape_system_matrix):
-            index = i - remove_count
-            if self.system_displacement_vector[index] == 0:
-                self.system_displacement_vector = np.delete(self.system_displacement_vector, index, 0)
-                self.system_force_vector = np.delete(self.system_force_vector, index, 0)
-                self.system_matrix = np.delete(self.system_matrix, index, 0)
-                self.system_matrix = np.delete(self.system_matrix, index, 1)
-                remove_count += 1
-                self.removed_indexes.append(i)
+            if self.system_displacement_vector[i] == 0:
+                indexes.append(i)
             else:
-                self.remainder_indexes.append(i)
+                self._remainder_indexes.append(i)
+
+        self.system_displacement_vector = np.delete(self.system_displacement_vector, indexes, 0)
+        self.system_force_vector = np.delete(self.system_force_vector, indexes, 0)
+        self.system_matrix = np.delete(self.system_matrix, indexes, 0)
+        self.system_matrix = np.delete(self.system_matrix, indexes, 1)
+
         self.reduced_force_vector = self.system_force_vector
         self.reduced_system_matrix = self.system_matrix
         self.system_force_vector = original_force_vector
@@ -535,8 +533,7 @@ class SystemElements:
             return self._stiffness_adaptation(verbosity, max_iter)
 
         assert(self.system_force_vector is not None), "There are no forces on the structure"
-        self.remainder_indexes = []
-        self.removed_indexes = []
+        self._remainder_indexes = []
         self.__assemble_system_matrix()
         self.__process_conditions()
 
@@ -547,7 +544,7 @@ class SystemElements:
         self.system_displacement_vector = np.zeros(self.shape_system_matrix)
         count = 0
 
-        for i in self.remainder_indexes:
+        for i in self._remainder_indexes:
             self.system_displacement_vector[i] = reduced_displacement_vector[count]
             count += 1
 
