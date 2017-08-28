@@ -765,7 +765,7 @@ class SystemElements:
             el.determine_force_vector()
 
         # determining the node results in post processing class
-        self.post_processor.node_results()
+        self.post_processor.node_results_elements()
         self.post_processor.reaction_forces()
         self.post_processor.element_results()
 

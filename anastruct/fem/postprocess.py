@@ -12,7 +12,7 @@ class SystemLevel:
         # post processor element level
         self.post_el = ElementLevel(self.system)
 
-    def node_results(self):
+    def node_results_elements(self):
         """
         Determines the node results on the system level.
         Results placed in SystemElements class: self.node_objects (list).
@@ -22,6 +22,7 @@ class SystemLevel:
             # post processor element level
             self.post_el.node_results(el)
 
+    def node_results_system(self):
         for k, v in self.system.node_element_map.items():
             # reset nodes in case of iterative calculation
             self.system.node_map[k].reset()

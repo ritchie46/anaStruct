@@ -565,10 +565,11 @@ class SystemElements:
             el.determine_force_vector()
 
         if naked:
-            self.post_processor.node_results()
+            self.post_processor.node_results_elements()
         else:
             # determining the node results in post processing class
-            self.post_processor.node_results()
+            self.post_processor.node_results_elements()
+            self.post_processor.node_results_system()
             self.post_processor.reaction_forces()
             self.post_processor.element_results()
 
@@ -607,6 +608,7 @@ class SystemElements:
             if not np.allclose(factors, 1, 1e-3):
                 self.solve(force_linear=True, naked=True)
             else:
+                self.post_processor.node_results_system()
                 self.post_processor.reaction_forces()
                 self.post_processor.element_results()
                 break
