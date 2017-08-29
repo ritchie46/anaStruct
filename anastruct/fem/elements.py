@@ -1,11 +1,13 @@
 import math
 import numpy as np
-from anastruct.fem.node import Node
+from functools import lru_cache
 
 """
 The matrices underneath are for slender beams, where the most deformation occurs due to bending.
 Shear deformation is not taken into account.
 """
+
+CACHE_BOUND = 32000
 
 
 class Element:
@@ -114,6 +116,7 @@ class Element:
         self.element_primary_force_vector = np.zeros(6)
 
 
+@lru_cache(CACHE_BOUND)
 def kinematic_matrix(ai, aj, l):
     """
     Kinematic matrix of an element dependent of the angle ai and the length of the element.
@@ -126,6 +129,7 @@ def kinematic_matrix(ai, aj, l):
                      [-math.sin(ai) / l, -math.cos(ai) / l, 0, math.sin(aj) / l, math.cos(aj) / l, 1]])
 
 
+@lru_cache(CACHE_BOUND)
 def constitutive_matrix(EA, EI, l, spring=None):
     """
     :param EA: (float) Young's modules * Area
@@ -172,6 +176,7 @@ def stiffness_matrix(var_constitutive_matrix, var_kinematic_matrix):
     return np.dot(kinematic_transposed_times_constitutive, var_kinematic_matrix)
 
 
+@lru_cache(CACHE_BOUND)
 def det_moment(kl, kr, q, x, EI, L):
     """
     See notebook in: anastruct/fem/background/primary_m_v.ipynb
@@ -189,6 +194,7 @@ def det_moment(kl, kr, q, x, EI, L):
                       L**2*kl*kr)/(2*EI*(12*EI**2 + 4*EI*L*kl + 4*EI*L*kr + L**2*kl*kr)) - q*x**2/(2*EI))
 
 
+@lru_cache(CACHE_BOUND)
 def det_shear(kl, kr, q, x, EI, L):
     """
     See notebook in: anastruct/fem/background/primary_m_v.ipynb
@@ -205,6 +211,7 @@ def det_shear(kl, kr, q, x, EI, L):
                (2*EI*(12*EI**2 + 4*EI*L*kl + 4*EI*L*kr + L**2*kl*kr)) - q*x/EI)
 
 
+@lru_cache(CACHE_BOUND)
 def det_axial(EA, L, q, x):
     """
     See notebook in: anastruct/fem/background/distributed_ax_force.ipynb

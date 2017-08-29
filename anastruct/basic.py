@@ -374,3 +374,4 @@ class FEMException(Exception):
     def __init__(self, type_, message):
         self.type = type_
         self.message = message
+
