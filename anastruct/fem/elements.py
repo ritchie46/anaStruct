@@ -129,13 +129,12 @@ def kinematic_matrix(ai, aj, l):
                      [-math.sin(ai) / l, -math.cos(ai) / l, 0, math.sin(aj) / l, math.cos(aj) / l, 1]])
 
 
-@lru_cache(CACHE_BOUND)
 def constitutive_matrix(EA, EI, l, spring=None):
     """
     :param EA: (float) Young's modules * Area
     :param EI: (float) Young's modules * Moment of Inertia
     :param l: (float) Length
-    :param hinge: (int) 1 or 2. Apply a hinge on the first of the second node.
+    :param spring: (int) 1 or 2. Apply a hinge on the first of the second node.
     :return: (array)
     """
     matrix = np.array([[EA / l, 0, 0],

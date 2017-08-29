@@ -102,7 +102,7 @@ class SimpleTest(unittest.TestCase):
         """
         SS_8.solve()
         u4 = (SS_8.get_node_displacements(4)["uz"] ** 2 + SS_8.get_node_displacements(4)["ux"] ** 2) ** 0.5 * 1000
-        self.assertAlmostEqual(u4, 105.288412424)
+        self.assertAlmostEqual(u4, 105.288412424, places=2)
 
     def test_ex_11(self):
         from anastruct.fem.examples.ex_11 import ss

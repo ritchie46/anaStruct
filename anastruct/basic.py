@@ -2,32 +2,32 @@ import numpy as np
 import math
 
 
-def find_closest_index(array, searchFor):
+def find_closest_index(array, search_for):
     """
     Find the closest index in an ordered array
     :param array: array searched in
-    :param searchFor: value that is searched
+    :param search_for: value that is searched
     :return: index of the closest match
     """
     if len(array) == 1:
         return 0
 
     # determine the direction of the iteration
-    if array[1] < array[0] > searchFor:  # iteration from big to small
+    if array[1] < array[0] > search_for:  # iteration from big to small
 
         # check if the value does not go out of scope
-        if array[0] < searchFor and array[-1] < searchFor:
+        if array[0] < search_for and array[-1] < search_for:
             return 0
-        elif array[0] > searchFor and array[-1] > searchFor:
+        elif array[0] > search_for and array[-1] > search_for:
             return len(array) - 1
 
         for i in range(len(array)):
-            if array[i] <= searchFor:
+            if array[i] <= search_for:
                 valueAtIndex = array[i]
                 previousValue = array[i - 1]
 
                 # search for the index with the smallest absolute difference
-                if searchFor - valueAtIndex <= previousValue - searchFor:
+                if search_for - valueAtIndex <= previousValue - search_for:
                     return i
                 else:
                     return i - 1
@@ -37,17 +37,17 @@ def find_closest_index(array, searchFor):
         # iteration from small to big
 
         # check if the value does not go out of scope
-        if array[0] < searchFor and array[-1] < searchFor:
+        if array[0] < search_for and array[-1] < search_for:
             return len(array) - 1
-        elif array[0] > searchFor and array[-1] > searchFor:
+        elif array[0] > search_for and array[-1] > search_for:
             return 0
 
         for i in range(len(array)):
-            if array[i] >= searchFor:
+            if array[i] >= search_for:
                 valueAtIndex = array[i]
                 previousValue = array[i - 1]
 
-                if valueAtIndex - searchFor <= searchFor - previousValue:
+                if valueAtIndex - search_for <= search_for - previousValue:
                     return i
                 else:
                     return i - 1

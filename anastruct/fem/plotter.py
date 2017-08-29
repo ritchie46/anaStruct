@@ -289,15 +289,16 @@ class Plotter:
     def __moment_load_patch(self, max_val):
 
         h = 0.2 * max_val
-        for F_tuple in self.system.loads_moment:
-            node = self.system.node_map[F_tuple[0]]
-            if F_tuple[2] > 0:
+        for k, v in self.system.loads_moment.items():
+
+            node = self.system.node_map[k]
+            if v > 0:
                 self.one_fig.plot(node.vertex.x, -node.vertex.y, marker=r'$\circlearrowleft$', ms=25,
                               color='orange')
             else:
                 self.one_fig.plot(node.vertex.x, -node.vertex.y, marker=r'$\circlearrowright$', ms=25,
                               color='orange')
-            self.one_fig.text(node.vertex.x + h * 0.2, -node.vertex.y + h * 0.2, "T=%d" % F_tuple[2], color='k',
+            self.one_fig.text(node.vertex.x + h * 0.2, -node.vertex.y + h * 0.2, "T=%d" % v, color='k',
                               fontsize=9, zorder=10)
 
     def plot_structure(self, figsize, verbosity, show=False, supports=True, scale=1, offset=(0, 0)):
