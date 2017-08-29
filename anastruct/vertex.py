@@ -3,16 +3,15 @@ import numpy as np
 
 
 class Vertex:
-    def __init__(self, x, y=None, orientation_cs=1):
+    def __init__(self, x, y=None):
         if isinstance(x, (tuple, list)):
             self.coordinates = np.array([x[0], x[1]])
         elif isinstance(x, np.ndarray):
             self.coordinates = x
         elif type(x) is Vertex:
-            self.coordinates = np.asarray(x.coordinates)
+            self.coordinates = np.array(x.coordinates)
         else:
             self.coordinates = np.array([x, y])
-        self.orientation_cs = orientation_cs
 
     @property
     def x(self):
@@ -20,7 +19,11 @@ class Vertex:
 
     @property
     def y(self):
-        return self.coordinates[1] * self.orientation_cs
+        return self.coordinates[1]
+
+    @property
+    def z(self):
+        return self.coordinates[1] * -1
 
     def modulus(self):
         return np.sqrt(np.sum(self.coordinates**2))

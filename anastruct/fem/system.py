@@ -163,31 +163,27 @@ class SystemElements:
 
         return self.count
 
-    def _det_vertices(self, location, original=False):
-        if original:
-            ori = self.orientation_cs * -1
+    def _det_vertices(self, location_list, original=False):
+        if isinstance(location_list, Vertex):
+            point_1 = self._previous_point
+            point_2 = Vertex(location_list)
+        elif len(location_list) == 1:
+            point_1 = self._previous_point
+            point_2 = Vertex(location_list[0][0], location_list[0][1])
+        elif isinstance(location_list[0], (int, float)):
+            point_1 = self._previous_point
+            point_2 = Vertex(location_list[0], location_list[1])
+        elif isinstance(location_list[0], Vertex):
+            point_1 = location_list[0]
+            point_2 = location_list[1]
         else:
-            ori = self.orientation_cs
-        if isinstance(location, Vertex):
-            point_1 = self._previous_point
-            point_2 = Vertex(location, None, ori)
-        elif len(location) == 1:
-            point_1 = self._previous_point
-            point_2 = Vertex(location[0][0], location[0][1], ori)
-        elif isinstance(location[0], (int, float)):
-            point_1 = self._previous_point
-            point_2 = Vertex(location[0], location[1], ori)
-        elif isinstance(location[0], Vertex):
-            point_1 = Vertex(location[0], orientation_cs=ori)
-            point_2 = Vertex(location[1], orientation_cs=ori)
-
-        else:
-            point_1 = Vertex(location[0][0], location[0][1], ori)
-            point_2 = Vertex(location[1][0], location[1][1], ori)
+            point_1 = Vertex(location_list[0][0], location_list[0][1])
+            point_2 = Vertex(location_list[1][0], location_list[1][1])
         self._previous_point = point_2
 
-        if original:
-            point_1 = Vertex(point_1.x, point_1.y * -1)
+        if self.xy_cs and not original:
+            point_1 = Vertex(point_1.x, -point_1.y)
+            point_2 = Vertex(point_2.x, -point_2.y)
 
         return point_1, point_2
 
@@ -1014,7 +1010,7 @@ class SystemElements:
         try:
             tol = 1e-9
             return next(filter(lambda x: math.isclose(x.vertex.x, vertex.x, abs_tol=tol)
-                               and math.isclose(x.vertex.y, vertex.y * self.orientation_cs, abs_tol=tol),
+                               and math.isclose(x.vertex.z, vertex.y, abs_tol=tol),
                                self.node_map.values())).id
         except StopIteration:
             return None

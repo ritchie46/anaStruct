@@ -7,10 +7,10 @@ from anastruct.fem.examples.ex_8_non_linear_portal import ss as SS_8
 class SimpleTest(unittest.TestCase):
 
     def test_example_1(self):
-        system = se.SystemElements(xy_cs=False)
-        system.add_element(location=[[0, 0], [3, -4]], EA=5e9, EI=8000)
-        system.add_element(location=[[3, -4], [8, -4]], EA=5e9, EI=4000)
-        system.q_load(element_id=2, q=10)
+        system = se.SystemElements(True)
+        system.add_element(location=[[0, 0], [3, 4]], EA=5e9, EI=8000)
+        system.add_element(location=[[3, 4], [8, 4]], EA=5e9, EI=4000)
+        system.q_load(element_id=2, q=-10)
         system.add_support_hinged(node_id=1)
         system.add_support_fixed(node_id=3)
 
@@ -20,11 +20,11 @@ class SimpleTest(unittest.TestCase):
         self.assertTrue(np.allclose(system.solve(), sol))
 
     def test_example_2(self):
-        system = se.SystemElements(xy_cs=False)
-        system.add_truss_element(location_list=[[0, 0], [0, -5]], EA=5000)
-        system.add_truss_element(location_list=[[0, -5], [5, -5]], EA=5000)
-        system.add_truss_element(location_list=[[5, -5], [5, 0]], EA=5000)
-        system.add_truss_element(location_list=[[0, 0], [5, -5]], EA=5000 * np.sqrt(2))
+        system = se.SystemElements()
+        system.add_truss_element(location_list=[[0, 0], [0, 5]], EA=5000)
+        system.add_truss_element(location_list=[[0, 5], [5, 5]], EA=5000)
+        system.add_truss_element(location_list=[[5, 5], [5, 0]], EA=5000)
+        system.add_truss_element(location_list=[[0, 0], [5, 5]], EA=5000 * np.sqrt(2))
         system.add_support_hinged(node_id=1)
         system.add_support_hinged(node_id=4)
         system.point_load(Fx=10, node_id=2)
@@ -34,14 +34,14 @@ class SimpleTest(unittest.TestCase):
         self.assertTrue(np.allclose(system.solve(), sol))
 
     def test_example_3(self):
-        system = se.SystemElements(xy_cs=False)
-        system.add_element(location=[[0, 0], [0, -5]], EA=15000, EI=5000)
-        system.add_element(location=[[0, -5], [5, -5]], EA=15000, EI=5000)
-        system.add_element(location=[[5, -5], [5, 0]], EA=15000, EI=5000)
+        system = se.SystemElements()
+        system.add_element(location=[[0, 0], [0, 5]], EA=15000, EI=5000)
+        system.add_element(location=[[0, 5], [5, 5]], EA=15000, EI=5000)
+        system.add_element(location=[[5, 5], [5, 0]], EA=15000, EI=5000)
         system.add_support_fixed(node_id=1)
         system.add_support_spring(node_id=4, translation=3, k=4000)
         system.point_load(Fx=30, node_id=2)
-        system.q_load(q=10, element_id=2)
+        system.q_load(q=-10, element_id=2)
         sol = np.fromstring("""0.          0.          0.          0.06264607  0.00379285 -0.0128231
         0.0575402   0.01287382 -0.00216051  0.          0.         -0.0080909""", float, sep=" ")
         self.assertTrue(np.allclose(system.solve(), sol, 1e-3))
@@ -51,9 +51,9 @@ class SimpleTest(unittest.TestCase):
         self.assertAlmostEqual(sol["phi_y"], 0.0021605118130397583)
 
     def test_example_4(self):
-        system = se.SystemElements(xy_cs=False)
+        system = se.SystemElements()
         system.add_element(location=[[0, 0], [5, 0]], EA=5e9, EI=8000, spring={2: 0})
-        system.add_element(location=[[5, 0], [5, -5]], EA=5e9, EI=4000)
+        system.add_element(location=[[5, 0], [5, 5]], EA=5e9, EI=4000)
         system.moment_load(Ty=10, node_id=3)
         system.add_support_hinged(node_id=1)
         system.add_support_hinged(node_id=3)
