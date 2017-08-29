@@ -33,9 +33,9 @@ class SystemElements:
         self.xy_cs = xy_cs
 
         if xy_cs:
-            self.direction_factor = -1
+            self.orientation_cs = -1
         else:
-            self.direction_factor = 1
+            self.orientation_cs = 1
 
         # structure system
         self.element_map = {}  # maps element ids to the Element objects.
@@ -160,29 +160,35 @@ class SystemElements:
 
         self._det_system_matrix_location(element)
         self._dead_load(g, element.id)
+
         return self.count
 
-    def _det_vertices(self, location_list, original=False):
-        if isinstance(location_list, Vertex):
-            point_1 = self._previous_point
-            point_2 = location_list
-        elif len(location_list) == 1:
-            point_1 = self._previous_point
-            point_2 = Vertex(location_list[0][0], location_list[0][1])
-        elif isinstance(location_list[0], (int, float)):
-            point_1 = self._previous_point
-            point_2 = Vertex(location_list[0], location_list[1])
-        elif isinstance(location_list[0], Vertex):
-            point_1 = location_list[0]
-            point_2 = location_list[1]
+    def _det_vertices(self, location, original=False):
+        if original:
+            ori = self.orientation_cs * -1
         else:
-            point_1 = Vertex(location_list[0][0], location_list[0][1])
-            point_2 = Vertex(location_list[1][0], location_list[1][1])
+            ori = self.orientation_cs
+        if isinstance(location, Vertex):
+            point_1 = self._previous_point
+            point_2 = Vertex(location, None, ori)
+        elif len(location) == 1:
+            point_1 = self._previous_point
+            point_2 = Vertex(location[0][0], location[0][1], ori)
+        elif isinstance(location[0], (int, float)):
+            point_1 = self._previous_point
+            point_2 = Vertex(location[0], location[1], ori)
+        elif isinstance(location[0], Vertex):
+            point_1 = Vertex(location[0], orientation_cs=ori)
+            point_2 = Vertex(location[1], orientation_cs=ori)
+
+        else:
+            point_1 = Vertex(location[0][0], location[0][1], ori)
+            point_2 = Vertex(location[1][0], location[1][1], ori)
         self._previous_point = point_2
 
-        if self.xy_cs and not original:
-            point_1 = Vertex(point_1.x, -point_1.y)
-            point_2 = Vertex(point_2.x, -point_2.y)
+        if original:
+            point_1 = Vertex(point_1.x, point_1.y * -1)
+
         return point_1, point_2
 
     def _det_node_ids(self, point_1, point_2):
@@ -743,9 +749,9 @@ class SystemElements:
 
         for i in range(len(element_id)):
             self.plotter.max_q = max(self.plotter.max_q, abs(q[i]))
-            self.loads_q[element_id[i]] = q[i] * self.direction_factor
+            self.loads_q[element_id[i]] = q[i] * self.orientation_cs
             el = self.element_map[element_id[i]]
-            el.q_load = q[i] * self.direction_factor
+            el.q_load = q[i] * self.orientation_cs
             el.q_direction = direction
 
     def _apply_perpendicular_q_load(self):
@@ -825,7 +831,7 @@ class SystemElements:
 
         for i in range(len(node_id)):
             self.plotter.max_system_point_load = max(self.plotter.max_system_point_load, (Fx[i]**2 + Fz[i]**2)**0.5)
-            self.loads_point[node_id[i]] = (Fx[i], Fz[i] * self.direction_factor)
+            self.loads_point[node_id[i]] = (Fx[i], Fz[i] * self.orientation_cs)
 
     def _apply_point_load(self):
         for node_id in self.loads_point:
@@ -914,12 +920,12 @@ class SystemElements:
             return {
                 "id": node.id,
                 "ux": -node.ux,
-                "uz": self.direction_factor * node.uz,
+                "uz": self.orientation_cs * node.uz,
                 "phi_y": node.phi_y
             }
         else:
             for node in self.node_map.values():
-                result_list.append((node.id, -node.ux, self.direction_factor * node.uz, node.phi_y))
+                result_list.append((node.id, -node.ux, self.orientation_cs * node.uz, node.phi_y))
         return result_list
 
     def get_element_results(self, element_id=0, verbose=False):
@@ -1008,7 +1014,7 @@ class SystemElements:
         try:
             tol = 1e-9
             return next(filter(lambda x: math.isclose(x.vertex.x, vertex.x, abs_tol=tol)
-                               and math.isclose(x.vertex.y, vertex.y * self.direction_factor, abs_tol=tol),
+                               and math.isclose(x.vertex.y, vertex.y * self.orientation_cs, abs_tol=tol),
                                self.node_map.values())).id
         except StopIteration:
             return None
