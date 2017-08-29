@@ -5,9 +5,9 @@ def run():
     system = se.SystemElements(xy_cs=False)
 
     # Add beams to the system. Positive z-axis is down, positive x-axis is the right.
-    system.add_element(location_list=[[0, 0], [0, -5]], EA=15000, EI=5000)
-    system.add_element(location_list=[[0, -5], [5, -5]], EA=15000, EI=5000)
-    system.add_element(location_list=[[5, -5], [5, 0]], EA=15000, EI=5000)
+    system.add_element(location=[[0, 0], [0, -5]], EA=15000, EI=5000)
+    system.add_element(location=[[0, -5], [5, -5]], EA=15000, EI=5000)
+    system.add_element(location=[[5, -5], [5, 0]], EA=15000, EI=5000)
 
     system.add_support_fixed(node_id=1)
     # Add a rotational spring at node 4.

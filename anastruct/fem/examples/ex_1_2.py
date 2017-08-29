@@ -3,8 +3,8 @@ from anastruct.fem import system as se
 
 def run():
     system = se.SystemElements(xy_cs=False)
-    system.add_element(location_list=[[3, -4], [0, 0]], EA=5e9, EI=8000)
-    system.add_element(location_list=[[8, -4], [3, -4]], EA=5e9, EI=4000)
+    system.add_element(location=[[3, -4], [0, 0]], EA=5e9, EI=8000)
+    system.add_element(location=[[8, -4], [3, -4]], EA=5e9, EI=4000)
     system.show_structure()
 
     system.q_load(element_id=2, q=10, direction=1)

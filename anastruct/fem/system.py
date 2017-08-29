@@ -84,9 +84,9 @@ class SystemElements:
     def add_truss_element(self, location_list, EA=None):
         return self.add_element(location_list, EA, 1e-14, element_type='truss')
 
-    def add_element(self, location_list, EA=None, EI=None, g=0, mp=None, spring=None, **kwargs):
+    def add_element(self, location, EA=None, EI=None, g=0, mp=None, spring=None, **kwargs):
         """
-        :param location_list: (list/ Pointxz) The two nodes of the element or the next node of the element.
+        :param location: (list/ Pointxz) The two nodes of the element or the next node of the element.
                                 Examples:
                                     [[x, z], [x, z]]
                                     [Pointxz, Pointxz]
@@ -121,7 +121,7 @@ class SystemElements:
         # add the element number
         self.count += 1
 
-        point_1, point_2 = self._det_vertices(location_list)
+        point_1, point_2 = self._det_vertices(location)
         node_id1, node_id2 = self._det_node_ids(point_1, point_2)
 
         point_1, point_2, node_id1, node_id2, spring, mp, ai = \
@@ -269,12 +269,12 @@ class SystemElements:
                     if not pass_hinge:
                         del spring[node]  # too many hinges at that element.
 
-    def add_multiple_elements(self, location_list, n=None, dl=None, EA=None, EI=None, g=0, mp=None, spring=None,
+    def add_multiple_elements(self, location, n=None, dl=None, EA=None, EI=None, g=0, mp=None, spring=None,
                               **kwargs):
         """
         Add multiple elements defined by the first and the last point.
 
-        :param location_list: See 'add_element' method
+        :param location: See 'add_element' method
         :param n: (int) Number of elements.
         :param dl: (flt) Distance between the elements nodes.
         :param EA: See 'add_element' method
@@ -309,7 +309,7 @@ class SystemElements:
             if "element_type" not in el:
                 el["element_type"] = element_type
 
-        point_1, point_2 = self._det_vertices(location_list, original=True)
+        point_1, point_2 = self._det_vertices(location, original=True)
         length = (point_2 - point_1).modulus()
         direction = (point_2 - point_1).unit()
 
