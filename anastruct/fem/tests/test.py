@@ -63,7 +63,7 @@ class SimpleTest(unittest.TestCase):
         self.assertTrue(np.allclose(system.solve(), sol))
 
     def test_example_5(self):
-        system = se.SystemElements(xy_cs=False)
+        system = se.SystemElements()
         system.add_element(location=[[0, 0], [5, 0]], EA=5e9, EI=8000)
         system.add_element(location=[[5, 0], [5, -5]], EA=5e9, EI=4000)
         system.moment_load(Ty=10, node_id=3)
@@ -102,7 +102,7 @@ class SimpleTest(unittest.TestCase):
         """
         SS_8.solve()
         u4 = (SS_8.get_node_displacements(4)["uz"] ** 2 + SS_8.get_node_displacements(4)["ux"] ** 2) ** 0.5 * 1000
-        self.assertAlmostEqual(u4, 105.288412424, places=2)
+        self.assertAlmostEqual(u4, 105.288412424, places=5)
 
     def test_ex_11(self):
         from anastruct.fem.examples.ex_11 import ss

@@ -9,7 +9,7 @@ from anastruct.fem.plotter import Plotter
 
 
 class SystemElements:
-    def __init__(self, figsize=(12, 8), xy_cs=True, EA=15e3, EI=5e3, load_factor=1, mesh=50, plot_backend='mpl'):
+    def __init__(self, figsize=(12, 8), EA=15e3, EI=5e3, load_factor=1, mesh=50, plot_backend='mpl'):
         """
 
         :param figsize: (tpl)
@@ -30,12 +30,13 @@ class SystemElements:
         self.EA = EA
         self.EI = EI
         self.figsize = figsize
-        self.xy_cs = xy_cs
-
-        if xy_cs:
-            self.orientation_cs = -1
-        else:
-            self.orientation_cs = 1
+        # self.xy_cs = xy_cs
+        #
+        # if xy_cs:
+        #     self.orientation_cs = -1
+        # else:
+        #     self.orientation_cs = 1
+        self.orientation_cs = -1  # needed for the loads directions
 
         # structure system
         self.element_map = {}  # maps element ids to the Element objects.
@@ -181,9 +182,9 @@ class SystemElements:
             point_2 = Vertex(location_list[1][0], location_list[1][1])
         self._previous_point = point_2
 
-        if self.xy_cs and not original:
-            point_1 = Vertex(point_1.x, -point_1.y)
-            point_2 = Vertex(point_2.x, -point_2.y)
+        # if self.xy_cs and not original:
+        #     point_1 = Vertex(point_1.x, -point_1.y)
+        #     point_2 = Vertex(point_2.x, -point_2.y)
 
         return point_1, point_2
 
@@ -206,8 +207,8 @@ class SystemElements:
         """
         # determine the angle of the element with the global x-axis
         delta_x = point_2.x - point_1.x
-        delta_z = -point_2.y - -point_1.y  # minus sign to work with an opposite z-axis
-        ai = angle_x_axis(delta_x, delta_z)
+        delta_z = point_2.z - point_1.z  # minus sign to work with an opposite z-axis
+        ai = -angle_x_axis(delta_x, delta_z)
 
         if 0.5 * math.pi < ai < 1.5 * math.pi:
             # switch points
@@ -215,7 +216,7 @@ class SystemElements:
             point_1 = point_2
             point_2 = p
             delta_x = point_2.x - point_1.x
-            delta_z = -point_2.z - -point_1.z  # minus sign to work with an opposite z-axis
+            delta_z = point_2.z - point_1.z  # minus sign to work with an opposite z-axis
             ai = angle_x_axis(delta_x, delta_z)
 
             id_ = node_id1
@@ -1010,7 +1011,7 @@ class SystemElements:
         try:
             tol = 1e-9
             return next(filter(lambda x: math.isclose(x.vertex.x, vertex.x, abs_tol=tol)
-                               and math.isclose(x.vertex.z, vertex.y, abs_tol=tol),
+                               and math.isclose(x.vertex.y, vertex.y, abs_tol=tol),
                                self.node_map.values())).id
         except StopIteration:
             return None
@@ -1025,6 +1026,6 @@ class SystemElements:
         return list(
             map(
                 lambda x: x.vertex.x if coordinate == 'x'
-                else x.vertex.y if coordinate == 'z' else -x.vertex.y if coordinate == 'y'
+                else x.vertex.y if coordinate == 'z' else x.vertex.z if coordinate == 'y'
                 else None,
                 self.node_map.values()))
