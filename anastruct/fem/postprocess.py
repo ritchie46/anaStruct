@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 from anastruct.fem.node import Node
-from anastruct.basic import is_moving_towards, integrate_array, angle_x_axis
+from anastruct.basic import integrate_array
 
 
 class SystemLevel:
@@ -116,20 +116,11 @@ class ElementLevel:
 
     @staticmethod
     def determine_axial_force(element):
-        test_node = np.array([element.vertex_1.x, element.vertex_1.z])
-        node_position = np.array([element.vertex_2.x, element.vertex_2.z])
-        displacement = np.array([element.node_2.ux - element.node_1.ux, element.node_2.uz - element.node_1.uz])
-
-        force_towards = is_moving_towards(test_node, node_position, displacement)
         N_1 = (math.sin(element.ai) * element.node_1.Fz) + -(math.cos(element.ai) * element.node_1.Fx)
         N_2 = -(math.sin(element.ai) * element.node_2.Fz) + (math.cos(element.ai) * element.node_2.Fx)
 
-        if force_towards:
-            element.N_1 = -N_1
-            element.N_2 = -N_2
-        else:
-            element.N_1 = N_1
-            element.N_2 = N_2
+        element.N_1 = N_1
+        element.N_2 = N_2
 
     @staticmethod
     def determine_bending_moment(element, con):

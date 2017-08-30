@@ -13,6 +13,7 @@ def run():
 
     system.solve()
     print(system.get_node_results_system())
+    print(system.get_element_results())
     system.show_structure()
     system.show_reaction_force()
     system.show_axial_force()

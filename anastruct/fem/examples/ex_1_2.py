@@ -7,7 +7,7 @@ def run():
     system.add_element(location=[[8, 4], [3, 4]], EA=5e9, EI=4000)
     system.show_structure()
 
-    system.q_load(element_id=2, q=10, direction=1)
+    system.q_load(element_id=2, q=-10)
 
     system.add_support_hinged(node_id=2)
     system.add_support_fixed(node_id=3)

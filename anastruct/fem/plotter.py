@@ -431,13 +431,13 @@ class Plotter:
                     point.displace_polar(alpha=el.ai + 0.5 * math.pi, radius=0.5 * el.N_1 * factor, inverse_z_axis=True)
 
                     if verbosity == 0:
-                        self.one_fig.text(point.x, -point.z, "-", ha='center', va='center',
+                        self.one_fig.text(point.x, point.y, "-", ha='center', va='center',
                                           fontsize=20, color='b')
                 if el.N_1 > 0:
                     point.displace_polar(alpha=el.ai + 0.5 * math.pi, radius=0.5 * el.N_1 * factor, inverse_z_axis=True)
 
                     if verbosity == 0:
-                        self.one_fig.text(point.x, -point.z, "+", ha='center', va='center',
+                        self.one_fig.text(point.x, point.y, "+", ha='center', va='center',
                                           fontsize=14, color='b')
 
         if show:

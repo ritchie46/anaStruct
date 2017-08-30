@@ -53,18 +53,6 @@ def find_closest_index(array, search_for):
                     return i - 1
 
 
-def is_moving_towards(test_node, node_position, displacement):
-    """
-    Tests if a node is displacing towards or away from the node.
-    :param test_node: Nodes that stands still (vector)
-    :param node_position: Node of which the displacment tested (vector)
-    :param displacement: (vector)
-    :return: (Boolean)
-    """
-    to_node = test_node - node_position
-    return np.dot(to_node, displacement) > 0
-
-
 def find_nearest(array, value):
     """
     :param array: (numpy array object)

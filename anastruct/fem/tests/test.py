@@ -137,6 +137,12 @@ class SimpleTest(unittest.TestCase):
         self.assertEqual(SS_8.find_node_id([4, 4]), 6)
         self.assertEqual(SS_8.find_node_id([3, -3]), None)
 
+    def test_add_multiple_elements(self):
+        ss = se.SystemElements()
+        ss.add_multiple_elements([[0, 0], [10, 10]], n=5)
+        sol = [0, 2.0, 4.0, 6.0, 8.0, 10]
+        self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, [x.vertex.x for x in ss.node_map.values()])]))
+
 
 if __name__ == "__main__":
     unittest.main()

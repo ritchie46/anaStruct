@@ -130,12 +130,8 @@ class SystemElements:
         self._append_node_id(point_1, point_2, node_id1, node_id2)
         self._ensure_single_hinge(spring, node_id1, node_id2)
 
-        # determine the length of the elements
-        point = point_2 - point_1
-        l = point.modulus()
-
         # add element
-        element = Element(self.count, EA, EI, l, ai, point_1, point_2, spring)
+        element = Element(self.count, EA, EI, (point_2 - point_1).modulus(), ai, point_1, point_2, spring)
         element.node_id1 = node_id1
         element.node_id2 = node_id2
         element.node_map = {node_id1: self.node_map[node_id1],
@@ -164,7 +160,7 @@ class SystemElements:
 
         return self.count
 
-    def _det_vertices(self, location_list, original=False):
+    def _det_vertices(self, location_list):
         if isinstance(location_list, Vertex):
             point_1 = self._previous_point
             point_2 = Vertex(location_list)
@@ -181,10 +177,6 @@ class SystemElements:
             point_1 = Vertex(location_list[0][0], location_list[0][1])
             point_2 = Vertex(location_list[1][0], location_list[1][1])
         self._previous_point = point_2
-
-        # if self.xy_cs and not original:
-        #     point_1 = Vertex(point_1.x, -point_1.y)
-        #     point_2 = Vertex(point_2.x, -point_2.y)
 
         return point_1, point_2
 
@@ -210,24 +202,16 @@ class SystemElements:
         delta_z = point_2.z - point_1.z  # minus sign to work with an opposite z-axis
         ai = -angle_x_axis(delta_x, delta_z)
 
-        if 0.5 * math.pi < ai < 1.5 * math.pi:
+        if delta_x < 0:
             # switch points
-            p = point_1
-            point_1 = point_2
-            point_2 = p
-            delta_x = point_2.x - point_1.x
-            delta_z = point_2.z - point_1.z  # minus sign to work with an opposite z-axis
-            ai = angle_x_axis(delta_x, delta_z)
+            point_1, point_2 = point_2, point_1
+            node_id1, node_id2 = node_id2, node_id1
 
-            id_ = node_id1
-            node_id1 = node_id2
-            node_id2 = id_
+            ai = -angle_x_axis(-delta_x, -delta_z)
 
             if spring is not None:
                 if 1 in spring and 2 in spring:
-                    k1 = spring[1]
-                    spring[1] = spring[2]
-                    spring[2] = k1
+                    spring[1], spring[2] = spring[2], spring[1]
                 elif 1 in spring:
                     spring[2] = spring.pop(1)
                 elif 2 in spring:
@@ -235,9 +219,7 @@ class SystemElements:
 
             if mp is not None:
                 if 1 in mp and 2 in mp:
-                    m1 = mp[1]
-                    mp[1] = mp[2]
-                    mp[2] = m1
+                    mp[1], mp[2] = mp[2], mp[1]
                 elif 1 in mp:
                     mp[2] = mp.pop(1)
                 elif 2 in mp:
@@ -312,7 +294,7 @@ class SystemElements:
             if "element_type" not in el:
                 el["element_type"] = element_type
 
-        point_1, point_2 = self._det_vertices(location, original=True)
+        point_1, point_2 = self._det_vertices(location)
         length = (point_2 - point_1).modulus()
         direction = (point_2 - point_1).unit()
 
@@ -322,7 +304,7 @@ class SystemElements:
             dl = length / n
 
         point = point_1 + direction * dl
-        elements = [self.add_element([point_1, point], first["EA"], first["EI"], first["g"], first["mp"], first["spring"],
+        elements = [self.add_element((point_1, point), first["EA"], first["EI"], first["g"], first["mp"], first["spring"],
                          element_type=first["element_type"])]
 
         l = 2 * dl
