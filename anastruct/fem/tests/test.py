@@ -47,7 +47,7 @@ class SimpleTest(unittest.TestCase):
         self.assertTrue(np.allclose(system.solve(), sol, 1e-3))
         self.assertAlmostEqual(system.get_node_displacements(3)["ux"], 0.0575402011335)
         sol = system.get_node_results_system(3)
-        self.assertAlmostEqual(sol["uz"], -0.012873819793265455)
+        self.assertAlmostEqual(sol["uy"], 0.012873819793265455)
         self.assertAlmostEqual(sol["phi_y"], 0.0021605118130397583)
 
     def test_example_4(self):
@@ -101,7 +101,7 @@ class SimpleTest(unittest.TestCase):
         Plastic hinges test
         """
         SS_8.solve()
-        u4 = (SS_8.get_node_displacements(4)["uz"] ** 2 + SS_8.get_node_displacements(4)["ux"] ** 2) ** 0.5 * 1000
+        u4 = (SS_8.get_node_displacements(4)["uy"] ** 2 + SS_8.get_node_displacements(4)["ux"] ** 2) ** 0.5 * 1000
         self.assertAlmostEqual(u4, 105.288412424, places=5)
 
     def test_ex_11(self):

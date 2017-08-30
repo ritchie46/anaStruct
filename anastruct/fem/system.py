@@ -856,7 +856,7 @@ class SystemElements:
         :return:
                 if node_id == 0: (list)
                     Returns a list containing tuples with the results
-                    [(id, Fx, Fz, Ty, ux, uz, phi_y), (id, Fx, Fz...), () .. ]
+                    [(id, Fx, Fz, Ty, ux, uy, phi_y), (id, Fx, Fz...), () .. ]
                 if node_id > 0: (dict)
         """
         result_list = []
@@ -868,12 +868,12 @@ class SystemElements:
                 "Fz": node.Fz,
                 "Ty": node.Ty,
                 "ux": node.ux,
-                "uz": node.uz,
+                "uy": -node.uz,
                 "phi_y": node.phi_y
             }
         else:
             for node in self.node_map.values():
-                result_list.append((node.id, node.Fx, node.Fz, node.Ty, node.ux, node.uz, node.phi_y))
+                result_list.append((node.id, node.Fx, node.Fz, node.Ty, node.ux, -node.uz, node.phi_y))
         return result_list
 
     def get_node_displacements(self, node_id=0):
@@ -882,7 +882,7 @@ class SystemElements:
         :return:
                 if node_id == 0: (list)
                     Returns a list containing tuples with the results
-                    [(id,  ux, uz, phi_y), (id, ux, uz), () .. ]
+                    [(id,  ux, uy, phi_y), (id, ux, uy), () .. ]
                 if node_id > 0: (dict)
         """
         result_list = []
@@ -891,12 +891,12 @@ class SystemElements:
             return {
                 "id": node.id,
                 "ux": -node.ux,
-                "uz": self.orientation_cs * node.uz,
+                "uy": node.uz,  # - * -  = +
                 "phi_y": node.phi_y
             }
         else:
             for node in self.node_map.values():
-                result_list.append((node.id, -node.ux, self.orientation_cs * node.uz, node.phi_y))
+                result_list.append((node.id, -node.ux, node.uz, node.phi_y))
         return result_list
 
     def get_element_results(self, element_id=0, verbose=False):
@@ -974,6 +974,8 @@ class SystemElements:
     def get_element_result_range(self, unit):
         if unit == "shear":
             return [el.shear_force[0] for el in self.element_map.values()]
+        elif unit == "moment":
+            return [el.bending_moment[0] for el in self.element_map.values()]
 
     def find_node_id(self, vertex):
         """
@@ -1000,6 +1002,6 @@ class SystemElements:
         return list(
             map(
                 lambda x: x.vertex.x if coordinate == 'x'
-                else x.vertex.y if coordinate == 'z' else x.vertex.z if coordinate == 'y'
+                else x.vertex.z if coordinate == 'z' else x.vertex.y if coordinate == 'y'
                 else None,
                 self.node_map.values()))
