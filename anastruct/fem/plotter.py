@@ -5,6 +5,8 @@ import matplotlib.patches as mpatches
 from anastruct.basic import find_nearest
 from plotly.offline import plot_mpl, iplot_mpl, init_notebook_mode
 
+PATCH_SIZE = 0.03
+
 
 class Plotter:
     def __init__(self, system, mesh, backend):
@@ -49,8 +51,8 @@ class Plotter:
         :param max_val: max scale of the plot
         """
 
-        width = 0.05 * max_val
-        height = 0.05 * max_val
+        width = PATCH_SIZE * max_val
+        height = PATCH_SIZE * max_val
         for node in self.system.supports_fixed:
 
             support_patch = mpatches.Rectangle((node.vertex.x - width * 0.5, - node.vertex.z - width * 0.5),
@@ -62,7 +64,7 @@ class Plotter:
         :param max_val: max scale of the plot
         """
         if self.backend == "mpl":
-            radius = 0.04 * max_val
+            radius = PATCH_SIZE * max_val
             for node in self.system.supports_hinged:
                 support_patch = mpatches.RegularPolygon((node.vertex.x, -node.vertex.z - radius),
                                                         numVertices=3, radius=radius, color='r', zorder=9)
@@ -82,7 +84,7 @@ class Plotter:
         """
         :param max_val: max scale of the plot
         """
-        radius = 0.03 * max_val
+        radius = PATCH_SIZE * max_val
         count = 0
         for node in self.system.supports_roll:
 
@@ -118,7 +120,7 @@ class Plotter:
         """
         :param max_val: max scale of the plot
         """
-        radius = 0.04 * max_val
+        radius = PATCH_SIZE * max_val
 
         for node in self.system.supports_spring_y:
             r = np.arange(0, radius, 0.001)
@@ -145,7 +147,7 @@ class Plotter:
         """
         :param max_val: max scale of the plot
         """
-        h = 0.03 * max_val
+        h = PATCH_SIZE * max_val
         left = -0.5 * h
         right = 0.5 * h
         dh = 0.2 * h
@@ -331,9 +333,9 @@ class Plotter:
         max_plot_range = max(max_x, max_z)
         self.max_val = max_plot_range
         range = max_plot_range * scale
-        plusxrange = center_x + range
+        plusxrange = center_x + range * figsize[1] / figsize[0]
         plusyrange = center_z + range
-        minxrange = center_x - range
+        minxrange = center_x - range * figsize[1] / figsize[0]
         minyrange = center_z - range
 
         self.one_fig.axis([minxrange, plusxrange, minyrange, plusyrange])

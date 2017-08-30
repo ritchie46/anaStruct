@@ -11,9 +11,7 @@ from anastruct.fem.plotter import Plotter
 class SystemElements:
     def __init__(self, figsize=(12, 8), EA=15e3, EI=5e3, load_factor=1, mesh=50, plot_backend='mpl'):
         """
-
         :param figsize: (tpl)
-        :param xy_cs: (Bool) Convert to xy coordinate system. Standard is xz
         :param EA: (flt) Standard E * A
         :param EI: (flt) Standard E * I
         :param load_factor: (tpl) Multiply all loads with this factor.
@@ -30,12 +28,6 @@ class SystemElements:
         self.EA = EA
         self.EI = EI
         self.figsize = figsize
-        # self.xy_cs = xy_cs
-        #
-        # if xy_cs:
-        #     self.orientation_cs = -1
-        # else:
-        #     self.orientation_cs = 1
         self.orientation_cs = -1  # needed for the loads directions
 
         # structure system
