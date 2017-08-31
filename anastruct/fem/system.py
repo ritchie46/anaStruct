@@ -389,10 +389,11 @@ class SystemElements:
             self.system_matrix[matrix_index][matrix_index] += K
 
         for i in range(len(self.element_map)):
+            element_matrix = self.element_map[i + 1].stiffness_matrix
             for row_index in range(len(self.system_matrix_locations[i])):
                 count = 0
                 for loc in self.system_matrix_locations[i][row_index]:
-                    self.system_matrix[loc[0]][loc[1]] += self.element_map[i + 1].stiffness_matrix[row_index][count]
+                    self.system_matrix[loc[0]][loc[1]] += element_matrix[row_index][count]
                     count += 1
 
         # returns True if symmetrical.
