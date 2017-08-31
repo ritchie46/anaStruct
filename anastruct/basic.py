@@ -1,5 +1,8 @@
 import numpy as np
-import math
+try:
+    from anastruct.cython.cbasic import converge, angle_x_axis
+except ImportError:
+    from anastruct.cython.basic import converge, angle_x_axis
 
 
 def find_nearest(array, value):
@@ -12,28 +15,6 @@ def find_nearest(array, value):
     # The lowest value is the nearest.
     index = (np.abs(array-value)).argmin()
     return array[index], index
-
-
-def converge(lhs, rhs, div=3):
-    """
-    Determine convergence factor.
-
-    :param lhs: (flt)
-    :param rhs: (flt)
-    :param div: (flt)
-    :return: multiplication factor (flt) ((lhs / rhs) - 1) / div + 1
-    """
-    return (abs(rhs) / abs(lhs) - 1) / div + 1
-
-
-def angle_x_axis(delta_x, delta_z):
-    # dot product v_x = [1, 0] ; v = [delta_x, delta_z]
-    # dot product = 1 * delta_x + 0 * delta_z -> delta_x
-    ai = math.acos(delta_x / math.sqrt(delta_x**2 + delta_z**2))
-    if delta_z < 0:
-        ai = 2 * math.pi - ai
-
-    return ai
 
 
 def integrate_array(y, dx):

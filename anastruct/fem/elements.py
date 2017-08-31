@@ -2,6 +2,11 @@ import math
 import numpy as np
 from functools import lru_cache
 
+try:
+    from anastruct.fem.cython.celements import det_shear, det_moment
+except ImportError:
+    from anastruct.fem.cython.elements import det_shear, det_moment
+
 """
 The matrices underneath are for slender beams, where the most deformation occurs due to bending.
 Shear deformation is not taken into account.
@@ -176,41 +181,6 @@ def stiffness_matrix(var_constitutive_matrix, var_kinematic_matrix):
 
 
 @lru_cache(CACHE_BOUND)
-def det_moment(kl, kr, q, x, EI, L):
-    """
-    See notebook in: anastruct/fem/background/primary_m_v.ipynb
-
-    :param kl: (flt) rotational stiffness left
-    :param kr: (flt) rotational stiffness right
-    :param q: (flt)
-    :param x: (flt) Location of bending moment
-    :param EI: (flt)
-    :param L: (flt) Length of the beam
-    :return: (flt)
-    """
-    return EI*(-L**3*kl*q*(6*EI + L*kr)/(12*EI*(12*EI**2 + 4*EI*L*kl + 4*EI*L*kr + L**2*kl*kr)) +
-               L*q*x*(12*EI**2 + 5*EI*L*kl + 3*EI*L*kr +
-                      L**2*kl*kr)/(2*EI*(12*EI**2 + 4*EI*L*kl + 4*EI*L*kr + L**2*kl*kr)) - q*x**2/(2*EI))
-
-
-@lru_cache(CACHE_BOUND)
-def det_shear(kl, kr, q, x, EI, L):
-    """
-    See notebook in: anastruct/fem/background/primary_m_v.ipynb
-
-    :param kl: (flt) rotational stiffness left
-    :param kr: (flt) rotational stiffness right
-    :param q: (flt)
-    :param x: (flt) Location of bending moment
-    :param EI: (flt)
-    :param L: (flt) Length of the beam
-    :return: (flt)
-    """
-    return EI*(L*q*(12*EI**2 + 5*EI*L*kl + 3*EI*L*kr + L**2*kl*kr) /
-               (2*EI*(12*EI**2 + 4*EI*L*kl + 4*EI*L*kr + L**2*kl*kr)) - q*x/EI)
-
-
-@lru_cache(CACHE_BOUND)
 def det_axial(EA, L, q, x):
     """
     See notebook in: anastruct/fem/background/distributed_ax_force.ipynb
@@ -221,4 +191,4 @@ def det_axial(EA, L, q, x):
     :param L: (flt) Length of the beam
     :return: (flt)
     """
-    EA * (L * q / (2 * EA) - q * x / EA)
+    return EA * (L * q / (2 * EA) - q * x / EA)

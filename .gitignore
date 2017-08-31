@@ -80,3 +80,7 @@ MANIFEST
 /__pycache__
 *.pyc
 *.ipynb
+*.pyd
+*.c
+
+build/*
