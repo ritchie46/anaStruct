@@ -977,6 +977,12 @@ class SystemElements:
         elif unit == "moment":
             return [el.bending_moment[0] for el in self.element_map.values()]
 
+    def get_node_result_range(self, unit):
+        if unit == "uy":
+            return [node.uz for node in self.node_map.values()]   # - * -  = +
+        elif unit == "ux":
+            return [-node.ux for node in self.node_map.values()]
+
     def find_node_id(self, vertex):
         """
         :param vertex: (Vertex/ list/ tpl) Vertex_xz, [x, z], (x, z)
