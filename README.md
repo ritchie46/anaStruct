@@ -1,7 +1,7 @@
 # anaStruct 2D Frames and Trusses
 [![Build Status](https://travis-ci.org/ritchie46/anaStruct.svg?branch=master)](https://travis-ci.org/ritchie46/anaStruct)
 
-Analise 2D Frames and trusses for slender structures. Determine the bending moment, shear force, normal force and displacements.
+Analyse 2D Frames and trusses for slender structures. Determine the bending moment, shear force, normal force and displacements.
 
 ## Note!
 
@@ -56,12 +56,12 @@ $ pip install git+https://github.com/ritchie46/anaStruct.git
 import StructuralEngineering.FEM.system as se
 
 # Create a new system object.
-system = se.SystemElements()
+system = se.SystemElements(EA=15000, EI=5000)
 
 # Add beams to the system. Positive z-axis is down, positive x-axis is the right.
-system.add_element(location_list=[[0, 0], [0, -5]], EA=15000, EI=5000)
-system.add_element(location_list=[[0, -5], [5, -5]], EA=15000, EI=5000)
-system.add_element(location_list=[[5, -5], [5, 0]], EA=15000, EI=5000)
+system.add_element(location_list=[[0, 0], [0, 5]])
+system.add_element(location_list=[[0, 5], [5, 5]])
+system.add_element(location_list=[[5, 5], [5, 0]])
 
 # Add supports.
 system.add_support_fixed(node_id=1)
@@ -70,7 +70,7 @@ system.add_support_spring(node_id=4, translation=3, K=4000)
 
 # Add loads.
 system.point_load(Fx=30, node_id=2)
-system.q_load(q=10, elementID=2)
+system.q_load(q=-10, elementID=2)
 
 system.show_structure()
 system.solve()
