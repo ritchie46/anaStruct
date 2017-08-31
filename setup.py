@@ -1,8 +1,8 @@
 import sys
 from setuptools import setup
-
+from Cython.Build import cythonize
 try:
-    from Cython.Buiald import cythonize
+    from Cython.Build import cythonize
     em = cythonize(["anastruct/cython/cbasic.pyx", "anastruct/fem/cython/celements.pyx"])
 except ImportError:
     em = []
@@ -27,6 +27,6 @@ setup(
         "numpy",
         "plotly"
     ],
-    ext_modules=em
+    ext_modules=cythonize(["anastruct/cython/cbasic.pyx", "anastruct/fem/cython/celements.pyx"])
 
 )

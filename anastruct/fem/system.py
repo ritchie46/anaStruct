@@ -375,7 +375,7 @@ class SystemElements:
             matrix_locations.append(full_row_locations)
         self.system_matrix_locations.append(matrix_locations)
 
-    def __assemble_system_matrix(self):
+    def __assemble_system_matrix(self, validate=False):
         """
         Shape of the matrix = n nodes * n d.o.f.
         Shape = n * 3
@@ -396,7 +396,8 @@ class SystemElements:
                     count += 1
 
         # returns True if symmetrical.
-        return np.allclose((self.system_matrix.transpose()), self.system_matrix)
+        if validate:
+            return np.allclose((self.system_matrix.transpose()), self.system_matrix)
 
     def set_force_vector(self, force_list):
         """
