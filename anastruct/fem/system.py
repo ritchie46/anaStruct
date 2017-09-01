@@ -66,6 +66,7 @@ class SystemElements:
         # Objects state
         self.count = 0
         self.system_matrix_locations = []
+        self.system_matrix_locations_2 = []
         self.system_matrix = None
         self.system_force_vector = None
         self.system_displacement_vector = None
@@ -342,7 +343,17 @@ class SystemElements:
         row_index_n2 = (element.node_2.id - 1) * 3
         matrix_locations = []
 
+        column_index_n1 = (element.node_1.id - 1) * 3
+        column_index_n2 = (element.node_2.id - 1) * 3
+
+        # starting indexes
+        # print(row_index_n1, row_index_n1)
+        # print(row_index_n2, row_index_n1)
+
+        self.system_matrix_locations_2.append(((row_index_n1, column_index_n1), (row_index_n2, column_index_n2)))
+
         for _ in range(3):  # ux1, uz1, phi1
+
             full_row_locations = []
             column_index_n1 = (element.node_1.id - 1) * 3
             column_index_n2 = (element.node_2.id - 1) * 3
@@ -354,11 +365,10 @@ class SystemElements:
             for i in range(3):  # matrix row index 4, 5, 6
                 full_row_locations.append((row_index_n1, column_index_n2))
                 column_index_n2 += 1
-
             row_index_n1 += 1
             matrix_locations.append(full_row_locations)
 
-        for _ in range(3):  # ux3, uz3, phi3
+        for _ in range(3):  # ux2, uz2, phi2
             full_row_locations = []
             column_index_n1 = (element.node_1.id - 1) * 3
             column_index_n2 = (element.node_2.id - 1) * 3
@@ -373,6 +383,7 @@ class SystemElements:
 
             row_index_n2 += 1
             matrix_locations.append(full_row_locations)
+
         self.system_matrix_locations.append(matrix_locations)
 
     def __assemble_system_matrix(self, validate=False):
@@ -389,12 +400,14 @@ class SystemElements:
             self.system_matrix[matrix_index][matrix_index] += K
 
         for i in range(len(self.element_map)):
-            element_matrix = self.element_map[i + 1].stiffness_matrix
+            element = self.element_map[i + 1]
+            element_matrix = element.stiffness_matrix
+
             for row_index in range(len(self.system_matrix_locations[i])):
-                count = 0
-                for loc in self.system_matrix_locations[i][row_index]:
-                    self.system_matrix[loc[0]][loc[1]] += element_matrix[row_index][count]
-                    count += 1
+                row, col = self.system_matrix_locations[i][row_index][0]
+                self.system_matrix[row, col: col+3] += element_matrix[row_index, :3]
+                row, col = self.system_matrix_locations[i][row_index][3]
+                self.system_matrix[row, col: col + 3] += element_matrix[row_index, 3:]
 
         # returns True if symmetrical.
         if validate:
