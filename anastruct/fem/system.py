@@ -336,13 +336,10 @@ class SystemElements:
          """
         # starting row
         # node 1
-        row_index_n1 = (element.node_1.id - 1) * 3
+        row_index_n1 = column_index_n1 =  (element.node_1.id - 1) * 3
 
         # node 2
-        row_index_n2 = (element.node_2.id - 1) * 3
-
-        column_index_n1 = (element.node_1.id - 1) * 3
-        column_index_n2 = (element.node_2.id - 1) * 3
+        row_index_n2 = column_index_n2 = (element.node_2.id - 1) * 3
 
         matrix_locations = [
             [(row_index_n1, column_index_n1), (row_index_n1, column_index_n2)],  # ux1, uz1, phi1
