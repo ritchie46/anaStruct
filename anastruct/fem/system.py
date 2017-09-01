@@ -9,14 +9,22 @@ from anastruct.fem.plotter import Plotter
 
 
 class SystemElements:
+    """
+    Modelling any structure starts with an object of this class.
+    """
+
     def __init__(self, figsize=(12, 8), EA=15e3, EI=5e3, load_factor=1, mesh=50, plot_backend='mpl'):
         """
-        :param figsize: (tpl)
-        :param EA: (flt) Standard E * A
-        :param EI: (flt) Standard E * I
-        :param load_factor: (tpl) Multiply all loads with this factor.
+        E = Young's modulus
+        A = Area
+        I = Moment of Inertia
+
+        :param figsize: (tpl) Set the standard plotting size.
+        :param EA: (flt) Standard E * A. Set the standard values of EA if none provided when generating an element.
+        :param EI: (flt) Standard E * I. Set the standard values of EA if none provided when generating an element.
+        :param load_factor: (flt) Multiply all loads with this factor.
         :param mesh: (int) Plotting mesh. Has no influence on the calculation.
-        :param plot_backend: (str)  matplotlib  -> "mpl"
+        :param plot_backend: (str)  matplotlib  -> "mpl"  (Currently only the matplotlib one is stable)
                                     plotly      -> "plt"
                                     plotly nb   -> "ipt"
         """
@@ -74,37 +82,69 @@ class SystemElements:
         self.reduced_system_matrix = None
         self._vertices = {}  # maps vertices to node ids
 
-    def add_truss_element(self, location_list, EA=None):
-        return self.add_element(location_list, EA, 1e-14, element_type='truss')
+    def add_truss_element(self, location, EA=None):
+        """
+        .. highlight:: python
+
+        Add an element that only has axial force.
+
+        :param location: (list/ Vertex) The two nodes of the element or the next node of the element.
+
+            :Example:
+
+            .. code-block:: python
+
+                   location=[[x, y], [x, y]]
+                   location=[Vertex, Vertex]
+                   location=[x, y]
+                   location=Vertex
+
+        :param EA: (flt) EA
+        :return: (int) Elements ID.
+        """
+        return self.add_element(location, EA, 1e-14, element_type='truss')
 
     def add_element(self, location, EA=None, EI=None, g=0, mp=None, spring=None, **kwargs):
         """
-        :param location: (list/ Pointxz) The two nodes of the element or the next node of the element.
-                                Examples:
-                                    [[x, z], [x, z]]
-                                    [Pointxz, Pointxz]
-                                    [x, z]
-                                    Pointxz
+        :param location: (list/ Vertex) The two nodes of the element or the next node of the element.
+
+            :Example:
+
+            .. code-block:: python
+
+                   location=[[x, y], [x, y]]
+                   location=[Vertex, Vertex]
+                   location=[x, y]
+                   location=Vertex
+
         :param EA: (flt) EA
         :param EI: (flt) EI
         :param g: (flt) Weight per meter. [kN/m] / [N/m]
         :param mp: (dict) Set a maximum plastic moment capacity. Keys are integers representing the nodes. Values
                           are the bending moment capacity.
-                          Example:
-                          { 1: 210e3,
-                            2: 180e3
-                          }
+
+            :Example:
+
+            .. code-block:: python
+
+                mp={1: 210e3,
+                    2: 180e3}
+
         :param spring: (dict) Set a rotational spring or a hinge (k=0) at node 1 or node 2.
-                            { 1: k
-                              2: k }
 
-                             Set a hinged node:
-                             {1: 0}
+            :Example:
 
-                        direction 1: ux
-                        direction 2: uz
-                        direction 3: phi_y
-        :return element id: (int)
+            .. code-block:: python
+
+                spring={1: k
+                        2: k}
+
+
+                # Set a hinged node:
+                spring={1: 0}
+
+
+        :return: (int) Elements ID.
         """
         element_type = kwargs.get("element_type", "general")
 
@@ -259,13 +299,20 @@ class SystemElements:
         :param g: See 'add_element' method
         :param mp: See 'add_element' method
         :param spring: See 'add_element' method
-        :param kwargs:
-                element_type: (str) See 'add_element' method
-                first: (dict) Different arguments for the first element
-                last: (dict) Different arguments for the last element
-                     Example:
-                     last = {'EA': 1e3, 'mp': 290}
-        :return: (list) Element id's
+
+        **Keyword Args:**
+
+        :param element_type: (str) See 'add_element' method
+        :param first: (dict) Different arguments for the first element
+        :param last: (dict) Different arguments for the last element
+
+            :Example:
+
+            .. code-block:: python
+
+                last={'EA': 1e3, 'mp': 290}
+
+        :return: (list) Element IDs
         """
 
         first = kwargs.get("first", {})
@@ -336,7 +383,7 @@ class SystemElements:
          """
         # starting row
         # node 1
-        row_index_n1 = column_index_n1 =  (element.node_1.id - 1) * 3
+        row_index_n1 = column_index_n1 = (element.node_1.id - 1) * 3
 
         # node 2
         row_index_n2 = column_index_n2 = (element.node_2.id - 1) * 3
@@ -377,7 +424,7 @@ class SystemElements:
         if validate:
             assert np.allclose((self.system_matrix.transpose()), self.system_matrix)
 
-    def set_force_vector(self, force_list):
+    def _set_force_vector(self, force_list):
         """
         :param force_list: list containing tuples with the
         1. number of the node,
@@ -398,7 +445,7 @@ class SystemElements:
             self.system_force_vector[index] += force
         return self.system_force_vector
 
-    def set_displacement_vector(self, nodes_list):
+    def _set_displacement_vector(self, nodes_list):
         """
         :param nodes_list: list containing tuples with
         1.the node
@@ -437,17 +484,21 @@ class SystemElements:
         self.system_force_vector = original_force_vector
         self.system_matrix = original_system_matrix
 
-    def solve(self, gnl=False, force_linear=False, verbosity=0, max_iter=1000, **kwargs):
-        """
+    def solve(self, force_linear=False, verbosity=0, max_iter=200, **kwargs):
 
-        :param gnl: (bool) Toggle geometrical non linear calculation.
+        """
+        Compute the results of current model.
+
         :param force_linear: (bool) Force a linear calculation. Even when the system has non linear nodes.
-        :param verbosity: (int) 0. get calculation outputs. 1. silence.
-        :param max_iter: (int) maximum allowed iterations.
-        :param kwargs: arguments for the iterative solver callers such as the _stiffness_adaptation method.
-                       naked (bool) Default = False, if True force lines won't be computed.
+        :param verbosity: (int) 0. Log calculation outputs. 1. silence.
+        :param max_iter: (int) Maximum allowed iterations.
+
         :return: (array) Displacements vector.
         """
+
+        # kwargs: arguments for the iterative solver callers such as the _stiffness_adaptation method.
+        #                naked (bool) Default = False, if True force lines won't be computed.
+
         naked = kwargs.get("naked", False)
 
         # (Re)set force vectors
@@ -458,9 +509,6 @@ class SystemElements:
         self._apply_perpendicular_q_load()
         self._apply_point_load()
         self._apply_moment_load()
-
-        if gnl:
-            return self._gnl(verbosity)
 
         if self.non_linear and not force_linear:
             return self._stiffness_adaptation(verbosity, max_iter)
@@ -593,31 +641,33 @@ class SystemElements:
 
     def add_support_hinged(self, node_id):
         """
-        adds a hinged support a the given node
-        :param node_id: integer representing the nodes ID
+        Model a hinged support at a given node.
+
+        :param node_id: (int/ list) Represents the nodes ID
         """
         if not isinstance(node_id, (tuple, list)):
             node_id = (node_id,)
 
         for id_ in node_id:
             self._support_check(id_)
-            self.set_displacement_vector([(id_, 1), (id_, 2)])
+            self._set_displacement_vector([(id_, 1), (id_, 2)])
 
             # add the support to the support list for the plotter
             self.supports_hinged.append(self.node_map[id_])
 
     def add_support_roll(self, node_id, direction=2):
         """
-        adds a rollable support at the given node
-        :param node_id: integer representing the nodes ID
-        :param direction: integer representing the direction that is fixed: x = 1, z = 2
+        Adds a rolling support at a given node.
+
+        :param node_id: (int/ list) Represents the nodes ID
+        :param direction: (int/ list) Represents the direction that is fixed: x = 1, y = 2
         """
         if not isinstance(node_id, (tuple, list)):
             node_id = (node_id,)
 
         for id_ in node_id:
             self._support_check(id_)
-            self.set_displacement_vector([(id_, direction)])
+            self._set_displacement_vector([(id_, direction)])
 
             # add the support to the support list for the plotter
             self.supports_roll.append(self.node_map[id_])
@@ -625,32 +675,41 @@ class SystemElements:
 
     def add_support_fixed(self, node_id):
         """
-        adds a fixed support at the given node
-        :param node_id: (int/ list) integer representing the nodes ID
+        Add a fixed support at a given node.
+
+        :param node_id: (int/ list) Represents the nodes ID
         """
         if not isinstance(node_id, (tuple, list)):
             node_id = (node_id,)
 
         for id_ in node_id:
             self._support_check(id_)
-            self.set_displacement_vector([(id_, 1), (id_, 2), (id_, 3)])
+            self._set_displacement_vector([(id_, 1), (id_, 2), (id_, 3)])
 
             # add the support to the support list for the plotter
             self.supports_fixed.append(self.node_map[id_])
 
     def add_support_spring(self, node_id, translation, k, roll=False):
         """
-        :param translation: (int) Integer representing prevented translation.
-        1 = translation in x
-        2 = translation in z
-        3 = rotation in y
+        Add a translational support at a given node.
+
+        Parameters
+        ----------
+        :param translation: (int/ list) Represents the prevented translation.
+
+            **Note**
+
+            |  1 = translation in x
+            |  2 = translation in z
+            |  3 = rotation in y
+
         :param node_id: (int/ list) Integer representing the nodes ID.
         :param k: (flt) Stiffness of the spring
-        :param roll: If set to True, only the translation of the spring is controlled.
+        :param roll: (bool) If set to True, only the translation of the spring is controlled.
 
-        The stiffness of the spring is added in the system matrix at the location that represents the node and the
-        displacement.
         """
+        # The stiffness of the spring is added in the system matrix at the location that represents the node and the
+        # displacement.
         if not isinstance(node_id, (tuple, list)):
             node_id = (node_id,)
 
@@ -673,11 +732,11 @@ class SystemElements:
 
             if not roll:  # fix the other d.o.f.
                 if translation == 1:  # translation spring in x-axis
-                    self.set_displacement_vector([(id_, 2)])
+                    self._set_displacement_vector([(id_, 2)])
                 elif translation == 2:  # translation spring in z-axis
-                    self.set_displacement_vector([(id_, 1)])
+                    self._set_displacement_vector([(id_, 1)])
                 elif translation == 3:  # rotational spring in y-axis
-                    self.set_displacement_vector([(id_, 1), (id_, 2)])
+                    self._set_displacement_vector([(id_, 1), (id_, 2)])
 
     def _dead_load(self, g, element_id):
         self.loads_dead_load.append((element_id, g))
@@ -685,10 +744,12 @@ class SystemElements:
 
     def q_load(self, q, element_id, direction="element"):
         """
+        Apply a q-load to an element.
+
         :param element_id: (int/ list) representing the element ID
         :param q: (flt) value of the q-load
         :param direction: (str) "element", "x", "y"
-        :return: (None)
+
         """
         if not isinstance(element_id, (tuple, list)):
             element_id = (element_id,)
@@ -741,9 +802,9 @@ class SystemElements:
             # system force vector. System forces = element force * -1
             # first row are the moments
             # second and third row are the reaction forces. The direction
-            self.set_force_vector([(element.node_1.id, 3, -left_moment), (element.node_2.id, 3, -right_moment),
-                                   (element.node_1.id, 2, rleft_z), (element.node_2.id, 2, rright_z),
-                                   (element.node_1.id, 1, rleft_x), (element.node_2.id, 1, rright_x)])
+            self._set_force_vector([(element.node_1.id, 3, -left_moment), (element.node_2.id, 3, -right_moment),
+                                    (element.node_1.id, 2, rleft_z), (element.node_2.id, 2, rright_z),
+                                    (element.node_1.id, 1, rleft_x), (element.node_2.id, 1, rright_x)])
 
     def _apply_parallel_q_load(self, element):
         direction = element.q_direction
@@ -765,11 +826,18 @@ class SystemElements:
         element.element_primary_force_vector[3] -= Fx
         element.element_primary_force_vector[4] -= Fz
 
-        self.set_force_vector([
+        self._set_force_vector([
             (element.node_1.id, 2, Fz), (element.node_2.id, 2, Fz),
             (element.node_1.id, 1, Fx), (element.node_2.id, 1, Fx)])
 
     def point_load(self, node_id, Fx=0, Fz=0):
+        """
+        Apply a point load to a node.
+
+        :param node_id: (int) Nodes ID.
+        :param Fx: (flt/ list) Force in global x direction.
+        :param Fz: (flt/ list) Force in global x direction.
+        """
         if not isinstance(node_id, (tuple, list)):
             node_id = (node_id,)
             Fx = (Fx,)
@@ -787,7 +855,7 @@ class SystemElements:
         for node_id in self.loads_point:
             Fx, Fz = self.loads_point[node_id]
             # system force vector.
-            self.set_force_vector([(node_id, 1, Fx * self.load_factor), (node_id, 2, Fz * self.load_factor)])
+            self._set_force_vector([(node_id, 1, Fx * self.load_factor), (node_id, 2, Fz * self.load_factor)])
 
     def moment_load(self, node_id, Ty):
         if not isinstance(node_id, (tuple, list)):
@@ -799,7 +867,7 @@ class SystemElements:
 
     def _apply_moment_load(self):
         for node_id, Ty in self.loads_moment.items():
-            self.set_force_vector([(node_id, 3, Ty * self.load_factor)])
+            self._set_force_vector([(node_id, 3, Ty * self.load_factor)])
 
     def show_structure(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True, supports=True):
         figsize = self.figsize if figsize is None else figsize
@@ -833,10 +901,14 @@ class SystemElements:
 
         :param node_id: (integer) representing the node's ID. If integer = 0, the results of all nodes are returned
         :return:
-                if node_id == 0: (list)
-                    Returns a list containing tuples with the results
-                    [(id, Fx, Fz, Ty, ux, uy, phi_y), (id, Fx, Fz...), () .. ]
-                if node_id > 0: (dict)
+
+        |  if node_id == 0: (list)
+        |
+        |    Returns a list containing tuples with the results:
+        |
+        |     [(id, Fx, Fz, Ty, ux, uy, phi_y), (id, Fx, Fz...), () .. ]
+        |
+        |  if node_id > 0: (dict)
         """
         result_list = []
         if node_id != 0:
@@ -857,12 +929,15 @@ class SystemElements:
 
     def get_node_displacements(self, node_id=0):
         """
-        :param node_id: (integer) representing the node's ID. If integer = 0, the results of all nodes are returned
+        :param node_id: (int) Represents the node's ID. If integer = 0, the results of all nodes are returned.
         :return:
-                if node_id == 0: (list)
-                    Returns a list containing tuples with the results
-                    [(id,  ux, uy, phi_y), (id, ux, uy), () .. ]
-                if node_id > 0: (dict)
+        |  if node_id == 0: (list)
+        |
+        |    Returns a list containing tuples with the results:
+        |
+        |     [(id, Fx, Fz, Ty, ux, uy, phi_y), (id, Fx, Fz...), () .. ]
+        |
+        |  if node_id > 0: (dict)
         """
         result_list = []
         if node_id != 0:
@@ -884,9 +959,13 @@ class SystemElements:
         :param verbose: (bool) If set to True the numerical results for the deflection and the bending moments are
                                returned.
         :return:
-                if node_id == 0: (list)
-                    Returns a list containing tuples with the results
-                if node_id > 0: (dict)
+        |  if node_id == 0: (list)
+        |
+        |    Returns a list containing tuples with the results:
+        |
+        |     [(id, Fx, Fz, Ty, ux, uy, phi_y), (id, Fx, Fz...), () .. ]
+        |
+        |  if node_id > 0: (dict)
         """
         if element_id != 0:
             el = self.element_map[element_id]
@@ -951,12 +1030,29 @@ class SystemElements:
             return result_list
 
     def get_element_result_range(self, unit):
+        """
+        Useful when added lots of elements. Returns a list of all the queried unit.
+
+        :param unit: (str)
+            - 'shear'
+            - 'moment'
+
+        :return: (list)
+        """
         if unit == "shear":
             return [el.shear_force[0] for el in self.element_map.values()]
         elif unit == "moment":
             return [el.bending_moment[0] for el in self.element_map.values()]
 
     def get_node_result_range(self, unit):
+        """
+        Query a list with node results.
+
+           :param unit: (str)
+            - 'uy'
+            - 'ux'
+        :return: (list)
+        """
         if unit == "uy":
             return [node.uz for node in self.node_map.values()]   # - * -  = +
         elif unit == "ux":
@@ -964,7 +1060,9 @@ class SystemElements:
 
     def find_node_id(self, vertex):
         """
-        :param vertex: (Vertex/ list/ tpl) Vertex_xz, [x, z], (x, z)
+        Retrieve the ID of a certain location.
+
+        :param vertex: (Vertex/ list/ tpl) Vertex_xz, [x, y], (x, y)
         :return: (int/ None) id of the node at the location of the vertex
         """
         if isinstance(vertex, (list, tuple)):

@@ -3,6 +3,9 @@
 
 Analyse 2D Frames and trusses for slender structures. Determine the bending moment, shear force, normal force and displacements.
 
+## Real world use case!
+[Non linear water accumulation analysis](https://ritchievink.com/blog/2017/08/23/a-nonlinear-water-accumulation-analysis-in-python/)
+
 ## Note!
 
 I am currently updating quite frequently, adding support for non linear nodes, better plotting options, numerical results and

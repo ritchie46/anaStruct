@@ -867,7 +867,7 @@ class SystemElements:
 
         for id_ in node_id:
             self._support_check(id_)
-            self.set_displacement_vector([(id_, 1), (id_, 2)])
+            self._set_displacement_vector([(id_, 1), (id_, 2)])
 
             # add the support to the support list for the plotter
             self.supports_hinged.append(self.node_map[id_])
@@ -883,7 +883,7 @@ class SystemElements:
 
         for id_ in node_id:
             self._support_check(id_)
-            self.set_displacement_vector([(id_, direction)])
+            self._set_displacement_vector([(id_, direction)])
 
             # add the support to the support list for the plotter
             self.supports_roll.append(self.node_map[id_])
@@ -899,7 +899,7 @@ class SystemElements:
 
         for id_ in node_id:
             self._support_check(id_)
-            self.set_displacement_vector([(id_, 1), (id_, 2), (id_, 3)])
+            self._set_displacement_vector([(id_, 1), (id_, 2), (id_, 3)])
 
             # add the support to the support list for the plotter
             self.supports_fixed.append(self.node_map[id_])
@@ -939,11 +939,11 @@ class SystemElements:
 
             if not roll:  # fix the other d.o.f.
                 if translation == 1:  # translation spring in x-axis
-                    self.set_displacement_vector([(id_, 2)])
+                    self._set_displacement_vector([(id_, 2)])
                 elif translation == 2:  # translation spring in z-axis
-                    self.set_displacement_vector([(id_, 1)])
+                    self._set_displacement_vector([(id_, 1)])
                 elif translation == 3:  # rotational spring in y-axis
-                    self.set_displacement_vector([(id_, 1), (id_, 2)])
+                    self._set_displacement_vector([(id_, 1), (id_, 2)])
 
     def _dead_load(self, g, element_id):
         self.loads_dead_load.append((element_id, g))
@@ -1007,9 +1007,9 @@ class SystemElements:
             # system force vector. System forces = element force * -1
             # first row are the moments
             # second and third row are the reaction forces. The direction
-            self.set_force_vector([(element.node_1.id, 3, -left_moment), (element.node_2.id, 3, -right_moment),
-                                   (element.node_1.id, 2, rleft_z), (element.node_2.id, 2, rright_z),
-                                   (element.node_1.id, 1, rleft_x), (element.node_2.id, 1, rright_x)])
+            self._set_force_vector([(element.node_1.id, 3, -left_moment), (element.node_2.id, 3, -right_moment),
+                                    (element.node_1.id, 2, rleft_z), (element.node_2.id, 2, rright_z),
+                                    (element.node_1.id, 1, rleft_x), (element.node_2.id, 1, rright_x)])
 
     def _apply_parallel_q_load(self, element):
         direction = element.q_direction
@@ -1031,7 +1031,7 @@ class SystemElements:
         element.element_primary_force_vector[3] -= Fx
         element.element_primary_force_vector[4] -= Fz
 
-        self.set_force_vector([
+        self._set_force_vector([
             (element.node_1.id, 2, Fz), (element.node_2.id, 2, Fz),
             (element.node_1.id, 1, Fx), (element.node_2.id, 1, Fx)])
 
@@ -1052,7 +1052,7 @@ class SystemElements:
     def _apply_point_load(self):
         for node_id, Fx, Fz in self.loads_point:
             # system force vector.
-            self.set_force_vector([(node_id, 1, Fx * self.load_factor), (node_id, 2, Fz * self.load_factor)])
+            self._set_force_vector([(node_id, 1, Fx * self.load_factor), (node_id, 2, Fz * self.load_factor)])
 
     def moment_load(self, node_id, Ty):
         if not isinstance(node_id, (tuple, list)):
@@ -1064,7 +1064,7 @@ class SystemElements:
 
     def _apply_moment_load(self):
         for node_id, _, Ty in self.loads_moment:
-            self.set_force_vector([(node_id, 3, Ty * self.load_factor)])
+            self._set_force_vector([(node_id, 3, Ty * self.load_factor)])
 
     def show_structure(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True, supports=True):
         figsize = self.figsize if figsize is None else figsize
