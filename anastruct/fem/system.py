@@ -66,7 +66,6 @@ class SystemElements:
         # Objects state
         self.count = 0
         self.system_matrix_locations = []
-        self.system_matrix_locations_2 = []
         self.system_matrix = None
         self.system_force_vector = None
         self.system_displacement_vector = None
@@ -341,48 +340,14 @@ class SystemElements:
 
         # node 2
         row_index_n2 = (element.node_2.id - 1) * 3
-        matrix_locations = []
 
         column_index_n1 = (element.node_1.id - 1) * 3
         column_index_n2 = (element.node_2.id - 1) * 3
 
-        # starting indexes
-        # print(row_index_n1, row_index_n1)
-        # print(row_index_n2, row_index_n1)
-
-        self.system_matrix_locations_2.append(((row_index_n1, column_index_n1), (row_index_n2, column_index_n2)))
-
-        for _ in range(3):  # ux1, uz1, phi1
-
-            full_row_locations = []
-            column_index_n1 = (element.node_1.id - 1) * 3
-            column_index_n2 = (element.node_2.id - 1) * 3
-
-            for i in range(3):  # matrix row index 1, 2, 3
-                full_row_locations.append((row_index_n1, column_index_n1))
-                column_index_n1 += 1
-
-            for i in range(3):  # matrix row index 4, 5, 6
-                full_row_locations.append((row_index_n1, column_index_n2))
-                column_index_n2 += 1
-            row_index_n1 += 1
-            matrix_locations.append(full_row_locations)
-
-        for _ in range(3):  # ux2, uz2, phi2
-            full_row_locations = []
-            column_index_n1 = (element.node_1.id - 1) * 3
-            column_index_n2 = (element.node_2.id - 1) * 3
-
-            for i in range(3):  # matrix row index 1, 2, 3
-                full_row_locations.append((row_index_n2, column_index_n1))
-                column_index_n1 += 1
-
-            for i in range(3):  # matrix row index 4, 5, 6
-                full_row_locations.append((row_index_n2, column_index_n2))
-                column_index_n2 += 1
-
-            row_index_n2 += 1
-            matrix_locations.append(full_row_locations)
+        matrix_locations = [
+            [(row_index_n1, column_index_n1), (row_index_n1, column_index_n2)],  # ux1, uz1, phi1
+            [(row_index_n2, column_index_n1), (row_index_n2, column_index_n2)]  # ux2, uz2, phi2
+        ]
 
         self.system_matrix_locations.append(matrix_locations)
 
@@ -403,11 +368,13 @@ class SystemElements:
             element = self.element_map[i + 1]
             element_matrix = element.stiffness_matrix
 
-            for row_index in range(0, len(self.system_matrix_locations[i]), 3):
+            # self.system_matrix_locations[i] stores indexes of this element in the systems matrix
+            for row_index in range(0, len(self.system_matrix_locations[i]), 1):
+                el_index = row_index * 3
                 row, col = self.system_matrix_locations[i][row_index][0]
-                self.system_matrix[row: row + 3, col: col + 3] += element_matrix[row_index: row_index + 3, :3]
-                row, col = self.system_matrix_locations[i][row_index][3]
-                self.system_matrix[row: row + 3, col: col + 3] += element_matrix[row_index: row_index + 3, 3:]
+                self.system_matrix[row: row + 3, col: col + 3] += element_matrix[el_index: el_index + 3, :3]
+                row, col = self.system_matrix_locations[i][row_index][1]
+                self.system_matrix[row: row + 3, col: col + 3] += element_matrix[el_index: el_index + 3, 3:]
 
         # returns True if symmetrical.
         if validate:
