@@ -746,10 +746,11 @@ def plot_values_deflection(element, factor, ax_range, linear=False):
         y_val = np.array([y1, y2])
 
     if ax_range is not None:
-        if np.max(x_val) > ax_range[1] \
-                or np.max(y_val) > ax_range[1]  \
-                or np.min(x_val) < ax_range[0]  \
-                or np.min(y_val) < ax_range[0]:
+
+        if np.max(x_val) > ax_range[1]: # \
+                #or np.max(y_val) > ax_range[1]:  #\
+                # or np.min(x_val) < ax_range[0]  \
+                # or np.min(y_val) < ax_range[0]:
             factor *= 0.1
             return plot_values_deflection(element, factor, ax_range, linear)
     return x_val, y_val

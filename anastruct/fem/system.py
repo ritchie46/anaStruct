@@ -557,7 +557,7 @@ class SystemElements:
         return self.system_displacement_vector
 
     def _stiffness_adaptation(self, verbosity, max_iter):
-        self.solve(False, True, naked=True)
+        self.solve(True, naked=True)
         if verbosity == 0:
             print("Starting stiffness adaptation calculation.")
 
