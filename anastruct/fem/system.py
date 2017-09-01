@@ -403,15 +403,15 @@ class SystemElements:
             element = self.element_map[i + 1]
             element_matrix = element.stiffness_matrix
 
-            for row_index in range(len(self.system_matrix_locations[i])):
+            for row_index in range(0, len(self.system_matrix_locations[i]), 3):
                 row, col = self.system_matrix_locations[i][row_index][0]
-                self.system_matrix[row, col: col+3] += element_matrix[row_index, :3]
+                self.system_matrix[row: row + 3, col: col + 3] += element_matrix[row_index: row_index + 3, :3]
                 row, col = self.system_matrix_locations[i][row_index][3]
-                self.system_matrix[row, col: col + 3] += element_matrix[row_index, 3:]
+                self.system_matrix[row: row + 3, col: col + 3] += element_matrix[row_index: row_index + 3, 3:]
 
         # returns True if symmetrical.
         if validate:
-            return np.allclose((self.system_matrix.transpose()), self.system_matrix)
+            assert np.allclose((self.system_matrix.transpose()), self.system_matrix)
 
     def set_force_vector(self, force_list):
         """
