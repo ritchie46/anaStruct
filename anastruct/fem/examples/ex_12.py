@@ -10,5 +10,4 @@ ss.moment_load([2, 3], [20, -20])
 
 if __name__ == "__main__":
     ss.solve()
-    print([a[3] for a in ss.get_node_results_system()])
     ss.show_bending_moment()

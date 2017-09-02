@@ -10,6 +10,4 @@ ss.point_load([2, 3], [20, -20])
 
 if __name__ == "__main__":
     ss.solve()
-    print(ss.get_node_results_system())
-    print([a[1] for a in ss.get_node_results_system()])
     ss.show_axial_force()

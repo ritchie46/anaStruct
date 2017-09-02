@@ -1,26 +1,22 @@
 import math
-from anastruct.fem import system as se
+from anastruct.fem.system import SystemElements
 
+ss = SystemElements(EA=5000)
+ss.add_truss_element(location=[[0, 0], [0, 5]])
+ss.add_truss_element(location=[[0, 5], [5, 5]])
+ss.add_truss_element(location=[[5, 5], [5, 0]])
+ss.add_truss_element(location=[[0, 0], [5, 5]], EA=5000 * math.sqrt(2))
 
-def run():
-    system = se.SystemElements()
-    system.add_truss_element(location=[[0, 0], [0, 5]], EA=5000)
-    system.add_truss_element(location=[[0, 5], [5, 5]], EA=5000)
-    system.add_truss_element(location=[[5, 5], [5, 0]], EA=5000)
-    system.add_truss_element(location=[[0, 0], [5, 5]], EA=5000 * math.sqrt(2))
+ss.add_support_hinged(node_id=1)
+ss.add_support_hinged(node_id=4)
 
-    system.add_support_hinged(node_id=1)
-    system.add_support_hinged(node_id=4)
+ss.point_load(Fx=10, node_id=2)
 
-    system.point_load(Fx=10, node_id=2)
+ss.solve()
+ss.show_structure()
+ss.show_reaction_force()
+ss.show_axial_force()
+ss.show_shear_force()
+ss.show_bending_moment()
+ss.show_displacement()
 
-    system.solve()
-    system.show_structure()
-    system.show_reaction_force()
-    system.show_axial_force()
-    system.show_shear_force()
-    system.show_bending_moment()
-    system.show_displacement()
-
-if __name__ == "__main__":
-    run()

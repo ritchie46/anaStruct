@@ -333,10 +333,10 @@ class Plotter:
         max_plot_range = max(max_x, max_z)
         self.max_val = max_plot_range
         range = max_plot_range * scale
-        plusxrange = center_x + range * figsize[1] / figsize[0]
-        plusyrange = center_z + range
-        minxrange = center_x - range * figsize[1] / figsize[0]
-        minyrange = center_z - range
+        plusxrange = center_x + range
+        plusyrange = center_z + range * figsize[1] / figsize[0]
+        minxrange = center_x - range
+        minyrange = center_z - range * figsize[1] / figsize[0]
 
         self.one_fig.axis([minxrange, plusxrange, minyrange, plusyrange])
 
@@ -588,7 +588,7 @@ class Plotter:
     def displacements(self, factor, figsize, verbosity, scale, offset, show, linear):
         self.plot_structure(figsize, 1, scale=scale, offset=offset)
         self.max_force = 0
-
+        ax_range = None
         # determine max factor for scaling
         if factor is None:
             for el in self.system.element_map.values():
@@ -598,8 +598,6 @@ class Plotter:
                 else:  # element is truss
                     factor = self.__set_factor(u_node, 0)
                 ax_range = self.one_fig.get_xlim()
-        else:
-            ax_range = None
 
         for el in self.system.element_map.values():
             axis_values = plot_values_deflection(el, factor, ax_range, linear)
@@ -745,13 +743,15 @@ def plot_values_deflection(element, factor, ax_range, linear=False):
         x_val = np.array([x1, x2])
         y_val = np.array([y1, y2])
 
-    if ax_range is not None:
-
-        if np.max(x_val) > ax_range[1]: # \
-                #or np.max(y_val) > ax_range[1]:  #\
-                # or np.min(x_val) < ax_range[0]  \
-                # or np.min(y_val) < ax_range[0]:
-            factor *= 0.1
-            return plot_values_deflection(element, factor, ax_range, linear)
+    # if ax_range is not None:
+    #
+    #     print(np.max(x_val), np.max(y_val), ax_range[1], factor)
+    #     if factor > 1e-6:
+    #         if np.max(x_val) > ax_range[1] \
+    #                 or np.max(y_val) > ax_range[1]\
+    #                 or np.min(x_val) < ax_range[0]  \
+    #                 or np.min(y_val) < ax_range[0]:
+    #             factor *= 0.1
+    #             return plot_values_deflection(element, factor, ax_range, linear)
     return x_val, y_val
 

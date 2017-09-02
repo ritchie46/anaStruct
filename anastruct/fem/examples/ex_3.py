@@ -1,28 +1,29 @@
-from anastruct.fem import system as se
+from anastruct.fem.system import SystemElements
 
+ss = SystemElements(EA=15000, EI=5000)
 
-def run():
-    system = se.SystemElements()
+# Add beams to the system.
+ss.add_element(location=[[0, 0], [0, 5]])
+ss.add_element(location=[[0, 5], [5, 5]])
+ss.add_element(location=[[5, 5], [5, 0]])
 
-    # Add beams to the system. Positive z-axis is down, positive x-axis is the right.
-    system.add_element(location=[[0, 0], [0, 5]], EA=15000, EI=5000)
-    system.add_element(location=[[0, 5], [5, 5]], EA=15000, EI=5000)
-    system.add_element(location=[[5, 5], [5, 0]], EA=15000, EI=5000)
+# Add a fixed support at node 1.
+ss.add_support_fixed(node_id=1)
 
-    system.add_support_fixed(node_id=1)
-    # Add a rotational spring at node 4.
-    system.add_support_spring(node_id=4, translation=3, k=4000)
+# Add a rotational spring support at node 4.
+ss.add_support_spring(node_id=4, translation=3, k=4000)
 
-    system.point_load(Fx=30, node_id=2)
-    system.q_load(q=-10, element_id=2)
-    system.solve()
+# Add loads.
+ss.point_load(Fx=30, node_id=2)
+ss.q_load(q=-10, element_id=2)
 
-    system.show_structure()
-    system.show_reaction_force()
-    system.show_axial_force()
-    system.show_shear_force()
-    system.show_bending_moment()
-    system.show_displacement(factor=1)
+# Solve
+ss.solve()
 
-if __name__ == "__main__":
-    run()
+# Get visual results.
+ss.show_structure()
+ss.show_reaction_force()
+ss.show_axial_force()
+ss.show_shear_force()
+ss.show_bending_moment()
+ss.show_displacement()
