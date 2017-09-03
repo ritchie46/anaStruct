@@ -354,45 +354,6 @@ class SystemElements:
                          element_type=last["element_type"]))
         return elements
 
-    def _det_system_matrix_location(self, element):
-        """
-        :param element (Element)
-
-         Determine the elements location in the stiffness matrix.
-         system matrix [K]
-
-         [fx 1] [K         |  \ node 1 starts at row 1
-         |fz 1] |  K       |  /
-         |Ty 1] |   K      | /
-         |fx 2] |    K     |  \ node 2 starts at row 4
-         |fz 2] |     K    |  /
-         |Ty 2] |      K   | /
-         |fx 3] |       K  |  \ node 3 starts at row 7
-         |fz 3] |        K |  /
-         [Ty 3] [         K] /
-
-                 n   n  n
-                 o   o  o
-                 d   d  d
-                 e   e  e
-                 1   2  3
-
-         thus with appending numbers in the system matrix: column = row
-         """
-        # starting row
-        # node 1
-        row_index_n1 = column_index_n1 = (element.node_1.id - 1) * 3
-
-        # node 2
-        row_index_n2 = column_index_n2 = (element.node_2.id - 1) * 3
-
-        matrix_locations = [
-            [(row_index_n1, column_index_n1), (row_index_n1, column_index_n2)],  # ux1, uz1, phi1
-            [(row_index_n2, column_index_n1), (row_index_n2, column_index_n2)]  # ux2, uz2, phi2
-        ]
-
-        self.system_matrix_locations.append(matrix_locations)
-
     def __assemble_system_matrix(self, validate=False):
         """
         Shape of the matrix = n nodes * n d.o.f.
