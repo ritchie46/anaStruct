@@ -186,8 +186,6 @@ class SystemElements:
         if mp is not None:
             self.non_linear_elements[self.count] = mp
             self.non_linear = True
-
-        self._det_system_matrix_location(element)
         self._dead_load(g, element.id)
 
         return self.count
@@ -408,17 +406,39 @@ class SystemElements:
             #  first index is row, second is column
             self.system_matrix[matrix_index][matrix_index] += K
 
+        # Determine the elements location in the stiffness matrix.
+        # system matrix [K]
+        #
+        # [fx 1] [K         |  \ node 1 starts at row 1
+        # |fz 1] |  K       |  /
+        # |Ty 1] |   K      | /
+        # |fx 2] |    K     |  \ node 2 starts at row 4
+        # |fz 2] |     K    |  /
+        # |Ty 2] |      K   | /
+        # |fx 3] |       K  |  \ node 3 starts at row 7
+        # |fz 3] |        K |  /
+        # [Ty 3] [         K] /
+        #
+        #         n   n  n
+        #         o   o  o
+        #         d   d  d
+        #         e   e  e
+        #         1   2  3
+        #
+        # thus with appending numbers in the system matrix: column = row
+
         for i in range(len(self.element_map)):
             element = self.element_map[i + 1]
             element_matrix = element.stiffness_matrix
 
-            # self.system_matrix_locations[i] stores indexes of this element in the systems matrix
-            for row_index in range(0, len(self.system_matrix_locations[i]), 1):
-                el_index = row_index * 3
-                row, col = self.system_matrix_locations[i][row_index][0]
-                self.system_matrix[row: row + 3, col: col + 3] += element_matrix[el_index: el_index + 3, :3]
-                row, col = self.system_matrix_locations[i][row_index][1]
-                self.system_matrix[row: row + 3, col: col + 3] += element_matrix[el_index: el_index + 3, 3:]
+            # n1 and n2 are starting indexes of the rows and the columns for node 1 and node 2
+            n1 = (element.node_1.id - 1) * 3
+            n2 = (element.node_2.id - 1) * 3
+            self.system_matrix[n1: n1 + 3, n1: n1 + 3] += element_matrix[0:3, :3]
+            self.system_matrix[n1: n1 + 3, n2: n2 + 3] += element_matrix[0:3, 3:]
+
+            self.system_matrix[n2: n2 + 3, n1: n1 + 3] += element_matrix[3:6, :3]
+            self.system_matrix[n2: n2 + 3, n2: n2 + 3] += element_matrix[3:6, 3:]
 
         # returns True if symmetrical.
         if validate:
@@ -434,15 +454,9 @@ class SystemElements:
         list may contain multiple tuples
         :return: Vector with forces on the nodes
         """
-        if self.system_force_vector is None:
-            self.system_force_vector = np.zeros(len(self._vertices) * 3)
-
         for id_, direction, force in force_list:
-            # index = number of the node-1 * nd.o.f. + x, or z, or y
-            # (x = 1 * i[1], y = 2 * i[1]
-            index = (id_ - 1) * 3 + direction - 1
-            # force = i[2]
-            self.system_force_vector[index] += force
+            self.system_force_vector[(id_ - 1) * 3 + direction - 1] += force
+
         return self.system_force_vector
 
     def _set_displacement_vector(self, nodes_list):
@@ -463,9 +477,6 @@ class SystemElements:
         return self.system_displacement_vector
 
     def __process_conditions(self):
-        original_force_vector = np.array(self.system_force_vector)
-        original_system_matrix = np.array(self.system_matrix)
-
         indexes = []
         # remove the unsolvable values from the matrix and vectors
         for i in range(self.shape_system_matrix):
@@ -475,14 +486,9 @@ class SystemElements:
                 self._remainder_indexes.append(i)
 
         self.system_displacement_vector = np.delete(self.system_displacement_vector, indexes, 0)
-        self.system_force_vector = np.delete(self.system_force_vector, indexes, 0)
-        self.system_matrix = np.delete(self.system_matrix, indexes, 0)
-        self.system_matrix = np.delete(self.system_matrix, indexes, 1)
-
-        self.reduced_force_vector = self.system_force_vector
-        self.reduced_system_matrix = self.system_matrix
-        self.system_force_vector = original_force_vector
-        self.system_matrix = original_system_matrix
+        self.reduced_force_vector = np.delete(self.system_force_vector, indexes, 0)
+        self.reduced_system_matrix = np.delete(self.system_matrix, indexes, 0)
+        self.reduced_system_matrix = np.delete(self.reduced_system_matrix, indexes, 1)
 
     def solve(self, force_linear=False, verbosity=0, max_iter=200, **kwargs):
 
@@ -505,7 +511,7 @@ class SystemElements:
         for el in self.element_map.values():
             el.reset()
 
-        self.system_force_vector = None
+        self.system_force_vector = self.system_force_vector = np.zeros(len(self._vertices) * 3)
         self._apply_perpendicular_q_load()
         self._apply_point_load()
         self._apply_moment_load()
@@ -778,12 +784,18 @@ class SystemElements:
             q_perpendicular *= self.load_factor
             kl = element.constitutive_matrix[1][1] * 1e6
             kr = element.constitutive_matrix[2][2] * 1e6
-            # minus because of systems positive rotation
-            left_moment = -det_moment(kl, kr, q_perpendicular, 0, element.EI, element.l)
-            right_moment = det_moment(kl, kr, q_perpendicular, element.l, element.EI, element.l)
 
-            rleft = det_shear(kl, kr, q_perpendicular, 0, element.EI, element.l)
-            rright = -det_shear(kl, kr, q_perpendicular, element.l, element.EI, element.l)
+            if math.isclose(kl, kr):
+                left_moment = det_moment(kl, kr, q_perpendicular, 0, element.EI, element.l)
+                right_moment = -left_moment
+                rleft = det_shear(kl, kr, q_perpendicular, 0, element.EI, element.l)
+                rright = rleft
+            else:
+                # minus because of systems positive rotation
+                left_moment = det_moment(kl, kr, q_perpendicular, 0, element.EI, element.l)
+                right_moment = -det_moment(kl, kr, q_perpendicular, element.l, element.EI, element.l)
+                rleft = det_shear(kl, kr, q_perpendicular, 0, element.EI, element.l)
+                rright = -det_shear(kl, kr, q_perpendicular, element.l, element.EI, element.l)
 
             rleft_x = rleft * math.sin(element.ai)
             rright_x = rright * math.sin(element.ai)
@@ -791,20 +803,12 @@ class SystemElements:
             rleft_z = rleft * math.cos(element.ai)
             rright_z = rright * math.cos(element.ai)
 
-            # place the primary forces in the 6*6 primary force matrix
-            element.element_primary_force_vector[0] -= rleft_x
-            element.element_primary_force_vector[1] -= rleft_z
-            element.element_primary_force_vector[2] += left_moment
-            element.element_primary_force_vector[3] -= rright_x
-            element.element_primary_force_vector[4] -= rright_z
-            element.element_primary_force_vector[5] += right_moment
+            primary_force = np.array([rleft_x, rleft_z, left_moment, rright_x, rright_z, right_moment])
+            element.element_primary_force_vector -= primary_force
 
-            # system force vector. System forces = element force * -1
-            # first row are the moments
-            # second and third row are the reaction forces. The direction
-            self._set_force_vector([(element.node_1.id, 3, -left_moment), (element.node_2.id, 3, -right_moment),
-                                    (element.node_1.id, 2, rleft_z), (element.node_2.id, 2, rright_z),
-                                    (element.node_1.id, 1, rleft_x), (element.node_2.id, 1, rright_x)])
+            # Set force vector
+            self.system_force_vector[(element.node_id1 - 1) * 3: (element.node_id1 - 1) * 3 + 3] += primary_force[0:3]
+            self.system_force_vector[(element.node_id2 - 1) * 3: (element.node_id2 - 1) * 3 + 3] += primary_force[3:]
 
     def _apply_parallel_q_load(self, element):
         direction = element.q_direction
