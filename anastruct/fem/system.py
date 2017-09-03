@@ -660,8 +660,6 @@ class SystemElements:
         """
         Add a translational support at a given node.
 
-        Parameters
-        ----------
         :param translation: (int/ list) Represents the prevented translation.
 
             **Note**
@@ -823,6 +821,12 @@ class SystemElements:
             self._set_force_vector([(node_id, 1, Fx * self.load_factor), (node_id, 2, Fz * self.load_factor)])
 
     def moment_load(self, node_id, Ty):
+        """
+        Apply a moment on a node.
+
+        :param node_id: (int) Nodes ID.
+        :param Ty: (flt/ list) Moments acting on the node.
+        """
         if not isinstance(node_id, (tuple, list)):
             node_id = (node_id,)
             Ty = (Ty,)
@@ -834,28 +838,92 @@ class SystemElements:
         for node_id, Ty in self.loads_moment.items():
             self._set_force_vector([(node_id, 3, Ty * self.load_factor)])
 
-    def show_structure(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True, supports=True):
+    def show_structure(self, verbosity=0, scale=1., offset=(0, 0), figsize=None, show=True, supports=True):
+        """
+        Plot the structure.
+
+        :param verbosity: (int) 0: All information, 1: Suppress information.
+        :param scale: (flt) Scale of the plot.
+        :param offset: (tpl) Offset the plots location on the figure.
+        :param figsize: (tpl) Change the figure size.
+        :param show: (bool) Plot the result or return a figure.
+        :param supports: (bool) Show the supports.
+        :return: (figure)
+        """
         figsize = self.figsize if figsize is None else figsize
         return self.plotter.plot_structure(figsize, verbosity, show, supports, scale, offset)
 
     def show_bending_moment(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+        """
+        Plot the bending moment.
+
+        :param factor: (flt) Influence the plotting scale.
+        :param verbosity: (int) 0: All information, 1: Suppress information.
+        :param scale: (flt) Scale of the plot.
+        :param offset: (tpl) Offset the plots location on the figure.
+        :param figsize: (tpl) Change the figure size.
+        :param show: (bool) Plot the result or return a figure.
+        :return: (figure)
+        """
         figsize = self.figsize if figsize is None else figsize
         self.plotter.bending_moment(factor, figsize, verbosity, scale, offset, show)
 
     def show_axial_force(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+        """
+        Plot the axial force.
+
+        :param factor: (flt) Influence the plotting scale.
+        :param verbosity: (int) 0: All information, 1: Suppress information.
+        :param scale: (flt) Scale of the plot.
+        :param offset: (tpl) Offset the plots location on the figure.
+        :param figsize: (tpl) Change the figure size.
+        :param show: (bool) Plot the result or return a figure.
+        :return: (figure)
+        """
         figsize = self.figsize if figsize is None else figsize
         self.plotter.axial_force(factor, figsize, verbosity, scale, offset, show)
 
     def show_shear_force(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+        """
+        Plot the shear force.
+
+        :param verbosity: (int) 0: All information, 1: Suppress information.
+        :param scale: (flt) Scale of the plot.
+        :param offset: (tpl) Offset the plots location on the figure.
+        :param figsize: (tpl) Change the figure size.
+        :param show: (bool) Plot the result or return a figure.
+        :return: (figure)
+        """
         figsize = self.figsize if figsize is None else figsize
         self.plotter.shear_force(figsize, verbosity, scale, offset, show)
 
     def show_reaction_force(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+        """
+        Plot the reaction force.
+
+        :param verbosity: (int) 0: All information, 1: Suppress information.
+        :param scale: (flt) Scale of the plot.
+        :param offset: (tpl) Offset the plots location on the figure.
+        :param figsize: (tpl) Change the figure size.
+        :param show: (bool) Plot the result or return a figure.
+        :return: (figure)
+        """
         figsize = self.figsize if figsize is None else figsize
         self.plotter.reaction_force(figsize, verbosity, scale, offset, show)
 
     def show_displacement(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
                           linear=False):
+        """
+        Plot the displacement.
+
+        :param factor: (flt) Influence the plotting scale.
+        :param verbosity: (int) 0: All information, 1: Suppress information.
+        :param scale: (flt) Scale of the plot.
+        :param offset: (tpl) Offset the plots location on the figure.
+        :param figsize: (tpl) Change the figure size.
+        :param show: (bool) Plot the result or return a figure.
+        :return: (figure)
+        """
         figsize = self.figsize if figsize is None else figsize
         self.plotter.displacements(factor, figsize, verbosity, scale, offset, show, linear)
 
@@ -923,7 +991,9 @@ class SystemElements:
         :param element_id: (int) representing the elements ID. If elementID = 0 the results of all elements are returned.
         :param verbose: (bool) If set to True the numerical results for the deflection and the bending moments are
                                returned.
+
         :return:
+        |
         |  if node_id == 0: (list)
         |
         |    Returns a list containing tuples with the results:
@@ -931,6 +1001,8 @@ class SystemElements:
         |     [(id, Fx, Fz, Ty, ux, uy, phi_y), (id, Fx, Fz...), () .. ]
         |
         |  if node_id > 0: (dict)
+        |
+
         """
         if element_id != 0:
             el = self.element_map[element_id]
