@@ -7,8 +7,7 @@
 *.o
 *.so
 
-# 
-Packages #
+# Packages #
 ############
 # it's better to unpack these files and commit the raw source
 # git has its own built in compression methods
@@ -73,6 +72,8 @@ Packages #
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+
 /StructuralEngineering.egg-info
 /dist
 MANIFEST
@@ -82,5 +83,8 @@ MANIFEST
 *.pyd
 *.c
 *.cfg
+*.egg-info
 
-build/*
+
+build/
+.ipynb_checkpoints/

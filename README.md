@@ -1,14 +1,8 @@
 # anaStruct 2D Frames and Trusses
 [![Build Status](https://travis-ci.org/ritchie46/anaStruct.svg?branch=master)](https://travis-ci.org/ritchie46/anaStruct)
+[![Documentation Status](https://readthedocs.org/projects/anastruct/badge/?version=latest)](http://anastruct.readthedocs.io/en/latest/?badge=latest)
 
 Analyse 2D Frames and trusses for slender structures. Determine the bending moments, shear forces, axial forces and displacements.
-
-## Real world use case!
-[Non linear water accumulation analysis](https://ritchievink.com/blog/2017/08/23/a-nonlinear-water-accumulation-analysis-in-python/)
-
-### Simple examples.
-
-* __[code examples!](https://ritchievink.com/blog/2017/01/12/python-1d-fem-example-1/)__
 
 ## Installation
 
@@ -22,7 +16,18 @@ Or for a release:
 $ pip install anastruct
 ```
 
+## Documentation
 
+### Real world use case!
+[Non linear water accumulation analysis](https://ritchievink.com/blog/2017/08/23/a-nonlinear-water-accumulation-analysis-in-python/)
+
+### Simple examples.
+
+[code examples!](https://ritchievink.com/blog/2017/01/12/python-1d-fem-example-1/)
+
+### Reference guide
+
+[reference]https://readthedocs.org/projects/anastruct/
 
 ## 2D FEM Frames and Trusses
 ![](images/rand/structure.png)
