@@ -27,7 +27,7 @@ $ pip install anastruct
 
 ### Reference guide
 
-[reference]https://readthedocs.org/projects/anastruct/
+[reference](http://anastruct.readthedocs.io)
 
 ## 2D FEM Frames and Trusses
 ![](images/rand/structure.png)
