@@ -719,9 +719,9 @@ class SystemElements:
 
         for i in range(len(element_id)):
             self.plotter.max_q = max(self.plotter.max_q, abs(q[i]))
-            self.loads_q[element_id[i]] = q[i] * self.orientation_cs
+            self.loads_q[element_id[i]] = q[i] * self.orientation_cs * self.load_factor
             el = self.element_map[element_id[i]]
-            el.q_load = q[i] * self.orientation_cs
+            el.q_load = q[i] * self.orientation_cs * self.load_factor
             el.q_direction = direction
 
     def _apply_perpendicular_q_load(self):
@@ -734,7 +734,6 @@ class SystemElements:
             elif element.q_direction == "x" or element.q_direction == "y" or element.dead_load:
                 self._apply_parallel_q_load(element)
 
-            q_perpendicular *= self.load_factor
             kl = element.constitutive_matrix[1][1] * 1e6
             kr = element.constitutive_matrix[2][2] * 1e6
 
@@ -773,7 +772,7 @@ class SystemElements:
             factor = abs(math.sin(element.ai))
 
         # q_load working at parallel to the elements x-axis
-        q_element = (element.q_load + element.dead_load) * factor * self.load_factor
+        q_element = (element.q_load + element.dead_load) * factor
 
         Fx = q_element * math.cos(element.ai) * element.l * 0.5
         Fz = q_element * math.sin(element.ai) * element.l * -0.5
