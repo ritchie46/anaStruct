@@ -490,23 +490,17 @@ class SystemElements:
 
         # add the solution of the reduced system in the complete system displacement vector
         self.system_displacement_vector = np.zeros(self.shape_system_matrix)
-        count = 0
-
-        for i in self._remainder_indexes:
-            self.system_displacement_vector[i] = reduced_displacement_vector[count]
-            count += 1
+        np.put(self.system_displacement_vector, self._remainder_indexes, reduced_displacement_vector)
 
         # determine the displacement vector of the elements
         for el in self.element_map.values():
             index_node_1 = (el.node_1.id - 1) * 3
             index_node_2 = (el.node_2.id - 1) * 3
 
-            for i in range(3):  # node 1 ux, uz, phi
-                el.element_displacement_vector[i] = self.system_displacement_vector[index_node_1 + i]
-
-            for i in range(3):  # node 2 ux, uz, phi
-                el.element_displacement_vector[3 + i] = self.system_displacement_vector[index_node_2 + i]
-
+            # node 1 ux, uz, phi
+            el.element_displacement_vector[:3] = self.system_displacement_vector[index_node_1: index_node_1 + 3]
+            # node 2 ux, uz, phi
+            el.element_displacement_vector[3:] = self.system_displacement_vector[index_node_2: index_node_2 + 3]
             el.determine_force_vector()
 
         if not naked:
@@ -516,10 +510,10 @@ class SystemElements:
             self.post_processor.reaction_forces()
             self.post_processor.element_results()
 
-        # check the values in the displacement vector for extreme values, indicating a flawed calculation
-        assert(np.any(self.system_displacement_vector < 1e6)), "The displacements of the structure exceed 1e6. " \
-                                                               "Check your support conditions," \
-                                                               "or your elements Young's modulus"
+            # check the values in the displacement vector for extreme values, indicating a flawed calculation
+            assert(np.any(self.system_displacement_vector < 1e6)), "The displacements of the structure exceed 1e6. " \
+                                                                   "Check your support conditions," \
+                                                                   "or your elements Young's modulus"
 
         return self.system_displacement_vector
 
