@@ -766,25 +766,24 @@ class SystemElements:
         direction = element.q_direction
         if direction == "x":
             factor = abs(math.cos(element.ai))
-        elif direction == "y":
+        else:
             factor = abs(math.sin(element.ai))
-        else:  # element has got only dead load
-            factor = abs(math.sin(element.ai))
+        # dead load
+        factor_dl = abs(math.sin(element.ai))
 
-        # q_load working at parallel to the elements x-axis
-        q_element = (element.q_load + element.dead_load) * factor
+        for q_element in (element.q_load * factor, element.dead_load * factor_dl):
+            # q_load working at parallel to the elements x-axis
+            Fx = q_element * math.cos(element.ai) * element.l * 0.5
+            Fz = q_element * math.sin(element.ai) * element.l * -0.5
 
-        Fx = q_element * math.cos(element.ai) * element.l * 0.5
-        Fz = q_element * math.sin(element.ai) * element.l * -0.5
+            element.element_primary_force_vector[0] -= Fx
+            element.element_primary_force_vector[1] -= Fz
+            element.element_primary_force_vector[3] -= Fx
+            element.element_primary_force_vector[4] -= Fz
 
-        element.element_primary_force_vector[0] -= Fx
-        element.element_primary_force_vector[1] -= Fz
-        element.element_primary_force_vector[3] -= Fx
-        element.element_primary_force_vector[4] -= Fz
-
-        self._set_force_vector([
-            (element.node_1.id, 2, Fz), (element.node_2.id, 2, Fz),
-            (element.node_1.id, 1, Fx), (element.node_2.id, 1, Fx)])
+            self._set_force_vector([
+                (element.node_1.id, 2, Fz), (element.node_2.id, 2, Fz),
+                (element.node_1.id, 1, Fx), (element.node_2.id, 1, Fx)])
 
     def point_load(self, node_id, Fx=0, Fz=0):
         """
