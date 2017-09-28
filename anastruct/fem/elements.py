@@ -1,4 +1,4 @@
-import math
+from math import sin, cos
 import numpy as np
 from functools import lru_cache
 
@@ -75,14 +75,14 @@ class Element:
             q = 0
         else:
             if self.q_direction == "x":
-                q_factor = math.sin(self.ai)
+                q_factor = sin(self.ai)
             elif self.q_direction == "y":
-                q_factor = math.cos(self.ai)
+                q_factor = cos(self.ai)
             else:
                 q_factor = 1
             q = self.q_load * q_factor
 
-        return q + self.dead_load * math.cos(self.ai)
+        return q + self.dead_load * cos(self.ai)
 
     @property
     def node_1(self):
@@ -129,9 +129,9 @@ def kinematic_matrix(ai, aj, l):
     :param ai: (float) angle with respect to the x axis.
     :param l: (float) Length
     """
-    return np.array([[-math.cos(ai), math.sin(ai), 0, math.cos(aj), -math.sin(aj), 0],
-                     [math.sin(ai) / l, math.cos(ai) / l, -1, -math.sin(aj) / l, -math.cos(aj) / l, 0],
-                     [-math.sin(ai) / l, -math.cos(ai) / l, 0, math.sin(aj) / l, math.cos(aj) / l, 1]])
+    return np.array([[-cos(ai), sin(ai), 0, cos(aj), -sin(aj), 0],
+                     [sin(ai) / l, cos(ai) / l, -1, -sin(aj) / l, -cos(aj) / l, 0],
+                     [-sin(ai) / l, -cos(ai) / l, 0, sin(aj) / l, cos(aj) / l, 1]])
 
 
 def constitutive_matrix(EA, EI, l, spring=None):
@@ -180,6 +180,26 @@ def stiffness_matrix(var_constitutive_matrix, var_kinematic_matrix):
     return np.dot(kinematic_transposed_times_constitutive, var_kinematic_matrix)
 
 
+def geometric_stiffness_matrix(l, N, ai):
+    """
+
+    :param l: (float) Length.
+    :param N: (float) Axial force.
+    :param ai: (float) angle. (First try 1st order)
+    :return: (array)
+    """
+    c = cos(ai)
+    s = sin(ai)
+    # http://people.duke.edu/~hpgavin/cee421/frame-finite-def.pdf
+    return N/l * np.array([[6/5*s**2, -6/5*s*c, -l/10*s, -6/5*s**2, 6/5*s*c, -l/10*s],
+                    [-6/5*s*c, 6/5*c**2, l/10*c, 6/5*s*c, -6/5*c**2, l/10*c],
+                    [-l/10*s, l/10*c, 2*l**2/15, l/10*s, -l/10*c, -l**2/30],
+                    [-6/5*s**2, 6/5*s*c, l/10*s, 6/5*s**2, -6/5*s*c, l/10*s],
+                    [6/5*s*c, -6/5*c**2, -l/10*c, -6/5*s*c, 6/5*c**2, -l/10*c],
+                    [-l/10*s, l/10*c, -l**2/30, l/10*s, -l/10*c, 2*l**2/15]]) \
+                * np.array([1, -1, 1, 1, -1, 1])  # conversion from coordinate system
+
+
 @lru_cache(CACHE_BOUND)
 def det_axial(EA, L, q, x):
     """
@@ -192,3 +212,4 @@ def det_axial(EA, L, q, x):
     :return: (flt)
     """
     return EA * (L * q / (2 * EA) - q * x / EA)
+

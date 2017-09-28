@@ -6,6 +6,7 @@ from anastruct.fem.elements import Element, det_moment, det_shear
 from anastruct.fem.node import Node
 from anastruct.vertex import Vertex
 from anastruct.fem.plotter import Plotter
+from anastruct.fem.elements import geometric_stiffness_matrix
 
 
 class SystemElements:
@@ -184,6 +185,7 @@ class SystemElements:
             self.node_map[node_id].elements[element.id] = element
 
         if mp is not None:
+            assert type(mp) == dict, "The mp parameter should be a dictionary."
             self.non_linear_elements[self.count] = mp
             self.non_linear = True
         self._dead_load(g, element.id)
@@ -240,6 +242,7 @@ class SystemElements:
             ai = -angle_x_axis(-delta_x, -delta_z)
 
             if spring is not None:
+                assert type(spring) == dict, "The spring parameter should be a dictionary."
                 if 1 in spring and 2 in spring:
                     spring[1], spring[2] = spring[2], spring[1]
                 elif 1 in spring:
@@ -354,14 +357,15 @@ class SystemElements:
                          element_type=last["element_type"]))
         return elements
 
-    def __assemble_system_matrix(self, validate=False):
+    def __assemble_system_matrix(self, validate=False, geometric_matrix=False):
         """
         Shape of the matrix = n nodes * n d.o.f.
         Shape = n * 3
         """
-        shape = len(self.node_map) * 3
-        self.shape_system_matrix = shape
-        self.system_matrix = np.zeros((shape, shape))
+        if not geometric_matrix:
+            shape = len(self.node_map) * 3
+            self.shape_system_matrix = shape
+            self.system_matrix = np.zeros((shape, shape))
 
         for matrix_index, K in self.system_spring_map.items():
             #  first index is row, second is column
@@ -390,7 +394,10 @@ class SystemElements:
 
         for i in range(len(self.element_map)):
             element = self.element_map[i + 1]
-            element_matrix = element.stiffness_matrix
+            if geometric_matrix:
+                element_matrix = geometric_stiffness_matrix(element.l, element.N_1, element.ai)
+            else:
+                element_matrix = element.stiffness_matrix
 
             # n1 and n2 are starting indexes of the rows and the columns for node 1 and node 2
             n1 = (element.node_1.id - 1) * 3
@@ -467,6 +474,7 @@ class SystemElements:
         #                naked (bool) Default = False, if True force lines won't be computed.
 
         naked = kwargs.get("naked", False)
+        gnl = kwargs.get("gnl", False)
 
         # (Re)set force vectors
         for el in self.element_map.values():
@@ -483,6 +491,8 @@ class SystemElements:
         assert(self.system_force_vector is not None), "There are no forces on the structure"
         self._remainder_indexes = []
         self.__assemble_system_matrix()
+        if gnl:
+            self.__assemble_system_matrix(geometric_matrix=True)
         self.__process_conditions()
 
         # solution of the reduced system (reduced due to support conditions)
@@ -522,6 +532,10 @@ class SystemElements:
         if verbosity == 0:
             print("Starting stiffness adaptation calculation.")
 
+        # check validity
+        assert all([mp > 0 for mpd in self.non_linear_elements.values() for mp in mpd]), \
+            "Cannot solve for an mp = 0. If you want a hinge set the spring stiffness equal to 0."
+
         for c in range(max_iter):
             factors = []
 
@@ -552,49 +566,30 @@ class SystemElements:
                 self.post_processor.reaction_forces()
                 self.post_processor.element_results()
                 break
-        if verbosity == 0:
-            print("Solved in {} iterations".format(c))
 
+        if c == max_iter - 1:
+            print("Couldn't solve the in the amount of iterations given.")
+        elif verbosity == 0:
+            print("Solved in {} iterations".format(c))
         return self.system_displacement_vector
 
-    def _gnl(self, verbosity):
-        div_c = 0
-        last_increase = 1e3
-        last_abs_u = np.abs(self.solve(False))
+    def gnl(self, verbosity=0):
         if verbosity == 0:
             print("Starting geometrical non linear calculation")
 
-        for c in range(1500):
-            for el in self.element_map.values():
-                delta_x = el.vertex_2.x + el.node_2.ux - el.vertex_1.x - el.node_1.ux
-                # minus sign to work with an opposite z-axis
-                delta_z = -el.vertex_2.z - el.node_2.uz + el.vertex_1.z + el.node_1.uz
-                a_bar = angle_x_axis(delta_x, delta_z)
-                l = math.sqrt(delta_x**2 + delta_z**2)
-                ai = a_bar + el.node_1.phi_y
-                aj = a_bar + el.node_2.phi_y
-                el.compile_kinematic_matrix(ai, aj, l)
-                #el.compile_constitutive_matrix(el.EA, el.EI, l)
-                el.compile_stiffness_matrix()
+        last_abs_u = np.abs(self.solve(force_linear=True))
 
-            current_abs_u = np.abs(self.solve(gnl=False, verbosity=1))
+        for c in range(200):
+            current_abs_u = np.abs(self.solve(gnl=True))
+
             global_increase = np.sum(current_abs_u) / np.sum(last_abs_u)
-
-            if global_increase < 0.1:
-                print("Divergence in {} iterations".format(c))
-                break
-            if global_increase - 1 < 1e-8 and global_increase >= 1:
-                print("Convergence in {} iterations".format(c))
-                break
-            if global_increase - last_increase > 0 and global_increase > 1:
-                div_c += 1
-
-                if div_c > 25:
-                    print("Divergence in {} iterations".format(c))
-                    break
-
             last_abs_u = current_abs_u
-            last_increase = global_increase
+
+            if math.isclose(global_increase, 1.0):
+                break
+
+        if verbosity == 0:
+            print("Solved in {} iterations".format(c))
 
     def _support_check(self, node_id):
         if self.node_map[node_id].hinge:
