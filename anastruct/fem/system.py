@@ -1099,16 +1099,26 @@ class SystemElements:
         except StopIteration:
             return None
 
-    def nodes_range(self, coordinate):
+    def nodes_range(self, dimension):
         """
         Retrieve a list with coordinates x or z (y).
 
-        :param coordinate: (str) "both", 'x', 'y' or 'z'
+        :param dimension: (str) "both", 'x', 'y' or 'z'
         :return: (list)
         """
         return list(
             map(
-                lambda x: x.vertex.x if coordinate == 'x'
-                else x.vertex.z if coordinate == 'z' else x.vertex.y if coordinate == 'y'
+                lambda x: x.vertex.x if dimension == 'x'
+                else x.vertex.z if dimension == 'z' else x.vertex.y if dimension == 'y'
                 else None,
                 self.node_map.values()))
+
+    def nearest_node(self, dimension, val):
+        """
+        Retrieve the nearest node ID.
+
+        :param dimension: (str) "both", 'x', 'y' or 'z'
+        :param val: (flt) Value of the dimension.
+        :return: (int) ID of the node.
+        """
+        return np.argmin(np.abs(np.array(self.nodes_range(dimension)) - val))
