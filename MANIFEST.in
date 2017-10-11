@@ -1,0 +1,2 @@
+include *.pyx
+recursive-include anastruct *.pyx
