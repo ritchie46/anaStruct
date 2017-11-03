@@ -83,6 +83,18 @@ class SystemElements:
         self.reduced_system_matrix = None
         self._vertices = {}  # maps vertices to node ids
 
+    def add_element_grid(self, x, y, EA=None, EI=None, g=None, mp=None, spring=None, **kwargs):
+        a = np.ones(x.shape)
+        if EA is None:
+            EA = a * self.EA
+        if EI is None:
+            EI = a * self.EI
+        if g is None:
+            g = a * 0
+
+        for i in range(len(x) - 1):
+            self.add_element([[x[i], y[i]], [x[i + 1], y[i + 1]]], EA[i], EI[i], g[i], mp, spring, **kwargs)
+
     def add_truss_element(self, location, EA=None):
         """
         .. highlight:: python
@@ -1060,6 +1072,7 @@ class SystemElements:
         :param unit: (str)
             - 'shear'
             - 'moment'
+            - 'axial'
 
         :return: (list)
         """
@@ -1067,6 +1080,8 @@ class SystemElements:
             return [el.shear_force[0] for el in self.element_map.values()]
         elif unit == "moment":
             return [el.bending_moment[0] for el in self.element_map.values()]
+        elif unit == "axial":
+            return [el.N_1 for el in self.element_map.values()]
 
     def get_node_result_range(self, unit):
         """
