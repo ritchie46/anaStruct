@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from anastruct.basic import find_nearest
-from plotly.offline import plot_mpl, iplot_mpl, init_notebook_mode
+from plotly.offline import plot_mpl, iplot_mpl
 
 PATCH_SIZE = 0.03
 
@@ -11,6 +11,7 @@ PATCH_SIZE = 0.03
 class Plotter:
     def __init__(self, system, mesh, backend):
         self.system = system
+        self.one_fig = None
         self.max_val = None
         self.max_force = 0
         self.max_q = 0
@@ -18,9 +19,6 @@ class Plotter:
         self.max_system_point_load = 0
         self.mesh = max(3, mesh)
         self.backend = backend
-
-        # if backend == "ipt":
-        #     init_notebook_mode(connected=True)
 
     def __start_plot(self, figsize):
         plt.close("all")
@@ -303,13 +301,14 @@ class Plotter:
             self.one_fig.text(node.vertex.x + h * 0.2, -node.vertex.z + h * 0.2, "T=%d" % v, color='k',
                               fontsize=9, zorder=10)
 
-    def plot_structure(self, figsize, verbosity, show=False, supports=True, scale=1, offset=(0, 0)):
+    def plot_structure(self, figsize, verbosity, show=False, supports=True, scale=1, offset=(0, 0), gridplot=False):
         """
         :param show: (boolean) if True, plt.figure will plot.
         :param supports: (boolean) if True, supports are plotted.
         :return:
         """
-        self.__start_plot(figsize)
+        if not gridplot:
+            self.__start_plot(figsize)
         max_x = 0
         max_z = 0
         min_x = 0
@@ -407,9 +406,9 @@ class Plotter:
         else:
             plot_mpl(self.fig)
 
-    def axial_force(self, factor, figsize, verbosity, scale, offset, show):
+    def axial_force(self, factor, figsize, verbosity, scale, offset, show, gridplot=False):
         self.max_force = 0
-        self.plot_structure(figsize, 1, scale=scale, offset=offset)
+        self.plot_structure(figsize, 1, scale=scale, offset=offset, gridplot=gridplot)
 
         node_results = True if verbosity == 0 else False
 
@@ -447,8 +446,8 @@ class Plotter:
         else:
             return self.fig
 
-    def bending_moment(self, factor, figsize, verbosity, scale, offset, show):
-        self.plot_structure(figsize, 1, scale=scale, offset=offset)
+    def bending_moment(self, factor, figsize, verbosity, scale, offset, show, gridplot=False):
+        self.plot_structure(figsize, 1, scale=scale, offset=offset, gridplot=gridplot)
         self.max_force = 0
         con = len(self.system.element_map[1].bending_moment)
 
@@ -494,8 +493,8 @@ class Plotter:
         else:
             return self.fig
 
-    def shear_force(self, figsize, verbosity, scale, offset, show):
-        self.plot_structure(figsize, 1, scale=scale, offset=offset)
+    def shear_force(self, figsize, verbosity, scale, offset, show, gridplot=False):
+        self.plot_structure(figsize, 1, scale=scale, offset=offset, gridplot=gridplot)
         self.max_force = 0
 
         # determine max factor for scaling
@@ -525,8 +524,8 @@ class Plotter:
         else:
             return self.fig
 
-    def reaction_force(self, figsize, verbosity, scale, offset, show):
-        self.plot_structure(figsize, 1, supports=False, scale=scale, offset=offset)
+    def reaction_force(self, figsize, verbosity, scale, offset, show, gridplot=False):
+        self.plot_structure(figsize, 1, supports=False, scale=scale, offset=offset, gridplot=gridplot)
 
         h = 0.2 * self.max_val
         max_force = 0
@@ -585,8 +584,8 @@ class Plotter:
         else:
             return self.fig
 
-    def displacements(self, factor, figsize, verbosity, scale, offset, show, linear):
-        self.plot_structure(figsize, 1, scale=scale, offset=offset)
+    def displacements(self, factor, figsize, verbosity, scale, offset, show, linear, gridplot=False):
+        self.plot_structure(figsize, 1, scale=scale, offset=offset, gridplot=gridplot)
         self.max_force = 0
         ax_range = None
         # determine max factor for scaling
@@ -618,6 +617,46 @@ class Plotter:
             self.plot()
         else:
             return self.fig
+
+    def results_plot(self, figsize, verbosity, scale, offset, show):
+        """
+        Aggregate all the plots in one grid plot.
+
+        :param figsize: (tpl)
+        :param verbosity: (int)
+        :param scale: (flt)
+        :param offset: (tpl)
+        :param show: (bool)
+        :return: Figure or None
+        """
+        plt.close("all")
+        self.fig = plt.figure(figsize=figsize)
+        a = 320
+        self.one_fig = self.fig.add_subplot(a + 1)
+        plt.title("structure")
+        self.plot_structure(figsize, verbosity, show=False, scale=scale, offset=offset, gridplot=True)
+        self.one_fig = self.fig.add_subplot(a + 2)
+        plt.title("bending moment")
+        self.bending_moment(None, figsize, verbosity, scale, offset, False, True)
+        self.one_fig = self.fig.add_subplot(a + 3)
+        plt.title("shear force")
+        self.shear_force(figsize, verbosity, scale, offset, False, True)
+        self.one_fig = self.fig.add_subplot(a + 4)
+        plt.title("axial force")
+        self.axial_force(None, figsize, verbosity, scale, offset, False, True)
+        self.one_fig = self.fig.add_subplot(a + 5)
+        plt.title("displacements")
+        self.displacements(None, figsize, verbosity, scale, offset, False, False, True)
+        self.one_fig = self.fig.add_subplot(a + 6)
+        plt.title("reaction force")
+        self.reaction_force(figsize, verbosity, scale, offset, False, True)
+
+        if show:
+            self.plot()
+        else:
+            return self.fig
+
+
 
 
 """

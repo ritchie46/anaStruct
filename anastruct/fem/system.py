@@ -926,6 +926,20 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         self.plotter.displacements(factor, figsize, verbosity, scale, offset, show, linear)
 
+    def show_results(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+        """
+        Plot all the results in one window.
+
+        :param verbosity: (int) 0: All information, 1: Suppress information.
+        :param scale: (flt) Scale of the plot.
+        :param offset: (tpl) Offset the plots location on the figure.
+        :param figsize: (tpl) Change the figure size.
+        :param show: (bool) Plot the result or return a figure.
+        :return: (figure)
+        """
+        figsize = self.figsize if figsize is None else figsize
+        self.plotter.results_plot(figsize, verbosity, scale, offset, show)
+
     def get_node_results_system(self, node_id=0):
         """
         These are the node results. These are the opposite of the forces and displacements working on the elements and
