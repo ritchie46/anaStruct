@@ -172,6 +172,7 @@ class SystemElements:
 
         point_1, point_2, node_id1, node_id2, spring, mp, ai = \
             self._force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp)
+
         self._append_node_id(point_1, point_2, node_id1, node_id2)
         self._ensure_single_hinge(spring, node_id1, node_id2)
 
@@ -239,6 +240,10 @@ class SystemElements:
     @staticmethod
     def _force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp):
         """
+        Forces the elements to be in the first and the last quadrant of the unity circle. Meaning the first node is
+        always left and the last node is always right. Or the are both on one vertical line.
+
+        The angle of the element will thus always be between -90 till +90 degrees.
         :return: point_1, point_2, node_id1, node_id2, spring, mp, ai
         """
         # determine the angle of the element with the global x-axis
@@ -775,13 +780,14 @@ class SystemElements:
             factor = abs(math.cos(element.ai))
         else:
             factor = abs(math.sin(element.ai))
+
         # dead load
         factor_dl = abs(math.sin(element.ai))
 
         for q_element in (element.q_load * factor, element.dead_load * factor_dl):
-            # q_load working at parallel to the elements x-axis
-            Fx = q_element * math.cos(element.ai) * element.l * 0.5
-            Fz = q_element * math.sin(element.ai) * element.l * -0.5
+            # q_load working at parallel to the elements x-axis             # set the proper direction
+            Fx = q_element * math.cos(element.ai) * element.l * 0.5 * -math.sin(element.ai) / abs(math.sin(element.ai))
+            Fz = q_element * abs(math.sin(element.ai)) * element.l * 0.5
 
             element.element_primary_force_vector[0] -= Fx
             element.element_primary_force_vector[1] -= Fz

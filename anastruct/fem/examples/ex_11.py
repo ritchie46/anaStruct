@@ -12,5 +12,4 @@ ss.add_support_hinged([1, 4])
 
 if __name__ == "__main__":
     ss.solve()
-    ss.show_structure()
     ss.show_axial_force()

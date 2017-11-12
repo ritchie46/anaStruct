@@ -133,6 +133,17 @@ class SimpleTest(unittest.TestCase):
         sssol = [a[1] for a in ss.get_node_results_system()]
         self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, sssol)]))
 
+    def test_ex_14(self):
+        """
+        Tests dead load and parallel load on axis.
+        """
+        from anastruct.fem.examples.ex_14 import ss
+        ss.solve()
+
+        sol = [-5.1854495715665756, -2.6645352591003757e-15, -7.9936057773011271e-15, 1.2434497875801753e-14, 5.1854495715665738]
+        sssol = [a[1] for a in ss.get_node_results_system()]
+        self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, sssol)]))
+
     def test_find_node_id(self):
         self.assertEqual(SS_8.find_node_id([4, 4]), 6)
         self.assertEqual(SS_8.find_node_id([3, -3]), None)
