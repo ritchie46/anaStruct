@@ -610,7 +610,7 @@ class SystemElements:
 
     def _support_check(self, node_id):
         if self.node_map[node_id].hinge:
-            raise Exception ("You cannot add a support to a hinged node.")
+            raise FEMException ("Flawed inputs", "You cannot add a support to a hinged node.")
 
     def add_support_hinged(self, node_id):
         """
@@ -776,23 +776,29 @@ class SystemElements:
 
     def _apply_parallel_q_load(self, element):
         direction = element.q_direction
-        if direction == "x":
-            factor = abs(math.cos(element.ai))
-        else:
-            factor = abs(math.sin(element.ai))
-
         # dead load
         factor_dl = abs(math.sin(element.ai))
 
-        for q_element in (element.q_load * factor, element.dead_load * factor_dl):
-            # q_load working at parallel to the elements x-axis             # set the proper direction
-            Fx = q_element * math.cos(element.ai) * element.l * 0.5 * -math.sin(element.ai) / abs(math.sin(element.ai))
-            Fz = q_element * abs(math.sin(element.ai)) * element.l * 0.5
+        if direction == "x":
+            factor = abs(math.cos(element.ai))
 
-            element.element_primary_force_vector[0] -= Fx
-            element.element_primary_force_vector[1] -= Fz
-            element.element_primary_force_vector[3] -= Fx
-            element.element_primary_force_vector[4] -= Fz
+            raise FEMException("Patience", "Not yet implemented.")
+        else:
+            if math.isclose(element.ai, 0):
+                # horizontal element cannot have parallel forces due to self weight or q-load in y direction.
+                return None
+            factor = abs(math.sin(element.ai))
+
+            for q_element in (element.q_load * factor, element.dead_load * factor_dl):
+                # q_load working at parallel to the elements x-axis             # set the proper direction
+                Fx = q_element * math.cos(element.ai) * element.l * 0.5 * -math.sin(element.ai) / abs(
+                    math.sin(element.ai))
+                Fz = q_element * abs(math.sin(element.ai)) * element.l * 0.5
+
+                element.element_primary_force_vector[0] -= Fx
+                element.element_primary_force_vector[1] -= Fz
+                element.element_primary_force_vector[3] -= Fx
+                element.element_primary_force_vector[4] -= Fz
 
             self._set_force_vector([
                 (element.node_1.id, 2, Fz), (element.node_2.id, 2, Fz),
