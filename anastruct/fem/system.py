@@ -790,9 +790,8 @@ class SystemElements:
             factor = abs(math.sin(element.ai))
 
             for q_element in (element.q_load * factor, element.dead_load * factor_dl):
-                # q_load working at parallel to the elements x-axis             # set the proper direction
-                Fx = q_element * math.cos(element.ai) * element.l * 0.5 * -math.sin(element.ai) / abs(
-                    math.sin(element.ai))
+                # q_load working at parallel to the elements x-axis          # set the proper direction
+                Fx = q_element * math.cos(element.ai) * element.l * 0.5 * -np.sign(math.sin(element.ai))
                 Fz = q_element * abs(math.sin(element.ai)) * element.l * 0.5
 
                 element.element_primary_force_vector[0] -= Fx
