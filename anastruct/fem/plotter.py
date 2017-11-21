@@ -456,7 +456,7 @@ class Plotter:
             factor = 0
             for el in self.system.element_map.values():
                 if el.q_load:
-                    m_sag = (el.node_1.Ty - el.node_2.Ty) * 0.5 - 1 / 8 * el.q_load * el.l**2
+                    m_sag = (el.node_1.Ty - el.node_2.Ty) * 0.5 - 1 / 8 * el.all_q_load * el.l**2
                     value_1 = max(abs(el.node_1.Ty), abs(m_sag))
                     value_2 = max(value_1, abs(el.node_2.Ty))
                     factor = self.__set_factor(value_1, value_2)
@@ -743,7 +743,11 @@ def plot_values_bending_moment(element, factor, con):
         y_val[count] = y1 + i * dy
 
         if element.q_load or element.dead_load:
-            q = element.q_load + element.dead_load if element.q_load else element.dead_load
+            q = element.all_q_load
+
+            # if element.q_direction == "x":
+            #     q += np.sign(math.sin(element.ai))
+
             x = i * element.l
             q_part = (-0.5 * -q * x**2 + 0.5 * -q * element.l * x)
 

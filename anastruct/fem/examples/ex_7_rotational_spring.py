@@ -12,6 +12,7 @@ ss.add_support_hinged(3)
 ss.point_load(2, Fz=-100)
 
 if __name__ == "__main__":
+    ss.solve()
     ss.show_displacement()
     ss.show_reaction_force()
     ss.show_bending_moment()

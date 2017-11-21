@@ -740,8 +740,6 @@ class SystemElements:
         for element_id, g in self.loads_dead_load:
             element = self.element_map[element_id]
             q_perpendicular = element.all_q_load
-            if element.q_direction == "x":
-                q_perpendicular *= -np.sin(math.sin(element.ai))
 
             if q_perpendicular == 0:
                 continue
