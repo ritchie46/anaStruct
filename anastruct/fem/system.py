@@ -779,10 +779,26 @@ class SystemElements:
         # dead load
         factor_dl = abs(math.sin(element.ai))
 
+        def update(Fx, Fz):
+            element.element_primary_force_vector[0] -= Fx
+            element.element_primary_force_vector[1] -= Fz
+            element.element_primary_force_vector[3] -= Fx
+            element.element_primary_force_vector[4] -= Fz
+
+            self._set_force_vector([
+                (element.node_1.id, 2, Fz), (element.node_2.id, 2, Fz),
+                (element.node_1.id, 1, Fx), (element.node_2.id, 1, Fx)])
+
         if direction == "x":
             factor = abs(math.cos(element.ai))
 
-            raise FEMException("Patience", "Not yet implemented.")
+            for q_element in (element.q_load * factor, element.dead_load * factor_dl):
+                # q_load working at parallel to the elements x-axis          # set the proper direction
+                Fx = -q_element * math.cos(element.ai) * element.l * 0.5
+                Fz = q_element * abs(math.sin(element.ai)) * element.l * 0.5 * np.sign(math.sin(element.ai))
+
+                update(Fx, Fz)
+
         else:
             if math.isclose(element.ai, 0):
                 # horizontal element cannot have parallel forces due to self weight or q-load in y direction.
@@ -794,14 +810,7 @@ class SystemElements:
                 Fx = q_element * math.cos(element.ai) * element.l * 0.5 * -np.sign(math.sin(element.ai))
                 Fz = q_element * abs(math.sin(element.ai)) * element.l * 0.5
 
-                element.element_primary_force_vector[0] -= Fx
-                element.element_primary_force_vector[1] -= Fz
-                element.element_primary_force_vector[3] -= Fx
-                element.element_primary_force_vector[4] -= Fz
-
-            self._set_force_vector([
-                (element.node_1.id, 2, Fz), (element.node_2.id, 2, Fz),
-                (element.node_1.id, 1, Fx), (element.node_2.id, 1, Fx)])
+                update(Fx, Fz)
 
     def point_load(self, node_id, Fx=0, Fz=0):
         """

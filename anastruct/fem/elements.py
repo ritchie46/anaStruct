@@ -75,7 +75,7 @@ class Element:
             q = 0
         else:
             if self.q_direction == "x":
-                q_factor = sin(self.ai)
+                q_factor = -sin(self.ai)
             elif self.q_direction == "y":
                 q_factor = cos(self.ai)
             else:

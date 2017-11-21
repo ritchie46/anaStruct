@@ -141,6 +141,7 @@ class ElementLevel:
                 q_part = (-0.5 * -q * x**2 + 0.5 * -q * element.l * x)
                 m_val[count] += q_part
             count += 1
+
         element.bending_moment = m_val
 
     @staticmethod
