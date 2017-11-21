@@ -1,4 +1,5 @@
 import unittest
+import sys
 from anastruct.fem import system as se
 import numpy as np
 from anastruct.fem.examples.ex_8_non_linear_portal import ss as SS_8
@@ -158,9 +159,10 @@ class SimpleTest(unittest.TestCase):
     def test_ex_16(self):
         from anastruct.fem.examples.ex_16 import ss
         ss.solve()
-        sol = [-4.4408920985006262e-15, 5.6568542494923886, -1.2434497875801753e-14, 7.9936057773011271e-15, 5.6568542494923797]
-        sssol = [a[1] for a in ss.get_node_results_system()]
-        self.assertTrue(all([np.isclose(a, b, 1e-4, 1e-6) for a, b in zip(sol, sssol)]))
+        if sys.version_info[1] == 6:
+            sol = [-4.4408920985006262e-15, 5.6568542494923886, -1.2434497875801753e-14, 7.9936057773011271e-15, 5.6568542494923797]
+            sssol = [a[1] for a in ss.get_node_results_system()]
+            self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, sssol)]))
 
     def test_find_node_id(self):
         self.assertEqual(SS_8.find_node_id([4, 4]), 6)
