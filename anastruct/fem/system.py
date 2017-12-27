@@ -1167,8 +1167,17 @@ class SystemElements:
         """
         Retrieve the nearest node ID.
 
-        :param dimension: (str) 'x', 'y' or 'z'
+        :param dimension: (str) "both", 'x', 'y' or 'z'
         :param val: (flt) Value of the dimension.
         :return: (int) ID of the node.
         """
-        return np.argmin(np.abs(np.array(self.nodes_range(dimension)) - val))
+        if dimension == "both":
+            match = list(map(lambda x: x[1],
+                             filter(lambda x: x[0][0] == val[0] and x[0][1] == val[1],
+                                    zip(self.nodes_range("both"), self.node_map.keys())
+                                    )
+                             )
+                         )
+            return match[0] if len(match) > 0 else None
+        else:
+            return np.argmin(np.abs(np.array(self.nodes_range(dimension)) - val))
