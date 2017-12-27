@@ -1159,6 +1159,7 @@ class SystemElements:
             map(
                 lambda x: x.vertex.x if dimension == 'x'
                 else x.vertex.z if dimension == 'z' else x.vertex.y if dimension == 'y'
+                else (x.vertex.x, x.vertex.y) if dimension == "both"
                 else None,
                 self.node_map.values()))
 
@@ -1166,7 +1167,7 @@ class SystemElements:
         """
         Retrieve the nearest node ID.
 
-        :param dimension: (str) "both", 'x', 'y' or 'z'
+        :param dimension: (str) 'x', 'y' or 'z'
         :param val: (flt) Value of the dimension.
         :return: (int) ID of the node.
         """
