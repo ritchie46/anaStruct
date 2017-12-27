@@ -370,11 +370,12 @@ class Plotter:
             self.__rotating_spring_support_patch(max_plot_range * scale)
             self.__spring_support_patch(max_plot_range * scale)
 
+        # add_loads
+        self.__q_load_patch(max_plot_range, verbosity)
+        self.__point_load_patch(max_plot_range, verbosity)
+        self.__moment_load_patch(max_plot_range)
+
         if show:
-            # add_loads
-            self.__q_load_patch(max_plot_range, verbosity)
-            self.__point_load_patch(max_plot_range, verbosity)
-            self.__moment_load_patch(max_plot_range)
             self.plot()
         else:
             return self.fig
