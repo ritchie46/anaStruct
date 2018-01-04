@@ -1,4 +1,5 @@
 import math
+import copy
 import numpy as np
 from anastruct.basic import converge, angle_x_axis, FEMException
 from anastruct.fem.postprocess import SystemLevel as post_sl
@@ -621,12 +622,13 @@ class SystemElements:
 
         :return: (bool)
         """
-        self.__prep_matrix_forces()
-        self._remainder_indexes = []
-        self.__assemble_system_matrix()
-        self.__process_conditions()
+        ss = copy.deepcopy(self)
+        ss.__prep_matrix_forces()
+        ss._remainder_indexes = []
+        ss.__assemble_system_matrix()
+        ss.__process_conditions()
 
-        w, _ = np.linalg.eig(self.reduced_system_matrix)
+        w, _ = np.linalg.eig(ss.reduced_system_matrix)
         return np.all(w > 0)
 
     def add_support_hinged(self, node_id):
