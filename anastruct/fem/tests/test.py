@@ -1,12 +1,12 @@
 import unittest
 import sys
+sys.path.append("..")
 from anastruct.fem import system as se
 import numpy as np
 from anastruct.fem.examples.ex_8_non_linear_portal import ss as SS_8
 
 
 class SimpleTest(unittest.TestCase):
-
     def test_example_1(self):
         system = se.SystemElements(True)
         system.add_element(location=[[0, 0], [3, 4]], EA=5e9, EI=8000)

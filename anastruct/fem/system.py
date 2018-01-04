@@ -475,6 +475,12 @@ class SystemElements:
         self.reduced_system_matrix = np.delete(self.system_matrix, indexes, 0)
         self.reduced_system_matrix = np.delete(self.reduced_system_matrix, indexes, 1)
 
+    def __prep_matrix_forces(self):
+        self.system_force_vector = self.system_force_vector = np.zeros(len(self._vertices) * 3)
+        self._apply_perpendicular_q_load()
+        self._apply_point_load()
+        self._apply_moment_load()
+
     def solve(self, force_linear=False, verbosity=0, max_iter=200, **kwargs):
 
         """
@@ -497,10 +503,7 @@ class SystemElements:
         for el in self.element_map.values():
             el.reset()
 
-        self.system_force_vector = self.system_force_vector = np.zeros(len(self._vertices) * 3)
-        self._apply_perpendicular_q_load()
-        self._apply_point_load()
-        self._apply_moment_load()
+        self.__prep_matrix_forces()
 
         if self.non_linear and not force_linear:
             return self._stiffness_adaptation(verbosity, max_iter)
@@ -611,6 +614,20 @@ class SystemElements:
     def _support_check(self, node_id):
         if self.node_map[node_id].hinge:
             raise FEMException ("Flawed inputs", "You cannot add a support to a hinged node.")
+
+    def validate(self):
+        """
+        Validate the stability of the stiffness matrix.
+
+        :return: (bool)
+        """
+        self.__prep_matrix_forces()
+        self._remainder_indexes = []
+        self.__assemble_system_matrix()
+        self.__process_conditions()
+
+        w, _ = np.linalg.eig(self.reduced_system_matrix)
+        return np.all(w > 0)
 
     def add_support_hinged(self, node_id):
         """
@@ -1181,3 +1198,7 @@ class SystemElements:
             return match[0] if len(match) > 0 else None
         else:
             return np.argmin(np.abs(np.array(self.nodes_range(dimension)) - val))
+
+
+
+
