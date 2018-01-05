@@ -616,10 +616,12 @@ class SystemElements:
         if self.node_map[node_id].hinge:
             raise FEMException ("Flawed inputs", "You cannot add a support to a hinged node.")
 
-    def validate(self):
+    def validate(self, min_eigen=1e-9):
         """
         Validate the stability of the stiffness matrix.
 
+        :param min_eigen: (flt) Minimum value of the eigenvalues of the stiffness matrix. This value should be close
+        to zero.
         :return: (bool)
         """
         ss = copy.deepcopy(self)
@@ -629,7 +631,7 @@ class SystemElements:
         ss.__process_conditions()
 
         w, _ = np.linalg.eig(ss.reduced_system_matrix)
-        return np.all(w > 0)
+        return np.all(w > min_eigen)
 
     def add_support_hinged(self, node_id):
         """
