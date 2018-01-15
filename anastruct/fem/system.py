@@ -624,7 +624,7 @@ class SystemElements:
         to zero.
         :return: (bool)
         """
-        ss = copy.deepcopy(self)
+        ss = copy.copy(self)
         ss.__prep_matrix_forces()
         ss._remainder_indexes = []
         ss.__assemble_system_matrix()
