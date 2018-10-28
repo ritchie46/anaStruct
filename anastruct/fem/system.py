@@ -1,13 +1,12 @@
 import math
 import copy
 import numpy as np
-from anastruct.basic import converge, angle_x_axis, FEMException
+from anastruct.basic import FEMException
 from anastruct.fem.postprocess import SystemLevel as post_sl
-from anastruct.fem.elements import Element, det_moment, det_shear
-from anastruct.fem.node import Node
+from anastruct.fem.elements import Element
 from anastruct.vertex import Vertex
 from anastruct.fem.plotter import Plotter
-from anastruct.fem.elements import geometric_stiffness_matrix
+from anastruct.fem import system_components
 
 
 class SystemElements:
@@ -168,14 +167,14 @@ class SystemElements:
         # add the element number
         self.count += 1
 
-        point_1, point_2 = self._det_vertices(location)
-        node_id1, node_id2 = self._det_node_ids(point_1, point_2)
+        point_1, point_2 = system_components.util.det_vertices(self, location)
+        node_id1, node_id2 = system_components.util.det_node_ids(self, point_1, point_2)
 
         point_1, point_2, node_id1, node_id2, spring, mp, ai = \
-            self._force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp)
+            system_components.util.force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp)
 
-        self._append_node_id(point_1, point_2, node_id1, node_id2)
-        self._ensure_single_hinge(spring, node_id1, node_id2)
+        system_components.util.append_node_id(self, point_1, point_2, node_id1, node_id2)
+        system_components.util.ensure_single_hinge(self, spring, node_id1, node_id2)
 
         # add element
         element = Element(self.count, EA, EI, (point_2 - point_1).modulus(), ai, point_1, point_2, spring)
@@ -202,108 +201,9 @@ class SystemElements:
             assert type(mp) == dict, "The mp parameter should be a dictionary."
             self.non_linear_elements[self.count] = mp
             self.non_linear = True
-        self._dead_load(g, element.id)
+        system_components.assembly.dead_load(self, g, element.id)
 
         return self.count
-
-    def _det_vertices(self, location_list):
-        if isinstance(location_list, Vertex):
-            point_1 = self._previous_point
-            point_2 = Vertex(location_list)
-        elif len(location_list) == 1:
-            point_1 = self._previous_point
-            point_2 = Vertex(location_list[0][0], location_list[0][1])
-        elif isinstance(location_list[0], (int, float)):
-            point_1 = self._previous_point
-            point_2 = Vertex(location_list[0], location_list[1])
-        elif isinstance(location_list[0], Vertex):
-            point_1 = location_list[0]
-            point_2 = location_list[1]
-        else:
-            point_1 = Vertex(location_list[0][0], location_list[0][1])
-            point_2 = Vertex(location_list[1][0], location_list[1][1])
-        self._previous_point = point_2
-
-        return point_1, point_2
-
-    def _det_node_ids(self, point_1, point_2):
-        node_ids = []
-        for p in (point_1, point_2):
-            k = str(p)
-            if k in self._vertices:
-                node_id = self._vertices[k]
-            else:
-                node_id = len(self._vertices) + 1
-                self._vertices[k] = node_id
-            node_ids.append(node_id)
-        return node_ids
-
-    @staticmethod
-    def _force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp):
-        """
-        Forces the elements to be in the first and the last quadrant of the unity circle. Meaning the first node is
-        always left and the last node is always right. Or the are both on one vertical line.
-
-        The angle of the element will thus always be between -90 till +90 degrees.
-        :return: point_1, point_2, node_id1, node_id2, spring, mp, ai
-        """
-        # determine the angle of the element with the global x-axis
-        delta_x = point_2.x - point_1.x
-        delta_z = point_2.z - point_1.z  # minus sign to work with an opposite z-axis
-        ai = -angle_x_axis(delta_x, delta_z)
-
-        if delta_x < 0:
-            # switch points
-            point_1, point_2 = point_2, point_1
-            node_id1, node_id2 = node_id2, node_id1
-
-            ai = -angle_x_axis(-delta_x, -delta_z)
-
-            if spring is not None:
-                assert type(spring) == dict, "The spring parameter should be a dictionary."
-                if 1 in spring and 2 in spring:
-                    spring[1], spring[2] = spring[2], spring[1]
-                elif 1 in spring:
-                    spring[2] = spring.pop(1)
-                elif 2 in spring:
-                    spring[1] = spring.pop(2)
-
-            if mp is not None:
-                if 1 in mp and 2 in mp:
-                    mp[1], mp[2] = mp[2], mp[1]
-                elif 1 in mp:
-                    mp[2] = mp.pop(1)
-                elif 2 in mp:
-                    mp[1] = mp.pop(2)
-        return point_1, point_2, node_id1, node_id2, spring, mp, ai
-
-    def _append_node_id(self, point_1, point_2, node_id1, node_id2):
-        if node_id1 not in self.node_map:
-            self.node_map[node_id1] = Node(node_id1, vertex=point_1)
-        if node_id2 not in self.node_map:
-            self.node_map[node_id2] = Node(node_id2, vertex=point_2)
-
-    def _ensure_single_hinge(self, spring, node_id1, node_id2):
-        if spring is not None and 0 in spring:
-            """
-            Must be one rotational fixed element per node. Thus keep track of the hinges (k == 0).
-            """
-
-            for node in range(1, 3):
-                if spring[node] == 0:  # node is a hinged node
-                    if node == 1:
-                        node_id = node_id1
-                    else:
-                        node_id = node_id2
-
-                    self.node_map[node_id].hinge = True
-
-                    if len(self.node_map[node_id].elements) > 0:
-                        pass_hinge = not all([el.hinge == node for el in self.node_map[node_id].elements.values()])
-                    else:
-                        pass_hinge = True
-                    if not pass_hinge:
-                        del spring[node]  # too many hinges at that element.
 
     def add_multiple_elements(self, location, n=None, dl=None, EA=None, EI=None, g=0, mp=None, spring=None,
                               **kwargs):
@@ -352,7 +252,7 @@ class SystemElements:
             if "element_type" not in el:
                 el["element_type"] = element_type
 
-        point_1, point_2 = self._det_vertices(location)
+        point_1, point_2 = system_components.util.det_vertices(self, location)
         length = (point_2 - point_1).modulus()
         direction = (point_2 - point_1).unit()
 
@@ -362,8 +262,9 @@ class SystemElements:
             dl = length / n
 
         point = point_1 + direction * dl
-        elements = [self.add_element((point_1, point), first["EA"], first["EI"], first["g"], first["mp"], first["spring"],
-                         element_type=first["element_type"])]
+        elements = [
+            self.add_element((point_1, point), first["EA"], first["EI"], first["g"], first["mp"], first["spring"],
+                             element_type=first["element_type"])]
 
         l = 2 * dl
         while l < length:
@@ -372,115 +273,8 @@ class SystemElements:
             l += dl
 
         elements.append(self.add_element(point_2, last["EA"], last["EI"], last["g"], last["mp"], last["spring"],
-                         element_type=last["element_type"]))
+                                         element_type=last["element_type"]))
         return elements
-
-    def __assemble_system_matrix(self, validate=False, geometric_matrix=False):
-        """
-        Shape of the matrix = n nodes * n d.o.f.
-        Shape = n * 3
-        """
-        if not geometric_matrix:
-            shape = len(self.node_map) * 3
-            self.shape_system_matrix = shape
-            self.system_matrix = np.zeros((shape, shape))
-
-        for matrix_index, K in self.system_spring_map.items():
-            #  first index is row, second is column
-            self.system_matrix[matrix_index][matrix_index] += K
-
-        # Determine the elements location in the stiffness matrix.
-        # system matrix [K]
-        #
-        # [fx 1] [K         |  \ node 1 starts at row 1
-        # |fz 1] |  K       |  /
-        # |Ty 1] |   K      | /
-        # |fx 2] |    K     |  \ node 2 starts at row 4
-        # |fz 2] |     K    |  /
-        # |Ty 2] |      K   | /
-        # |fx 3] |       K  |  \ node 3 starts at row 7
-        # |fz 3] |        K |  /
-        # [Ty 3] [         K] /
-        #
-        #         n   n  n
-        #         o   o  o
-        #         d   d  d
-        #         e   e  e
-        #         1   2  3
-        #
-        # thus with appending numbers in the system matrix: column = row
-
-        for i in range(len(self.element_map)):
-            element = self.element_map[i + 1]
-            if geometric_matrix:
-                element_matrix = geometric_stiffness_matrix(element.l, element.N_1, element.ai)
-            else:
-                element_matrix = element.stiffness_matrix
-
-            # n1 and n2 are starting indexes of the rows and the columns for node 1 and node 2
-            n1 = (element.node_1.id - 1) * 3
-            n2 = (element.node_2.id - 1) * 3
-            self.system_matrix[n1: n1 + 3, n1: n1 + 3] += element_matrix[0:3, :3]
-            self.system_matrix[n1: n1 + 3, n2: n2 + 3] += element_matrix[0:3, 3:]
-
-            self.system_matrix[n2: n2 + 3, n1: n1 + 3] += element_matrix[3:6, :3]
-            self.system_matrix[n2: n2 + 3, n2: n2 + 3] += element_matrix[3:6, 3:]
-
-        # returns True if symmetrical.
-        if validate:
-            assert np.allclose((self.system_matrix.transpose()), self.system_matrix)
-
-    def _set_force_vector(self, force_list):
-        """
-        :param force_list: list containing tuples with the
-        1. number of the node,
-        2. the number of the direction (1 = x, 2 = z, 3 = y)
-        3. the force
-        [(1, 3, 1000)] node=1, direction=3 (y), force=1000
-        list may contain multiple tuples
-        :return: Vector with forces on the nodes
-        """
-        for id_, direction, force in force_list:
-            self.system_force_vector[(id_ - 1) * 3 + direction - 1] += force
-
-        return self.system_force_vector
-
-    def _set_displacement_vector(self, nodes_list):
-        """
-        :param nodes_list: list containing tuples with
-        1.the node
-        2. the d.o.f. that is set
-        :return: Vector with the displacements of the nodes (If displacement is not known, the value is set
-        to NaN)
-        """
-        if self.system_displacement_vector is None:
-            self.system_displacement_vector = np.empty(len(self._vertices) * 3)
-            self.system_displacement_vector[:] = np.NaN
-
-        for i in nodes_list:
-            index = (i[0] - 1) * 3 + i[1] - 1
-            self.system_displacement_vector[index] = 0
-        return self.system_displacement_vector
-
-    def __process_conditions(self):
-        indexes = []
-        # remove the unsolvable values from the matrix and vectors
-        for i in range(self.shape_system_matrix):
-            if self.system_displacement_vector[i] == 0:
-                indexes.append(i)
-            else:
-                self._remainder_indexes.append(i)
-
-        self.system_displacement_vector = np.delete(self.system_displacement_vector, indexes, 0)
-        self.reduced_force_vector = np.delete(self.system_force_vector, indexes, 0)
-        self.reduced_system_matrix = np.delete(self.system_matrix, indexes, 0)
-        self.reduced_system_matrix = np.delete(self.reduced_system_matrix, indexes, 1)
-
-    def __prep_matrix_forces(self):
-        self.system_force_vector = self.system_force_vector = np.zeros(len(self._vertices) * 3)
-        self._apply_perpendicular_q_load()
-        self._apply_point_load()
-        self._apply_moment_load()
 
     def solve(self, force_linear=False, verbosity=0, max_iter=200, **kwargs):
 
@@ -504,17 +298,17 @@ class SystemElements:
         for el in self.element_map.values():
             el.reset()
 
-        self.__prep_matrix_forces()
+        system_components.assembly.prep_matrix_forces(self)
 
         if self.non_linear and not force_linear:
-            return self._stiffness_adaptation(verbosity, max_iter)
+            return system_components.solver.stiffness_adaptation(self, verbosity, max_iter)
 
-        assert(self.system_force_vector is not None), "There are no forces on the structure"
+        assert (self.system_force_vector is not None), "There are no forces on the structure"
         self._remainder_indexes = []
-        self.__assemble_system_matrix()
+        system_components.assembly.assemble_system_matrix(self)
         if gnl:
-            self.__assemble_system_matrix(geometric_matrix=True)
-        self.__process_conditions()
+            system_components.assembly.assemble_system_matrix(self, geometric_matrix=True)
+        system_components.assembly.process_conditions(self)
 
         # solution of the reduced system (reduced due to support conditions)
         reduced_displacement_vector = np.linalg.solve(self.reduced_system_matrix, self.reduced_force_vector)
@@ -542,79 +336,11 @@ class SystemElements:
             self.post_processor.element_results()
 
             # check the values in the displacement vector for extreme values, indicating a flawed calculation
-            assert(np.any(self.system_displacement_vector < 1e6)), "The displacements of the structure exceed 1e6. " \
-                                                                   "Check your support conditions," \
-                                                                   "or your elements Young's modulus"
+            assert (np.any(self.system_displacement_vector < 1e6)), "The displacements of the structure exceed 1e6. " \
+                                                                    "Check your support conditions," \
+                                                                    "or your elements Young's modulus"
 
         return self.system_displacement_vector
-
-    def _stiffness_adaptation(self, verbosity, max_iter):
-        self.solve(True, naked=True)
-        if verbosity == 0:
-            print("Starting stiffness adaptation calculation.")
-
-        # check validity
-        assert all([mp > 0 for mpd in self.non_linear_elements.values() for mp in mpd]), \
-            "Cannot solve for an mp = 0. If you want a hinge set the spring stiffness equal to 0."
-
-        for c in range(max_iter):
-            factors = []
-
-            # update the elements stiffnesses
-            for k, v in self.non_linear_elements.items():
-                el = self.element_map[k]
-
-                for node_no, mp in v.items():
-                    if node_no == 1:
-                        # Fast Ty
-                        m_e = el.element_force_vector[2] + el.element_primary_force_vector[2]
-                    else:
-                        # Fast Ty
-                        m_e = el.element_force_vector[5] + el.element_primary_force_vector[5]
-
-                    if abs(m_e) > mp:
-                        el.nodes_plastic[node_no - 1] = True
-                    if el.nodes_plastic[node_no - 1]:
-                        factor = converge(m_e, mp)
-                        factors.append(factor)
-                        el.update_stiffness(factor, node_no)
-
-            if not np.allclose(factors, 1, 1e-3):
-                self.solve(force_linear=True, naked=True)
-            else:
-                self.post_processor.node_results_elements()
-                self.post_processor.node_results_system()
-                self.post_processor.reaction_forces()
-                self.post_processor.element_results()
-                break
-
-        if c == max_iter - 1:
-            print("Couldn't solve the in the amount of iterations given.")
-        elif verbosity == 0:
-            print("Solved in {} iterations".format(c))
-        return self.system_displacement_vector
-
-    def gnl(self, verbosity=0):
-        if verbosity == 0:
-            print("Starting geometrical non linear calculation")
-
-        last_abs_u = np.abs(self.solve(force_linear=True))
-
-        for c in range(200):
-            current_abs_u = np.abs(self.solve(gnl=True))
-
-            global_increase = np.sum(current_abs_u) / np.sum(last_abs_u)
-            last_abs_u = current_abs_u
-
-            if math.isclose(global_increase, 1.0):
-                break
-
-        if verbosity == 0:
-            print("Solved in {} iterations".format(c))
-
-    def _support_check(self, node_id):
-        if self.node_map[node_id].hinge:
-            raise FEMException ("Flawed inputs", "You cannot add a support to a hinged node.")
 
     def validate(self, min_eigen=1e-9):
         """
@@ -625,10 +351,10 @@ class SystemElements:
         :return: (bool)
         """
         ss = copy.copy(self)
-        ss.__prep_matrix_forces()
+        system_components.assembly.prep_matrix_forces(ss)
         ss._remainder_indexes = []
-        ss.__assemble_system_matrix()
-        ss.__process_conditions()
+        system_components.assembly.assemble_system_matrix(ss)
+        system_components.assembly.process_conditions(ss)
 
         w, _ = np.linalg.eig(ss.reduced_system_matrix)
         return np.all(w > min_eigen)
@@ -643,8 +369,8 @@ class SystemElements:
             node_id = (node_id,)
 
         for id_ in node_id:
-            self._support_check(id_)
-            self._set_displacement_vector([(id_, 1), (id_, 2)])
+            system_components.util.support_check(self, id_)
+            system_components.assembly.set_displacement_vector(self, [(id_, 1), (id_, 2)])
 
             # add the support to the support list for the plotter
             self.supports_hinged.append(self.node_map[id_])
@@ -660,8 +386,8 @@ class SystemElements:
             node_id = (node_id,)
 
         for id_ in node_id:
-            self._support_check(id_)
-            self._set_displacement_vector([(id_, direction)])
+            system_components.util.support_check(self, id_)
+            system_components.assembly.set_displacement_vector(self, [(id_, direction)])
 
             # add the support to the support list for the plotter
             self.supports_roll.append(self.node_map[id_])
@@ -677,8 +403,8 @@ class SystemElements:
             node_id = (node_id,)
 
         for id_ in node_id:
-            self._support_check(id_)
-            self._set_displacement_vector([(id_, 1), (id_, 2), (id_, 3)])
+            system_components.util.support_check(self, id_)
+            system_components.assembly.set_displacement_vector(self, [(id_, 1), (id_, 2), (id_, 3)])
 
             # add the support to the support list for the plotter
             self.supports_fixed.append(self.node_map[id_])
@@ -706,7 +432,7 @@ class SystemElements:
             node_id = (node_id,)
 
         for id_ in node_id:
-            self._support_check(id_)
+            system_components.util.support_check(self, id_)
 
             # determine the location in the system matrix
             # row and column are the same
@@ -724,15 +450,11 @@ class SystemElements:
 
             if not roll:  # fix the other d.o.f.
                 if translation == 1:  # translation spring in x-axis
-                    self._set_displacement_vector([(id_, 2)])
+                    system_components.assembly.set_displacement_vector(self, [(id_, 2)])
                 elif translation == 2:  # translation spring in z-axis
-                    self._set_displacement_vector([(id_, 1)])
+                    system_components.assembly.set_displacement_vector(self, [(id_, 1)])
                 elif translation == 3:  # rotational spring in y-axis
-                    self._set_displacement_vector([(id_, 1), (id_, 2)])
-
-    def _dead_load(self, g, element_id):
-        self.loads_dead_load.append((element_id, g))
-        self.element_map[element_id].dead_load = g
+                    system_components.assembly.set_displacement_vector(self, [(id_, 1), (id_, 2)])
 
     def q_load(self, q, element_id, direction="element"):
         """
@@ -757,82 +479,6 @@ class SystemElements:
             el.q_load = q[i] * self.orientation_cs * self.load_factor
             el.q_direction = direction
 
-    def _apply_perpendicular_q_load(self):
-        for element_id, g in self.loads_dead_load:
-            element = self.element_map[element_id]
-            q_perpendicular = element.all_q_load
-
-            if q_perpendicular == 0:
-                continue
-            elif element.q_direction == "x" or element.q_direction == "y" or element.dead_load:
-                self._apply_parallel_q_load(element)
-
-            kl = element.constitutive_matrix[1][1] * 1e6
-            kr = element.constitutive_matrix[2][2] * 1e6
-
-            if math.isclose(kl, kr):
-                left_moment = det_moment(kl, kr, q_perpendicular, 0, element.EI, element.l)
-                right_moment = -left_moment
-                rleft = det_shear(kl, kr, q_perpendicular, 0, element.EI, element.l)
-                rright = rleft
-            else:
-                # minus because of systems positive rotation
-                left_moment = det_moment(kl, kr, q_perpendicular, 0, element.EI, element.l)
-                right_moment = -det_moment(kl, kr, q_perpendicular, element.l, element.EI, element.l)
-                rleft = det_shear(kl, kr, q_perpendicular, 0, element.EI, element.l)
-                rright = -det_shear(kl, kr, q_perpendicular, element.l, element.EI, element.l)
-
-            rleft_x = rleft * math.sin(element.ai)
-            rright_x = rright * math.sin(element.ai)
-
-            rleft_z = rleft * math.cos(element.ai)
-            rright_z = rright * math.cos(element.ai)
-
-            primary_force = np.array([rleft_x, rleft_z, left_moment, rright_x, rright_z, right_moment])
-            element.element_primary_force_vector -= primary_force
-
-            # Set force vector
-            self.system_force_vector[(element.node_id1 - 1) * 3: (element.node_id1 - 1) * 3 + 3] += primary_force[0:3]
-            self.system_force_vector[(element.node_id2 - 1) * 3: (element.node_id2 - 1) * 3 + 3] += primary_force[3:]
-
-    def _apply_parallel_q_load(self, element):
-        direction = element.q_direction
-        # dead load
-        factor_dl = abs(math.sin(element.ai))
-
-        def update(Fx, Fz):
-            element.element_primary_force_vector[0] -= Fx
-            element.element_primary_force_vector[1] -= Fz
-            element.element_primary_force_vector[3] -= Fx
-            element.element_primary_force_vector[4] -= Fz
-
-            self._set_force_vector([
-                (element.node_1.id, 2, Fz), (element.node_2.id, 2, Fz),
-                (element.node_1.id, 1, Fx), (element.node_2.id, 1, Fx)])
-
-        if direction == "x":
-            factor = abs(math.cos(element.ai))
-
-            for q_element in (element.q_load * factor, element.dead_load * factor_dl):
-                # q_load working at parallel to the elements x-axis          # set the proper direction
-                Fx = -q_element * math.cos(element.ai) * element.l * 0.5
-                Fz = q_element * abs(math.sin(element.ai)) * element.l * 0.5 * np.sign(math.sin(element.ai))
-
-                update(Fx, Fz)
-
-        else:
-            if math.isclose(element.ai, 0):
-                # horizontal element cannot have parallel forces due to self weight or q-load in y direction.
-                return None
-            factor = abs(math.sin(element.ai))
-
-            for q_element in (element.q_load * factor, element.dead_load * factor_dl):
-                # q_load working at parallel to the elements x-axis          # set the proper direction
-                Fx = q_element * math.cos(element.ai) * element.l * 0.5 * -np.sign(math.sin(element.ai))
-                Fz = q_element * abs(math.sin(element.ai)) * element.l * 0.5
-
-                update(Fx, Fz)
-
     def point_load(self, node_id, Fx=0, Fz=0):
         """
         Apply a point load to a node.
@@ -851,14 +497,9 @@ class SystemElements:
             Fz = [0 for _ in Fx]
 
         for i in range(len(node_id)):
-            self.plotter.max_system_point_load = max(self.plotter.max_system_point_load, (Fx[i]**2 + Fz[i]**2)**0.5)
+            self.plotter.max_system_point_load = max(self.plotter.max_system_point_load,
+                                                     (Fx[i] ** 2 + Fz[i] ** 2) ** 0.5)
             self.loads_point[node_id[i]] = (Fx[i], Fz[i] * self.orientation_cs)
-
-    def _apply_point_load(self):
-        for node_id in self.loads_point:
-            Fx, Fz = self.loads_point[node_id]
-            # system force vector.
-            self._set_force_vector([(node_id, 1, Fx * self.load_factor), (node_id, 2, Fz * self.load_factor)])
 
     def moment_load(self, node_id, Ty):
         """
@@ -873,10 +514,6 @@ class SystemElements:
 
         for i in range(len(node_id)):
             self.loads_moment[node_id[i]] = Ty[i]
-
-    def _apply_moment_load(self):
-        for node_id, Ty in self.loads_moment.items():
-            self._set_force_vector([(node_id, 3, Ty * self.load_factor)])
 
     def show_structure(self, verbosity=0, scale=1., offset=(0, 0), figsize=None, show=True, supports=True):
         """
@@ -1148,7 +785,7 @@ class SystemElements:
         :return: (list)
         """
         if unit == "uy":
-            return [node.uz for node in self.node_map.values()]   # - * -  = +
+            return [node.uz for node in self.node_map.values()]  # - * -  = +
         elif unit == "ux":
             return [-node.ux for node in self.node_map.values()]
 
@@ -1164,7 +801,7 @@ class SystemElements:
         try:
             tol = 1e-9
             return next(filter(lambda x: math.isclose(x.vertex.x, vertex.x, abs_tol=tol)
-                               and math.isclose(x.vertex.y, vertex.y, abs_tol=tol),
+                                         and math.isclose(x.vertex.y, vertex.y, abs_tol=tol),
                                self.node_map.values())).id
         except StopIteration:
             return None
@@ -1202,7 +839,3 @@ class SystemElements:
             return match[0] if len(match) > 0 else None
         else:
             return np.argmin(np.abs(np.array(self.nodes_range(dimension)) - val))
-
-
-
-

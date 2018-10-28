@@ -12,7 +12,6 @@ def converge(lhs, rhs):
     """
     lhs = abs(lhs)
     rhs = abs(rhs)
-
     div = max(lhs, rhs) / min(lhs, rhs) * 2
 
     return (rhs / lhs - 1) / div + 1
