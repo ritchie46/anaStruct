@@ -6,7 +6,7 @@ from anastruct.fem.postprocess import SystemLevel as post_sl
 from anastruct.fem.elements import Element
 from anastruct.vertex import Vertex
 from anastruct.fem.plotter import Plotter
-from anastruct.fem import system_components
+from . import system_components
 
 
 class SystemElements:
