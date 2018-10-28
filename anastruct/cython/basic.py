@@ -1,7 +1,7 @@
 import math
 
 
-def converge(lhs, rhs, div=3):
+def converge(lhs, rhs):
     """
     Determine convergence factor.
 
@@ -10,7 +10,12 @@ def converge(lhs, rhs, div=3):
     :param div: (flt)
     :return: multiplication factor (flt) ((lhs / rhs) - 1) / div + 1
     """
-    return (abs(rhs) / abs(lhs) - 1) / div + 1
+    lhs = abs(lhs)
+    rhs = abs(rhs)
+
+    div = max(lhs, rhs) / min(lhs, rhs) * 2
+
+    return (rhs / lhs - 1) / div + 1
 
 
 def angle_x_axis(delta_x, delta_z):

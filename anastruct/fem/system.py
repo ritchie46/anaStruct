@@ -575,7 +575,7 @@ class SystemElements:
                     if abs(m_e) > mp:
                         el.nodes_plastic[node_no - 1] = True
                     if el.nodes_plastic[node_no - 1]:
-                        factor = converge(m_e, mp, 3)
+                        factor = converge(m_e, mp)
                         factors.append(factor)
                         el.update_stiffness(factor, node_no)
 
