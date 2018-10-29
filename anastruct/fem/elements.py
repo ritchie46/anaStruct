@@ -129,9 +129,13 @@ def kinematic_matrix(ai, aj, l):
     :param ai: (float) angle with respect to the x axis.
     :param l: (float) Length
     """
-    return np.array([[-cos(ai), sin(ai), 0, cos(aj), -sin(aj), 0],
-                     [sin(ai) / l, cos(ai) / l, -1, -sin(aj) / l, -cos(aj) / l, 0],
-                     [-sin(ai) / l, -cos(ai) / l, 0, sin(aj) / l, cos(aj) / l, 1]])
+    c_ai = cos(ai)
+    s_ai = sin(ai)
+    c_aj = cos(aj)
+    s_aj = sin(aj)
+    return np.array([[-c_ai, s_ai, 0, c_aj, -s_aj, 0],
+                     [s_ai / l, c_ai / l, -1, -s_aj / l, -c_aj / l, 0],
+                     [-s_ai / l, -c_ai / l, 0, s_aj / l, c_aj / l, 1]])
 
 
 def constitutive_matrix(EA, EI, l, spring=None):
