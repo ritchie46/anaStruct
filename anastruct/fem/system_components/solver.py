@@ -1,9 +1,18 @@
 import numpy as np
-import math
+import copy
 from anastruct.basic import converge
+from scipy import linalg
 
 
 def stiffness_adaptation(system, verbosity, max_iter):
+    """
+    Non linear solver for the nodes by adapting the stiffness of the elements (nodes).
+
+    :param system: (SystemElements)
+    :param verbosity: (int)
+    :param max_iter: (int)
+    :return: (np.array) Vector with displacements.
+    """
     system.solve(True, naked=True)
     if verbosity == 0:
         print("Starting stiffness adaptation calculation.")
@@ -50,20 +59,71 @@ def stiffness_adaptation(system, verbosity, max_iter):
     return system.system_displacement_vector
 
 
-def gnl(self, verbosity=0):
+def det_linear_buckling(system):
+    """
+    Determine linear buckling by solving the generalized eigenvalue problem (k -λkg)x = 0.
+
+    geometrical stiffness matrix at buckling point: Kg = f(N_max)
+    1st order forces: N0
+    Nmax = λN0
+    Kg(Nmax) = λ(Kg(N0) = λKg0
+
+    2nd order analysis is solved by:
+    (K + λKg0)U = F
+
+    We are interested in the point that there is nog additional load F and displacement U is possible.
+    (K + λKg0)ΔU = ΔF = 0
+    (K + λKg0) = 0
+
+    Is the generalized eigenvalue problem:
+    (A - λB)x = 0
+
+    :param system: (SystemElements)
+    :return: (flt) The factor the loads can be increased until the structure fails due to buckling.
+    """
+    system.solve()
+
+    # buckling
+    k0 = system.reduced_system_matrix * 1.0  # copy
+
+    for el in system.element_map.values():
+        el.compile_geometric_non_linear_stiffness_matrix()
+        el.reset()
+
+    system.solve()
+    kg = system.reduced_system_matrix - k0
+    # solve (k -λkg)x = 0
+
+    eigenvalues = np.abs(linalg.eigvals(k0, kg))
+    return np.min(eigenvalues)
+
+
+def geometrically_non_linear(system, verbosity=0, buckling_factor=True):
+    """
+
+    :param system: (SystemElements)
+    :param verbosity: (int)
+    :param buckling_factor: (bool)
+    :return: buckling_factor: (flt) The factor the loads can be increased until the structure fails due to buckling.
+    """
+    # https://www.ethz.ch/content/dam/ethz/special-interest/baug/ibk/structural-mechanics-dam/education/femI/Lecture_2b.pdf
     if verbosity == 0:
         print("Starting geometrical non linear calculation")
 
-    last_abs_u = np.abs(self.solve(force_linear=True))
+    if buckling_factor:
+        buckling_system = copy.copy(system)
+        buckling_factor = det_linear_buckling(buckling_system)
+    else:
+        buckling_factor = None
 
-    for c in range(200):
-        current_abs_u = np.abs(self.solve(gnl=True))
+    system.solve()
 
-        global_increase = np.sum(current_abs_u) / np.sum(last_abs_u)
-        last_abs_u = current_abs_u
+    for el in system.element_map.values():
+        el.compile_geometric_non_linear_stiffness_matrix()
 
-        if math.isclose(global_increase, 1.0):
-            break
+    system.solve()
 
-    if verbosity == 0:
-        print("Solved in {} iterations".format(c))
+    return buckling_factor
+
+
+

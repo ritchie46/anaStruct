@@ -67,6 +67,7 @@ class SystemElements:
         self.reaction_forces = {}  # node objects
         self.non_linear = False
         self.non_linear_elements = {}  # keys are element ids, values are dicts: {node_index: max moment capacity}
+        self.buckling_factor = None
 
         # previous point of element
         self._previous_point = Vertex(0, 0)
@@ -276,7 +277,7 @@ class SystemElements:
                                          element_type=last["element_type"]))
         return elements
 
-    def solve(self, force_linear=False, verbosity=0, max_iter=200, **kwargs):
+    def solve(self, force_linear=False, verbosity=0, max_iter=200, geometrical_non_linear=False, **kwargs):
 
         """
         Compute the results of current model.
@@ -284,7 +285,7 @@ class SystemElements:
         :param force_linear: (bool) Force a linear calculation. Even when the system has non linear nodes.
         :param verbosity: (int) 0. Log calculation outputs. 1. silence.
         :param max_iter: (int) Maximum allowed iterations.
-
+        :param geometrical_non_linear: (bool) Calculate second order effects and determine the buckling factor.
         :return: (array) Displacements vector.
         """
 
@@ -292,7 +293,13 @@ class SystemElements:
         #                naked (bool) Default = False, if True force lines won't be computed.
 
         naked = kwargs.get("naked", False)
-        gnl = kwargs.get("gnl", False)
+
+        if not naked:
+            if not self.validate():
+                if any(['general' in element.type for element in self.element_map.values()]):
+                    raise FEMException('StabilityError', 'The eigenvalues of the stiffness matrix are non zero, '
+                                                         'which indicates a instable structure. '
+                                                         'Check your support conditions')
 
         # (Re)set force vectors
         for el in self.element_map.values():
@@ -304,10 +311,12 @@ class SystemElements:
             return system_components.solver.stiffness_adaptation(self, verbosity, max_iter)
 
         assert (self.system_force_vector is not None), "There are no forces on the structure"
-        self._remainder_indexes = []
+
         system_components.assembly.assemble_system_matrix(self)
-        if gnl:
-            system_components.assembly.assemble_system_matrix(self, geometric_matrix=True)
+        if geometrical_non_linear:
+            self.buckling_factor = system_components.solver.geometrically_non_linear(self, verbosity)
+            return self.system_displacement_vector
+
         system_components.assembly.process_conditions(self)
 
         # solution of the reduced system (reduced due to support conditions)

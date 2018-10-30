@@ -126,6 +126,7 @@ def assemble_system_matrix(system, validate=False, geometric_matrix=False):
     Shape of the matrix = n nodes * n d.o.f.
     Shape = n * 3
     """
+    system._remainder_indexes = []
     if not geometric_matrix:
         shape = len(system.node_map) * 3
         system.shape_system_matrix = shape
@@ -158,10 +159,7 @@ def assemble_system_matrix(system, validate=False, geometric_matrix=False):
 
     for i in range(len(system.element_map)):
         element = system.element_map[i + 1]
-        if geometric_matrix:
-            element_matrix = geometric_stiffness_matrix(element.l, element.N_1, element.ai)
-        else:
-            element_matrix = element.stiffness_matrix
+        element_matrix = element.stiffness_matrix
 
         # n1 and n2 are starting indexes of the rows and the columns for node 1 and node 2
         n1 = (element.node_1.id - 1) * 3

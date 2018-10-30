@@ -19,12 +19,12 @@ setup(
     url='https://ritchievink.com',
     download_url="https://github.com/ritchie46/anaStruct",
     license='GPL-3.0',
-    packages=['anastruct', 'anastruct.fem', 'anastruct.fem.system_components',
+    packages=['anastruct', 'anastruct.fem', 'anastruct.fem.system_components', 'anastruct.fem.examples',
               "anastruct.material", "anastruct.cython", "anastruct.fem.cython"],
     install_requires=[
         "matplotlib",
         "numpy",
-        "plotly"
+        "scipy"
     ],
     ext_modules=em
 

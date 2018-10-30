@@ -116,6 +116,10 @@ class Element:
             self.constitutive_matrix[2][2] *= factor
         self.compile_stiffness_matrix()
 
+    def compile_geometric_non_linear_stiffness_matrix(self):
+        self.compile_stiffness_matrix()
+        self.stiffness_matrix += geometric_stiffness_matrix(self.l, self.N_1, self.ai)
+
     def reset(self):
         self.element_displacement_vector = np.zeros(6)
         self.element_primary_force_vector = np.zeros(6)
