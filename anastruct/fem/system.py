@@ -57,6 +57,9 @@ class SystemElements:
         self.supports_spring_y = []
         self.supports_roll_direction = []
 
+        # save tuples of the arguments for copying purposes.
+        self.supports_spring_args = []
+
         # keep track of the loads
         self.loads_point = {}  # node ids with a point loads
         self.loads_q = {}  # element ids with a q-load
@@ -200,7 +203,7 @@ class SystemElements:
 
         if mp is not None:
             assert type(mp) == dict, "The mp parameter should be a dictionary."
-            self.non_linear_elements[self.count] = mp
+            self.non_linear_elements[element.id] = mp
             self.non_linear = True
         system_components.assembly.dead_load(self, g, element.id)
 
@@ -436,6 +439,7 @@ class SystemElements:
         :param roll: (bool) If set to True, only the translation of the spring is controlled.
 
         """
+        self.supports_spring_args.append((node_id, translation, k, roll))
         # The stiffness of the spring is added in the system matrix at the location that represents the node and the
         # displacement.
         if not isinstance(node_id, (tuple, list)):
