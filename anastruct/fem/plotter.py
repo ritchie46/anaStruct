@@ -5,7 +5,7 @@ import matplotlib.patches as mpatches
 from anastruct.basic import find_nearest
 try:
     from plotly.offline import plot_mpl, iplot_mpl
-except ModuleNotFoundError:
+except Exception:
    import warnings
    warnings.warn("Plotly not found. The functions that require plotly will result in an error")
 PATCH_SIZE = 0.03
