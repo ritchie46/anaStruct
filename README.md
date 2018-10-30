@@ -50,7 +50,7 @@ $ pip install anastruct
 * hinged elements :heavy_check_mark:
 * rotational springs :heavy_check_mark:
 * non-linear nodes :heavy_check_mark:
-* geometrical non linearity :heavy_multiplication_x:
+* geometrical non linearity :heavy_check_mark:
 
 ```python
 from anastruct.fem.system import SystemElements
