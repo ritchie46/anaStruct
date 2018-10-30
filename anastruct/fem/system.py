@@ -304,13 +304,11 @@ class SystemElements:
         # (Re)set force vectors
         for el in self.element_map.values():
             el.reset()
-
         system_components.assembly.prep_matrix_forces(self)
+        assert (self.system_force_vector is not None), "There are no forces on the structure"
 
         if self.non_linear and not force_linear:
             return system_components.solver.stiffness_adaptation(self, verbosity, max_iter)
-
-        assert (self.system_force_vector is not None), "There are no forces on the structure"
 
         system_components.assembly.assemble_system_matrix(self)
         if geometrical_non_linear:
@@ -359,10 +357,13 @@ class SystemElements:
         to zero.
         :return: (bool)
         """
+
         ss = copy.copy(self)
         system_components.assembly.prep_matrix_forces(ss)
+        assert (np.abs(ss.system_force_vector).sum() != 0), "There are no forces on the structure"
         ss._remainder_indexes = []
         system_components.assembly.assemble_system_matrix(ss)
+
         system_components.assembly.process_conditions(ss)
 
         w, _ = np.linalg.eig(ss.reduced_system_matrix)

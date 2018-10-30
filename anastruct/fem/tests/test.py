@@ -179,6 +179,11 @@ class SimpleTest(unittest.TestCase):
         sol = [0, 2.0, 4.0, 6.0, 8.0, 10]
         self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, [x.vertex.x for x in ss.node_map.values()])]))
 
+    def test_no_forces_assertion(self):
+        ss = se.SystemElements()
+        ss.add_element([0, 10])
+        self.assertRaises(AssertionError, ss.solve)
+
 
 if __name__ == "__main__":
     unittest.main()
