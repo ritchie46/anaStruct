@@ -1,4 +1,5 @@
 import math
+import collections
 import copy
 import numpy as np
 from anastruct.basic import FEMException
@@ -378,7 +379,7 @@ class SystemElements:
 
         :param node_id: (int/ list) Represents the nodes ID
         """
-        if not isinstance(node_id, (tuple, list)):
+        if not isinstance(node_id, collections.Iterable):
             node_id = (node_id,)
 
         for id_ in node_id:
@@ -395,7 +396,7 @@ class SystemElements:
         :param node_id: (int/ list) Represents the nodes ID
         :param direction: (int/ list) Represents the direction that is fixed: x = 1, y = 2
         """
-        if not isinstance(node_id, (tuple, list)):
+        if not isinstance(node_id, collections.Iterable):
             node_id = (node_id,)
 
         for id_ in node_id:
@@ -412,7 +413,7 @@ class SystemElements:
 
         :param node_id: (int/ list) Represents the nodes ID
         """
-        if not isinstance(node_id, (tuple, list)):
+        if not isinstance(node_id, collections.Iterable):
             node_id = (node_id,)
 
         for id_ in node_id:
@@ -442,7 +443,7 @@ class SystemElements:
         self.supports_spring_args.append((node_id, translation, k, roll))
         # The stiffness of the spring is added in the system matrix at the location that represents the node and the
         # displacement.
-        if not isinstance(node_id, (tuple, list)):
+        if not isinstance(node_id, collections.Iterable):
             node_id = (node_id,)
 
         for id_ in node_id:
@@ -479,7 +480,7 @@ class SystemElements:
         :param direction: (str) "element", "x", "y"
 
         """
-        if not isinstance(element_id, (tuple, list)):
+        if not isinstance(element_id, collections.Iterable):
             element_id = (element_id,)
             q = (q,)
 
@@ -501,7 +502,7 @@ class SystemElements:
         :param Fx: (flt/ list) Force in global x direction.
         :param Fz: (flt/ list) Force in global x direction.
         """
-        if not isinstance(node_id, (tuple, list)):
+        if not isinstance(node_id, collections.Iterable):
             node_id = (node_id,)
             Fx = (Fx,)
             Fz = (Fz,)
@@ -522,7 +523,7 @@ class SystemElements:
         :param node_id: (int) Nodes ID.
         :param Ty: (flt/ list) Moments acting on the node.
         """
-        if not isinstance(node_id, (tuple, list)):
+        if not isinstance(node_id, collections.Iterable):
             node_id = (node_id,)
             Ty = (Ty,)
 
