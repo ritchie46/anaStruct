@@ -482,10 +482,15 @@ class SystemElements:
         """
         if not isinstance(element_id, collections.Iterable):
             element_id = (element_id,)
+        elif not hasattr(element_id, '__getitem__'):
+            element_id = tuple(element_id)
+        if not isinstance(q, collections.Iterable):
             q = (q,)
+        elif not hasattr(q, '__getitem__'):
+            q = tuple(q)
 
-        if type(q) != type(element_id):  # arguments should be q, [id_1, [id_2]
-            q = [q for _ in element_id]
+        if len(q) != len(element_id):  # arguments should be q, [id_1, [id_2]
+            q = [q[0] for _ in element_id]
 
         for i in range(len(element_id)):
             self.plotter.max_q = max(self.plotter.max_q, abs(q[i]))
