@@ -86,6 +86,7 @@ Utility methods for interacting with the elements and nodes
 
 
 Other functions
----------------
+=======================
+
 .. automodule:: anastruct.fem.system
     :members: discretize

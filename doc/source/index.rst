@@ -33,4 +33,4 @@ Code examples
     :maxdepth: 2
     :caption: Contents:
 
-    SystemElements
+    system_module
