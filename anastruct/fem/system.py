@@ -393,6 +393,7 @@ class SystemElements:
             node_id = (node_id,)
 
         for id_ in node_id:
+            id_ = _negative_index_to_id(id_, self.node_map.keys())
             system_components.util.support_check(self, id_)
             system_components.assembly.set_displacement_vector(self, [(id_, 1), (id_, 2)])
 
@@ -410,6 +411,7 @@ class SystemElements:
             node_id = (node_id,)
 
         for id_ in node_id:
+            id_ = _negative_index_to_id(id_, self.node_map.keys())
             system_components.util.support_check(self, id_)
             system_components.assembly.set_displacement_vector(self, [(id_, direction)])
 
@@ -427,6 +429,7 @@ class SystemElements:
             node_id = (node_id,)
 
         for id_ in node_id:
+            id_ = _negative_index_to_id(id_, self.node_map.keys())
             system_components.util.support_check(self, id_)
             system_components.assembly.set_displacement_vector(self, [(id_, 1), (id_, 2), (id_, 3)])
 
@@ -457,6 +460,7 @@ class SystemElements:
             node_id = (node_id,)
 
         for id_ in node_id:
+            id_ = _negative_index_to_id(id_, self.node_map.keys())
             system_components.util.support_check(self, id_)
 
             # determine the location in the system matrix
@@ -503,9 +507,10 @@ class SystemElements:
             q = [q[0] for _ in element_id]
 
         for i in range(len(element_id)):
+            id_ = _negative_index_to_id(element_id[i], self.element_map.keys())
             self.plotter.max_q = max(self.plotter.max_q, abs(q[i]))
-            self.loads_q[element_id[i]] = q[i] * self.orientation_cs * self.load_factor
-            el = self.element_map[element_id[i]]
+            self.loads_q[id_] = q[i] * self.orientation_cs * self.load_factor
+            el = self.element_map[id_]
             el.q_load = q[i] * self.orientation_cs * self.load_factor
             el.q_direction = direction
 
@@ -527,9 +532,10 @@ class SystemElements:
             Fz = [0 for _ in Fx]
 
         for i in range(len(node_id)):
+            id_ = _negative_index_to_id(node_id[i], self.node_map.keys())
             self.plotter.max_system_point_load = max(self.plotter.max_system_point_load,
                                                      (Fx[i] ** 2 + Fz[i] ** 2) ** 0.5)
-            self.loads_point[node_id[i]] = (Fx[i], Fz[i] * self.orientation_cs)
+            self.loads_point[id_] = (Fx[i], Fz[i] * self.orientation_cs)
 
     def moment_load(self, node_id, Ty):
         """
@@ -543,7 +549,8 @@ class SystemElements:
             Ty = (Ty,)
 
         for i in range(len(node_id)):
-            self.loads_moment[node_id[i]] = Ty[i]
+            id_ = _negative_index_to_id(node_id[i], self.node_map.keys())
+            self.loads_moment[id_] = Ty[i]
 
     def show_structure(self, verbosity=0, scale=1., offset=(0, 0), figsize=None, show=True, supports=True):
         """
@@ -619,7 +626,7 @@ class SystemElements:
         self.plotter.reaction_force(figsize, verbosity, scale, offset, show)
 
     def show_displacement(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
-                          linear=False):
+                          linear=False, values_only=False):
         """
         Plot the displacement.
 
@@ -629,10 +636,11 @@ class SystemElements:
         :param offset: (tpl) Offset the plots location on the figure.
         :param figsize: (tpl) Change the figure size.
         :param show: (bool) Plot the result or return a figure.
+        :param linear: (bool) Dont evaluate the displacement values in between the elements
         :return: (figure)
         """
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.displacements(factor, figsize, verbosity, scale, offset, show, linear)
+        self.plotter.displacements(factor, figsize, verbosity, scale, offset, show, linear, values_only)
 
     def show_results(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
         """
@@ -909,3 +917,10 @@ def discretize(system, n=10):
                   direction=system.element_map[element_id].q_direction)
 
     return ss
+
+
+def _negative_index_to_id(idx, collection):
+    if idx > 0:
+        return idx
+    else:
+        return max(collection) + (idx + 1)
