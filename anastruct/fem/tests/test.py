@@ -169,6 +169,11 @@ class SimpleTest(unittest.TestCase):
         ss.solve(geometrical_non_linear=True)
         self.assertNotAlmostEqual(493.48022005446785, ss.buckling_factor)
 
+    def test_ex_18_buckling_factor(self):
+        from anastruct.fem.examples.ex_18_discretize import ss
+        ss.solve(geometrical_non_linear=True)
+        self.assertNotAlmostEqual(493.48022005446785, ss.buckling_factor)
+
     def test_find_node_id(self):
         self.assertEqual(SS_8.find_node_id([4, 4]), 6)
         self.assertEqual(SS_8.find_node_id([3, -3]), None)

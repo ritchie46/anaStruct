@@ -98,12 +98,14 @@ def det_linear_buckling(system):
     return np.min(eigenvalues)
 
 
-def geometrically_non_linear(system, verbosity=0, buckling_factor=True):
+def geometrically_non_linear(system, verbosity=0, buckling_factor=True, discretize_kwargs=None, discretize=None):
     """
 
     :param system: (SystemElements)
     :param verbosity: (int)
     :param buckling_factor: (bool)
+    :param discretize_kwargs: (dict) Containing the kwargs passed to the discretize function
+    :param discretize: (function) discretize function.
     :return: buckling_factor: (flt) The factor the loads can be increased until the structure fails due to buckling.
     """
     # https://www.ethz.ch/content/dam/ethz/special-interest/baug/ibk/structural-mechanics-dam/education/femI/Lecture_2b.pdf
@@ -111,7 +113,10 @@ def geometrically_non_linear(system, verbosity=0, buckling_factor=True):
         print("Starting geometrical non linear calculation")
 
     if buckling_factor:
-        buckling_system = copy.copy(system)
+        if discretize_kwargs is not None:
+            buckling_system = discretize(system, **discretize_kwargs)
+        else:
+            buckling_system = copy.copy(system)
         buckling_factor = det_linear_buckling(buckling_system)
     else:
         buckling_factor = None

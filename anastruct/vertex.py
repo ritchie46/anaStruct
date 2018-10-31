@@ -91,3 +91,8 @@ class Vertex:
         return "Vertex({}, {})".format(self.x, self.y)
 
 
+def vertex_range(v1, v2, n):
+    dv = v2 - v1
+    return [v1 + dv * i / n for i in range(n + 1)]
+
+
