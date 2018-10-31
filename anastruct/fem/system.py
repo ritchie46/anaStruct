@@ -90,6 +90,19 @@ class SystemElements:
         self._vertices = {}  # maps vertices to node ids
 
     def add_element_grid(self, x, y, EA=None, EI=None, g=None, mp=None, spring=None, **kwargs):
+        """
+        Add multiple elements defined by two containers with coordinates.
+
+        :param x: (list/ np.array) x coordinates.
+        :param y: (list/ np.array) y coordinates.
+        :param EA: See 'add_element' method
+        :param EI: See 'add_element' method
+        :param g: See 'add_element' method
+        :param mp: See 'add_element' method
+        :param spring: See 'add_element' method
+        :paramg **kwargs: See 'add_element' method
+        :return: None
+        """
         a = np.ones(x.shape)
         if EA is None:
             EA = a * self.EA
