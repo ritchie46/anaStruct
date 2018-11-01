@@ -117,3 +117,9 @@ def plot_values_shear_force(element, factor):
     x_val = np.array([x1, x_1, x_2, x2])
     y_val = np.array([y1, y_1, y_2, y2])
     return x_val, y_val
+
+
+def plot_values_element(element):
+    x_val = [element.vertex_1.x, element.vertex_2.x]
+    y_val = [-element.vertex_1.z, -element.vertex_2.z]
+    return x_val, y_val
