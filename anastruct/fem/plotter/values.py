@@ -1,4 +1,5 @@
-from .element import plot_values_deflection, plot_values_bending_moment, plot_values_axial_force
+from .element import plot_values_deflection, plot_values_bending_moment, plot_values_axial_force, \
+    plot_values_shear_force
 import numpy as np
 import math
 
@@ -56,4 +57,11 @@ class PlottingValues:
                                 self.system.element_map.values()))
             factor = det_scaling_factor(max_force, self.max_val_structure)
         xy = np.hstack([plot_values_axial_force(el, factor) for el in self.system.element_map.values()])
+        return xy[0, :], xy[1, :]
+
+    def shear_force(self, factor):
+        if factor is None:
+            max_force = max(map(lambda el: np.max(np.abs(el.shear_force)), self.system.element_map.values()))
+            factor = det_scaling_factor(max_force, self.max_val_structure)
+        xy = np.hstack([plot_values_shear_force(el, factor) for el in self.system.element_map.values()])
         return xy[0, :], xy[1, :]

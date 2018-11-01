@@ -97,3 +97,23 @@ def plot_values_axial_force(element, factor):
     x_val = [x1, x_1, x_2, x2]
     y_val = [y1, y_1, y_2, y2]
     return x_val, y_val
+
+
+def plot_values_shear_force(element, factor):
+    x1 = element.vertex_1.x
+    y1 = -element.vertex_1.z
+    x2 = element.vertex_2.x
+    y2 = -element.vertex_2.z
+
+    shear_1 = element.shear_force[0]
+    shear_2 = element.shear_force[-1]
+
+    # apply angle ai
+    x_1 = x1 + shear_1 * math.sin(-element.ai) * factor
+    y_1 = y1 + shear_1 * math.cos(-element.ai) * factor
+    x_2 = x2 + shear_2 * math.sin(-element.ai) * factor
+    y_2 = y2 + shear_2 * math.cos(-element.ai) * factor
+
+    x_val = np.array([x1, x_1, x_2, x2])
+    y_val = np.array([y1, y_1, y_2, y2])
+    return x_val, y_val

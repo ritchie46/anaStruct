@@ -619,19 +619,23 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         return self.plotter.axial_force(factor, figsize, verbosity, scale, offset, show)
 
-    def show_shear_force(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+    def show_shear_force(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
+                         values_only=False):
         """
         Plot the shear force.
-
+        :param factor: (flt) Influence the plotting scale.
         :param verbosity: (int) 0: All information, 1: Suppress information.
         :param scale: (flt) Scale of the plot.
         :param offset: (tpl) Offset the plots location on the figure.
         :param figsize: (tpl) Change the figure size.
         :param show: (bool) Plot the result or return a figure.
+        :param values_only: (bool) Return the values that would be plotted as tuple containing two arrays: (x, y)
         :return: (figure)
         """
+        if values_only:
+            return self.plot_values.shear_force(factor)
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.shear_force(figsize, verbosity, scale, offset, show)
+        return self.plotter.shear_force(factor, figsize, verbosity, scale, offset, show)
 
     def show_reaction_force(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
         """
@@ -952,6 +956,7 @@ def discretize(system, n=10):
 
 
 def insert_node(system, location, element_id):
+    # TODO: implement
     ss = SystemElements(EA=system.EA, EI=system.EI, load_factor=system.load_factor,
                         mesh=system.plotter.mesh, plot_backend=system.plotter.backend)
 

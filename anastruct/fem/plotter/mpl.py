@@ -497,15 +497,16 @@ class Plotter:
         else:
             return self.fig
 
-    def shear_force(self, figsize, verbosity, scale, offset, show, gridplot=False):
+    def shear_force(self, factor, figsize, verbosity, scale, offset, show, gridplot=False):
         self.plot_structure(figsize, 1, scale=scale, offset=offset, gridplot=gridplot)
         self.max_force = 0
 
-        # determine max factor for scaling
-        for el in self.system.element_map.values():
-            shear_1 = max(el.shear_force)
-            shear_2 = min(el.shear_force)
-            factor = self.__set_factor(shear_1, shear_2)
+        if factor is None:
+            # determine max factor for scaling
+            for el in self.system.element_map.values():
+                shear_1 = max(el.shear_force)
+                shear_2 = min(el.shear_force)
+                factor = self.__set_factor(shear_1, shear_2)
 
         for el in self.system.element_map.values():
             if math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9) and \
