@@ -1,4 +1,4 @@
-from .element import plot_values_deflection, plot_values_bending_moment
+from .element import plot_values_deflection, plot_values_bending_moment, plot_values_axial_force
 import numpy as np
 import math
 
@@ -48,4 +48,12 @@ class PlottingValues:
 
         n = len(self.system.element_map[1].bending_moment)
         xy = np.hstack([plot_values_bending_moment(el, factor, n) for el in self.system.element_map.values()])
+        return xy[0, :], xy[1, :]
+
+    def axial_force(self, factor):
+        if factor is None:
+            max_force = max(map(lambda el: max(abs(el.N_1), abs(el.N_2), el.max_deflection),
+                                self.system.element_map.values()))
+            factor = det_scaling_factor(max_force, self.max_val_structure)
+        xy = np.hstack([plot_values_axial_force(el, factor) for el in self.system.element_map.values()])
         return xy[0, :], xy[1, :]

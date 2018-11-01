@@ -78,3 +78,22 @@ def plot_values_bending_moment(element, factor, n):
     y_val = np.insert(y_val, 0, -element.vertex_1.z)
 
     return x_val, y_val
+
+
+def plot_values_axial_force(element, factor):
+    x1 = element.vertex_1.x
+    y1 = -element.vertex_1.z
+    x2 = element.vertex_2.x
+    y2 = -element.vertex_2.z
+
+    N1 = element.N_1
+    N2 = element.N_2
+
+    x_1 = x1 + N1 * math.cos(0.5 * math.pi + element.ai) * factor
+    y_1 = y1 + N1 * math.sin(0.5 * math.pi + element.ai) * factor
+    x_2 = x2 + N2 * math.cos(0.5 * math.pi + element.ai) * factor
+    y_2 = y2 + N2 * math.sin(0.5 * math.pi + element.ai) * factor
+
+    x_val = [x1, x_1, x_2, x2]
+    y_val = [y1, y_1, y_2, y2]
+    return x_val, y_val

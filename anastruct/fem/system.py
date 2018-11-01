@@ -595,12 +595,13 @@ class SystemElements:
         :param values_only: (bool) Return the values that would be plotted as tuple containing two arrays: (x, y)
         :return: (figure)
         """
-        figsize = self.figsize if figsize is None else figsize
         if values_only:
             return self.plot_values.bending_moment(factor)
+        figsize = self.figsize if figsize is None else figsize
         return self.plotter.bending_moment(factor, figsize, verbosity, scale, offset, show)
 
-    def show_axial_force(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+    def show_axial_force(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
+                         values_only=False):
         """
         Plot the axial force.
 
@@ -610,8 +611,11 @@ class SystemElements:
         :param offset: (tpl) Offset the plots location on the figure.
         :param figsize: (tpl) Change the figure size.
         :param show: (bool) Plot the result or return a figure.
+        :param values_only: (bool) Return the values that would be plotted as tuple containing two arrays: (x, y)
         :return: (figure)
         """
+        if values_only:
+            return self.plot_values.axial_force(factor)
         figsize = self.figsize if figsize is None else figsize
         return self.plotter.axial_force(factor, figsize, verbosity, scale, offset, show)
 
@@ -658,10 +662,9 @@ class SystemElements:
         :param values_only: (bool) Return the values that would be plotted as tuple containing two arrays: (x, y)
         :return: (figure)
         """
-        figsize = self.figsize if figsize is None else figsize
         if values_only:
             return self.plot_values.displacements(factor, linear)
-
+        figsize = self.figsize if figsize is None else figsize
         return self.plotter.displacements(factor, figsize, verbosity, scale, offset, show, linear)
 
     def show_results(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
