@@ -6,7 +6,7 @@ from anastruct.basic import FEMException
 from anastruct.fem.postprocess import SystemLevel as post_sl
 from anastruct.fem.elements import Element
 from anastruct.vertex import Vertex
-from anastruct.fem.plotter import Plotter
+from anastruct.fem import plotter
 from . import system_components
 from anastruct.vertex import vertex_range
 
@@ -33,7 +33,7 @@ class SystemElements:
         """
         # init object
         self.post_processor = post_sl(self)
-        self.plotter = Plotter(self, mesh, plot_backend)
+        self.plotter = plotter.Plotter(self, mesh, plot_backend)
 
         # standard values if none provided
         self.EA = EA
@@ -653,7 +653,11 @@ class SystemElements:
         :return: (figure)
         """
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.displacements(factor, figsize, verbosity, scale, offset, show, linear, values_only)
+        if values_only:
+            p = plotter.PlottingValues(self, 10)
+            return p.displacements(factor, linear)
+
+        self.plotter.displacements(factor, figsize, verbosity, scale, offset, show, linear)
 
     def show_results(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
         """
