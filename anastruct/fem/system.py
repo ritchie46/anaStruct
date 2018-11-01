@@ -34,6 +34,7 @@ class SystemElements:
         # init object
         self.post_processor = post_sl(self)
         self.plotter = plotter.Plotter(self, mesh, plot_backend)
+        self.plot_values = plotter.PlottingValues(self, mesh)
 
         # standard values if none provided
         self.EA = EA
@@ -580,7 +581,8 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         return self.plotter.plot_structure(figsize, verbosity, show, supports, scale, offset)
 
-    def show_bending_moment(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+    def show_bending_moment(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
+                            values_only=False):
         """
         Plot the bending moment.
 
@@ -590,10 +592,13 @@ class SystemElements:
         :param offset: (tpl) Offset the plots location on the figure.
         :param figsize: (tpl) Change the figure size.
         :param show: (bool) Plot the result or return a figure.
+        :param values_only: (bool) Return the values that would be plotted as tuple containing two arrays: (x, y)
         :return: (figure)
         """
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.bending_moment(factor, figsize, verbosity, scale, offset, show)
+        if values_only:
+            return self.plot_values.bending_moment(factor)
+        return self.plotter.bending_moment(factor, figsize, verbosity, scale, offset, show)
 
     def show_axial_force(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
         """
@@ -608,7 +613,7 @@ class SystemElements:
         :return: (figure)
         """
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.axial_force(factor, figsize, verbosity, scale, offset, show)
+        return self.plotter.axial_force(factor, figsize, verbosity, scale, offset, show)
 
     def show_shear_force(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
         """
@@ -636,7 +641,7 @@ class SystemElements:
         :return: (figure)
         """
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.reaction_force(figsize, verbosity, scale, offset, show)
+        return self.plotter.reaction_force(figsize, verbosity, scale, offset, show)
 
     def show_displacement(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
                           linear=False, values_only=False):
@@ -649,15 +654,15 @@ class SystemElements:
         :param offset: (tpl) Offset the plots location on the figure.
         :param figsize: (tpl) Change the figure size.
         :param show: (bool) Plot the result or return a figure.
-        :param linear: (bool) Dont evaluate the displacement values in between the elements
+        :param linear: (bool) Don't evaluate the displacement values in between the elements
+        :param values_only: (bool) Return the values that would be plotted as tuple containing two arrays: (x, y)
         :return: (figure)
         """
         figsize = self.figsize if figsize is None else figsize
         if values_only:
-            p = plotter.PlottingValues(self, 10)
-            return p.displacements(factor, linear)
+            return self.plot_values.displacements(factor, linear)
 
-        self.plotter.displacements(factor, figsize, verbosity, scale, offset, show, linear)
+        return self.plotter.displacements(factor, figsize, verbosity, scale, offset, show, linear)
 
     def show_results(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
         """

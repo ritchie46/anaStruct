@@ -34,3 +34,47 @@ def plot_values_deflection(element, factor, linear=False):
         y_val = np.array([y1, y2])
 
     return x_val, y_val
+
+
+def plot_values_bending_moment(element, factor, n):
+    """
+    :param element: (object) of the Element class
+    :param factor: (float) scaling the plot
+    :param n: (integer) amount of x-values
+    :return:
+    """
+
+    # Determine forces for horizontal element ai = 0
+    T_left = element.node_1.Ty
+    T_right = -element.node_2.Ty
+
+    sin = math.sin(-element.ai)
+    cos = math.cos(-element.ai)
+
+    # apply angle ai
+    x1 = element.vertex_1.x + T_left * sin * factor
+    y1 = -element.vertex_1.z + T_left * cos * factor
+    x2 = element.vertex_2.x + T_right * sin * factor
+    y2 = -element.vertex_2.z + T_right * cos * factor
+
+    interpolate = np.linspace(0, 1, n)
+    dx = x2 - x1
+    dy = y2 - y1
+
+    # determine moment for 0 < x < length of the element
+    x_val = x1 + interpolate * dx
+    y_val = y1 + interpolate * dy
+
+    if element.q_load or element.dead_load:
+        q = element.all_q_load
+        x = interpolate * element.l
+        q_part = (-0.5 * -q * x**2 + 0.5 * -q * element.l * x)
+        x_val += sin * q_part * factor
+        y_val += cos * q_part * factor
+
+    x_val = np.append(x_val, element.vertex_2.x)
+    y_val = np.append(y_val, -element.vertex_2.z)
+    x_val = np.insert(x_val, 0, element.vertex_1.x)
+    y_val = np.insert(y_val, 0, -element.vertex_1.z)
+
+    return x_val, y_val
