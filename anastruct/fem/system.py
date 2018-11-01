@@ -893,6 +893,13 @@ class SystemElements:
 
 
 def discretize(system, n=10):
+    """
+    Takes an already defined :class:`.SystemElements` object and increases the number of elements.
+
+    :param system: (:class:`.SystemElements`)
+    :param n: (int) Divide the elements into n sub-elements.
+    :return: (:class:`.SystemElements`)
+    """
     ss = SystemElements(EA=system.EA, EI=system.EI, load_factor=system.load_factor,
                         mesh=system.plotter.mesh, plot_backend=system.plotter.backend)
 
@@ -930,6 +937,17 @@ def discretize(system, n=10):
                   direction=system.element_map[element_id].q_direction)
 
     return ss
+
+
+def insert_node(system, location, element_id):
+    ss = SystemElements(EA=system.EA, EI=system.EI, load_factor=system.load_factor,
+                        mesh=system.plotter.mesh, plot_backend=system.plotter.backend)
+
+    for element in system.element_map.values():
+        g = system.element_map[element.id].dead_load
+        mp = system.non_linear_elements[element.id] if element.id in system.non_linear_elements else None
+        ss.add_element([element.vertex_1, element.vertex_2], EA=element.EA,
+                       EI=element.EI, g=g, mp=mp, spring=element.springs)
 
 
 def _negative_index_to_id(idx, collection):

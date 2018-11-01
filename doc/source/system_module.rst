@@ -1,5 +1,5 @@
-SystemElements Class
-====================
+Basic workflow
+==============
 
 .. autoclass:: anastruct.fem.system.SystemElements
 
@@ -88,5 +88,6 @@ Utility methods for interacting with the elements and nodes
 Other functions
 =======================
 
-.. automodule:: anastruct.fem.system
-    :members: discretize
+    .. automodule:: anastruct.fem.system
+        :members: discretize
+
