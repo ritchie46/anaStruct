@@ -296,6 +296,59 @@ class SystemElements:
                                          element_type=last["element_type"]))
         return elements
 
+    def insert_node(self, element_id, location=None, factor=None):
+        """
+        Insert a node into an existing structure.
+        This can be done by adding a new Vertex at any given location, or by setting a factor of the elements
+        length. E.g. if you want a node at 40% of the elements length, you pass factor = 0.4.
+
+        Note: this method completely rebuilds the SystemElements object and is therefore slower then building
+        a model with `add_element` methods.
+
+        :param element_id: (int) Id number of the element you want to insert the node.
+        :param location: (list/ Vertex) The nodes of the element or the next node of the element.
+
+            :Example:
+
+            .. code-block:: python
+
+                   location=[x, y]
+                   location=Vertex
+
+        :param: factor: (flt) Value between 0 and 1 to determine the new node location.
+        """
+        ss = SystemElements(EA=self.EA, EI=self.EI, load_factor=self.load_factor,
+                            mesh=self.plotter.mesh, plot_backend=self.plotter.backend)
+
+        for element in self.element_map.values():
+            g = self.element_map[element.id].dead_load
+            mp = self.non_linear_elements[element.id] if element.id in self.non_linear_elements else None
+            if element_id == element.id:
+                if factor is not None:
+                    location = factor * (element.vertex_2 - element.vertex_1) + element.vertex_1
+                else:
+                    location = Vertex(location)
+
+                mp1 = mp2 = spring1 = spring2 = None
+                if mp is not None:
+                    if 1 in mp:
+                        mp1 = {1: mp[1]}
+                    if 2 in mp:
+                        mp2 = {2: mp[2]}
+                if element.springs is not None:
+                    if 1 in element.springs:
+                        spring1 = {1: element.springs[1]}
+                    if 2 in element.springs:
+                        spring2 = {2: element.springs[2]}
+
+                ss.add_element([element.vertex_1, location], EA=element.EA, EI=element.EI, g=g, mp=mp1, spring=spring1)
+                ss.add_element([location, element.vertex_2], EA=element.EA, EI=element.EI, g=g, mp=mp2, spring=spring2)
+
+            else:
+                ss.add_element([element.vertex_1, element.vertex_2], EA=element.EA,
+                               EI=element.EI, g=g, mp=mp, spring=element.springs)
+        self.__dict__ = ss.__dict__.copy()
+
     def solve(self, force_linear=False, verbosity=0, max_iter=200, geometrical_non_linear=False, **kwargs):
 
         """
@@ -957,18 +1010,6 @@ def discretize(system, n=10):
                   direction=system.element_map[element_id].q_direction)
 
     return ss
-
-
-def insert_node(system, location, element_id):
-    # TODO: implement
-    ss = SystemElements(EA=system.EA, EI=system.EI, load_factor=system.load_factor,
-                        mesh=system.plotter.mesh, plot_backend=system.plotter.backend)
-
-    for element in system.element_map.values():
-        g = system.element_map[element.id].dead_load
-        mp = system.non_linear_elements[element.id] if element.id in system.non_linear_elements else None
-        ss.add_element([element.vertex_1, element.vertex_2], EA=element.EA,
-                       EI=element.EI, g=g, mp=mp, spring=element.springs)
 
 
 def _negative_index_to_id(idx, collection):
