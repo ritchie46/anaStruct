@@ -4,7 +4,7 @@ from setuptools import setup
 try:
     from Cython.Build import cythonize
     em = cythonize(['anastruct/cython/cbasic.pyx', 'anastruct/fem/cython/celements.pyx'])
-except ImportError:
+except Exception:
     em = []
 
 if sys.version_info[0] == 3 and sys.version_info[1] < 5:
