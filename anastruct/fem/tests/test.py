@@ -178,6 +178,12 @@ class SimpleTest(unittest.TestCase):
         ss.solve(geometrical_non_linear=True)
         self.assertNotAlmostEqual(493.48022005446785, ss.buckling_factor)
 
+    def test_ex_19_nummerical_displacements_averaging(self):
+        from anastruct.fem.examples.ex_19_num_displacements import ss
+        ss.solve()
+        self.assertTrue(np.allclose([el.deflection.max() for el in ss.element_map.values()], [0.10318963656044,
+                                                                                              0.10318963656044]))
+
     def test_ex_20_insert_node(self):
         from anastruct.fem.examples.ex_20_insert_node import ss
         x, y = ss.show_structure(values_only=True)

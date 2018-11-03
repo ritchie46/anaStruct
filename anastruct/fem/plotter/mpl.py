@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from anastruct.basic import find_nearest
+
 try:
     from plotly.offline import plot_mpl, iplot_mpl
 except Exception:
@@ -601,10 +602,9 @@ class Plotter:
                     factor = self.__set_factor(el.max_deflection, u_node)
                 else:  # element is truss
                     factor = self.__set_factor(u_node, 0)
-                ax_range = self.one_fig.get_xlim()
 
         for el in self.system.element_map.values():
-            axis_values = plot_values_deflection(el, factor, ax_range, linear)
+            axis_values = plot_values_deflection(el, factor, linear)
             self.plot_result(axis_values, node_results=False)
 
             if el.type == "general":
@@ -645,7 +645,7 @@ class Plotter:
         self.bending_moment(None, figsize, verbosity, scale, offset, False, True)
         self.one_fig = self.fig.add_subplot(a + 3)
         plt.title("shear force")
-        self.shear_force(figsize, verbosity, scale, offset, False, True)
+        self.shear_force(None, figsize, verbosity, scale, offset, False, True)
         self.one_fig = self.fig.add_subplot(a + 4)
         plt.title("axial force")
         self.axial_force(None, figsize, verbosity, scale, offset, False, True)
@@ -660,8 +660,6 @@ class Plotter:
             self.plot()
         else:
             return self.fig
-
-
 
 
 """
@@ -768,7 +766,7 @@ def plot_values_bending_moment(element, factor, con):
     return x_val, y_val
 
 
-def plot_values_deflection(element, factor, ax_range, linear=False):
+def plot_values_deflection(element, factor, linear=False):
     ux1 = element.node_1.ux * factor
     uz1 = -element.node_1.uz * factor
     ux2 = element.node_2.ux * factor
