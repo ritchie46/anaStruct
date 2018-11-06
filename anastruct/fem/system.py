@@ -740,7 +740,7 @@ class SystemElements:
         :return: (figure)
         """
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.results_plot(figsize, verbosity, scale, offset, show)
+        return self.plotter.results_plot(figsize, verbosity, scale, offset, show)
 
     def get_node_results_system(self, node_id=0):
         """
