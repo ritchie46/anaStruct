@@ -33,7 +33,7 @@ class SystemElements:
         """
         # init object
         self.post_processor = post_sl(self)
-        self.plotter = plotter.Plotter(self, mesh, plot_backend)
+        self.plotter = plotter.Plotter(self, mesh)
         self.plot_values = plotter.PlottingValues(self, mesh)
 
         # standard values if none provided

@@ -14,7 +14,7 @@ def det_scaling_factor(max_unit, max_val_structure):
 class PlottingValues:
     def __init__(self, system, mesh):
         self.system = system
-        self.mesh = mesh
+        self.mesh = max(3, mesh)
         # used for scaling the plotting values.
         self._max_val_structure = None
 
@@ -33,8 +33,9 @@ class PlottingValues:
     def displacements(self, factor, linear):
         if factor is None:
             # needed to determine the scaling factor
-            max_displacement = max(map(lambda el: max(abs(el.node_1.ux), abs(el.node_1.uz), el.max_deflection),
-                                       self.system.element_map.values()))
+            max_displacement = max(map(
+                lambda el: max(abs(el.node_1.ux), abs(el.node_1.uz), el.max_deflection) if el.type == 'general' else 0,
+                self.system.element_map.values()))
             factor = det_scaling_factor(max_displacement, self.max_val_structure)
         xy = np.hstack([plot_values_deflection(el, factor, linear) for el in self.system.element_map.values()])
         return xy[0, :], xy[1, :]
@@ -43,7 +44,7 @@ class PlottingValues:
         if factor is None:
             # maximum moment determined by comparing the node's moments and the sagging moments.
             max_moment = max(map(lambda el: max(abs(el.node_1.Ty), abs(
-                (el.node_1.Ty - el.node_2.Ty) * 0.5 - 1 / 8 * el.all_q_load * el.l ** 2), el.max_deflection),
+                (el.node_1.Ty - el.node_2.Ty) * 0.5 - 1 / 8 * el.all_q_load * el.l ** 2)),
                                  self.system.element_map.values()))
             factor = det_scaling_factor(max_moment, self.max_val_structure)
 
@@ -53,7 +54,7 @@ class PlottingValues:
 
     def axial_force(self, factor):
         if factor is None:
-            max_force = max(map(lambda el: max(abs(el.N_1), abs(el.N_2), el.max_deflection),
+            max_force = max(map(lambda el: max(abs(el.N_1), abs(el.N_2)),
                                 self.system.element_map.values()))
             factor = det_scaling_factor(max_force, self.max_val_structure)
         xy = np.hstack([plot_values_axial_force(el, factor) for el in self.system.element_map.values()])
