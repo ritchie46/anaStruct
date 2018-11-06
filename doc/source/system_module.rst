@@ -16,6 +16,8 @@ Add elements
 
     .. automethod:: anastruct.fem.system.SystemElements.add_element_grid
 
+    .. automethod:: anastruct.fem.system.SystemElements.discretize
+
 
 Apply forces
 ------------
@@ -85,9 +87,4 @@ Utility methods for interacting with the elements and nodes
     .. automethod:: anastruct.fem.system.SystemElements.nearest_node
 
 
-Other functions
-=======================
-
-    .. automodule:: anastruct.fem.system
-        :members: discretize
 

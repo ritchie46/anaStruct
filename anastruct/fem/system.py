@@ -392,8 +392,7 @@ class SystemElements:
         if geometrical_non_linear:
             discretize_kwargs = kwargs.get('discretize_kwargs', None)
             self.buckling_factor = system_components.solver.geometrically_non_linear(self, verbosity,
-                                                                                     discretize_kwargs=discretize_kwargs,
-                                                                                     discretize=discretize)
+                                                                                     discretize_kwargs=discretize_kwargs)
             return self.system_displacement_vector
 
         system_components.assembly.process_conditions(self)
@@ -964,52 +963,49 @@ class SystemElements:
         else:
             return np.argmin(np.abs(np.array(self.nodes_range(dimension)) - val))
 
+    def discretize(self, n=10):
+        """
+        Takes an already defined :class:`.SystemElements` object and increases the number of elements.
 
-def discretize(system, n=10):
-    """
-    Takes an already defined :class:`.SystemElements` object and increases the number of elements.
+        :param n: (int) Divide the elements into n sub-elements.
+        """
+        ss = SystemElements(EA=self.EA, EI=self.EI, load_factor=self.load_factor,
+                            mesh=self.plotter.mesh, plot_backend=self.plotter.backend)
 
-    :param system: (:class:`.SystemElements`)
-    :param n: (int) Divide the elements into n sub-elements.
-    :return: (:class:`.SystemElements`)
-    """
-    ss = SystemElements(EA=system.EA, EI=system.EI, load_factor=system.load_factor,
-                        mesh=system.plotter.mesh, plot_backend=system.plotter.backend)
+        for element in self.element_map.values():
+            g = self.element_map[element.id].dead_load
+            mp = self.non_linear_elements[element.id] if element.id in self.non_linear_elements else None
 
-    for element in system.element_map.values():
-        g = system.element_map[element.id].dead_load
-        mp = system.non_linear_elements[element.id] if element.id in system.non_linear_elements else None
+            for i, v in enumerate(vertex_range(element.vertex_1, element.vertex_2, n)):
+                if i == 0:
+                    last_v = v
+                    continue
 
-        for i, v in enumerate(vertex_range(element.vertex_1, element.vertex_2, n)):
-            if i == 0:
+                loc = [last_v, v]
+                ss.add_element(loc, EA=element.EA, EI=element.EI, g=g, mp=mp, spring=element.springs)
                 last_v = v
-                continue
 
-            loc = [last_v, v]
-            ss.add_element(loc, EA=element.EA, EI=element.EI, g=g, mp=mp, spring=element.springs)
-            last_v = v
+        # supports
+        for node, direction in zip(self.supports_roll, self.supports_roll_direction):
+            ss.add_support_roll((node.id - 1) * n + 1, direction)
+        for node in self.supports_fixed:
+            ss.add_support_fixed((node.id - 1) * n + 1)
+        for node in self.supports_hinged:
+            ss.add_support_hinged((node.id - 1) * n + 1)
+        for args in self.supports_spring_args:
+            ss.add_support_spring((args[0] - 1) * n + 1, *args[1:])
 
-    # supports
-    for node, direction in zip(system.supports_roll, system.supports_roll_direction):
-        ss.add_support_roll((node.id - 1) * n + 1, direction)
-    for node in system.supports_fixed:
-        ss.add_support_fixed((node.id - 1) * n + 1)
-    for node in system.supports_hinged:
-        ss.add_support_hinged((node.id - 1) * n + 1)
-    for args in system.supports_spring_args:
-        ss.add_support_spring((args[0] - 1) * n + 1, *args[1:])
+        # loads
+        for node_id, forces in self.loads_point.items():
+            ss.point_load((node_id - 1) * n + 1, Fx=forces[0], Fz=forces[1] / self.orientation_cs)
+        for node_id, forces in self.loads_moment.items():
+            ss.moment_load((node_id - 1) * n + 1, forces)
+        for element_id, forces in self.loads_q.items():
+            ss.q_load(q=forces / self.orientation_cs / self.load_factor,
+                      element_id=element_id,
+                      direction=self.element_map[element_id].q_direction)
 
-    # loads
-    for node_id, forces in system.loads_point.items():
-        ss.point_load((node_id - 1) * n + 1, Fx=forces[0], Fz=forces[1] / system.orientation_cs)
-    for node_id, forces in system.loads_moment.items():
-        ss.moment_load((node_id - 1) * n + 1, forces)
-    for element_id, forces in system.loads_q.items():
-        ss.q_load(q=forces / system.orientation_cs / system.load_factor,
-                  element_id=element_id,
-                  direction=system.element_map[element_id].q_direction)
-
-    return ss
+        self.__dict__ = ss.__dict__.copy()
 
 
 def _negative_index_to_id(idx, collection):
