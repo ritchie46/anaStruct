@@ -318,7 +318,7 @@ class SystemElements:
         :param: factor: (flt) Value between 0 and 1 to determine the new node location.
         """
         ss = SystemElements(EA=self.EA, EI=self.EI, load_factor=self.load_factor,
-                            mesh=self.plotter.mesh, plot_backend=self.plotter.backend)
+                            mesh=self.plotter.mesh)
 
         for element in self.element_map.values():
             g = self.element_map[element.id].dead_load
