@@ -1,7 +1,7 @@
 from libc.stdlib cimport abs
-from libc.math cimport acos, sqrt, pi
+from libc.math cimport acos, sqrt, pi, abs
 
-cpdef converge(double lhs, double rhs, int div=3):
+cpdef converge(double lhs, double rhs):
     """
     Determine convergence factor.
 
@@ -12,9 +12,9 @@ cpdef converge(double lhs, double rhs, int div=3):
     """
     lhs = abs(lhs)
     rhs = abs(rhs)
-    cdef double div
-    div = max(lhs, rhs) / min(lhs, rhs) * 2
-    return (abs(rhs) / abs(lhs) - 1) / div + 1
+    # cdef double div
+    div = max(lhs, rhs) / min(lhs, rhs) * 2.0
+    return (abs(rhs) / abs(lhs) - 1.0) / div + 1.0
 
 cpdef angle_x_axis(double delta_x, double delta_z):
     cdef double ai

@@ -1,5 +1,6 @@
 import unittest
 import sys
+
 sys.path.append("..")
 from anastruct.fem import system as se
 import numpy as np
@@ -141,7 +142,8 @@ class SimpleTest(unittest.TestCase):
         from anastruct.fem.examples.ex_14 import ss
         ss.solve()
 
-        sol = [-5.1854495715665756, -2.6645352591003757e-15, -7.9936057773011271e-15, 1.2434497875801753e-14, 5.1854495715665738]
+        sol = [-5.1854495715665756, -2.6645352591003757e-15, -7.9936057773011271e-15, 1.2434497875801753e-14,
+               5.1854495715665738]
         sssol = [a[1] for a in ss.get_node_results_system()]
         self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, sssol)]))
 
@@ -152,7 +154,8 @@ class SimpleTest(unittest.TestCase):
         from anastruct.fem.examples.ex_15 import ss
         ss.solve()
 
-        sol = [-9.4139433815692541, -8.8817841970012523e-15, 1.7763568394002505e-15, 3.5527136788005009e-15, 9.4139433815692577]
+        sol = [-9.4139433815692541, -8.8817841970012523e-15, 1.7763568394002505e-15, 3.5527136788005009e-15,
+               9.4139433815692577]
         sssol = [a[1] for a in ss.get_node_results_system()]
         self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, sssol)]))
 
@@ -160,7 +163,8 @@ class SimpleTest(unittest.TestCase):
         from anastruct.fem.examples.ex_16 import ss
         ss.solve()
         if sys.version_info[1] >= 6:
-            sol = [-4.4408920985006262e-15, 5.6568542494923886, -1.2434497875801753e-14, 7.9936057773011271e-15, 5.6568542494923797]
+            sol = [-4.4408920985006262e-15, 5.6568542494923886, -1.2434497875801753e-14, 7.9936057773011271e-15,
+                   5.6568542494923797]
             sssol = [a[1] for a in ss.get_node_results_system()]
             self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, sssol)]))
 
@@ -173,6 +177,18 @@ class SimpleTest(unittest.TestCase):
         from anastruct.fem.examples.ex_18_discretize import ss
         ss.solve(geometrical_non_linear=True)
         self.assertNotAlmostEqual(493.48022005446785, ss.buckling_factor)
+
+    def test_ex_19_nummerical_displacements_averaging(self):
+        from anastruct.fem.examples.ex_19_num_displacements import ss
+        ss.solve()
+        self.assertTrue(np.allclose([el.deflection.max() for el in ss.element_map.values()], [0.10318963656044,
+                                                                                              0.10318963656044]))
+
+    def test_ex_20_insert_node(self):
+        from anastruct.fem.examples.ex_20_insert_node import ss
+        x, y = ss.show_structure(values_only=True)
+        self.assertTrue(np.allclose(x, np.array([0., 3., 3., 5., 5., 10.])))
+        self.assertTrue(np.allclose(y, np.array([0., 0., 0., 5., 5., 0.])))
 
     def test_find_node_id(self):
         self.assertEqual(SS_8.find_node_id([4, 4]), 6)

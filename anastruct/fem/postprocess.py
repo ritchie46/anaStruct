@@ -126,21 +126,13 @@ class ElementLevel:
     def determine_bending_moment(element, con):
         dT = -(element.node_2.Ty + element.node_1.Ty)  # T2 - (-T1)
 
-        x_val = np.linspace(0, 1, con)
-        m_val = np.empty(con)
-
-        # determine moment for 0 < x < length of the element
-        count = 0
-        for i in x_val:
-            x = i * element.l
-            x_val[count] = x
-            m_val[count] = element.node_1.Ty + i * dT
-
-            if element.all_q_load:
-                q = element.all_q_load
-                q_part = (-0.5 * -q * x**2 + 0.5 * -q * element.l * x)
-                m_val[count] += q_part
-            count += 1
+        iteration_factor = np.linspace(0, 1, con)
+        x = iteration_factor * element.l
+        m_val = element.node_1.Ty + iteration_factor * dT
+        if element.all_q_load:
+            q = element.all_q_load
+            q_part = (-0.5 * -q * x ** 2 + 0.5 * -q * element.l * x)
+            m_val += q_part
 
         element.bending_moment = m_val
 
@@ -181,11 +173,16 @@ class ElementLevel:
 
         if element.type == 'general':
             dx = element.l / (len(element.bending_moment) - 1)
-            phi_neg = -integrate_array(element.bending_moment / element.EI, dx)
+
+            # Take the average of cumulative integration from both sides. This is due to numerical differences, that
+            # would be observable in symmetrical structures.
+            phi_neg = -0.5 * (
+                        integrate_array(element.bending_moment, dx) + integrate_array(element.bending_moment[::-1],
+                                                                                      dx)) / element.EI
             w = integrate_array(phi_neg, dx)
 
             # Angle between last w and elements axis. The w array will be corrected so that this angle == 0.
-            alpha = math.atan(w[-1] / element.l)
+            alpha = np.arctan(w[-1] / element.l)
 
             lx = np.linspace(0, element.l, con)
 
@@ -193,18 +190,7 @@ class ElementLevel:
             element.deflection = -w
             element.max_deflection = np.max(np.abs(w))
 
-        """
-        Extension
-        """
-
+        # Extension
         u = 0.5 * (element.N_1 + element.N_2) / element.EA * element.l
         du = u / con
-
-        element.extension = np.empty(con)
-
-        for i in range(con):
-            u = du * (i + 1)
-            element.extension[i] = u
-
-
-
+        element.extension = du * (np.arange(con) + 1)

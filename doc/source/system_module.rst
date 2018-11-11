@@ -1,4 +1,4 @@
-SystemElements
+Basic workflow
 ==============
 
 .. autoclass:: anastruct.fem.system.SystemElements
@@ -13,6 +13,10 @@ Add elements
     .. automethod:: anastruct.fem.system.SystemElements.add_element
 
     .. automethod:: anastruct.fem.system.SystemElements.add_multiple_elements
+
+    .. automethod:: anastruct.fem.system.SystemElements.add_element_grid
+
+    .. automethod:: anastruct.fem.system.SystemElements.discretize
 
 
 Apply forces
@@ -35,6 +39,12 @@ Supporting conditions
     .. automethod:: anastruct.fem.system.SystemElements.add_support_fixed
 
     .. automethod:: anastruct.fem.system.SystemElements.add_support_spring
+
+
+Find a solution
+---------------
+
+    .. automethod:: anastruct.fem.system.SystemElements.solve
 
 
 Visual feedback
@@ -60,12 +70,21 @@ Numerical feedback
 
     .. automethod:: anastruct.fem.system.SystemElements.get_node_displacements
 
+    .. automethod:: anastruct.fem.system.SystemElements.get_node_result_range
+
     .. automethod:: anastruct.fem.system.SystemElements.get_element_results
 
     .. automethod:: anastruct.fem.system.SystemElements.get_element_result_range
 
-    .. automethod:: anastruct.fem.system.SystemElements.get_element_result_range
+
+Utility methods for interacting with the elements and nodes
+-------------------------------------------------------------
 
     .. automethod:: anastruct.fem.system.SystemElements.find_node_id
 
     .. automethod:: anastruct.fem.system.SystemElements.nodes_range
+
+    .. automethod:: anastruct.fem.system.SystemElements.nearest_node
+
+
+

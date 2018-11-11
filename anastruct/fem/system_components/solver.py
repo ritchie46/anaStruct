@@ -98,7 +98,7 @@ def det_linear_buckling(system):
     return np.min(eigenvalues)
 
 
-def geometrically_non_linear(system, verbosity=0, buckling_factor=True, discretize_kwargs=None, discretize=None):
+def geometrically_non_linear(system, verbosity=0, buckling_factor=True, discretize_kwargs=None):
     """
 
     :param system: (SystemElements)
@@ -113,10 +113,10 @@ def geometrically_non_linear(system, verbosity=0, buckling_factor=True, discreti
         print("Starting geometrical non linear calculation")
 
     if buckling_factor:
+        buckling_system = copy.copy(system)
         if discretize_kwargs is not None:
-            buckling_system = discretize(system, **discretize_kwargs)
-        else:
-            buckling_system = copy.copy(system)
+            buckling_system.discretize(**discretize_kwargs)
+
         buckling_factor = det_linear_buckling(buckling_system)
     else:
         buckling_factor = None

@@ -21,10 +21,7 @@ def integrate_array(y, dx):
     """
     integrate array y * dx
     """
-    y_int = np.zeros(y.size)
-    for i in range(y.size - 1):
-        y_int[i + 1] = y_int[i] + y[i + 1] * dx
-    return y_int
+    return np.cumsum(y) * dx
 
 
 class FEMException(Exception):

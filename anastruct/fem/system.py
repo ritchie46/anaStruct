@@ -6,7 +6,7 @@ from anastruct.basic import FEMException
 from anastruct.fem.postprocess import SystemLevel as post_sl
 from anastruct.fem.elements import Element
 from anastruct.vertex import Vertex
-from anastruct.fem.plotter import Plotter
+from anastruct.fem import plotter
 from . import system_components
 from anastruct.vertex import vertex_range
 
@@ -33,7 +33,8 @@ class SystemElements:
         """
         # init object
         self.post_processor = post_sl(self)
-        self.plotter = Plotter(self, mesh, plot_backend)
+        self.plotter = plotter.Plotter(self, mesh)
+        self.plot_values = plotter.PlottingValues(self, mesh)
 
         # standard values if none provided
         self.EA = EA
@@ -90,6 +91,19 @@ class SystemElements:
         self._vertices = {}  # maps vertices to node ids
 
     def add_element_grid(self, x, y, EA=None, EI=None, g=None, mp=None, spring=None, **kwargs):
+        """
+        Add multiple elements defined by two containers with coordinates.
+
+        :param x: (list/ np.array) x coordinates.
+        :param y: (list/ np.array) y coordinates.
+        :param EA: See 'add_element' method
+        :param EI: See 'add_element' method
+        :param g: See 'add_element' method
+        :param mp: See 'add_element' method
+        :param spring: See 'add_element' method
+        :paramg **kwargs: See 'add_element' method
+        :return: None
+        """
         a = np.ones(x.shape)
         if EA is None:
             EA = a * self.EA
@@ -282,6 +296,59 @@ class SystemElements:
                                          element_type=last["element_type"]))
         return elements
 
+    def insert_node(self, element_id, location=None, factor=None):
+        """
+        Insert a node into an existing structure.
+        This can be done by adding a new Vertex at any given location, or by setting a factor of the elements
+        length. E.g. if you want a node at 40% of the elements length, you pass factor = 0.4.
+
+        Note: this method completely rebuilds the SystemElements object and is therefore slower then building
+        a model with `add_element` methods.
+
+        :param element_id: (int) Id number of the element you want to insert the node.
+        :param location: (list/ Vertex) The nodes of the element or the next node of the element.
+
+            :Example:
+
+            .. code-block:: python
+
+                   location=[x, y]
+                   location=Vertex
+
+        :param: factor: (flt) Value between 0 and 1 to determine the new node location.
+        """
+        ss = SystemElements(EA=self.EA, EI=self.EI, load_factor=self.load_factor,
+                            mesh=self.plotter.mesh)
+
+        for element in self.element_map.values():
+            g = self.element_map[element.id].dead_load
+            mp = self.non_linear_elements[element.id] if element.id in self.non_linear_elements else None
+            if element_id == element.id:
+                if factor is not None:
+                    location = factor * (element.vertex_2 - element.vertex_1) + element.vertex_1
+                else:
+                    location = Vertex(location)
+
+                mp1 = mp2 = spring1 = spring2 = None
+                if mp is not None:
+                    if 1 in mp:
+                        mp1 = {1: mp[1]}
+                    if 2 in mp:
+                        mp2 = {2: mp[2]}
+                if element.springs is not None:
+                    if 1 in element.springs:
+                        spring1 = {1: element.springs[1]}
+                    if 2 in element.springs:
+                        spring2 = {2: element.springs[2]}
+
+                ss.add_element([element.vertex_1, location], EA=element.EA, EI=element.EI, g=g, mp=mp1, spring=spring1)
+                ss.add_element([location, element.vertex_2], EA=element.EA, EI=element.EI, g=g, mp=mp2, spring=spring2)
+
+            else:
+                ss.add_element([element.vertex_1, element.vertex_2], EA=element.EA,
+                               EI=element.EI, g=g, mp=mp, spring=element.springs)
+        self.__dict__ = ss.__dict__.copy()
+
     def solve(self, force_linear=False, verbosity=0, max_iter=200, geometrical_non_linear=False, **kwargs):
 
         """
@@ -325,8 +392,7 @@ class SystemElements:
         if geometrical_non_linear:
             discretize_kwargs = kwargs.get('discretize_kwargs', None)
             self.buckling_factor = system_components.solver.geometrically_non_linear(self, verbosity,
-                                                                                     discretize_kwargs=discretize_kwargs,
-                                                                                     discretize=discretize)
+                                                                                     discretize_kwargs=discretize_kwargs)
             return self.system_displacement_vector
 
         system_components.assembly.process_conditions(self)
@@ -393,6 +459,7 @@ class SystemElements:
             node_id = (node_id,)
 
         for id_ in node_id:
+            id_ = _negative_index_to_id(id_, self.node_map.keys())
             system_components.util.support_check(self, id_)
             system_components.assembly.set_displacement_vector(self, [(id_, 1), (id_, 2)])
 
@@ -410,6 +477,7 @@ class SystemElements:
             node_id = (node_id,)
 
         for id_ in node_id:
+            id_ = _negative_index_to_id(id_, self.node_map.keys())
             system_components.util.support_check(self, id_)
             system_components.assembly.set_displacement_vector(self, [(id_, direction)])
 
@@ -427,6 +495,7 @@ class SystemElements:
             node_id = (node_id,)
 
         for id_ in node_id:
+            id_ = _negative_index_to_id(id_, self.node_map.keys())
             system_components.util.support_check(self, id_)
             system_components.assembly.set_displacement_vector(self, [(id_, 1), (id_, 2), (id_, 3)])
 
@@ -457,6 +526,7 @@ class SystemElements:
             node_id = (node_id,)
 
         for id_ in node_id:
+            id_ = _negative_index_to_id(id_, self.node_map.keys())
             system_components.util.support_check(self, id_)
 
             # determine the location in the system matrix
@@ -503,9 +573,10 @@ class SystemElements:
             q = [q[0] for _ in element_id]
 
         for i in range(len(element_id)):
+            id_ = _negative_index_to_id(element_id[i], self.element_map.keys())
             self.plotter.max_q = max(self.plotter.max_q, abs(q[i]))
-            self.loads_q[element_id[i]] = q[i] * self.orientation_cs * self.load_factor
-            el = self.element_map[element_id[i]]
+            self.loads_q[id_] = q[i] * self.orientation_cs * self.load_factor
+            el = self.element_map[id_]
             el.q_load = q[i] * self.orientation_cs * self.load_factor
             el.q_direction = direction
 
@@ -527,9 +598,10 @@ class SystemElements:
             Fz = [0 for _ in Fx]
 
         for i in range(len(node_id)):
+            id_ = _negative_index_to_id(node_id[i], self.node_map.keys())
             self.plotter.max_system_point_load = max(self.plotter.max_system_point_load,
                                                      (Fx[i] ** 2 + Fz[i] ** 2) ** 0.5)
-            self.loads_point[node_id[i]] = (Fx[i], Fz[i] * self.orientation_cs)
+            self.loads_point[id_] = (Fx[i], Fz[i] * self.orientation_cs)
 
     def moment_load(self, node_id, Ty):
         """
@@ -543,9 +615,11 @@ class SystemElements:
             Ty = (Ty,)
 
         for i in range(len(node_id)):
-            self.loads_moment[node_id[i]] = Ty[i]
+            id_ = _negative_index_to_id(node_id[i], self.node_map.keys())
+            self.loads_moment[id_] = Ty[i]
 
-    def show_structure(self, verbosity=0, scale=1., offset=(0, 0), figsize=None, show=True, supports=True):
+    def show_structure(self, verbosity=0, scale=1., offset=(0, 0), figsize=None, show=True, supports=True,
+                       values_only=False):
         """
         Plot the structure.
 
@@ -555,12 +629,16 @@ class SystemElements:
         :param figsize: (tpl) Change the figure size.
         :param show: (bool) Plot the result or return a figure.
         :param supports: (bool) Show the supports.
+        :param values_only: (bool) Return the values that would be plotted as tuple containing two arrays: (x, y)
         :return: (figure)
         """
         figsize = self.figsize if figsize is None else figsize
+        if values_only:
+            return self.plot_values.structure()
         return self.plotter.plot_structure(figsize, verbosity, show, supports, scale, offset)
 
-    def show_bending_moment(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+    def show_bending_moment(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
+                            values_only=False):
         """
         Plot the bending moment.
 
@@ -570,12 +648,16 @@ class SystemElements:
         :param offset: (tpl) Offset the plots location on the figure.
         :param figsize: (tpl) Change the figure size.
         :param show: (bool) Plot the result or return a figure.
+        :param values_only: (bool) Return the values that would be plotted as tuple containing two arrays: (x, y)
         :return: (figure)
         """
+        if values_only:
+            return self.plot_values.bending_moment(factor)
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.bending_moment(factor, figsize, verbosity, scale, offset, show)
+        return self.plotter.bending_moment(factor, figsize, verbosity, scale, offset, show)
 
-    def show_axial_force(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+    def show_axial_force(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
+                         values_only=False):
         """
         Plot the axial force.
 
@@ -585,24 +667,31 @@ class SystemElements:
         :param offset: (tpl) Offset the plots location on the figure.
         :param figsize: (tpl) Change the figure size.
         :param show: (bool) Plot the result or return a figure.
+        :param values_only: (bool) Return the values that would be plotted as tuple containing two arrays: (x, y)
         :return: (figure)
         """
+        if values_only:
+            return self.plot_values.axial_force(factor)
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.axial_force(factor, figsize, verbosity, scale, offset, show)
+        return self.plotter.axial_force(factor, figsize, verbosity, scale, offset, show)
 
-    def show_shear_force(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+    def show_shear_force(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
+                         values_only=False):
         """
         Plot the shear force.
-
+        :param factor: (flt) Influence the plotting scale.
         :param verbosity: (int) 0: All information, 1: Suppress information.
         :param scale: (flt) Scale of the plot.
         :param offset: (tpl) Offset the plots location on the figure.
         :param figsize: (tpl) Change the figure size.
         :param show: (bool) Plot the result or return a figure.
+        :param values_only: (bool) Return the values that would be plotted as tuple containing two arrays: (x, y)
         :return: (figure)
         """
+        if values_only:
+            return self.plot_values.shear_force(factor)
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.shear_force(figsize, verbosity, scale, offset, show)
+        return self.plotter.shear_force(factor, figsize, verbosity, scale, offset, show)
 
     def show_reaction_force(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
         """
@@ -616,10 +705,10 @@ class SystemElements:
         :return: (figure)
         """
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.reaction_force(figsize, verbosity, scale, offset, show)
+        return self.plotter.reaction_force(figsize, verbosity, scale, offset, show)
 
     def show_displacement(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
-                          linear=False):
+                          linear=False, values_only=False):
         """
         Plot the displacement.
 
@@ -629,10 +718,14 @@ class SystemElements:
         :param offset: (tpl) Offset the plots location on the figure.
         :param figsize: (tpl) Change the figure size.
         :param show: (bool) Plot the result or return a figure.
+        :param linear: (bool) Don't evaluate the displacement values in between the elements
+        :param values_only: (bool) Return the values that would be plotted as tuple containing two arrays: (x, y)
         :return: (figure)
         """
+        if values_only:
+            return self.plot_values.displacements(factor, linear)
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.displacements(factor, figsize, verbosity, scale, offset, show, linear)
+        return self.plotter.displacements(factor, figsize, verbosity, scale, offset, show, linear)
 
     def show_results(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
         """
@@ -646,7 +739,7 @@ class SystemElements:
         :return: (figure)
         """
         figsize = self.figsize if figsize is None else figsize
-        self.plotter.results_plot(figsize, verbosity, scale, offset, show)
+        return self.plotter.results_plot(figsize, verbosity, scale, offset, show)
 
     def get_node_results_system(self, node_id=0):
         """
@@ -870,42 +963,53 @@ class SystemElements:
         else:
             return np.argmin(np.abs(np.array(self.nodes_range(dimension)) - val))
 
+    def discretize(self, n=10):
+        """
+        Takes an already defined :class:`.SystemElements` object and increases the number of elements.
 
-def discretize(system, n=10):
-    ss = SystemElements(EA=system.EA, EI=system.EI, load_factor=system.load_factor,
-                        mesh=system.plotter.mesh, plot_backend=system.plotter.backend)
+        :param n: (int) Divide the elements into n sub-elements.
+        """
+        ss = SystemElements(EA=self.EA, EI=self.EI, load_factor=self.load_factor,
+                            mesh=self.plotter.mesh, plot_backend=self.plotter.backend)
 
-    for element in system.element_map.values():
-        g = system.element_map[element.id].dead_load
-        mp = system.non_linear_elements[element.id] if element.id in system.non_linear_elements else None
+        for element in self.element_map.values():
+            g = self.element_map[element.id].dead_load
+            mp = self.non_linear_elements[element.id] if element.id in self.non_linear_elements else None
 
-        for i, v in enumerate(vertex_range(element.vertex_1, element.vertex_2, n)):
-            if i == 0:
+            for i, v in enumerate(vertex_range(element.vertex_1, element.vertex_2, n)):
+                if i == 0:
+                    last_v = v
+                    continue
+
+                loc = [last_v, v]
+                ss.add_element(loc, EA=element.EA, EI=element.EI, g=g, mp=mp, spring=element.springs)
                 last_v = v
-                continue
 
-            loc = [last_v, v]
-            ss.add_element(loc, EA=element.EA, EI=element.EI, g=g, mp=mp, spring=element.springs)
-            last_v = v
+        # supports
+        for node, direction in zip(self.supports_roll, self.supports_roll_direction):
+            ss.add_support_roll((node.id - 1) * n + 1, direction)
+        for node in self.supports_fixed:
+            ss.add_support_fixed((node.id - 1) * n + 1)
+        for node in self.supports_hinged:
+            ss.add_support_hinged((node.id - 1) * n + 1)
+        for args in self.supports_spring_args:
+            ss.add_support_spring((args[0] - 1) * n + 1, *args[1:])
 
-    # supports
-    for node, direction in zip(system.supports_roll, system.supports_roll_direction):
-        ss.add_support_roll((node.id - 1) * n + 1, direction)
-    for node in system.supports_fixed:
-        ss.add_support_fixed((node.id - 1) * n + 1)
-    for node in system.supports_hinged:
-        ss.add_support_hinged((node.id - 1) * n + 1)
-    for args in system.supports_spring_args:
-        ss.add_support_spring((args[0] - 1) * n + 1, *args[1:])
+        # loads
+        for node_id, forces in self.loads_point.items():
+            ss.point_load((node_id - 1) * n + 1, Fx=forces[0], Fz=forces[1] / self.orientation_cs)
+        for node_id, forces in self.loads_moment.items():
+            ss.moment_load((node_id - 1) * n + 1, forces)
+        for element_id, forces in self.loads_q.items():
+            ss.q_load(q=forces / self.orientation_cs / self.load_factor,
+                      element_id=element_id,
+                      direction=self.element_map[element_id].q_direction)
 
-    # loads
-    for node_id, forces in system.loads_point.items():
-        ss.point_load((node_id - 1) * n + 1, Fx=forces[0], Fz=forces[1] / system.orientation_cs)
-    for node_id, forces in system.loads_moment.items():
-        ss.moment_load((node_id - 1) * n + 1, forces)
-    for element_id, forces in system.loads_q.items():
-        ss.q_load(q=forces / system.orientation_cs / system.load_factor,
-                  element_id=element_id,
-                  direction=system.element_map[element_id].q_direction)
+        self.__dict__ = ss.__dict__.copy()
 
-    return ss
+
+def _negative_index_to_id(idx, collection):
+    if idx > 0:
+        return idx
+    else:
+        return max(collection) + (idx + 1)
