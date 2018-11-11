@@ -558,7 +558,6 @@ class SystemElements:
         :param element_id: (int/ list) representing the element ID
         :param q: (flt) value of the q-load
         :param direction: (str) "element", "x", "y"
-
         """
         if not isinstance(element_id, collections.Iterable):
             element_id = (element_id,)
@@ -580,13 +579,14 @@ class SystemElements:
             el.q_load = q[i] * self.orientation_cs * self.load_factor
             el.q_direction = direction
 
-    def point_load(self, node_id, Fx=0, Fz=0):
+    def point_load(self, node_id, Fx=0, Fz=0, rotation=0):
         """
         Apply a point load to a node.
 
-        :param node_id: (int) Nodes ID.
+        :param node_id: (int/ list) Nodes ID.
         :param Fx: (flt/ list) Force in global x direction.
         :param Fz: (flt/ list) Force in global x direction.
+        :param rotation: (flt/ list) Rotate the force clockwise. Rotation is in degrees.
         """
         if not isinstance(node_id, collections.Iterable):
             node_id = (node_id,)
@@ -601,13 +601,15 @@ class SystemElements:
             id_ = _negative_index_to_id(node_id[i], self.node_map.keys())
             self.plotter.max_system_point_load = max(self.plotter.max_system_point_load,
                                                      (Fx[i] ** 2 + Fz[i] ** 2) ** 0.5)
-            self.loads_point[id_] = (Fx[i], Fz[i] * self.orientation_cs)
+            cos = math.cos(math.radians(rotation))
+            sin = math.sin(math.radians(rotation))
+            self.loads_point[id_] = (Fx[i] * cos + Fz[i] * sin, Fz[i] * self.orientation_cs * cos + Fx[i] * sin)
 
     def moment_load(self, node_id, Ty):
         """
         Apply a moment on a node.
 
-        :param node_id: (int) Nodes ID.
+        :param node_id: (int/ list) Nodes ID.
         :param Ty: (flt/ list) Moments acting on the node.
         """
         if not isinstance(node_id, collections.Iterable):

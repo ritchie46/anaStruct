@@ -39,7 +39,7 @@ def apply_point_load(system):
 
 
 def apply_perpendicular_q_load(system):
-    for element_id, g in system.loads_dead_load:
+    for element_id in system.loads_dead_load:
         element = system.element_map[element_id]
         q_perpendicular = element.all_q_load
 
@@ -117,7 +117,7 @@ def apply_parallel_q_load(system, element):
 
 
 def dead_load(system, g, element_id):
-    system.loads_dead_load.append((element_id, g))
+    system.loads_dead_load.append(element_id)
     system.element_map[element_id].dead_load = g
 
 
