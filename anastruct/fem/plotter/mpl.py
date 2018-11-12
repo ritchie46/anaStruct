@@ -237,7 +237,6 @@ class Plotter(PlottingValues):
             self.__start_plot(figsize)
 
         x, y = super().structure()
-        self.one_fig.plot(x, y, color='black', marker='s')
 
         max_x = np.max(x)
         min_x = np.min(x)
@@ -258,9 +257,8 @@ class Plotter(PlottingValues):
 
         if verbosity == 0:
             for el in self.system.element_map.values():
-                axis_values = plot_values_element(el)
-                x_val = axis_values[0]
-                y_val = axis_values[1]
+                x_val, y_val = plot_values_element(el)
+                self.one_fig.plot(x_val, y_val, color='black', marker='s')
 
                 # add node ID to plot
                 ax_range = max_plot_range * 0.015
