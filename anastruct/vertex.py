@@ -5,13 +5,13 @@ import numpy as np
 class Vertex:
     def __init__(self, x, y=None):
         if isinstance(x, (tuple, list)):
-            self.coordinates = np.array([x[0], x[1]])
+            self.coordinates = np.array([x[0], x[1]], dtype=np.float32)
         elif isinstance(x, np.ndarray):
-            self.coordinates = x
+            self.coordinates = np.array(x, dtype=np.float32)
         elif type(x) is Vertex:
-            self.coordinates = np.array(x.coordinates)
+            self.coordinates = np.array(x.coordinates, dtype=np.float32)
         else:
-            self.coordinates = np.array([x, y])
+            self.coordinates = np.array([x, y], dtype=np.float32)
 
     @property
     def x(self):
