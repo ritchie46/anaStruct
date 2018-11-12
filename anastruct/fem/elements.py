@@ -1,4 +1,5 @@
 from math import sin, cos
+from anastruct.basic import FEMException
 import numpy as np
 from functools import lru_cache
 
@@ -78,8 +79,10 @@ class Element:
                 q_factor = -sin(self.ai)
             elif self.q_direction == "y":
                 q_factor = cos(self.ai)
-            else:
+            elif self.q_direction == "element" or self.q_direction is None:
                 q_factor = 1
+            elif self.q_direction is not None:
+                raise FEMException('Wrong parameters', "q-loads direction is not set property. Please choose 'x', 'y', or 'element'")
             q = self.q_load * q_factor
 
         return q + self.dead_load * cos(self.ai)

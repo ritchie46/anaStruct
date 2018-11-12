@@ -117,7 +117,7 @@ def apply_parallel_q_load(system, element):
 
 
 def dead_load(system, g, element_id):
-    system.loads_dead_load.append(element_id)
+    system.loads_dead_load.add(element_id)
     system.element_map[element_id].dead_load = g
 
 

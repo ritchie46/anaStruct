@@ -1,6 +1,4 @@
-import math
-import collections
-import copy
+import math, re, collections, copy
 import numpy as np
 from anastruct.basic import FEMException
 from anastruct.fem.postprocess import SystemLevel as post_sl
@@ -16,7 +14,7 @@ class SystemElements:
     Modelling any structure starts with an object of this class.
     """
 
-    def __init__(self, figsize=(12, 8), EA=15e3, EI=5e3, load_factor=1, mesh=50, plot_backend='mpl'):
+    def __init__(self, figsize=(12, 8), EA=15e3, EI=5e3, load_factor=1, mesh=50):
         """
         E = Young's modulus
         A = Area
@@ -67,7 +65,7 @@ class SystemElements:
         self.loads_point = {}  # node ids with a point loads
         self.loads_q = {}  # element ids with a q-load
         self.loads_moment = {}
-        self.loads_dead_load = []  # element ids with q-load due to dead load
+        self.loads_dead_load = set()  # element ids with q-load due to dead load
 
         # results
         self.reaction_forces = {}  # node objects
@@ -104,7 +102,7 @@ class SystemElements:
         :paramg **kwargs: See 'add_element' method
         :return: None
         """
-        a = np.ones(x.shape)
+        a = np.ones(len(x))
         if EA is None:
             EA = a * self.EA
         if EI is None:
@@ -559,17 +557,7 @@ class SystemElements:
         :param q: (flt) value of the q-load
         :param direction: (str) "element", "x", "y"
         """
-        if not isinstance(element_id, collections.Iterable):
-            element_id = (element_id,)
-        elif not hasattr(element_id, '__getitem__'):
-            element_id = tuple(element_id)
-        if not isinstance(q, collections.Iterable):
-            q = (q,)
-        elif not hasattr(q, '__getitem__'):
-            q = tuple(q)
-
-        if len(q) != len(element_id):  # arguments should be q, [id_1, [id_2]
-            q = [q[0] for _ in element_id]
+        q, element_id, direction = _args_to_lists(q, element_id, direction)
 
         for i in range(len(element_id)):
             id_ = _negative_index_to_id(element_id[i], self.element_map.keys())
@@ -577,7 +565,7 @@ class SystemElements:
             self.loads_q[id_] = q[i] * self.orientation_cs * self.load_factor
             el = self.element_map[id_]
             el.q_load = q[i] * self.orientation_cs * self.load_factor
-            el.q_direction = direction
+            el.q_direction = direction[i]
 
     def point_load(self, node_id, Fx=0, Fz=0, rotation=0):
         """
@@ -588,21 +576,14 @@ class SystemElements:
         :param Fz: (flt/ list) Force in global x direction.
         :param rotation: (flt/ list) Rotate the force clockwise. Rotation is in degrees.
         """
-        if not isinstance(node_id, collections.Iterable):
-            node_id = (node_id,)
-            Fx = (Fx,)
-            Fz = (Fz,)
-        elif Fx == 0:
-            Fx = [0 for _ in Fz]
-        elif Fz == 0:
-            Fz = [0 for _ in Fx]
+        node_id, Fx, Fz, rotation = _args_to_lists(node_id, Fx, Fz, rotation)
 
         for i in range(len(node_id)):
             id_ = _negative_index_to_id(node_id[i], self.node_map.keys())
             self.plotter.max_system_point_load = max(self.plotter.max_system_point_load,
                                                      (Fx[i] ** 2 + Fz[i] ** 2) ** 0.5)
-            cos = math.cos(math.radians(rotation))
-            sin = math.sin(math.radians(rotation))
+            cos = math.cos(math.radians(rotation[i]))
+            sin = math.sin(math.radians(rotation[i]))
             self.loads_point[id_] = (Fx[i] * cos + Fz[i] * sin, Fz[i] * self.orientation_cs * cos + Fx[i] * sin)
 
     def moment_load(self, node_id, Ty):
@@ -612,9 +593,7 @@ class SystemElements:
         :param node_id: (int/ list) Nodes ID.
         :param Ty: (flt/ list) Moments acting on the node.
         """
-        if not isinstance(node_id, collections.Iterable):
-            node_id = (node_id,)
-            Ty = (Ty,)
+        node_id, Ty = _args_to_lists(node_id, Ty)
 
         for i in range(len(node_id)):
             id_ = _negative_index_to_id(node_id[i], self.node_map.keys())
@@ -1009,9 +988,55 @@ class SystemElements:
 
         self.__dict__ = ss.__dict__.copy()
 
+    def remove_loads(self, q=False):
+        """
+        Remove all the applied loads from the structure.
+        :param q: (bool) Remove the dead load.
+        """
+
+        self.loads_point = {}
+        self.loads_q = {}
+        self.loads_moment = {}
+        if q:
+            for k in self.element_map:
+                self.element_map[k].dead_load = 0
+            self.loads_dead_load = set()
+
+    def apply_load_case(self, loadcase):
+        """
+
+        :param loadcase:
+        :return:
+        """
+        for method, kwargs in loadcase.spec.items():
+            kwargs = re.sub(r"[{}']", '', str(kwargs)).replace(':', '=')
+            exec(f'self.{method}({kwargs})')
+
 
 def _negative_index_to_id(idx, collection):
     if idx > 0:
         return idx
     else:
         return max(collection) + (idx + 1)
+
+
+def _args_to_lists(*args):
+    arg_lists = []
+    for arg in args:
+        if isinstance(arg, collections.Iterable) and not isinstance(arg, str):
+            arg_lists.append(arg)
+        else:
+            arg_lists.append([arg])
+    lengths = list(map(len, arg_lists))
+    n = max(lengths)
+    if n == 1:
+        return arg_lists
+
+    args = []
+    for arg, l in zip(arg_lists, lengths):
+        if l == n:
+            args.append(arg)
+        else:
+            args.append([arg[0] for _ in range(n)])
+    return args
+
