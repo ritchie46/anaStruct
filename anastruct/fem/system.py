@@ -1,6 +1,6 @@
 import math, re, collections, copy
 import numpy as np
-from anastruct.basic import FEMException
+from anastruct.basic import FEMException, args_to_lists
 from anastruct.fem.postprocess import SystemLevel as post_sl
 from anastruct.fem.elements import Element
 from anastruct.vertex import Vertex
@@ -557,7 +557,7 @@ class SystemElements:
         :param q: (flt) value of the q-load
         :param direction: (str) "element", "x", "y"
         """
-        q, element_id, direction = _args_to_lists(q, element_id, direction)
+        q, element_id, direction = args_to_lists(q, element_id, direction)
 
         for i in range(len(element_id)):
             id_ = _negative_index_to_id(element_id[i], self.element_map.keys())
@@ -576,7 +576,7 @@ class SystemElements:
         :param Fz: (flt/ list) Force in global x direction.
         :param rotation: (flt/ list) Rotate the force clockwise. Rotation is in degrees.
         """
-        node_id, Fx, Fz, rotation = _args_to_lists(node_id, Fx, Fz, rotation)
+        node_id, Fx, Fz, rotation = args_to_lists(node_id, Fx, Fz, rotation)
 
         for i in range(len(node_id)):
             id_ = _negative_index_to_id(node_id[i], self.node_map.keys())
@@ -593,7 +593,7 @@ class SystemElements:
         :param node_id: (int/ list) Nodes ID.
         :param Ty: (flt/ list) Moments acting on the node.
         """
-        node_id, Ty = _args_to_lists(node_id, Ty)
+        node_id, Ty = args_to_lists(node_id, Ty)
 
         for i in range(len(node_id)):
             id_ = _negative_index_to_id(node_id[i], self.node_map.keys())
@@ -1009,8 +1009,11 @@ class SystemElements:
         :return:
         """
         for method, kwargs in loadcase.spec.items():
-            kwargs = re.sub(r"[{}']", '', str(kwargs)).replace(':', '=')
-            exec(f'self.{method}({kwargs})')
+            kwargs = re.sub(r"[{}]", '', str(kwargs))
+            # pass the groups that match back to the replace
+            kwargs = re.sub(r".??(\w+).?:", r'\1=', kwargs)
+
+            exec('self.{}({})'.format(method, kwargs))
 
 
 def _negative_index_to_id(idx, collection):
@@ -1019,24 +1022,4 @@ def _negative_index_to_id(idx, collection):
     else:
         return max(collection) + (idx + 1)
 
-
-def _args_to_lists(*args):
-    arg_lists = []
-    for arg in args:
-        if isinstance(arg, collections.Iterable) and not isinstance(arg, str):
-            arg_lists.append(arg)
-        else:
-            arg_lists.append([arg])
-    lengths = list(map(len, arg_lists))
-    n = max(lengths)
-    if n == 1:
-        return arg_lists
-
-    args = []
-    for arg, l in zip(arg_lists, lengths):
-        if l == n:
-            args.append(arg)
-        else:
-            args.append([arg[0] for _ in range(n)])
-    return args
 
