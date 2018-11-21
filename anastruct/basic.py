@@ -1,4 +1,5 @@
 import numpy as np
+import collections
 try:
     from anastruct.cython.cbasic import converge, angle_x_axis
 except ImportError:
@@ -29,3 +30,23 @@ class FEMException(Exception):
         self.type = type_
         self.message = message
 
+
+def args_to_lists(*args):
+    arg_lists = []
+    for arg in args:
+        if isinstance(arg, collections.Iterable) and not isinstance(arg, str):
+            arg_lists.append(arg)
+        else:
+            arg_lists.append([arg])
+    lengths = list(map(len, arg_lists))
+    n = max(lengths)
+    if n == 1:
+        return arg_lists
+
+    args = []
+    for arg, l in zip(arg_lists, lengths):
+        if l == n:
+            args.append(arg)
+        else:
+            args.append([arg[0] for _ in range(n)])
+    return args
