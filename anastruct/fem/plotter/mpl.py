@@ -255,11 +255,11 @@ class Plotter(PlottingValues):
 
         self.one_fig.axis([minxrange, plusxrange, minyrange, plusyrange])
 
-        if verbosity == 0:
-            for el in self.system.element_map.values():
-                x_val, y_val = plot_values_element(el)
-                self.one_fig.plot(x_val, y_val, color='black', marker='s')
+        for el in self.system.element_map.values():
+            x_val, y_val = plot_values_element(el)
+            self.one_fig.plot(x_val, y_val, color='black', marker='s')
 
+            if verbosity == 0:
                 # add node ID to plot
                 ax_range = max_plot_range * 0.015
                 self.one_fig.text(x_val[0] + ax_range, y_val[0] + ax_range, '%d' % el.node_id1, color='g', fontsize=9,
