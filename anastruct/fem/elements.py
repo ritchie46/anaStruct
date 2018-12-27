@@ -2,6 +2,7 @@ from math import sin, cos
 from anastruct.basic import FEMException
 import numpy as np
 from functools import lru_cache
+import copy
 
 try:
     from anastruct.fem.cython.celements import det_shear, det_moment
@@ -82,7 +83,8 @@ class Element:
             elif self.q_direction == "element" or self.q_direction is None:
                 q_factor = 1
             elif self.q_direction is not None:
-                raise FEMException('Wrong parameters', "q-loads direction is not set property. Please choose 'x', 'y', or 'element'")
+                raise FEMException('Wrong parameters',
+                                   "q-loads direction is not set property. Please choose 'x', 'y', or 'element'")
             q = self.q_load * q_factor
 
         return q + self.dead_load * cos(self.ai)
@@ -126,6 +128,28 @@ class Element:
     def reset(self):
         self.element_displacement_vector = np.zeros(6)
         self.element_primary_force_vector = np.zeros(6)
+
+    def __add__(self, other):
+        if self.id != other.id:
+            raise FEMException('Wrong element:', 'only elements with the same id can be added.')
+        el = copy.deepcopy(self)
+        for unit in ['bending_moment', 'shear_force', 'deflection', 'extension', 'N_1', 'N_2']:
+            if getattr(el, unit) is None:
+                setattr(el, unit, getattr(other, unit))
+            else:
+                setattr(el, unit, getattr(el, unit) + getattr(other, unit))
+        el.max_deflection = other.max_deflection if el.max_deflection is None else \
+            max(el.max_deflection, other.max_deflection)
+
+        el.node_map[self.node_id1] = el.node_1 + other.node_1
+        el.node_map[self.node_id2] = el.node_2 + other.node_2
+        el.node_map[self.node_id1].ux = el.node_1.ux + other.node_1.ux
+        el.node_map[self.node_id1].uz = el.node_1.uz + other.node_1.uz
+        el.node_map[self.node_id1].phi_y = el.node_1.phi_y + other.node_1.phi_y
+        el.node_map[self.node_id2].ux = el.node_2.ux + other.node_2.ux
+        el.node_map[self.node_id2].uz = el.node_2.uz + other.node_2.uz
+        el.node_map[self.node_id2].phi_y = el.node_2.phi_y + other.node_2.phi_y
+        return el
 
 
 @lru_cache(CACHE_BOUND)

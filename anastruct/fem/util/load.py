@@ -1,4 +1,7 @@
 import pprint
+import copy
+from anastruct.basic import args_to_lists
+import numpy as np
 
 
 class LoadCase:
@@ -48,3 +51,51 @@ class LoadCase:
     def __str__(self):
         return f'Loadcase {self.name}:\n' + pprint.pformat(self.spec)
 
+
+class LoadCombination:
+    def __init__(self, name):
+        self.name = name
+        self.spec = dict()
+
+    def add_load_case(self, lc, factor):
+        """
+        Add a load case to the load combination.
+
+        :param lc: (:class:`anastruct.fem.util.LoadCase`)
+        :param factor: (flt) Multiply all the loads in this LoadCase with this factor.
+        """
+        lc, factor = args_to_lists(lc, factor)
+        for i in range(len(lc)):
+            self.spec[lc[i].name] = [lc[i], factor[i]]
+
+    def solve(self, system, force_linear=False, verbosity=0, max_iter=200, geometrical_non_linear=False, **kwargs):
+        """
+        Evaluate the Load Combination.
+
+        :param system: (:class:`anastruct.fem.system.SystemElements`) Structure to apply loads on.
+        :param force_linear: (bool) Force a linear calculation. Even when the system has non linear nodes.
+        :param verbosity: (int) 0: Log calculation outputs. 1: silence.
+        :param max_iter: (int) Maximum allowed iterations.
+        :param geometrical_non_linear: (bool) Calculate second order effects and determine the buckling factor.
+        :return: (ResultObject)
+
+        Development **kwargs:
+            :param naked: (bool) Whether or not to run the solve function without doing post processing.
+            :param discretize_kwargs: When doing a geometric non linear analysis you can reduce or increase the number
+                                      of elements created that are used for determining the buckling_factor
+        """
+        results = {}
+        for lc, factor in self.spec.values():
+            ss = copy.deepcopy(system)
+            ss.apply_load_case(lc)
+            ss.solve(force_linear, verbosity, max_iter, geometrical_non_linear, **kwargs)
+            results[lc.name] = ss
+
+        ss_new = copy.deepcopy(system)
+
+        for k in ss_new.element_map:
+            for lc_ss in results.values():
+                ss_new.element_map[k] = ss_new.element_map[k] + lc_ss.element_map[k]
+
+        results['combination'] = ss_new
+        return results
