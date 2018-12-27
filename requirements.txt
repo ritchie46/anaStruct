@@ -1,13 +1,4 @@
-certifi==2018.10.15
-cycler==0.10.0
-kiwisolver==1.0.1
-matplotlib==3.0.1
-mkl-fft==1.0.6
-mkl-random==1.0.1
-numpy==1.15.3
-pyparsing==2.2.2
-python-dateutil==2.7.3
-pytz==2018.5
-scipy==1.1.0
-six==1.11.0
-tornado==5.1.1
+matplotlib
+numpy>=1.15
+scipy>=1.1.0
+
