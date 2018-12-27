@@ -1,5 +1,5 @@
-Basic workflow
-==============
+Modelling methods
+=================
 
 .. autoclass:: anastruct.fem.system.SystemElements
 

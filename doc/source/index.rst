@@ -30,9 +30,17 @@ Code examples
 .. _Real_world_use_case: https://ritchievink.com/blog/2017/08/23/a-nonlinear-water-accumulation-analysis-in-python/
 
 .. toctree::
-    :maxdepth: 3
-    :caption: Contents:
+   :maxdepth: 3
+   :caption: Contents:
 
-    system_module
+   installation
 
-    ref
+   getting_started
+
+   elements
+
+   supports
+
+   modelling_methods
+
+   ref
