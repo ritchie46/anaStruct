@@ -41,6 +41,8 @@ Code examples
 
    supports
 
+   loads
+
    modelling_methods
 
    ref

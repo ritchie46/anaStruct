@@ -9,7 +9,12 @@ The SystemElements class has several methods that help you model a structure. Th
 * discretize
 
 
-A structure is defined by elements, which have their own state. The state of an element can be interesting when
+A structure is defined by elements, which have their own state.
+
+The elements are stored in `SystemElement.element_map`. This is a dictionary with keys representing the element ids, and
+values being the element objects. The element objects ar implicitly created by the SystemElements object.
+
+The state of an element can be interesting when
 post-processing results. For now we'll focus on the modelling part. Below you see the different methods for modelling
 a structure.
 
@@ -18,6 +23,9 @@ Standard elements
 
 Standard elements have bending and axial stiffness and therefore will implement shear force, bending moment, axial force,
 extension, and deflection. Standard elements can be added with the following methods.
+
+add_element
+###########
 
 .. automethod:: anastruct.fem.system.SystemElements.add_element
 
@@ -29,6 +37,9 @@ Example
     ss = SystemElements(EI=5e3, EA=1e5)
     ss.add_multiple_elements([[0, 0], [0, 10]], 10)
     ss.show_structure()
+
+add_multiple_elements
+#####################
 
 
 .. automethod:: anastruct.fem.system.SystemElements.add_multiple_elements
@@ -45,6 +56,9 @@ Example
     ss.show_structure()
 
 
+add_element_grid
+################
+
 .. automethod:: anastruct.fem.system.SystemElements.add_element_grid
 
 
@@ -53,6 +67,9 @@ Truss elements
 
 Truss elements don't have bending stiffness and will therefore not implement shear force, bending moment and deflection.
 It does model axial force and extension.
+
+add_truss_element
+#################
 
 .. automethod:: anastruct.fem.system.SystemElements.add_truss_element
 
