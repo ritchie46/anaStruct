@@ -43,6 +43,8 @@ Code examples
 
    loads
 
+   plotting
+
    modelling_methods
 
    ref
