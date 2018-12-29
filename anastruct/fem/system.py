@@ -16,18 +16,15 @@ class SystemElements:
 
     def __init__(self, figsize=(12, 8), EA=15e3, EI=5e3, load_factor=1, mesh=50):
         """
-        E = Young's modulus
-        A = Area
-        I = Moment of Inertia
+        * E = Young's modulus
+        * A = Area
+        * I = Moment of Inertia
 
         :param figsize: (tpl) Set the standard plotting size.
         :param EA: (flt) Standard E * A. Set the standard values of EA if none provided when generating an element.
         :param EI: (flt) Standard E * I. Set the standard values of EA if none provided when generating an element.
         :param load_factor: (flt) Multiply all loads with this factor.
         :param mesh: (int) Plotting mesh. Has no influence on the calculation.
-        :param plot_backend: (str)  matplotlib  -> "mpl"  (Currently only the matplotlib one is stable)
-                                    plotly      -> "plt"
-                                    plotly nb   -> "ipt"
         """
         # init object
         self.post_processor = post_sl(self)
@@ -87,6 +84,14 @@ class SystemElements:
         self.reduced_force_vector = None
         self.reduced_system_matrix = None
         self._vertices = {}  # maps vertices to node ids
+
+    @property
+    def id_last_element(self):
+        return max(self.element_map.keys())
+
+    @property
+    def id_last_node(self):
+        return max(self.node_map.keys())
 
     def add_element_grid(self, x, y, EA=None, EI=None, g=None, mp=None, spring=None, **kwargs):
         """
