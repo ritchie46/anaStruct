@@ -44,9 +44,40 @@ We can take a look at the results of the calculation by plotting different units
 .. code-block:: python
 
     ss.show_structure()
+
+.. image:: img/getting_started/structure.png
+
+
+.. code-block:: python
+
     ss.show_reaction_force()
+
+.. image:: img/getting_started/reaction.png
+
+
+.. code-block:: python
+
     ss.show_axial_force()
+
+.. image:: img/getting_started/axial_force.png
+
+
+.. code-block:: python
+
     ss.show_shear_force()
+
+.. image:: img/getting_started/shear.png
+
+
+.. code-block:: python
+
     ss.show_bending_moment()
+
+.. image:: img/getting_started/moment.png
+
+
+.. code-block:: python
+
     ss.show_displacement()
 
+.. image:: img/getting_started/deflection.png
