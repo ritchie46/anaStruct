@@ -21,7 +21,7 @@ setup(
     license='GPL-3.0',
     packages=['anastruct', 'anastruct.fem', 'anastruct.fem.system_components', 'anastruct.fem.examples',
               'anastruct.material', 'anastruct.cython', 'anastruct.fem.cython', 'anastruct.fem.plotter',
-              'anastruct.fem.util', 'anastruct.fem.util.load'],
+              'anastruct.fem.util'],
     package_dir='',
     install_requires=[
         'matplotlib',
