@@ -16,18 +16,18 @@ Or for a release:
 $ pip install anastruct
 ```
 
-## Documentation
+## Get started
 
-### Real world use case!
+### Read the docs!
+
+[Documentation](http://anastruct.readthedocs.io)
+
+### Real world use case.
 [Non linear water accumulation analysis](https://ritchievink.com/blog/2017/08/23/a-nonlinear-water-accumulation-analysis-in-python/)
 
 ### Simple examples.
 
 [code examples!](https://ritchievink.com/blog/2017/01/12/python-1d-fem-example-1/)
-
-### Reference guide
-
-[reference](http://anastruct.readthedocs.io)
 
 ## 2D FEM Frames and Trusses
 ![](images/rand/structure.png)
@@ -51,14 +51,15 @@ $ pip install anastruct
 * rotational springs :heavy_check_mark:
 * non-linear nodes :heavy_check_mark:
 * geometrical non linearity :heavy_check_mark:
+* load cases and load combinations heavy_check_mark:
 
 ```python
-from anastruct.fem.system import SystemElements
+from anastruct import SystemElements
 
 ss = SystemElements(EA=15000, EI=5000)
 
 # Add beams to the system.
-ss.add_element(location=[[0, 0], [0, 5]])
+ss.add_element(location=[0, 5])
 ss.add_element(location=[[0, 5], [5, 5]])
 ss.add_element(location=[[5, 5], [5, 0]])
 
