@@ -12,6 +12,11 @@ Structure object
 You start a model by instantiating a SystemElements object. All the models state, i.e. elements, materials and forces
 are kept by this object.
 
+.. automethod:: anastruct.fem.system.SystemElements.__init__
+
+Example
+#######
+
 .. code-block:: python
 
     from anastruct.fem.system import SystemElements
