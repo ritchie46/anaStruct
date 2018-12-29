@@ -60,7 +60,7 @@ class LoadCase:
         self.spec['dead_load-{}'.format(self.c)] = dict(element_id=element_id, g=g)
 
     def __str__(self):
-        return f'Loadcase {self.name}:\n' + pprint.pformat(self.spec)
+        return 'Loadcase {}:\n'.format(self.name) + pprint.pformat(self.spec)
 
 
 class LoadCombination:
