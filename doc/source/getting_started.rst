@@ -19,7 +19,7 @@ Example
 
 .. code-block:: python
 
-    from anastruct.fem.system import SystemElements
+    from anastruct import SystemElements
     ss = SystemElements()
 
 This *ss* object now has access to several methods which modify the state of the model. We can for instance create
