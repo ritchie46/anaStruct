@@ -45,6 +45,10 @@ Code examples
 
    plotting
 
+   calculation
+
+   loadcases
+
    modelling_methods
 
    ref

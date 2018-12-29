@@ -1,2 +1,2 @@
 from anastruct.fem.system import SystemElements
-
+from anastruct.fem.util.load import LoadCase, LoadCombination

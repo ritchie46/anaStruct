@@ -3,7 +3,8 @@ Plotting
 
 The SystemElements object implements several plotting methods for retrieving standard plotting results. Every plotting
 method has got the same parameters. The plotter is based on a Matplotlib backend and it is possible to get the figure
-and do modifications of your own.
+and do modifications of your own. The x and y coordinates of the model should all be positive value for the plotter
+to work properly.
 
 
 Structure

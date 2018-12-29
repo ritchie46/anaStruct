@@ -1024,18 +1024,19 @@ class SystemElements:
 
             exec('self.{}({})'.format(method, kwargs))
 
-    # def __deepcopy__(self, memo):
-    #     __dict__ = {}
-    #     for k, v in self.__dict__.items():
-    #         if 'plotter' != k and 'plot_values' != k and 'post_processor' != k:
-    #             __dict__[k] = copy.deepcopy(v)
-    #         else:
-    #             __dict__[k] = copy.copy(v)
-    #
-    #     ss_copy = copy.copy(self)
-    #     __dict__.update(ss_copy.__dict__)
-    #     ss_copy.__dict__ = __dict__
-    #     return ss_copy
+    def __deepcopy__(self, memo):
+        system = copy.copy(self)
+        mesh = self.plotter.mesh
+        system.plotter = None
+        system.post_processor = None
+        system.plot_values = None
+
+        system.__dict__ = copy.deepcopy(system.__dict__)
+        system.plotter = plotter.Plotter(system, mesh)
+        system.post_processor = post_sl(system)
+        system.plot_values = plotter.PlottingValues
+
+        return system
 
 
 def _negative_index_to_id(idx, collection):
