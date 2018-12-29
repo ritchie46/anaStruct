@@ -158,6 +158,9 @@ class Plotter(PlottingValues):
             else:
                 ai = -el.ai
 
+            rec = mpatches.Rectangle((x1, y1), width=el.l, height=h, angle=-np.degrees(ai), color='g', alpha=0.3)
+            self.one_fig.add_patch(rec)
+
             # - value, because the positive z of the system is opposite of positive y of the plotter
             xn1 = x1 + np.sin(ai) * h * direction
             yn1 = y1 + np.cos(ai) * h * direction

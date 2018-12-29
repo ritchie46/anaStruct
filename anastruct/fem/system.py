@@ -996,6 +996,7 @@ class SystemElements:
     def remove_loads(self, q=False):
         """
         Remove all the applied loads from the structure.
+
         :param q: (bool) Remove the dead load.
         """
 
@@ -1009,11 +1010,11 @@ class SystemElements:
 
     def apply_load_case(self, loadcase):
         """
-
         :param loadcase:
         :return:
         """
         for method, kwargs in loadcase.spec.items():
+            method = method.split('-')[0]
             kwargs = re.sub(r"[{}]", '', str(kwargs))
             # pass the groups that match back to the replace
             kwargs = re.sub(r".??(\w+).?:", r'\1=', kwargs)
