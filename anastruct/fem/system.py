@@ -993,19 +993,22 @@ class SystemElements:
 
         self.__dict__ = ss.__dict__.copy()
 
-    def remove_loads(self, q=False):
+    def remove_loads(self, dead_load=False):
         """
         Remove all the applied loads from the structure.
 
-        :param q: (bool) Remove the dead load.
+        :param dead_load: (bool) Remove the dead load.
         """
 
         self.loads_point = {}
         self.loads_q = {}
         self.loads_moment = {}
-        if q:
-            for k in self.element_map:
+
+        for k in self.element_map:
+            self.element_map[k].q_load = 0
+            if dead_load:
                 self.element_map[k].dead_load = 0
+        if dead_load:
             self.loads_dead_load = set()
 
     def apply_load_case(self, loadcase):
@@ -1020,6 +1023,19 @@ class SystemElements:
             kwargs = re.sub(r".??(\w+).?:", r'\1=', kwargs)
 
             exec('self.{}({})'.format(method, kwargs))
+
+    # def __deepcopy__(self, memo):
+    #     __dict__ = {}
+    #     for k, v in self.__dict__.items():
+    #         if 'plotter' != k and 'plot_values' != k and 'post_processor' != k:
+    #             __dict__[k] = copy.deepcopy(v)
+    #         else:
+    #             __dict__[k] = copy.copy(v)
+    #
+    #     ss_copy = copy.copy(self)
+    #     __dict__.update(ss_copy.__dict__)
+    #     ss_copy.__dict__ = __dict__
+    #     return ss_copy
 
 
 def _negative_index_to_id(idx, collection):
