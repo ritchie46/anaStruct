@@ -103,13 +103,13 @@ To get the deflection of all nodes in the girder, we use the `get_node_result_ra
 Element results
 ###############
 
-Axial force, shear force and extension are properties of the elements and not of the nodes. To get this information, we
-need to query the results from the elements.
-
 .. automethod:: anastruct.fem.system.SystemElements.get_element_results
 
 Example
 .......
+
+Axial force, shear force and extension are properties of the elements and not of the nodes. To get this information, we
+need to query the results from the elements.
 
 Let's find the value of the maximum axial compression force, which is in element 10.
 
@@ -127,15 +127,16 @@ Range of element results
 
 .. automethod:: anastruct.fem.system.SystemElements.get_element_result_range
 
+
+Example
+........
+
 We can of course think of a structure where we do not know where the maximum axial compression force will occur.
 So let's check if our assumption is correct and that the maximum force is indeed in element 10.
 
 We query all the axial forces. The returned item is an ordered list. Because Python starts counting from zero, and
 our elements start counting from one, we'll need to add one to get the right element. Here we'll see that the minimum
 force (compression is negative) is indeed in element 10.
-
-Example
-........
 
 .. code-block:: python
 
