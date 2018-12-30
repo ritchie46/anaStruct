@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 from anastruct.basic import converge
+import logging
 from scipy import linalg
 
 
@@ -15,7 +16,7 @@ def stiffness_adaptation(system, verbosity, max_iter):
     """
     system.solve(True, naked=True)
     if verbosity == 0:
-        print("Starting stiffness adaptation calculation.")
+        logging.info("Starting stiffness adaptation calculation.")
 
     # check validity
     assert all([mp > 0 for mpd in system.non_linear_elements.values() for mp in mpd]), \
@@ -53,9 +54,9 @@ def stiffness_adaptation(system, verbosity, max_iter):
             break
 
     if c == max_iter - 1:
-        print("Couldn't solve the in the amount of iterations given.")
+        logging.warning("Couldn't solve the in the amount of iterations given. max_iter={}".format(max_iter))
     elif verbosity == 0:
-        print("Solved in {} iterations".format(c))
+        logging.info("Solved in {} iterations".format(c))
     return system.system_displacement_vector
 
 
@@ -110,7 +111,7 @@ def geometrically_non_linear(system, verbosity=0, buckling_factor=True, discreti
     """
     # https://www.ethz.ch/content/dam/ethz/special-interest/baug/ibk/structural-mechanics-dam/education/femI/Lecture_2b.pdf
     if verbosity == 0:
-        print("Starting geometrical non linear calculation")
+        logging.info("Starting geometrical non linear calculation")
 
     if buckling_factor:
         buckling_system = copy.copy(system)

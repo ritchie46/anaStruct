@@ -1,7 +1,6 @@
 import pprint
 import copy
 from anastruct.basic import args_to_lists
-from anastruct.fem import plotter
 
 
 class LoadCase:
