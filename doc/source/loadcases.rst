@@ -87,13 +87,13 @@ a key `combination` in the results dictionary.
 
 .. code-block:: python
 
-results = combination.solve(ss)
+    results = combination.solve(ss)
 
-for k, ss in results.items():
-    results[k].show_structure()
-    results[k].show_displacement(show=False)
-    plt.title(k)
-    plt.show()
+    for k, ss in results.items():
+        results[k].show_structure()
+        results[k].show_displacement(show=False)
+        plt.title(k)
+        plt.show()
 
 **Load case wind**
 
