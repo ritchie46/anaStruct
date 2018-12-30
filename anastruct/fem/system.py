@@ -745,6 +745,7 @@ class SystemElements:
         """
         result_list = []
         if node_id != 0:
+            node_id = _negative_index_to_id(node_id, self.node_map)
             node = self.node_map[node_id]
             return {
                 "id": node.id,
@@ -805,6 +806,7 @@ class SystemElements:
 
         """
         if element_id != 0:
+            element_id = _negative_index_to_id(element_id, self.element_map)
             el = self.element_map[element_id]
             if el.type == "truss":
                 return {
