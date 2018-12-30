@@ -3,7 +3,14 @@ import numpy as np
 
 
 class Vertex:
+    """
+    Utility point in 2D.
+    """
     def __init__(self, x, y=None):
+        """
+        :param x: Can be any of int, float, coordinate list, or other vertex.
+        :param y: (int, flt)
+        """
         if isinstance(x, (tuple, list)):
             self.coordinates = np.array([x[0], x[1]], dtype=np.float32)
         elif isinstance(x, np.ndarray):
@@ -15,6 +22,10 @@ class Vertex:
 
     @property
     def x(self):
+        """
+
+        :return:
+        """
         return self.coordinates[0]
 
     @property

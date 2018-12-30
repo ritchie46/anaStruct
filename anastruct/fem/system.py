@@ -12,6 +12,24 @@ from anastruct.vertex import vertex_range
 class SystemElements:
     """
     Modelling any structure starts with an object of this class.
+
+    :ivar EA: Standard axial stiffness of elements, default=15,000
+    :ivar EI: Standard bending stiffness of elements, default=5,000
+    :ivar figsize: (tpl) Matplotlibs standard figure size
+    :ivar element_map: (dict) Keys are the element ids, values are the element objects
+    :ivar node_map: (dict) Keys are the node ids, values are the node objects.
+    :ivar node_element_map: (dict) maps node ids to element objects.
+    :ivar supports_fixed: (list) All the fixed supports in the system.
+    :ivar supports_hinged: (list) All the hinged supports in the system.
+    :ivar supports_roll: (list) All the roll supports in the system.
+    :ivar supports_spring_x: (list) All the spring supports in x-direction in the system.
+    :ivar supports_spring_z: (list) All the spring supports in z-direction in the system.
+    :ivar supports_spring_y: (list) All the spring supports in y-direction in the system.
+    :ivar supports_roll_direction: (list) The directions of the rolling supports.
+    :ivar loads_point: (dict) Maps node ids to point loads.
+    :ivar loads_q: (dict) Maps element ids to q-loads.
+    :ivar loads_moment: (dict) Maps node ids to moment loads.
+    :ivar loads_dead_load: (set) Element ids that have a dead load applied.
     """
 
     def __init__(self, figsize=(12, 8), EA=15e3, EI=5e3, load_factor=1, mesh=50):
