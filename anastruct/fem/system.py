@@ -738,8 +738,10 @@ class SystemElements:
         |  if node_id == 0: (list)
         |
         |    Returns a list containing tuples with the results:
-        |
-        |     [(id, Fx, Fz, Ty, ux, uy, phi_y), (id, Fx, Fz...), () .. ]
+
+        ::
+
+            [(id, Fx, Fz, Ty, ux, uy, phi_y), (id, Fx, Fz...), () .. ]
         |
         |  if node_id > 0: (dict)
         """
@@ -768,8 +770,10 @@ class SystemElements:
         |  if node_id == 0: (list)
         |
         |    Returns a list containing tuples with the results:
-        |
-        |     [(id, Fx, Fz, Ty, ux, uy, phi_y), (id, Fx, Fz...), () .. ]
+
+        ::
+
+             [(id, ux, uy, phi_y), (id, ux, uy, phi_y),  ... (id, ux, uy, phi_y) ]
         |
         |  if node_id > 0: (dict)
         """
@@ -798,8 +802,10 @@ class SystemElements:
         |  if node_id == 0: (list)
         |
         |    Returns a list containing tuples with the results:
-        |
-        |     [(id, Fx, Fz, Ty, ux, uy, phi_y), (id, Fx, Fz...), () .. ]
+
+        ::
+
+             [(id, length, alpha, u, N_1, N_2), (id, length, alpha, u, N_1, N_2), ... (id, length, alpha, u, N_1, N_2)]
         |
         |  if node_id > 0: (dict)
         |
@@ -814,8 +820,7 @@ class SystemElements:
                     "length": el.l,
                     "alpha": el.ai,
                     "u": el.extension[0],
-                    "N_1": el.N_1,
-                    "N_2": el.N_2
+                    "N": el.N_1,
                 }
             else:
                 return {
@@ -823,8 +828,7 @@ class SystemElements:
                     "length": el.l,
                     "alpha": el.ai,
                     "u": el.extension[0],
-                    "N_1": el.N_1,
-                    "N_2": el.N_2,
+                    "N": el.N_1,
                     "wmax": np.min(el.deflection),
                     "wmin": np.max(el.deflection),
                     "w": el.deflection if verbose else None,
@@ -843,8 +847,7 @@ class SystemElements:
                         "length": el.l,
                         "alpha": el.ai,
                         "u": el.extension[0],
-                        "N_1": el.N_1,
-                        "N_2": el.N_2
+                        "N": el.N_1,
                     }
                     )
 
@@ -855,8 +858,7 @@ class SystemElements:
                             "length": el.l,
                             "alpha": el.ai,
                             "u": el.extension[0],
-                            "N_1": el.N_1,
-                            "N_2": el.N_2,
+                            "N": el.N_1,
                             "wmax": np.min(el.deflection),
                             "wmin": np.max(el.deflection),
                             "w": el.deflection if verbose else None,
@@ -893,12 +895,15 @@ class SystemElements:
            :param unit: (str)
             - 'uy'
             - 'ux'
+            - 'phi_y'
         :return: (list)
         """
         if unit == "uy":
             return [node.uz for node in self.node_map.values()]  # - * -  = +
         elif unit == "ux":
             return [-node.ux for node in self.node_map.values()]
+        elif unit == "phi_y":
+            return [node.phi_y for node in self.node_map.values()]
 
     def find_node_id(self, vertex):
         """
