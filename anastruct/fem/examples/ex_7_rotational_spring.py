@@ -9,7 +9,7 @@ ss.add_element([[0, 0], [3.5, 0]])
 ss.add_element([7, 0], spring={1: 100})
 ss.add_support_fixed([1])
 ss.add_support_hinged(3)
-ss.point_load(2, Fz=-100)
+ss.point_load(2, Fy=-100)
 
 if __name__ == "__main__":
     ss.solve()

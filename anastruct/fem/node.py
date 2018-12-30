@@ -23,6 +23,10 @@ class Node:
         self.hinge = False
         self.elements = {}
 
+    @property
+    def Fy(self):
+        return -self.Fz
+
     def __str__(self):
         if self.vertex:
             return "[id = {}, Fx = {}, Fz = {}, Ty = {}, ux = {}, uz = {}, phi_y = {}, x = {}, y = {}]".format(

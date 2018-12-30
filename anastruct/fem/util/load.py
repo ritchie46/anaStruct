@@ -27,17 +27,17 @@ class LoadCase:
         self.c += 1
         self.spec['q_load-{}'.format(self.c)] = dict(q=q, element_id=element_id, direction=direction)
 
-    def point_load(self, node_id, Fx=0, Fz=0, rotation=0):
+    def point_load(self, node_id, Fx=0, Fy=0, rotation=0):
         """
         Apply a point load to a node.
 
         :param node_id: (int/ list) Nodes ID.
         :param Fx: (flt/ list) Force in global x direction.
-        :param Fz: (flt/ list) Force in global x direction.
+        :param Fy: (flt/ list) Force in global x direction.
         :param rotation: (flt/ list) Rotate the force clockwise. Rotation is in degrees.
         """
         self.c += 1
-        self.spec['point_load-{}'.format(self.c)] = dict(node_id=node_id, Fx=Fx, Fz=Fz, rotation=rotation)
+        self.spec['point_load-{}'.format(self.c)] = dict(node_id=node_id, Fx=Fx, Fy=Fy, rotation=rotation)
 
     def moment_load(self, node_id, Ty):
         """

@@ -590,24 +590,24 @@ class SystemElements:
             el.q_load = q[i] * self.orientation_cs * self.load_factor
             el.q_direction = direction[i]
 
-    def point_load(self, node_id, Fx=0, Fz=0, rotation=0):
+    def point_load(self, node_id, Fx=0, Fy=0, rotation=0):
         """
         Apply a point load to a node.
 
         :param node_id: (int/ list) Nodes ID.
         :param Fx: (flt/ list) Force in global x direction.
-        :param Fz: (flt/ list) Force in global x direction.
+        :param Fy: (flt/ list) Force in global x direction.
         :param rotation: (flt/ list) Rotate the force clockwise. Rotation is in degrees.
         """
-        node_id, Fx, Fz, rotation = args_to_lists(node_id, Fx, Fz, rotation)
+        node_id, Fx, Fy, rotation = args_to_lists(node_id, Fx, Fy, rotation)
 
         for i in range(len(node_id)):
             id_ = _negative_index_to_id(node_id[i], self.node_map.keys())
             self.plotter.max_system_point_load = max(self.plotter.max_system_point_load,
-                                                     (Fx[i] ** 2 + Fz[i] ** 2) ** 0.5)
+                                                     (Fx[i] ** 2 + Fy[i] ** 2) ** 0.5)
             cos = math.cos(math.radians(rotation[i]))
             sin = math.sin(math.radians(rotation[i]))
-            self.loads_point[id_] = (Fx[i] * cos + Fz[i] * sin, Fz[i] * self.orientation_cs * cos + Fx[i] * sin)
+            self.loads_point[id_] = (Fx[i] * cos + Fy[i] * sin, Fy[i] * self.orientation_cs * cos + Fx[i] * sin)
 
     def moment_load(self, node_id, Ty):
         """
@@ -759,7 +759,7 @@ class SystemElements:
 
         ::
 
-            [(id, Fx, Fz, Ty, ux, uy, phi_y), (id, Fx, Fz...), () .. ]
+            [(id, Fx, Fy, Ty, ux, uy, phi_y), (id, Fx, Fy...), () .. ]
         |
         |  if node_id > 0: (dict)
         """
@@ -770,7 +770,7 @@ class SystemElements:
             return {
                 "id": node.id,
                 "Fx": node.Fx,
-                "Fz": node.Fz,
+                "Fy": node.Fy,
                 "Ty": node.Ty,
                 "ux": node.ux,
                 "uy": -node.uz,
@@ -778,7 +778,7 @@ class SystemElements:
             }
         else:
             for node in self.node_map.values():
-                result_list.append((node.id, node.Fx, node.Fz, node.Ty, node.ux, -node.uz, node.phi_y))
+                result_list.append((node.id, node.Fx, node.Fy, node.Ty, node.ux, -node.uz, node.phi_y))
         return result_list
 
     def get_node_displacements(self, node_id=0):
@@ -1008,7 +1008,7 @@ class SystemElements:
 
         # loads
         for node_id, forces in self.loads_point.items():
-            ss.point_load((node_id - 1) * n + 1, Fx=forces[0], Fz=forces[1] / self.orientation_cs)
+            ss.point_load((node_id - 1) * n + 1, Fx=forces[0], Fy=forces[1] / self.orientation_cs)
         for node_id, forces in self.loads_moment.items():
             ss.moment_load((node_id - 1) * n + 1, forces)
         for element_id, forces in self.loads_q.items():

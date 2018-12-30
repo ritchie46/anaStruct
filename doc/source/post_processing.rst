@@ -30,7 +30,7 @@ example.
     ss.add_support_roll(-1, 2)
 
     # loads
-    ss.point_load(node_id=np.arange(2, 9, 2), Fz=-100)
+    ss.point_load(node_id=np.arange(2, 9, 2), Fy=-100)
 
     ss.solve()
     ss.show_structure()
@@ -49,7 +49,7 @@ We can use this method to query the reaction forces of the supports.
 
 .. code-block:: python
 
-    print(ss.get_node_results_system(node_id=1)['Fz'], ss.get_node_results_system(node_id=-1)['Fz'])
+    print(ss.get_node_results_system(node_id=1)['Fy'], ss.get_node_results_system(node_id=-1)['Fy'])
 
 **output**
 ::

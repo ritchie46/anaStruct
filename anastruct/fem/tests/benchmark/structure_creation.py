@@ -11,7 +11,7 @@ for i in range(n):
     t0 = time.time()
     ss = SystemElements()
     el = ss.add_multiple_elements([[0, 0], [10, 10]], n=500)
-    ss.point_load(ss.node_map.values(), Fz=1)
+    ss.point_load(ss.node_map.values(), Fy=1)
     ss.q_load(1, el)
     t = time.time() - t0
     print(t)

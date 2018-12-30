@@ -74,7 +74,7 @@ case from the system, create a `LoadCombination` object and add the `LoadCase` o
 
     # create another load case
     lc_cables = LoadCase('cables')
-    lc_cables.point_load(node_id=[2, 3, 4], Fz=-100)
+    lc_cables.point_load(node_id=[2, 3, 4], Fy=-100)
 
     combination = LoadCombination('ULS')
     combination.add_load_case(lc_wind, 1.5)
