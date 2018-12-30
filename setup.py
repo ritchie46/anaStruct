@@ -12,8 +12,8 @@ if sys.version_info[0] == 3 and sys.version_info[1] < 5:
 
 setup(
     name='anastruct',
-    version='1.0b4',
-    description='structural engineering package',
+    version='1.0',
+    description='analyse 2D structures',
     author='Ritchie Vink',
     author_email='ritchie46@gmail.com',
     url='https://ritchievink.com',
