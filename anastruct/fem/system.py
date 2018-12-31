@@ -111,9 +111,9 @@ class SystemElements:
 
         :param x: (list/ np.array) x coordinates.
         :param y: (list/ np.array) y coordinates.
-        :param EA: See 'add_element' method
-        :param EI: See 'add_element' method
-        :param g: See 'add_element' method
+        :param EA: (list/ np.array) See 'add_element' method
+        :param EI: (list/ np.array) See 'add_element' method
+        :param g: (list/ np.array) See 'add_element' method
         :param mp: See 'add_element' method
         :param spring: See 'add_element' method
         :paramg **kwargs: See 'add_element' method
@@ -126,6 +126,10 @@ class SystemElements:
             EI = a * self.EI
         if g is None:
             g = a * 0
+        # cast to array if parameters are not given as array.
+        EA = EA * a
+        EI = EI * a
+        g = g * a
 
         for i in range(len(x) - 1):
             self.add_element([[x[i], y[i]], [x[i + 1], y[i + 1]]], EA[i], EI[i], g[i], mp, spring, **kwargs)
@@ -150,7 +154,7 @@ class SystemElements:
         :param EA: (flt) EA
         :return: (int) Elements ID.
         """
-        return self.add_element(location, EA, 1e-14, element_type='truss')
+        return self.add_element(location, EA, element_type='truss')
 
     def add_element(self, location, EA=None, EI=None, g=0, mp=None, spring=None, **kwargs):
         """
@@ -198,6 +202,9 @@ class SystemElements:
 
         EA = self.EA if EA is None else EA
         EI = self.EI if EI is None else EI
+
+        if element_type == 'truss':
+            EI = 1e-14
 
         # add the element number
         self.count += 1
@@ -392,7 +399,7 @@ class SystemElements:
 
         if not naked:
             if not self.validate():
-                if any(['general' in element.type for element in self.element_map.values()]):
+                if all(['general' in element.type for element in self.element_map.values()]):
                     raise FEMException('StabilityError', 'The eigenvalues of the stiffness matrix are non zero, '
                                                          'which indicates a instable structure. '
                                                          'Check your support conditions')

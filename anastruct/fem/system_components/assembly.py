@@ -69,6 +69,10 @@ def apply_perpendicular_q_load(system):
         rleft_z = rleft * math.cos(element.ai)
         rright_z = rright * math.cos(element.ai)
 
+        if element.type == 'truss':
+            left_moment = 0
+            right_moment = 0
+
         primary_force = np.array([rleft_x, rleft_z, left_moment, rright_x, rright_z, right_moment])
         element.element_primary_force_vector -= primary_force
 

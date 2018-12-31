@@ -54,11 +54,14 @@ Intermediate
     x -= x.min()
 
     for length in [0, span]:
-        ss.add_element_grid(x + length, y, element_type=element_type)
         x_left_column = np.ones(y[::2].shape) * x.min() + length
-        x_right_column = np.ones(y[::2].shape) * x.max() + length
-        ss.add_element_grid(x_left_column, y[::2])
-        ss.add_element_grid(x_right_column, y[::2])
+        x_right_column = np.ones(y[::2].shape[0] + 1) * x.max() + length
+
+        # add triangles
+        ss.add_element_grid(x + length, y, element_type=element_type)
+        # add vertical elements
+        ss.add_element_grid(x_left_column, y[::2], element_type=element_type)
+        ss.add_element_grid(x_right_column, np.r_[y[0], y[1::2], y[-1]], element_type=element_type)
 
         ss.add_support_spring(
             node_id=ss.find_node_id(vertex=[x_left_column[0], y[0]]),
@@ -70,9 +73,14 @@ Intermediate
             k=k)
 
     # add top girder
-    ss.add_element_grid([0, width, span, span + width], np.ones(4) * y.max())
+    ss.add_element_grid([0, width, span, span + width], np.ones(4) * y.max(), EI=10e3)
+
+    # Add stability elements at the bottom.
+    ss.add_truss_element([[0, y.min()], [width, y.min()]])
+    ss.add_truss_element([[span, y.min()], [span + width, y.min()]])
 
     for el in ss.element_map.values():
+        # apply wind load on elements that are vertical
         if np.isclose(np.sin(el.ai), 1):
             ss.q_load(
                 q=1,
@@ -82,11 +90,14 @@ Intermediate
 
     ss.show_structure()
     ss.solve()
-    ss.show_displacement()
+    ss.show_displacement(factor=2)
+    ss.show_bending_moment()
 
 .. image:: img/examples/tower_bridge_struct.png
 
 .. image:: img/examples/tower_bridge_displa.png
+
+.. image:: img/examples/tower_bridge_moment.png
 
 Advanced
 #########
