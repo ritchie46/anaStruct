@@ -12,7 +12,7 @@ if sys.version_info[0] == 3 and sys.version_info[1] < 5:
 
 setup(
     name='anastruct',
-    version='1.0.1',
+    version='1.0.2',
     description='analyse 2D structures.',
     author='Ritchie Vink',
     author_email='ritchie46@gmail.com',
