@@ -16,23 +16,13 @@ Or for a release:
 $ pip install anastruct
 ```
 
-## Get started
+## Getting started
 
 ### Read the docs!
 
 [Documentation](http://anastruct.readthedocs.io)
 
-### Real world use case.
-[Non linear water accumulation analysis](https://ritchievink.com/blog/2017/08/23/a-nonlinear-water-accumulation-analysis-in-python/)
-
-### Simple examples.
-
-[code examples!](https://ritchievink.com/blog/2017/01/12/python-1d-fem-example-1/)
-
-## 2D FEM Frames and Trusses
-![](images/rand/structure.png)
-
-## Development version
+## Includes
 
 * trusses :heavy_check_mark:
 * beams :heavy_check_mark:
@@ -51,7 +41,64 @@ $ pip install anastruct
 * rotational springs :heavy_check_mark:
 * non-linear nodes :heavy_check_mark:
 * geometrical non linearity :heavy_check_mark:
-* load cases and load combinations heavy_check_mark:
+* load cases and load combinations :heavy_check_mark:
+
+## Examples
+
+```python
+from anastruct import SystemElements
+import numpy as np
+
+ss = SystemElements()
+element_type = 'truss'
+
+# Create 2 towers
+width = 6
+span = 30
+k = 5e3
+
+# create triangles
+y = np.arange(1, 10) * np.pi
+x = np.cos(y) * width * 0.5
+x -= x.min()
+
+for length in [0, span]:
+    ss.add_element_grid(x + length, y, element_type=element_type)
+    x_left_column = np.ones(y[::2].shape) * x.min() + length
+    x_right_column = np.ones(y[::2].shape) * x.max() + length
+    ss.add_element_grid(x_left_column, y[::2])
+    ss.add_element_grid(x_right_column, y[::2])
+
+    ss.add_support_spring(
+        node_id=ss.find_node_id(vertex=[x_left_column[0], y[0]]),
+        translation=2,
+        k=k)
+    ss.add_support_spring(
+        node_id=ss.find_node_id(vertex=[x_right_column[0], y[0]]),
+        translation=2,
+        k=k)
+
+# add top girder
+ss.add_element_grid([0, width, span, span + width], np.ones(4) * y.max())
+
+for el in ss.element_map.values():
+    # apply wind load on elements that are vertical
+    if np.isclose(np.sin(el.ai), 1):
+        ss.q_load(
+            q=1,
+            element_id=el.id,
+            direction='x'
+        )
+
+ss.show_structure()
+ss.solve()
+ss.show_displacement()
+
+```
+
+![](doc/source/img/examples/tower_bridge_struct.png)
+
+![](doc/source/img/examples/tower_bridge_displa.png)
 
 ```python
 from anastruct import SystemElements
@@ -84,3 +131,7 @@ ss.show_shear_force()
 ss.show_bending_moment()
 ss.show_displacement()
 ```
+![](images/rand/structure.png)
+
+### Real world use case.
+[Non linear water accumulation analysis](https://ritchievink.com/blog/2017/08/23/a-nonlinear-water-accumulation-analysis-in-python/)
