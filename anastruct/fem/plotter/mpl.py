@@ -158,15 +158,15 @@ class Plotter(PlottingValues):
             else:
                 ai = -el.ai
 
-            rec = mpatches.Rectangle((x1, y1), width=el.l, height=h, angle=-np.degrees(ai), color='g', alpha=0.3)
-            self.one_fig.add_patch(rec)
-
             # - value, because the positive z of the system is opposite of positive y of the plotter
             xn1 = x1 + np.sin(ai) * h * direction
             yn1 = y1 + np.cos(ai) * h * direction
             xn2 = x2 + np.sin(ai) * h * direction
             yn2 = y2 + np.cos(ai) * h * direction
-            self.one_fig.plot([x1, xn1, xn2, x2], [y1, yn1, yn2, y2], color='g')
+            coordinates = ([x1, xn1, xn2, x2], [y1, yn1, yn2, y2])
+            self.one_fig.plot(*coordinates, color='g')
+            rec = plt.Polygon(np.vstack(coordinates).T, color='g', alpha=0.3)
+            self.one_fig.add_patch(rec)
 
             if verbosity == 0:
                 # arrow
@@ -285,10 +285,11 @@ class Plotter(PlottingValues):
             self.__rotating_spring_support_patch(max_plot_range * scale)
             self.__spring_support_patch(max_plot_range * scale)
 
-        # add_loads
-        self.__q_load_patch(max_plot_range, verbosity)
-        self.__point_load_patch(max_plot_range, verbosity)
-        self.__moment_load_patch(max_plot_range)
+        if verbosity == 0:
+            # add_loads
+            self.__q_load_patch(max_plot_range, verbosity)
+            self.__point_load_patch(max_plot_range, verbosity)
+            self.__moment_load_patch(max_plot_range)
 
         if show:
             self.plot()

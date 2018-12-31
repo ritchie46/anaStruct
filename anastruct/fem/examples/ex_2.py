@@ -17,6 +17,5 @@ ss.show_structure()
 ss.show_reaction_force()
 ss.show_axial_force()
 ss.show_shear_force()
-ss.show_bending_moment()
-ss.show_displacement()
+ss.show_displacement(factor=10)
 
