@@ -107,8 +107,8 @@ class Plotter(PlottingValues):
         dh = 0.2 * h
 
         for node, _ in self.system.supports_spring_z:
-            yval = np.arange(0, -9, -1) * dh + node.vertex.x
-            xval = np.array([0, 0, left, right, left, right, left, 0, 0]) + node.vertex.y
+            yval = np.arange(0, -9, -1) * dh + node.vertex.y
+            xval = np.array([0, 0, left, right, left, right, left, 0, 0]) + node.vertex.x
 
             self.one_fig.plot(xval, yval, color='r', zorder=10)
 
