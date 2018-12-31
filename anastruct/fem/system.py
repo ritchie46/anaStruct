@@ -19,13 +19,6 @@ class SystemElements:
     :ivar element_map: (dict) Keys are the element ids, values are the element objects
     :ivar node_map: (dict) Keys are the node ids, values are the node objects.
     :ivar node_element_map: (dict) maps node ids to element objects.
-    :ivar supports_fixed: (list) All the fixed supports in the system.
-    :ivar supports_hinged: (list) All the hinged supports in the system.
-    :ivar supports_roll: (list) All the roll supports in the system.
-    :ivar supports_spring_x: (list) All the spring supports in x-direction in the system.
-    :ivar supports_spring_z: (list) All the spring supports in z-direction in the system.
-    :ivar supports_spring_y: (list) All the spring supports in y-direction in the system.
-    :ivar supports_roll_direction: (list) The directions of the rolling supports.
     :ivar loads_point: (dict) Maps node ids to point loads.
     :ivar loads_q: (dict) Maps element ids to q-loads.
     :ivar loads_moment: (dict) Maps node ids to moment loads.
@@ -59,7 +52,8 @@ class SystemElements:
         self.element_map = {}  # maps element ids to the Element objects.
         self.node_map = {}  # maps node ids to the Node objects.
         self.node_element_map = {}  # maps node ids to Element objects
-        self.system_spring_map = {}  # keys matrix index (for both row and columns), values K
+        # keys matrix index (for both row and columns), values K, are processed assemble_system_matrix
+        self.system_spring_map = {}
 
         # list of indexes that remain after conditions are applied
         self._remainder_indexes = []
@@ -391,6 +385,9 @@ class SystemElements:
         # kwargs: arguments for the iterative solver callers such as the _stiffness_adaptation method.
         #                naked (bool) Default = False, if True force lines won't be computed.
 
+        if self.system_displacement_vector is None:
+            system_components.assembly.process_supports(self)
+
         naked = kwargs.get("naked", False)
 
         if not naked:
@@ -482,7 +479,6 @@ class SystemElements:
         for id_ in node_id:
             id_ = _negative_index_to_id(id_, self.node_map.keys())
             system_components.util.support_check(self, id_)
-            system_components.assembly.set_displacement_vector(self, [(id_, 1), (id_, 2)])
 
             # add the support to the support list for the plotter
             self.supports_hinged.append(self.node_map[id_])
@@ -500,7 +496,6 @@ class SystemElements:
         for id_ in node_id:
             id_ = _negative_index_to_id(id_, self.node_map.keys())
             system_components.util.support_check(self, id_)
-            system_components.assembly.set_displacement_vector(self, [(id_, direction)])
 
             # add the support to the support list for the plotter
             self.supports_roll.append(self.node_map[id_])
@@ -518,7 +513,6 @@ class SystemElements:
         for id_ in node_id:
             id_ = _negative_index_to_id(id_, self.node_map.keys())
             system_components.util.support_check(self, id_)
-            system_components.assembly.set_displacement_vector(self, [(id_, 1), (id_, 2), (id_, 3)])
 
             # add the support to the support list for the plotter
             self.supports_fixed.append(self.node_map[id_])
@@ -558,19 +552,11 @@ class SystemElements:
 
             # add the support to the support list for the plotter
             if translation == 1:
-                self.supports_spring_x.append(self.node_map[id_])
+                self.supports_spring_x.append((self.node_map[id_], roll))
             elif translation == 2:
-                self.supports_spring_z.append(self.node_map[id_])
+                self.supports_spring_z.append((self.node_map[id_], roll))
             else:
-                self.supports_spring_y.append(self.node_map[id_])
-
-            if not roll:  # fix the other d.o.f.
-                if translation == 1:  # translation spring in x-axis
-                    system_components.assembly.set_displacement_vector(self, [(id_, 2)])
-                elif translation == 2:  # translation spring in z-axis
-                    system_components.assembly.set_displacement_vector(self, [(id_, 1)])
-                elif translation == 3:  # rotational spring in y-axis
-                    system_components.assembly.set_displacement_vector(self, [(id_, 1), (id_, 2)])
+                self.supports_spring_y.append((self.node_map[id_], roll))
 
     def q_load(self, q, element_id, direction="element"):
         """

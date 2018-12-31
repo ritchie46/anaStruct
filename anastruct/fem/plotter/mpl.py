@@ -85,7 +85,7 @@ class Plotter(PlottingValues):
         """
         radius = PATCH_SIZE * max_val
 
-        for node in self.system.supports_spring_y:
+        for node, _ in self.system.supports_spring_y:
             r = np.arange(0, radius, 0.001)
             theta = 25 * np.pi * r / (0.2 * max_val)
             x = np.cos(theta) * r + node.vertex.x
@@ -106,7 +106,7 @@ class Plotter(PlottingValues):
         right = 0.5 * h
         dh = 0.2 * h
 
-        for node in self.system.supports_spring_z:
+        for node, _ in self.system.supports_spring_z:
             yval = np.arange(0, -9, -1) * dh + node.vertex.x
             xval = np.array([0, 0, left, right, left, right, left, 0, 0]) + node.vertex.y
 
@@ -117,7 +117,7 @@ class Plotter(PlottingValues):
                                                     numVertices=3, radius=h * 0.9, color='r', zorder=10)
             self.one_fig.add_patch(support_patch)
 
-        for node in self.system.supports_spring_x:
+        for node, _ in self.system.supports_spring_x:
             xval = np.arange(0, 9, 1) * dh + node.vertex.x
             yval = np.array([0, 0, left, right, left, right, left, 0, 0]) + node.vertex.y
 

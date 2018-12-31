@@ -69,7 +69,7 @@ def det_node_ids(system, point_1, point_2):
 
 def support_check(system, node_id):
     if system.node_map[node_id].hinge:
-        raise FEMException ("Flawed inputs", "You cannot add a support to a hinged node.")
+        raise FEMException("Flawed inputs", "You cannot add a support to a hinged node.")
 
 
 def force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp):

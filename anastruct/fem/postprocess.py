@@ -52,11 +52,11 @@ class SystemLevel:
             supports.append(node.id)
         for node in self.system.supports_roll:
             supports.append(node.id)
-        for node in self.system.supports_spring_x:
+        for node, _ in self.system.supports_spring_x:
             supports.append(node.id)
-        for node in self.system.supports_spring_z:
+        for node, _ in self.system.supports_spring_z:
             supports.append(node.id)
-        for node in self.system.supports_spring_y:
+        for node, _ in self.system.supports_spring_y:
             supports.append(node.id)
 
         for node_id in supports:

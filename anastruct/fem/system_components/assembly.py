@@ -184,12 +184,16 @@ def set_displacement_vector(system, nodes_list):
     to NaN)
     """
     if system.system_displacement_vector is None:
-        system.system_displacement_vector = np.empty(len(system._vertices) * 3)
-        system.system_displacement_vector[:] = np.NaN
+        system.system_displacement_vector = np.ones(len(system._vertices) * 3) * np.NaN
 
     for i in nodes_list:
         index = (i[0] - 1) * 3 + i[1] - 1
-        system.system_displacement_vector[index] = 0
+
+        try:
+            system.system_displacement_vector[index] = 0
+        except IndexError as e:
+            raise IndexError(e, 'This often occurs if you set supports before the all the elements are modelled. '
+                                'First finish the model.')
     return system.system_displacement_vector
 
 
@@ -206,3 +210,27 @@ def process_conditions(system):
     system.reduced_force_vector = np.delete(system.system_force_vector, indexes, 0)
     system.reduced_system_matrix = np.delete(system.system_matrix, indexes, 0)
     system.reduced_system_matrix = np.delete(system.reduced_system_matrix, indexes, 1)
+
+
+def process_supports(system):
+    for node in system.supports_hinged:
+        set_displacement_vector(system, [(node.id, 1), (node.id, 2)])
+
+    for i in range(len(system.supports_roll)):
+        set_displacement_vector(system, [(system.supports_roll[i].id, system.supports_roll_direction[i])])
+
+    for node in system.supports_fixed:
+        set_displacement_vector(system, [(node.id, 1), (node.id, 2), (node.id, 3)])
+
+    for node, roll in system.supports_spring_x:
+        if not roll:
+            set_displacement_vector(system, [(node.id, 2)])
+
+    for node, roll in system.supports_spring_z:
+        if not roll:
+            set_displacement_vector(system, [(node.id, 1)])
+
+    for node, roll in system.supports_spring_y:
+        if not roll:
+            set_displacement_vector(system, [(node.id, 1), (node.id, 2)])
+
