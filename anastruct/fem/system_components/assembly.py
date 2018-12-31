@@ -1,4 +1,4 @@
-from anastruct.fem.elements import geometric_stiffness_matrix, det_moment, det_shear
+from anastruct.fem.elements import det_moment, det_shear
 import numpy as np
 import math
 
@@ -63,11 +63,11 @@ def apply_perpendicular_q_load(system):
             rleft = det_shear(kl, kr, q_perpendicular, 0, element.EI, element.l)
             rright = -det_shear(kl, kr, q_perpendicular, element.l, element.EI, element.l)
 
-        rleft_x = rleft * math.sin(element.ai)
-        rright_x = rright * math.sin(element.ai)
+        rleft_x = rleft * math.sin(element.angle)
+        rright_x = rright * math.sin(element.angle)
 
-        rleft_z = rleft * math.cos(element.ai)
-        rright_z = rright * math.cos(element.ai)
+        rleft_z = rleft * math.cos(element.angle)
+        rright_z = rright * math.cos(element.angle)
 
         if element.type == 'truss':
             left_moment = 0
@@ -84,7 +84,7 @@ def apply_perpendicular_q_load(system):
 def apply_parallel_q_load(system, element):
     direction = element.q_direction
     # dead load
-    factor_dl = abs(math.sin(element.ai))
+    factor_dl = abs(math.sin(element.angle))
 
     def update(Fx, Fz):
         element.element_primary_force_vector[0] -= Fx
@@ -97,25 +97,25 @@ def apply_parallel_q_load(system, element):
             (element.node_1.id, 1, Fx), (element.node_2.id, 1, Fx)])
 
     if direction == "x":
-        factor = abs(math.cos(element.ai))
+        factor = abs(math.cos(element.angle))
 
         for q_element in (element.q_load * factor, element.dead_load * factor_dl):
             # q_load working at parallel to the elements x-axis          # set the proper direction
-            Fx = -q_element * math.cos(element.ai) * element.l * 0.5
-            Fz = q_element * abs(math.sin(element.ai)) * element.l * 0.5 * np.sign(math.sin(element.ai))
+            Fx = -q_element * math.cos(element.angle) * element.l * 0.5
+            Fz = q_element * abs(math.sin(element.angle)) * element.l * 0.5 * np.sign(math.sin(element.angle))
 
             update(Fx, Fz)
 
     else:
-        if math.isclose(element.ai, 0):
+        if math.isclose(element.angle, 0):
             # horizontal element cannot have parallel forces due to self weight or q-load in y direction.
             return None
-        factor = abs(math.sin(element.ai))
+        factor = abs(math.sin(element.angle))
 
         for q_element in (element.q_load * factor, element.dead_load * factor_dl):
             # q_load working at parallel to the elements x-axis          # set the proper direction
-            Fx = q_element * math.cos(element.ai) * element.l * 0.5 * -np.sign(math.sin(element.ai))
-            Fz = q_element * abs(math.sin(element.ai)) * element.l * 0.5
+            Fx = q_element * math.cos(element.angle) * element.l * 0.5 * -np.sign(math.sin(element.angle))
+            Fz = q_element * abs(math.sin(element.angle)) * element.l * 0.5
 
             update(Fx, Fz)
 
