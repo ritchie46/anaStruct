@@ -238,3 +238,14 @@ def process_supports(system):
         if not roll:
             set_displacement_vector(system, [(node.id, 1), (node.id, 2)])
 
+    for node_id, angle in system.inclined_roll.items():
+        for el in system.node_element_map[node_id]:
+            if el.node_1.id == node_id:
+                el.a1 = el.angle + angle
+            elif el.node_2.id == node_id:
+                el.a2 = el.angle + angle
+
+            el.compile_kinematic_matrix(el.a1, el.a2, el.l)
+            el.compile_stiffness_matrix()
+
+

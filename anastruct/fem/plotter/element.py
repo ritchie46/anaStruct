@@ -26,8 +26,8 @@ def plot_values_deflection(element, factor, linear=False):
         x_val = np.linspace(x1, x2, n)
         y_val = np.linspace(y1, y2, n)
 
-        x_val = x_val + element.deflection * math.sin(element.ai) * factor
-        y_val = y_val + element.deflection * -math.cos(element.ai) * factor
+        x_val = x_val + element.deflection * math.sin(element.angle) * factor
+        y_val = y_val + element.deflection * -math.cos(element.angle) * factor
 
     else:  # truss element has no bending
         x_val = np.array([x1, x2])
@@ -44,12 +44,12 @@ def plot_values_bending_moment(element, factor, n):
     :return:
     """
 
-    # Determine forces for horizontal element ai = 0
+    # Determine forces for horizontal element.angle = 0
     T_left = element.node_1.Ty
     T_right = -element.node_2.Ty
 
-    sin = math.sin(-element.ai)
-    cos = math.cos(-element.ai)
+    sin = math.sin(-element.angle)
+    cos = math.cos(-element.angle)
 
     # apply angle ai
     x1 = element.vertex_1.x + T_left * sin * factor
@@ -89,10 +89,10 @@ def plot_values_axial_force(element, factor):
     N1 = element.N_1
     N2 = element.N_2
 
-    x_1 = x1 + N1 * math.cos(0.5 * math.pi + element.ai) * factor
-    y_1 = y1 + N1 * math.sin(0.5 * math.pi + element.ai) * factor
-    x_2 = x2 + N2 * math.cos(0.5 * math.pi + element.ai) * factor
-    y_2 = y2 + N2 * math.sin(0.5 * math.pi + element.ai) * factor
+    x_1 = x1 + N1 * math.cos(0.5 * math.pi + element.angle) * factor
+    y_1 = y1 + N1 * math.sin(0.5 * math.pi + element.angle) * factor
+    x_2 = x2 + N2 * math.cos(0.5 * math.pi + element.angle) * factor
+    y_2 = y2 + N2 * math.sin(0.5 * math.pi + element.angle) * factor
 
     x_val = [x1, x_1, x_2, x2]
     y_val = [y1, y_1, y_2, y2]
@@ -109,10 +109,10 @@ def plot_values_shear_force(element, factor):
     shear_2 = element.shear_force[-1]
 
     # apply angle ai
-    x_1 = x1 + shear_1 * math.sin(-element.ai) * factor
-    y_1 = y1 + shear_1 * math.cos(-element.ai) * factor
-    x_2 = x2 + shear_2 * math.sin(-element.ai) * factor
-    y_2 = y2 + shear_2 * math.cos(-element.ai) * factor
+    x_1 = x1 + shear_1 * math.sin(-element.angle) * factor
+    y_1 = y1 + shear_1 * math.cos(-element.angle) * factor
+    x_2 = x2 + shear_2 * math.sin(-element.angle) * factor
+    y_2 = y2 + shear_2 * math.cos(-element.angle) * factor
 
     x_val = np.array([x1, x_1, x_2, x2])
     y_val = np.array([y1, y_1, y_2, y2])

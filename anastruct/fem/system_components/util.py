@@ -83,14 +83,14 @@ def force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp)
     # determine the angle of the element with the global x-axis
     delta_x = point_2.x - point_1.x
     delta_z = point_2.z - point_1.z  # minus sign to work with an opposite z-axis
-    ai = -angle_x_axis(delta_x, delta_z)
+    angle = -angle_x_axis(delta_x, delta_z)
 
     if delta_x < 0:
         # switch points
         point_1, point_2 = point_2, point_1
         node_id1, node_id2 = node_id2, node_id1
 
-        ai = -angle_x_axis(-delta_x, -delta_z)
+        angle = -angle_x_axis(-delta_x, -delta_z)
 
         if spring is not None:
             assert type(spring) == dict, "The spring parameter should be a dictionary."
@@ -108,4 +108,4 @@ def force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp)
                 mp[2] = mp.pop(1)
             elif 2 in mp:
                 mp[1] = mp.pop(2)
-    return point_1, point_2, node_id1, node_id2, spring, mp, ai
+    return point_1, point_2, node_id1, node_id2, spring, mp, angle

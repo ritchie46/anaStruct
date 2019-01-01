@@ -66,6 +66,7 @@ class SystemElements:
         self.supports_spring_z = []
         self.supports_spring_y = []
         self.supports_roll_direction = []
+        self.inclined_roll = {}  # map node ids to inclination angle relative to global x-axis.
 
         # save tuples of the arguments for copying purposes.
         self.supports_spring_args = []
@@ -212,14 +213,14 @@ class SystemElements:
         point_1, point_2 = system_components.util.det_vertices(self, location)
         node_id1, node_id2 = system_components.util.det_node_ids(self, point_1, point_2)
 
-        point_1, point_2, node_id1, node_id2, spring, mp, ai = \
+        point_1, point_2, node_id1, node_id2, spring, mp, angle = \
             system_components.util.force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp)
 
         system_components.util.append_node_id(self, point_1, point_2, node_id1, node_id2)
         system_components.util.ensure_single_hinge(self, spring, node_id1, node_id2)
 
         # add element
-        element = Element(self.count, EA, EI, (point_2 - point_1).modulus(), ai, point_1, point_2, spring)
+        element = Element(self.count, EA, EI, (point_2 - point_1).modulus(), angle, point_1, point_2, spring)
         element.node_id1 = node_id1
         element.node_id2 = node_id2
         element.node_map = {node_id1: self.node_map[node_id1],
@@ -490,12 +491,14 @@ class SystemElements:
             # add the support to the support list for the plotter
             self.supports_hinged.append(self.node_map[id_])
 
-    def add_support_roll(self, node_id, direction=2):
+    def add_support_roll(self, node_id, direction='x', angle=None):
         """
         Adds a rolling support at a given node.
 
         :param node_id: (int/ list) Represents the nodes ID
-        :param direction: (int/ list) Represents the direction that is fixed: x = 1, y = 2
+        :param direction: (str/ list) Represents the direction that is free: 'x', 'y'
+        :param angle (flt/ list) Angle in degrees relative to global x-axis.
+                                If angle is given, the support will be inclined.
         """
         if not isinstance(node_id, collections.Iterable):
             node_id = (node_id,)
@@ -503,6 +506,15 @@ class SystemElements:
         for id_ in node_id:
             id_ = _negative_index_to_id(id_, self.node_map.keys())
             system_components.util.support_check(self, id_)
+
+            if direction == 'x':
+                direction = 2
+            elif direction == 'y':
+                direction = 1
+
+            if angle is not None:
+                direction = 2
+                self.inclined_roll[id_] = np.radians(-angle)
 
             # add the support to the support list for the plotter
             self.supports_roll.append(self.node_map[id_])

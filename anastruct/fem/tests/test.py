@@ -205,6 +205,28 @@ class SimpleTest(unittest.TestCase):
         ss.add_element([0, 10])
         self.assertRaises(AssertionError, ss.solve)
 
+    def test_inclined_roll(self):
+        ss = se.SystemElements()
+
+        x = [0, 1, 2]
+        y = [0, 1, 0]
+
+        ss.add_element_grid(x, y)
+        ss.add_support_hinged(1)
+        ss.add_support_roll(3, 'x')
+        ss.point_load(2, Fy=-100)
+        ss.solve()
+        u1 = ss.get_node_results_system(3)
+        ss = se.SystemElements()
+        ss.add_element_grid(x, y)
+        ss.add_support_hinged(1)
+        ss.add_support_roll(3, angle=0)
+        ss.point_load(2, Fy=-100)
+        ss.solve()
+        u2 = ss.get_node_results_system(3)
+        for k in u1:
+            self.assertTrue(np.isclose(u1[k], u2[k]))
+
 
 if __name__ == "__main__":
     unittest.main()

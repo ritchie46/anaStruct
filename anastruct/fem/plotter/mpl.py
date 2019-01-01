@@ -2,7 +2,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from anastruct.basic import find_nearest
+from anastruct.basic import find_nearest, rotate_xy
 from anastruct.fem.plotter.values import PlottingValues, det_scaling_factor, plot_values_axial_force, \
     plot_values_bending_moment, plot_values_deflection, plot_values_element, plot_values_shear_force
 
@@ -50,25 +50,32 @@ class Plotter(PlottingValues):
         radius = PATCH_SIZE * max_val
         count = 0
         for node in self.system.supports_roll:
-
             direction = self.system.supports_roll_direction[count]
+            x1 = np.cos(np.pi) * radius + node.vertex.x + radius
+            z1 = np.sin(np.pi) * radius + node.vertex.y
+            x2 = np.cos(np.radians(90)) * radius + node.vertex.x + radius
+            z2 = np.sin(np.radians(90)) * radius + node.vertex.y
+            x3 = np.cos(np.radians(270)) * radius + node.vertex.x + radius
+            z3 = np.sin(np.radians(270)) * radius + node.vertex.y
 
-            if direction == 2:  # horizontal roll
+            triangle = np.array([[x1, z1], [x2, z2], [x3, z3]])
+
+            if node.id in self.system.inclined_roll:
+                angle = self.system.inclined_roll[node.id]
+                triangle = rotate_xy(triangle, angle + np.pi * 0.5)
+                support_patch = plt.Polygon(triangle, color='r',
+                                            zorder=9)
+                self.one_fig.add_patch(support_patch)
+                self.one_fig.plot(triangle[1:, 0] - 0.5 * radius * np.sin(angle), triangle[1:, 1] - 0.5 * radius *
+                                  np.cos(angle), color='r')
+
+            elif direction == 2:  # horizontal roll
                 support_patch = mpatches.RegularPolygon((node.vertex.x, node.vertex.y - radius),
                                                         numVertices=3, radius=radius, color='r', zorder=9)
                 self.one_fig.add_patch(support_patch)
                 y = -node.vertex.z - 2 * radius
                 self.one_fig.plot([node.vertex.x - radius, node.vertex.x + radius], [y, y], color='r')
             elif direction == 1:  # vertical roll
-                center = 0
-                x1 = center + np.cos(np.pi) * radius + node.vertex.x + radius
-                z1 = center + np.sin(np.pi) * radius + node.vertex.y
-                x2 = center + np.cos(np.radians(90)) * radius + node.vertex.x + radius
-                z2 = center + np.sin(np.radians(90)) * radius + node.vertex.y
-                x3 = center + np.cos(np.radians(270)) * radius + node.vertex.x + radius
-                z3 = center + np.sin(np.radians(270)) * radius + node.vertex.y
-
-                triangle = np.array([[x1, z1], [x2, z2], [x3, z3]])
                 # translate the support to the node
 
                 support_patch = mpatches.Polygon(triangle, color='r', zorder=9)
@@ -272,8 +279,8 @@ class Plotter(PlottingValues):
 
                 # add element ID to plot
                 factor = 0.02 * self.max_val_structure
-                x_val = (x_val[0] + x_val[-1]) / 2 - np.sin(el.ai) * factor
-                y_val = (y_val[0] + y_val[-1]) / 2 + np.cos(el.ai) * factor
+                x_val = (x_val[0] + x_val[-1]) / 2 - np.sin(el.angle) * factor
+                y_val = (y_val[0] + y_val[-1]) / 2 + np.cos(el.angle) * factor
 
                 self.one_fig.text(x_val, y_val, str(el.id), color='r', fontsize=9, zorder=10)
 
@@ -341,13 +348,13 @@ class Plotter(PlottingValues):
 
                 point = (el.vertex_2 - el.vertex_1) / 2 + el.vertex_1
                 if el.N_1 < 0:
-                    point.displace_polar(alpha=el.ai + 0.5 * np.pi, radius=0.5 * el.N_1 * factor, inverse_z_axis=True)
+                    point.displace_polar(alpha=el.angle + 0.5 * np.pi, radius=0.5 * el.N_1 * factor, inverse_z_axis=True)
 
                     if verbosity == 0:
                         self.one_fig.text(point.x, point.y, "-", ha='center', va='center',
                                           fontsize=20, color='b')
                 if el.N_1 > 0:
-                    point.displace_polar(alpha=el.ai + 0.5 * np.pi, radius=0.5 * el.N_1 * factor, inverse_z_axis=True)
+                    point.displace_polar(alpha=el.angle + 0.5 * np.pi, radius=0.5 * el.N_1 * factor, inverse_z_axis=True)
 
                     if verbosity == 0:
                         self.one_fig.text(point.x, point.y, "+", ha='center', va='center',
@@ -388,8 +395,8 @@ class Plotter(PlottingValues):
                 offset = -self.max_val_structure * 0.05
 
                 if verbosity == 0:
-                    x = axis_values[0][index] + np.sin(-el.ai) * offset
-                    y = axis_values[1][index] + np.cos(-el.ai) * offset
+                    x = axis_values[0][index] + np.sin(-el.angle) * offset
+                    y = axis_values[1][index] + np.cos(-el.angle) * offset
                     self.one_fig.text(x, y, "%s" % round(m_sag, 1),
                                       fontsize=9)
         if show:

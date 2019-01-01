@@ -114,6 +114,26 @@ class ElementLevel:
             phi_y=element.element_displacement_vector[5]
         )
 
+        if element.a1 != element.angle:
+            node = element.node_map[element.node_id1]
+            angle = element.a1 - element.angle
+            c = np.cos(angle)
+            s = np.sin(angle)
+            node.Fz = c * node.Fz + s * node.Fx
+            node.Fx = c * node.Fx + s * node.Fx
+            node.ux = c * node.ux + s * node.uz
+            node.uz = c * node.uz + s * node.ux
+
+        if element.a2 != element.angle:
+            node = element.node_map[element.node_id2]
+            angle = element.a2 - element.angle
+            c = np.cos(angle)
+            s = np.sin(angle)
+            node.Fz = c * node.Fz + s * node.Fx
+            node.Fx = c * node.Fx + s * node.Fx
+            node.ux = c * node.ux + s * node.uz
+            node.uz = c * node.uz + s * node.ux
+
     @staticmethod
     def determine_axial_force(element):
         N_1 = (math.sin(element.angle) * element.node_1.Fz) + -(math.cos(element.angle) * element.node_1.Fx)
