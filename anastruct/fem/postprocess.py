@@ -93,7 +93,7 @@ class ElementLevel:
         Determine node results on the element level.
 
         """
-
+        # Global coordinates system
         element.node_map[element.node_id1] = Node(
             id=element.node_id1,
             Fx=element.element_force_vector[0] + element.element_primary_force_vector[0],
@@ -114,25 +114,22 @@ class ElementLevel:
             phi_y=element.element_displacement_vector[5]
         )
 
-        if element.a1 != element.angle:
-            node = element.node_map[element.node_id1]
-            angle = element.a1 - element.angle
-            c = np.cos(angle)
-            s = np.sin(angle)
-            node.Fz = c * node.Fz + s * node.Fx
-            node.Fx = c * node.Fx + s * node.Fx
-            node.ux = c * node.ux + s * node.uz
-            node.uz = c * node.uz + s * node.ux
-
-        if element.a2 != element.angle:
-            node = element.node_map[element.node_id2]
-            angle = element.a2 - element.angle
-            c = np.cos(angle)
-            s = np.sin(angle)
-            node.Fz = c * node.Fz + s * node.Fx
-            node.Fx = c * node.Fx + s * node.Fx
-            node.ux = c * node.ux + s * node.uz
-            node.uz = c * node.uz + s * node.ux
+        # Local coordinate system. With inclined supports
+        for i in range(1, 3):
+            a_n = getattr(element, 'a{}'.format(i))
+            if a_n != element.angle:
+                node = element.node_map[getattr(element, 'node_id{}'.format(i))]
+                angle = a_n - element.angle
+                c = np.cos(angle)
+                s = np.sin(angle)
+                Fx = node.Fx
+                Fz = node.Fz
+                ux = node.ux
+                uz = node.uz
+                node.Fz = c * Fz + s * Fx
+                node.Fx = -(c * Fx + s * Fz)
+                node.ux = c * ux + s * uz
+                node.uz = c * uz + s * ux
 
     @staticmethod
     def determine_axial_force(element):

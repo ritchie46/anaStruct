@@ -205,12 +205,10 @@ class SimpleTest(unittest.TestCase):
         ss.add_element([0, 10])
         self.assertRaises(AssertionError, ss.solve)
 
-    def test_inclined_roll(self):
+    def test_inclined_roll_equal_to_horizontal_roll(self):
         ss = se.SystemElements()
-
         x = [0, 1, 2]
         y = [0, 1, 0]
-
         ss.add_element_grid(x, y)
         ss.add_support_hinged(1)
         ss.add_support_roll(3, 'x')
@@ -226,6 +224,17 @@ class SimpleTest(unittest.TestCase):
         u2 = ss.get_node_results_system(3)
         for k in u1:
             self.assertTrue(np.isclose(u1[k], u2[k]))
+
+    def test_inclined_roll_force(self):
+        ss = se.SystemElements()
+        x = [0, 1, 2]
+        y = [0, 0, 0]
+        ss.add_element_grid(x, y)
+        ss.add_support_hinged(1)
+        ss.add_support_roll(3, angle=45)
+        ss.point_load(2, Fy=-100)
+        ss.solve()
+        self.assertAlmostEqual(50, ss.get_node_results_system(3)['Fx'])
 
 
 if __name__ == "__main__":
