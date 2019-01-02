@@ -16,9 +16,7 @@ Or for a release:
 $ pip install anastruct
 ```
 
-## Getting started
-
-### Read the docs!
+## Read the docs!
 
 [Documentation](http://anastruct.readthedocs.io)
 
