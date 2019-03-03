@@ -163,7 +163,7 @@ class Plotter(PlottingValues):
             elif el.q_direction == "x":
                 ai = 0.5 * np.pi
             else:
-                ai = -el.ai
+                ai = -el.angle
 
             # - value, because the positive z of the system is opposite of positive y of the plotter
             xn1 = x1 + np.sin(ai) * h * direction
@@ -181,8 +181,8 @@ class Plotter(PlottingValues):
                 ya_1 = (y2 - y1) * 0.2 + y1 + np.cos(ai) * 0.8 * h * direction
                 len_x = np.sin(ai - np.pi) * 0.6 * h * direction
                 len_y = np.cos(ai - np.pi) * 0.6 * h * direction
-                xt = xa_1 + np.sin(-el.ai) * 0.4 * h * direction
-                yt = ya_1 + np.cos(-el.ai) * 0.4 * h * direction
+                xt = xa_1 + np.sin(-el.angle) * 0.4 * h * direction
+                yt = ya_1 + np.cos(-el.angle) * 0.4 * h * direction
                 # fc = face color, ec = edge color
                 self.one_fig.arrow(xa_1, ya_1, len_x, len_y, head_width=h * 0.25, head_length=0.2 * h, ec='g', fc='g')
                 self.one_fig.text(xt, yt, "q=%d" % el.q_load, color='k', fontsize=9, zorder=10)
