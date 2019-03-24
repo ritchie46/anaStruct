@@ -237,10 +237,11 @@ class Plotter(PlottingValues):
             self.one_fig.text(node.vertex.x + h * 0.2, -node.vertex.z + h * 0.2, "T=%d" % v, color='k',
                               fontsize=9, zorder=10)
 
-    def plot_structure(self, figsize, verbosity, show=False, supports=True, scale=1, offset=(0, 0), gridplot=False):
+    def plot_structure(self, figsize, verbosity, show=False, supports=True, scale=1, offset=(0, 0), gridplot=False, annotation=True):
         """
         :param show: (boolean) if True, plt.figure will plot.
         :param supports: (boolean) if True, supports are plotted.
+        :param annotation: (boolean) if True, structure annotations are plotted. It include section name.
         :return:
         """
         if not gridplot:
@@ -283,6 +284,13 @@ class Plotter(PlottingValues):
                 y_val = (y_val[0] + y_val[-1]) / 2 + np.cos(el.angle) * factor
 
                 self.one_fig.text(x_val, y_val, str(el.id), color='r', fontsize=9, zorder=10)
+                
+                # add element anatation to plot
+                if annotation:
+                    x_val += + np.sin(el.angle) * factor * 2.3
+                    y_val += - np.cos(el.angle) * factor * 2.3
+                    annotation_text = '%s'%(el.sectname)
+                    self.one_fig.text(x_val, y_val, annotation_text, color='b', fontsize=9, zorder=10)
 
         # add supports
         if supports:
