@@ -236,6 +236,56 @@ class SimpleTest(unittest.TestCase):
         ss.solve()
         self.assertAlmostEqual(50, ss.get_node_results_system(3)['Fx'])
 
+    def test_sectionbase_steel_section_deflection(self):
+        ss = se.SystemElements()
+        ss.add_multiple_elements([[0, 0], [6, 0]], n=2, steelsection = 'IPE 300', E = 210e9, sw = False, orient = 'y')
+        ss.add_support_hinged(1)
+        ss.add_support_hinged(3)
+        ss.point_load(2, Fy=-10000)
+        ss.solve()
+        self.assertAlmostEqual(-0.00256442, ss.get_node_displacements(2)['uy'])
+
+    def test_sectionbase_steel_section_self_weight_reaction(self):
+        ss = se.SystemElements()
+        ss.add_element([[0, 0], [20, 0]], steelsection = 'IPE 300', sw = True,)
+        ss.add_support_hinged(1)
+        ss.add_support_hinged(2)
+        ss.solve()
+        self.assertAlmostEqual(-4224.24, ss.reaction_forces[1].Fz)
+
+    def test_rectangle_section_deflection(self):
+        ss = se.SystemElements()
+        ss.add_multiple_elements([[0, 0], [2, 0]], n=2, h=0.05, b = 0.16, E = 210e9, sw = False, orient = 'y')
+        ss.add_support_hinged(1)
+        ss.add_support_hinged(3)
+        ss.point_load(2, Fy=-1000)
+        ss.solve()
+        self.assertAlmostEqual(-0.00047619, ss.get_node_displacements(2)['uy'])
+
+    def test_circle_section_deflection(self):
+        ss = se.SystemElements()
+        ss.add_multiple_elements([[0, 0], [2, 0]], n=2, d=0.07, E = 210e9, sw = False)
+        ss.add_support_hinged(1)
+        ss.add_support_hinged(3)
+        ss.point_load(2, Fy=-1000)
+        ss.solve()
+        self.assertAlmostEqual(-0.00067339, ss.get_node_displacements(2)['uy'])
+        
+    def test_rectangle_section_self_weight_reaction(self):
+        ss = se.SystemElements()
+        ss.add_element([[0, 0], [2, 0]], h=0.1, b = 0.1, E = 210e9, sw = True, gamma = 10000)
+        ss.add_support_hinged(1)
+        ss.add_support_hinged(2)
+        ss.solve()
+        self.assertAlmostEqual(-100, ss.reaction_forces[1].Fz)
+
+    def test_circle_section_self_weight_reaction(self):
+        ss = se.SystemElements()
+        ss.add_element([[0, 0], [2, 0]], d=0.2, E = 210e9, sw = True, gamma = 10000)
+        ss.add_support_hinged(1)
+        ss.add_support_hinged(2)
+        ss.solve()
+        self.assertAlmostEqual(-314.15926535, ss.reaction_forces[1].Fz)
 
 if __name__ == "__main__":
     unittest.main()

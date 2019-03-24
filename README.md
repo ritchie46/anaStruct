@@ -40,6 +40,8 @@ $ pip install anastruct
 * non-linear nodes :heavy_check_mark:
 * geometrical non linearity :heavy_check_mark:
 * load cases and load combinations :heavy_check_mark:
+* generic type of section - rectangle and circle :heavy_check_mark:
+* EU, US, UK steel section database :heavy_check_mark:
 
 ## Examples
 

@@ -7,7 +7,9 @@ from anastruct.vertex import Vertex
 from anastruct.fem import plotter
 from . import system_components
 from anastruct.vertex import vertex_range
+from anastruct.sectionbase.sectionbase import SectionBase
 
+sectionbase = SectionBase()
 
 class SystemElements:
     """
@@ -97,6 +99,9 @@ class SystemElements:
         self.reduced_force_vector = None
         self.reduced_system_matrix = None
         self._vertices = {}  # maps vertices to node ids
+        
+        #sectionbase
+        self.sectionbase = sectionbase
 
     @property
     def id_last_element(self):
@@ -105,6 +110,52 @@ class SystemElements:
     @property
     def id_last_node(self):
         return max(self.node_map.keys())
+
+    def _get_steelsection_properties(self, **kwargs):
+        steelsecton = kwargs.get("steelsection", 'IPE 300')
+        orient = kwargs.get("orient", 'y')
+        E = kwargs.get("E", 210e9)
+        sw = kwargs.get("sw", False)
+
+        param = self.sectionbase.get_sectionparameters(steelsecton)
+        EA = E * param['Ax']
+        if orient=='y':EI=E * param['Iy']
+        if orient=='z':EI=E * param['Iz']
+        if sw: g = param['swdl']
+        else: g = 0
+        sectname ='%s(%s)'%(steelsecton, orient)
+        return [sectname, EA, EI, g]
+
+    def _get_rectangle_properties(self, **kwargs):
+        b = kwargs.get("b", 0.1)
+        h = kwargs.get("h", 0.5)
+        E = kwargs.get("E", 210e9)
+        gamma = kwargs.get("gamma", 10000)
+        sw = kwargs.get("sw", False)
+
+        A = b * h
+        I = b * h**3 / 12
+        EA = E * A
+        EI=E * I
+        if sw: g = A * gamma 
+        else: g = 0
+        sectname ='rect %sx%s'%(b, h)
+        return [sectname, EA, EI, g]
+
+    def _get_circle_properties(self,**kwargs):
+        d = kwargs.get("d", 0.4)
+        E = kwargs.get("E", 210e9)
+        gamma = kwargs.get("gamma", 10000)
+        sw = kwargs.get("sw", False)
+
+        A = math.pi * (d)**2 / 4
+        I = math.pi * d**4 / 64
+        EA = E * A
+        EI=E * I
+        if sw: g = A * gamma
+        else: g = 0
+        sectname ='fi %s'%(d)
+        return [sectname, EA, EI, g]
 
     def add_element_grid(self, x, y, EA=None, EI=None, g=None, mp=None, spring=None, **kwargs):
         """
@@ -135,7 +186,7 @@ class SystemElements:
         for i in range(len(x) - 1):
             self.add_element([[x[i], y[i]], [x[i + 1], y[i + 1]]], EA[i], EI[i], g[i], mp, spring, **kwargs)
 
-    def add_truss_element(self, location, EA=None):
+    def add_truss_element(self, location, EA=None, **kwargs):
         """
         .. highlight:: python
 
@@ -155,7 +206,7 @@ class SystemElements:
         :param EA: (flt) EA
         :return: (int) Elements ID.
         """
-        return self.add_element(location, EA, element_type='truss')
+        return self.add_element(location, EA, element_type='truss',  **kwargs)
 
     def add_element(self, location, EA=None, EI=None, g=0, mp=None, spring=None, **kwargs):
         """
@@ -203,7 +254,15 @@ class SystemElements:
 
         EA = self.EA if EA is None else EA
         EI = self.EI if EI is None else EI
-
+        
+        sectname = ''
+        # change EA EI and g if steel section specified
+        if 'steelsection' in kwargs: sectname, EA, EI, g = self._get_steelsection_properties(**kwargs)
+        # change EA EI and g if rectangle section specified
+        if 'h' in kwargs: sectname, EA, EI, g = self._get_rectangle_properties(**kwargs)
+        # change EA EI and g if circle section specified
+        if 'd' in kwargs: sectname, EA, EI, g = self._get_circle_properties(**kwargs)
+        
         if element_type == 'truss':
             EI = 1e-14
 
@@ -225,6 +284,9 @@ class SystemElements:
         element.node_id2 = node_id2
         element.node_map = {node_id1: self.node_map[node_id1],
                             node_id2: self.node_map[node_id2]}
+        
+        #element anotations
+        element.sectname = sectname
 
         element.type = element_type
 
@@ -267,6 +329,14 @@ class SystemElements:
         :param element_type: (str) See 'add_element' method
         :param first: (dict) Different arguments for the first element
         :param last: (dict) Different arguments for the last element
+        :param steelsection: (str) Steel section name like IPE 300
+        :param orient: (str) Steel section axis for moment of inertia - 'y' and 'z' possible
+        :param b: (flt) Width of generic rectangle section
+        :param h: (flt) Height of generic rectangle section
+        :param d: (flt) Diameter of generic circle section
+        :param sw: (boolean) If true self weight of section is considered as dead load
+        :param E: (flt) Modulus of elasticity for section material
+        :param gamma: (flt) Weight of section material per volume unit. [kN/m3] / [N/m3]s
 
             :Example:
 
@@ -307,16 +377,16 @@ class SystemElements:
         point = point_1 + direction * dl
         elements = [
             self.add_element((point_1, point), first["EA"], first["EI"], first["g"], first["mp"], first["spring"],
-                             element_type=first["element_type"])]
+                             element_type=first["element_type"], **kwargs),]
 
         l = 2 * dl
         while l < length:
             point += direction * dl
-            elements.append(self.add_element(point, EA, EI, g, mp, spring, element_type=element_type))
+            elements.append(self.add_element(point, EA, EI, g, mp, spring, element_type=element_type, **kwargs))
             l += dl
 
         elements.append(self.add_element(point_2, last["EA"], last["EI"], last["g"], last["mp"], last["spring"],
-                                         element_type=last["element_type"]))
+                                         element_type=last["element_type"], **kwargs))
         return elements
 
     def insert_node(self, element_id, location=None, factor=None):
@@ -628,7 +698,7 @@ class SystemElements:
             self.loads_moment[id_] = Ty[i]
 
     def show_structure(self, verbosity=0, scale=1., offset=(0, 0), figsize=None, show=True, supports=True,
-                       values_only=False):
+                       values_only=False, annotation=False):
         """
         Plot the structure.
 
@@ -639,12 +709,13 @@ class SystemElements:
         :param show: (bool) Plot the result or return a figure.
         :param supports: (bool) Show the supports.
         :param values_only: (bool) Return the values that would be plotted as tuple containing two arrays: (x, y)
+        :param annotation: (boolean) if True, structure annotations are plotted. It include section name.
         :return: (figure)
         """
         figsize = self.figsize if figsize is None else figsize
         if values_only:
             return self.plot_values.structure()
-        return self.plotter.plot_structure(figsize, verbosity, show, supports, scale, offset)
+        return self.plotter.plot_structure(figsize, verbosity, show, supports, scale, offset, annotation=annotation)
 
     def show_bending_moment(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
                             values_only=False):
