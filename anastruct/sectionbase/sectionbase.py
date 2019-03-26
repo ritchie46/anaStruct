@@ -168,3 +168,6 @@ class SectionBaseProxy:
         if cls.data is None:
             cls.data = SectionBase()
         return cls.data
+
+
+section_base_proxy = SectionBaseProxy()

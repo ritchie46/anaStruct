@@ -1,4 +1,4 @@
-from anastruct.sectionbase.sectionbase import SectionBaseProxy
+from anastruct.sectionbase.sectionbase import section_base_proxy
 import math
 
 
@@ -8,7 +8,7 @@ def steel_section_properties(**kwargs):
     E = kwargs.get("E", 210e9)
     sw = kwargs.get("sw", False)
 
-    param = SectionBaseProxy().get_sectionparameters(steel_section)
+    param = section_base_proxy().get_sectionparameters(steel_section)
     EA = E * param['Ax']
     if orient == 'y':
         EI = E * param['Iy']
