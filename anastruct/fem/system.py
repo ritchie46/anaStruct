@@ -651,7 +651,7 @@ class SystemElements:
             self.loads_moment[id_] = Ty[i]
 
     def show_structure(self, verbosity=0, scale=1., offset=(0, 0), figsize=None, show=True, supports=True,
-                       values_only=False, annotation=False):
+                       values_only=False, annotations=False):
         """
         Plot the structure.
 
@@ -662,13 +662,14 @@ class SystemElements:
         :param show: (bool) Plot the result or return a figure.
         :param supports: (bool) Show the supports.
         :param values_only: (bool) Return the values that would be plotted as tuple containing two arrays: (x, y)
-        :param annotation: (boolean) if True, structure annotations are plotted. It include section name.
+        :param annotations: (boolean) if True, structure annotations are plotted. It includes section name.
+                                      Note: only works when verbosity is equal to 0.
         :return: (figure)
         """
         figsize = self.figsize if figsize is None else figsize
         if values_only:
             return self.plot_values.structure()
-        return self.plotter.plot_structure(figsize, verbosity, show, supports, scale, offset, annotation=annotation)
+        return self.plotter.plot_structure(figsize, verbosity, show, supports, scale, offset, annotations=annotations)
 
     def show_bending_moment(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
                             values_only=False):

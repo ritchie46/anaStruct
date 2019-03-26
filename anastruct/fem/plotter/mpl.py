@@ -238,11 +238,11 @@ class Plotter(PlottingValues):
                               fontsize=9, zorder=10)
 
     def plot_structure(self, figsize, verbosity, show=False, supports=True, scale=1, offset=(0, 0), gridplot=False,
-                       annotation=True):
+                       annotations=True):
         """
         :param show: (boolean) if True, plt.figure will plot.
         :param supports: (boolean) if True, supports are plotted.
-        :param annotation: (boolean) if True, structure annotations are plotted. It includes section name.
+        :param annotations: (boolean) if True, structure annotations are plotted. It includes section name.
         :return:
         """
         if not gridplot:
@@ -288,7 +288,7 @@ class Plotter(PlottingValues):
                 
                 # add element annotation to plot
                 # TODO: check how this holds with multiple structure scales.
-                if annotation:
+                if annotations:
                     x_val += + np.sin(el.angle) * factor * 2.3
                     y_val += - np.cos(el.angle) * factor * 2.3
                     self.one_fig.text(x_val, y_val, el.section_name, color='b', fontsize=9, zorder=10)
