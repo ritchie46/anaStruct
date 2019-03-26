@@ -5,6 +5,9 @@ from anastruct.sectionbase import units as u
 
 
 class SectionBase:
+    """
+    Code is extracted from StruPy project.
+    """
 
     def __init__(self, basename='EU'):
         self.out_lu = None
@@ -152,3 +155,16 @@ class SectionBase:
         descriptiondir['swdl'] = 'Self weight dead load'
         descriptiondir['figuretype'] = 'General type of section figure'
         return descriptiondir
+
+
+class SectionBaseProxy:
+    """
+    utility class to ensure data is not loaded when not needed.
+    """
+    data = None
+
+    @classmethod
+    def __call__(cls, *args, **kwargs):
+        if cls.data is None:
+            cls.data = SectionBase()
+        return cls.data

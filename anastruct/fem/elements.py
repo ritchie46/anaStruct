@@ -70,8 +70,7 @@ class Element:
         self.nodes_plastic = [False, False]
         self.compile_constitutive_matrix(self.EA, self.EI, l)
         self.compile_stiffness_matrix()
-        #--element anotation
-        self.sectname = ''
+        self.section_name = ''  # needed for element annotation
 
     @property
     def all_q_load(self):

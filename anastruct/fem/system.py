@@ -7,9 +7,8 @@ from anastruct.vertex import Vertex
 from anastruct.fem import plotter
 from . import system_components
 from anastruct.vertex import vertex_range
-from anastruct.sectionbase.sectionbase import SectionBase
+from anastruct.sectionbase import properties
 
-sectionbase = SectionBase()
 
 class SystemElements:
     """
@@ -99,9 +98,6 @@ class SystemElements:
         self.reduced_force_vector = None
         self.reduced_system_matrix = None
         self._vertices = {}  # maps vertices to node ids
-        
-        #sectionbase
-        self.sectionbase = sectionbase
 
     @property
     def id_last_element(self):
@@ -110,52 +106,6 @@ class SystemElements:
     @property
     def id_last_node(self):
         return max(self.node_map.keys())
-
-    def _get_steelsection_properties(self, **kwargs):
-        steelsecton = kwargs.get("steelsection", 'IPE 300')
-        orient = kwargs.get("orient", 'y')
-        E = kwargs.get("E", 210e9)
-        sw = kwargs.get("sw", False)
-
-        param = self.sectionbase.get_sectionparameters(steelsecton)
-        EA = E * param['Ax']
-        if orient=='y':EI=E * param['Iy']
-        if orient=='z':EI=E * param['Iz']
-        if sw: g = param['swdl']
-        else: g = 0
-        sectname ='%s(%s)'%(steelsecton, orient)
-        return [sectname, EA, EI, g]
-
-    def _get_rectangle_properties(self, **kwargs):
-        b = kwargs.get("b", 0.1)
-        h = kwargs.get("h", 0.5)
-        E = kwargs.get("E", 210e9)
-        gamma = kwargs.get("gamma", 10000)
-        sw = kwargs.get("sw", False)
-
-        A = b * h
-        I = b * h**3 / 12
-        EA = E * A
-        EI=E * I
-        if sw: g = A * gamma 
-        else: g = 0
-        sectname ='rect %sx%s'%(b, h)
-        return [sectname, EA, EI, g]
-
-    def _get_circle_properties(self,**kwargs):
-        d = kwargs.get("d", 0.4)
-        E = kwargs.get("E", 210e9)
-        gamma = kwargs.get("gamma", 10000)
-        sw = kwargs.get("sw", False)
-
-        A = math.pi * (d)**2 / 4
-        I = math.pi * d**4 / 64
-        EA = E * A
-        EI=E * I
-        if sw: g = A * gamma
-        else: g = 0
-        sectname ='fi %s'%(d)
-        return [sectname, EA, EI, g]
 
     def add_element_grid(self, x, y, EA=None, EI=None, g=None, mp=None, spring=None, **kwargs):
         """
@@ -255,13 +205,16 @@ class SystemElements:
         EA = self.EA if EA is None else EA
         EI = self.EI if EI is None else EI
         
-        sectname = ''
+        section_name = ''
         # change EA EI and g if steel section specified
-        if 'steelsection' in kwargs: sectname, EA, EI, g = self._get_steelsection_properties(**kwargs)
+        if 'steelsection' in kwargs:
+            section_name, EA, EI, g = properties.steel_section_properties(**kwargs)
         # change EA EI and g if rectangle section specified
-        if 'h' in kwargs: sectname, EA, EI, g = self._get_rectangle_properties(**kwargs)
+        if 'h' in kwargs:
+            section_name, EA, EI, g = properties.rectangle_properties(**kwargs)
         # change EA EI and g if circle section specified
-        if 'd' in kwargs: sectname, EA, EI, g = self._get_circle_properties(**kwargs)
+        if 'd' in kwargs:
+            section_name, EA, EI, g = properties.circle_properties(**kwargs)
         
         if element_type == 'truss':
             EI = 1e-14
@@ -285,8 +238,8 @@ class SystemElements:
         element.node_map = {node_id1: self.node_map[node_id1],
                             node_id2: self.node_map[node_id2]}
         
-        #element anotations
-        element.sectname = sectname
+        # needed for element annotations
+        element.section_name = section_name
 
         element.type = element_type
 
