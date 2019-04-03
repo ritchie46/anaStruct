@@ -8,6 +8,7 @@ from anastruct.fem import plotter
 from . import system_components
 from anastruct.vertex import vertex_range
 from anastruct.sectionbase import properties
+from anastruct.dxfloader.dxfloader import dxfloader
 
 
 class SystemElements:
@@ -1092,6 +1093,9 @@ class SystemElements:
         system.plot_values = plotter.PlottingValues
 
         return system
+
+    def load_dxf_data_to_system(self, dxf_file_path):
+        dxfloader.load_dxf_data_to_system(dxf_file_path, self)
 
 
 def _negative_index_to_id(idx, collection):

@@ -42,6 +42,7 @@ $ pip install anastruct
 * load cases and load combinations :heavy_check_mark:
 * generic type of section - rectangle and circle :heavy_check_mark:
 * EU, US, UK steel section database :heavy_check_mark:
+* dxf data import :heavy_check_mark:
 
 ## Examples
 

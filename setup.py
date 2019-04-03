@@ -21,13 +21,14 @@ setup(
     license='GPL-3.0',
     packages=['anastruct', 'anastruct.fem', 'anastruct.fem.system_components', 'anastruct.fem.examples',
               'anastruct.material', 'anastruct.cython', 'anastruct.fem.cython', 'anastruct.fem.plotter',
-              'anastruct.fem.util', 'anastruct.sectionbase'],
-    package_data={'': ['*.xml']},
+              'anastruct.fem.util', 'anastruct.sectionbase', 'anastruct.dxfloader'],
+    package_data={'': ['*.xml', '*.dxf']},
     package_dir='',
     install_requires=[
         'matplotlib',
         'numpy',
-        'scipy'
+        'scipy',
+        'ezdxf'
     ],
     ext_modules=em
 
