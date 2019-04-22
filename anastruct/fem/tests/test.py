@@ -112,6 +112,7 @@ class SimpleTest(unittest.TestCase):
         el = ss.element_map[1]
         self.assertAlmostEqual(el.N_1, 27.8833333333, places=3)
         self.assertAlmostEqual(el.N_2, 17.8833333333, places=3)
+        self.assertAlmostEqual(ss.get_element_results(1)['length'], 5.3851647, places=5)
 
     def test_ex_12(self):
         """

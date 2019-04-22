@@ -866,7 +866,7 @@ class SystemElements:
                 return {
                     "id": el.id,
                     "length": el.l,
-                    "alpha": el.ai,
+                    "alpha": el.angle,
                     "u": el.extension[0],
                     "N": el.N_1,
                 }
@@ -874,7 +874,7 @@ class SystemElements:
                 return {
                     "id": el.id,
                     "length": el.l,
-                    "alpha": el.ai,
+                    "alpha": el.angle,
                     "u": el.extension[0],
                     "N": el.N_1,
                     "wmax": np.min(el.deflection),
@@ -893,7 +893,7 @@ class SystemElements:
                     result_list.append({
                         "id": el.id,
                         "length": el.l,
-                        "alpha": el.ai,
+                        "alpha": el.angle,
                         "u": el.extension[0],
                         "N": el.N_1,
                     }
@@ -904,7 +904,7 @@ class SystemElements:
                         {
                             "id": el.id,
                             "length": el.l,
-                            "alpha": el.ai,
+                            "alpha": el.angle,
                             "u": el.extension[0],
                             "N": el.N_1,
                             "wmax": np.min(el.deflection),
