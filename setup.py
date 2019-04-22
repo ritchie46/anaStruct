@@ -25,9 +25,9 @@ setup(
     package_data={'': ['*.xml']},
     package_dir='',
     install_requires=[
-        'matplotlib',
-        'numpy',
-        'scipy'
+        'matplotlib==3.0.3',
+        'numpy==1.15.4',
+        'scipy==1.1.0'
     ],
     ext_modules=em
 
