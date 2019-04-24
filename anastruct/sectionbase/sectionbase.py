@@ -13,30 +13,34 @@ class SectionBase:
         self.out_lu = None
         self.out_mu = None
         self.out_fu = None
-        self.__database = None
+        self.current_database = None
         self.xml_lu = None
         self.xml_sdu = None
         self.xml_wu = None
         self.xml_swdlu = None
-        self.set_databasename(basename)
+        self.root = None  # xml root
+
+        self.set_database_name(basename)
         self.set_unit_system()
-        self.__load_data_from_xml()
+        self.load_data_from_xml()
 
     def set_unit_system(self, lenght_unit='m', mass_unit='kg', force_unit='N'):
         self.out_lu = u.l_dict[lenght_unit]
         self.out_mu = u.m_dict[mass_unit]
         self.out_fu = u.f_dict[force_unit]
 
-    def set_databasename(self, basename):
-        if basename == 'EU':
-            self.__database = 'sectionbase_EuropeanSectionDatabase.xml'
+    def set_database_name(self, basename):
+        if basename == 'EU' or basename == 'UK':
             self.xml_lu = u.m
             self.xml_sdu = u.m
             self.xml_wu = u.kg
             self.xml_swdlu = 10. * u.N
-            self.__load_data_from_xml()
+            if basename == 'EU':
+                self.current_database = 'sectionbase_EuropeanSectionDatabase.xml'
+            else:
+                self.current_database = 'sectionbase_BritishSectionDatabase.xml'
         elif basename == 'US':
-            self.__database = 'sectionbase_AmericanSectionDatabase.xml'
+            self.current_database = 'sectionbase_AmericanSectionDatabase.xml'
             self.xml_lu = u.ft
             self.xml_sdu = u.inch
             self.xml_wu = u.lb
