@@ -330,7 +330,7 @@ class SystemElements:
         point = point_1 + direction * dl
         elements = [
             self.add_element((point_1, point), first["EA"], first["EI"], first["g"], first["mp"], first["spring"],
-                             element_type=first["element_type"], **kwargs),]
+                             element_type=first["element_type"], **kwargs)]
 
         l = 2 * dl
         while l < length:
