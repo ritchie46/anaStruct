@@ -45,35 +45,24 @@ class SectionBase:
             self.xml_sdu = u.inch
             self.xml_wu = u.lb
             self.xml_swdlu = u.lbf
-            self.__load_data_from_xml()
-        elif basename == 'UK':
-            self.__database = 'sectionbase_BritishSectionDatabase.xml'
-            self.xml_lu = u.m
-            self.xml_sdu = u.m
-            self.xml_wu = u.kg
-            self.xml_swdlu = 10 * u.N
-            self.__load_data_from_xml()
-        else:
-            pass
 
-    def __load_data_from_xml(self):
-        self.__package_dir = os.path.split(__file__)[0]
-        self.__xmlbase_path = os.path.join(self.__package_dir, self.__database)
-        self.__tree = ET.parse(self.__xmlbase_path)
-        self.__root = self.__tree.getroot()
+        self.load_data_from_xml()
 
-    def __get_sectiondictwithparam(self, sectionname):
-        sectiondictwithparam = {}
-        for item in self.__root.iter('sectionlist_item'):
-            if item.attrib['sectionname'] == sectionname:
-                sectiondictwithparam = copy.deepcopy(item.attrib)
-                sectiondictwithparam['swdl'] = sectiondictwithparam['mass']
-                sectiondictwithparam = self.__sectionparameters_unitaplly(sectiondictwithparam)
-        sectiondictwithparam['Wy'] = \
-            sectiondictwithparam['Iy'] / max(sectiondictwithparam['vz'], sectiondictwithparam['vpz'])
-        sectiondictwithparam['Wz'] = \
-            sectiondictwithparam['Iz'] / max(sectiondictwithparam['vy'], sectiondictwithparam['vpy'])
-        return sectiondictwithparam
+    def load_data_from_xml(self):
+        self.root = ET.parse(os.path.join(os.path.dirname(__file__), 'data', self.current_database)).getroot()
+
+    def get_section_dict_with_param(self, section_name):
+        section_dict_with_param = {}
+        for item in self.root.iter('sectionlist_item'):
+            if item.attrib['sectionname'] == section_name:
+                section_dict_with_param = copy.deepcopy(item.attrib)
+                section_dict_with_param['swdl'] = section_dict_with_param['mass']
+                section_dict_with_param = self.__sectionparameters_unitaplly(section_dict_with_param)
+        section_dict_with_param['Wy'] = \
+            section_dict_with_param['Iy'] / max(section_dict_with_param['vz'], section_dict_with_param['vpz'])
+        section_dict_with_param['Wz'] = \
+            section_dict_with_param['Iz'] / max(section_dict_with_param['vy'], section_dict_with_param['vpy'])
+        return section_dict_with_param
 
     def __sectionparameters_unitaplly(self, param):
         lu = self.xml_lu / self.out_lu  # long unit
@@ -118,41 +107,41 @@ class SectionBase:
 
     def get_database_name(self):
         name = []
-        for item in self.__root.iter('baseinformation'):
+        for item in self.root.iter('baseinformation'):
             name = item.attrib
         return name['basetitle']
 
     def get_sectionparameters(self, sectname='IPE 270'):
-        return self.__get_sectiondictwithparam(sectname)
+        return self.get_section_dict_with_param(sectname)
 
     def get_database_sectiontypes(self):
         sectiontypes = []
-        for item in self.__root.iter('sectiontype_item'):
+        for item in self.root.iter('sectiontype_item'):
             sectiontypes.append(item.attrib['figure'])
         return sectiontypes
 
     def get_database_sectiontypesdescription(self):
         description = {}
-        for item in self.__root.iter('sectiontype_item'):
+        for item in self.root.iter('sectiontype_item'):
             description[item.attrib['figure']] = item.attrib['description']
         return description
 
     def get_database_sectionlist(self):
         sectionlist = []
-        for item in self.__root.iter('sectionlist_item'):
+        for item in self.root.iter('sectionlist_item'):
             sectionlist.append(item.attrib['sectionname'])
         return sectionlist
 
     def get_database_sectionlistwithtype(self, secttype='IPE'):
         sectionlistwithtype = []
-        for item in self.__root.iter('sectionlist_item'):
+        for item in self.root.iter('sectionlist_item'):
             if item.attrib['figure'] == secttype:
                 sectionlistwithtype.append(item.attrib['sectionname'])
         return sectionlistwithtype
 
     def get_parameters_description(self):
         descriptiondir = []
-        for item in self.__root.iter('parameterdescription'):
+        for item in self.root.iter('parameterdescription'):
             descriptiondir = item.attrib
         descriptiondir['Wy'] = 'Elastic section modulus about Y axis'
         descriptiondir['Wz'] = 'Elastic section modulus about Z axis'
