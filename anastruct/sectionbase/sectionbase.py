@@ -1,5 +1,4 @@
 import os
-import copy
 import xml.etree.ElementTree as ET
 from anastruct.sectionbase import units as u
 
@@ -8,6 +7,7 @@ class SectionBase:
     """
     Code is extracted from StruPy project.
     """
+    available_database_names = ['EU', 'US', 'UK']
 
     def __init__(self, basename='EU'):
         self.out_lu = None
@@ -17,7 +17,7 @@ class SectionBase:
         self.xml_lu = None
         self.xml_sdu = None
         self.xml_wu = None
-        self.xml_swdlu = None
+        self.xml_self_weight_dead_load = None
         self.root = None  # xml root
 
         self.set_database_name(basename)
@@ -34,7 +34,7 @@ class SectionBase:
             self.xml_lu = u.m
             self.xml_sdu = u.m
             self.xml_wu = u.kg
-            self.xml_swdlu = 10. * u.N
+            self.xml_self_weight_dead_load = 10. * u.N
             if basename == 'EU':
                 self.current_database = 'sectionbase_EuropeanSectionDatabase.xml'
             else:
@@ -44,110 +44,34 @@ class SectionBase:
             self.xml_lu = u.ft
             self.xml_sdu = u.inch
             self.xml_wu = u.lb
-            self.xml_swdlu = u.lbf
+            self.xml_self_weight_dead_load = u.lbf
 
         self.load_data_from_xml()
 
     def load_data_from_xml(self):
         self.root = ET.parse(os.path.join(os.path.dirname(__file__), 'data', self.current_database)).getroot()
 
-    def get_section_dict_with_param(self, section_name):
-        section_dict_with_param = {}
-        for item in self.root.iter('sectionlist_item'):
-            if item.attrib['sectionname'] == section_name:
-                section_dict_with_param = copy.deepcopy(item.attrib)
-                section_dict_with_param['swdl'] = section_dict_with_param['mass']
-                section_dict_with_param = self.__sectionparameters_unitaplly(section_dict_with_param)
-        section_dict_with_param['Wy'] = \
-            section_dict_with_param['Iy'] / max(section_dict_with_param['vz'], section_dict_with_param['vpz'])
-        section_dict_with_param['Wz'] = \
-            section_dict_with_param['Iz'] / max(section_dict_with_param['vy'], section_dict_with_param['vpy'])
-        return section_dict_with_param
+    def get_section_parameters(self, section_name):
+        element = dict(
+            self.root.findall("./sectionlist/sectionlist_item[@sectionname='{}']".format(section_name))[0].items()
+        )
+        element['swdl'] = element['mass']
+        element = self.convert_units(element)
 
-    def __sectionparameters_unitaplly(self, param):
+        return element
+
+    def convert_units(self, element):
         lu = self.xml_lu / self.out_lu  # long unit
-        sdu = self.xml_sdu / self.out_lu  # sectdim unit
+        sdu = self.xml_sdu / self.out_lu  # sect dim unit
         wu = self.xml_wu / self.out_mu  # weight unit
-        swdlu = self.xml_swdlu / self.out_fu  # self weightdead load unit
-        # --
-        param['mass'] = float(param['mass']) * wu / lu
-        param['surf'] = float(param['surf']) * sdu ** 2 / lu
-        param['h'] = float(param['h']) * sdu
-        param['b'] = float(param['b']) * sdu
-        param['ea'] = float(param['ea']) * sdu
-        param['es'] = float(param['es']) * sdu
-        param['ra'] = float(param['ra']) * sdu
-        param['rs'] = float(param['rs']) * sdu
-        param['gap'] = float(param['gap']) * sdu
-        param['Ax'] = float(param['Ax']) * sdu ** 2
-        param['Ay'] = float(param['Ay']) * sdu ** 2
-        param['Az'] = float(param['Az']) * sdu ** 2
-        param['Ix'] = float(param['Ix']) * sdu ** 4
-        param['Iy'] = float(param['Iy']) * sdu ** 4
-        param['Iz'] = float(param['Iz']) * sdu ** 4
-        param['Iomega'] = float(param['Iomega']) * sdu ** 6
-        param['vy'] = float(param['vy']) * sdu
-        param['vpy'] = float(param['vpy']) * sdu
-        param['vz'] = float(param['vz']) * sdu
-        param['vpz'] = float(param['vpz']) * sdu
-        param['Wply'] = float(param['Wply']) * sdu ** 3
-        param['Wplz'] = float(param['Wplz']) * sdu ** 3
-        param['Wtors'] = float(param['Wtors']) * sdu ** 3
-        param['Ayv'] = float(param['Ayv']) * sdu ** 2
-        param['Azv'] = float(param['Azv']) * sdu ** 2
-        param['swdl'] = float(param['swdl']) * swdlu / lu
-        param['gamma'] = float(param['gamma'])
-        return param
+        self_weight_dead_load = self.xml_self_weight_dead_load / self.out_fu  # self weight dead load unit
 
-    def get_available_databasenames(self):
-        return ['EU', 'US', 'UK']
-
-    def get_available_unit_system(self):
-        return [u.l_dict.keys(), u.m_dict.keys(), u.f_dict.keys()]
-
-    def get_database_name(self):
-        name = []
-        for item in self.root.iter('baseinformation'):
-            name = item.attrib
-        return name['basetitle']
-
-    def get_sectionparameters(self, sectname='IPE 270'):
-        return self.get_section_dict_with_param(sectname)
-
-    def get_database_sectiontypes(self):
-        sectiontypes = []
-        for item in self.root.iter('sectiontype_item'):
-            sectiontypes.append(item.attrib['figure'])
-        return sectiontypes
-
-    def get_database_sectiontypesdescription(self):
-        description = {}
-        for item in self.root.iter('sectiontype_item'):
-            description[item.attrib['figure']] = item.attrib['description']
-        return description
-
-    def get_database_sectionlist(self):
-        sectionlist = []
-        for item in self.root.iter('sectionlist_item'):
-            sectionlist.append(item.attrib['sectionname'])
-        return sectionlist
-
-    def get_database_sectionlistwithtype(self, secttype='IPE'):
-        sectionlistwithtype = []
-        for item in self.root.iter('sectionlist_item'):
-            if item.attrib['figure'] == secttype:
-                sectionlistwithtype.append(item.attrib['sectionname'])
-        return sectionlistwithtype
-
-    def get_parameters_description(self):
-        descriptiondir = []
-        for item in self.root.iter('parameterdescription'):
-            descriptiondir = item.attrib
-        descriptiondir['Wy'] = 'Elastic section modulus about Y axis'
-        descriptiondir['Wz'] = 'Elastic section modulus about Z axis'
-        descriptiondir['swdl'] = 'Self weight dead load'
-        descriptiondir['figuretype'] = 'General type of section figure'
-        return descriptiondir
+        element['mass'] = float(element['mass']) * wu / lu
+        element['Ax'] = float(element['Ax']) * sdu ** 2
+        element['Iy'] = float(element['Iy']) * sdu ** 4
+        element['Iz'] = float(element['Iz']) * sdu ** 4
+        element['swdl'] = float(element['swdl']) * self_weight_dead_load / lu
+        return element
 
 
 class SectionBaseProxy:
