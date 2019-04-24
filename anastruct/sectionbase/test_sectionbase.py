@@ -1,5 +1,6 @@
 import unittest
 from anastruct.sectionbase.sectionbase import section_base_proxy
+from anastruct.fem import system
 
 
 class SimpleUnitTest(unittest.TestCase):
@@ -65,7 +66,7 @@ class SimpleUnitTest(unittest.TestCase):
 
     def test_W12X65_US(self):
         # W12X65 has mass=65[lb/ft] Ax=19.1[inch2] Iy=533[inch4] Iz=174[inch4]
-        section_base_proxy().set_databasename('US')
+        section_base_proxy().set_database_name('US')
         section_base_proxy().set_unit_system(lenght_unit='inch', mass_unit='lb', force_unit='lbf')
         param = section_base_proxy().get_sectionparameters('W12X65')
         self.assertAlmostEqual(param['Ax'] / 19.1, 1, places=2)
@@ -73,6 +74,57 @@ class SimpleUnitTest(unittest.TestCase):
         self.assertAlmostEqual(param['Iy'] / 533, 1, places=2)
         self.assertAlmostEqual(param['Iz'] / 174, 1, places=2)
         self.assertAlmostEqual(param['swdl'] / (65 / 12), 1, places=2)
+
+    def test_sectionbase_steel_section_deflection(self):
+        ss = system.SystemElements()
+        ss.add_multiple_elements([[0, 0], [6, 0]], n=2, steelsection='IPE 300', E=210e9, sw=False, orient='y')
+        ss.add_support_hinged(1)
+        ss.add_support_hinged(3)
+        ss.point_load(2, Fy=-10000)
+        ss.solve()
+        self.assertAlmostEqual(-0.00256442, ss.get_node_displacements(2)['uy'])
+
+    def test_sectionbase_steel_section_self_weight_reaction(self):
+        ss = system.SystemElements()
+        ss.add_element([[0, 0], [20, 0]], steelsection='IPE 300', sw=True, )
+        ss.add_support_hinged(1)
+        ss.add_support_hinged(2)
+        ss.solve()
+        self.assertAlmostEqual(-4224.24, ss.reaction_forces[1].Fz)
+
+    def test_rectangle_section_deflection(self):
+        ss = system.SystemElements()
+        ss.add_multiple_elements([[0, 0], [2, 0]], n=2, h=0.05, b=0.16, E=210e9, sw=False, orient='y')
+        ss.add_support_hinged(1)
+        ss.add_support_hinged(3)
+        ss.point_load(2, Fy=-1000)
+        ss.solve()
+        self.assertAlmostEqual(-0.00047619, ss.get_node_displacements(2)['uy'])
+
+    def test_circle_section_deflection(self):
+        ss = system.SystemElements()
+        ss.add_multiple_elements([[0, 0], [2, 0]], n=2, d=0.07, E=210e9, sw=False)
+        ss.add_support_hinged(1)
+        ss.add_support_hinged(3)
+        ss.point_load(2, Fy=-1000)
+        ss.solve()
+        self.assertAlmostEqual(-0.00067339, ss.get_node_displacements(2)['uy'])
+
+    def test_rectangle_section_self_weight_reaction(self):
+        ss = system.SystemElements()
+        ss.add_element([[0, 0], [2, 0]], h=0.1, b=0.1, E=210e9, sw=True, gamma=10000)
+        ss.add_support_hinged(1)
+        ss.add_support_hinged(2)
+        ss.solve()
+        self.assertAlmostEqual(-100, ss.reaction_forces[1].Fz)
+
+    def test_circle_section_self_weight_reaction(self):
+        ss = system.SystemElements()
+        ss.add_element([[0, 0], [2, 0]], d=0.2, E=210e9, sw=True, gamma=10000)
+        ss.add_support_hinged(1)
+        ss.add_support_hinged(2)
+        ss.solve()
+        self.assertAlmostEqual(-314.15926535, ss.reaction_forces[1].Fz)
 
 
 if __name__ == "__main__":
