@@ -1,1 +1,1 @@
-from anastruct.sectionbase.sectionbase import SectionBaseProxy
+from anastruct.sectionbase.sectionbase import section_base

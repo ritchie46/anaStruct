@@ -9,7 +9,7 @@ class SectionBase:
     """
     available_database_names = ['EU', 'US', 'UK']
 
-    def __init__(self, basename='EU'):
+    def __init__(self):
         self.current_length_unit = None
         self.current_mass_unit = None
         self.current_force_unit = None
@@ -20,9 +20,7 @@ class SectionBase:
         self.xml_self_weight_dead_load = None
         self.root = None  # xml root
 
-        self.set_database_name(basename)
         self.set_unit_system()
-        self.load_data_from_xml()
 
     def set_unit_system(self, length='m', mass_unit='kg', force_unit='N'):
         self.current_length_unit = u.l_dict[length]
@@ -52,6 +50,10 @@ class SectionBase:
         self.root = ET.parse(os.path.join(os.path.dirname(__file__), 'data', self.current_database)).getroot()
 
     def get_section_parameters(self, section_name):
+        if self.root is None:
+            self.set_database_name('EU')
+            self.load_data_from_xml()
+
         element = dict(
             self.root.findall("./sectionlist/sectionlist_item[@sectionname='{}']".format(section_name))[0].items()
         )
@@ -73,17 +75,4 @@ class SectionBase:
         return element
 
 
-class SectionBaseProxy:
-    """
-    utility class to ensure data is not loaded when not needed.
-    """
-    data = None
-
-    @classmethod
-    def __call__(cls, *args, **kwargs):
-        if cls.data is None:
-            cls.data = SectionBase()
-        return cls.data
-
-
-section_base_proxy = SectionBaseProxy()
+section_base = SectionBase()
