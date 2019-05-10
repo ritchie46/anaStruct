@@ -129,6 +129,11 @@ class SimpleUnitTest(unittest.TestCase):
         ss.solve()
         self.assertAlmostEqual(-314.15926535, ss.reaction_forces[1].Fz)
 
+    def test_show_available_sections(self):
+        sections = section_base.available_sections
+        self.assertEqual(sections[0], 'CAE 100x10')
+        self.assertEqual(len(sections), 2145)
+
 
 if __name__ == "__main__":
     unittest.main()

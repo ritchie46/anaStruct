@@ -18,9 +18,20 @@ class SectionBase:
         self.xml_area_unit = None
         self.xml_weight_unit = None
         self.xml_self_weight_dead_load = None
-        self.root = None  # xml root
+        self._root = None  # xml root
 
         self.set_unit_system()
+
+    @property
+    def root(self):
+        if self._root is None:
+            self.set_database_name('EU')
+            self.load_data_from_xml()
+        return self._root
+
+    @property
+    def available_sections(self):
+        return list(map(lambda el: el.attrib['sectionname'], self.root.findall("./sectionlist/sectionlist_item")))
 
     def set_unit_system(self, length='m', mass_unit='kg', force_unit='N'):
         self.current_length_unit = u.l_dict[length]
@@ -47,7 +58,7 @@ class SectionBase:
         self.load_data_from_xml()
 
     def load_data_from_xml(self):
-        self.root = ET.parse(os.path.join(os.path.dirname(__file__), 'data', self.current_database)).getroot()
+        self._root = ET.parse(os.path.join(os.path.dirname(__file__), 'data', self.current_database)).getroot()
 
     def get_section_parameters(self, section_name):
         if self.root is None:
