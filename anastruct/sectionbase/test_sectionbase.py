@@ -134,6 +134,9 @@ class SimpleUnitTest(unittest.TestCase):
         self.assertEqual(sections[0], 'CAE 100x10')
         self.assertEqual(len(sections), 2145)
 
+    def test_available_units(self):
+        self.assertEqual(section_base.available_units['length'][0], 'm')
+
 
 if __name__ == "__main__":
     unittest.main()

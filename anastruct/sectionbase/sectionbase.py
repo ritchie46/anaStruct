@@ -1,6 +1,6 @@
 import os
-import xml.etree.ElementTree as ET
-from anastruct.sectionbase import units as u
+import xml.etree.ElementTree as ElementTree
+from anastruct.sectionbase import units
 
 
 class SectionBase:
@@ -33,32 +33,38 @@ class SectionBase:
     def available_sections(self):
         return list(map(lambda el: el.attrib['sectionname'], self.root.findall("./sectionlist/sectionlist_item")))
 
+    @property
+    def available_units(self):
+        return {'length': list(units.l_dict.keys()),
+                'mass': list(units.m_dict.keys()),
+                'force': list(units.f_dict.keys())}
+
     def set_unit_system(self, length='m', mass_unit='kg', force_unit='N'):
-        self.current_length_unit = u.l_dict[length]
-        self.current_mass_unit = u.m_dict[mass_unit]
-        self.current_force_unit = u.f_dict[force_unit]
+        self.current_length_unit = units.l_dict[length]
+        self.current_mass_unit = units.m_dict[mass_unit]
+        self.current_force_unit = units.f_dict[force_unit]
 
     def set_database_name(self, basename):
         if basename == 'EU' or basename == 'UK':
-            self.xml_length_unit = u.m
-            self.xml_area_unit = u.m
-            self.xml_weight_unit = u.kg
-            self.xml_self_weight_dead_load = 10. * u.N
+            self.xml_length_unit = units.m
+            self.xml_area_unit = units.m
+            self.xml_weight_unit = units.kg
+            self.xml_self_weight_dead_load = 10. * units.N
             if basename == 'EU':
                 self.current_database = 'sectionbase_EuropeanSectionDatabase.xml'
             else:
                 self.current_database = 'sectionbase_BritishSectionDatabase.xml'
         elif basename == 'US':
             self.current_database = 'sectionbase_AmericanSectionDatabase.xml'
-            self.xml_length_unit = u.ft
-            self.xml_area_unit = u.inch
-            self.xml_weight_unit = u.lb
-            self.xml_self_weight_dead_load = u.lbf
+            self.xml_length_unit = units.ft
+            self.xml_area_unit = units.inch
+            self.xml_weight_unit = units.lb
+            self.xml_self_weight_dead_load = units.lbf
 
         self.load_data_from_xml()
 
     def load_data_from_xml(self):
-        self._root = ET.parse(os.path.join(os.path.dirname(__file__), 'data', self.current_database)).getroot()
+        self._root = ElementTree.parse(os.path.join(os.path.dirname(__file__), 'data', self.current_database)).getroot()
 
     def get_section_parameters(self, section_name):
         if self.root is None:
