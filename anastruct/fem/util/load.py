@@ -7,6 +7,7 @@ class LoadCase:
     """
     Group different loads in a load case
     """
+
     def __init__(self, name):
         """
         :param name: (str) Name of the load case
@@ -24,7 +25,9 @@ class LoadCase:
         :param direction: (str) "element", "x", "y"
         """
         self.c += 1
-        self.spec['q_load-{}'.format(self.c)] = dict(q=q, element_id=element_id, direction=direction)
+        self.spec["q_load-{}".format(self.c)] = dict(
+            q=q, element_id=element_id, direction=direction
+        )
 
     def point_load(self, node_id, Fx=0, Fy=0, rotation=0):
         """
@@ -36,7 +39,9 @@ class LoadCase:
         :param rotation: (flt/ list) Rotate the force clockwise. Rotation is in degrees.
         """
         self.c += 1
-        self.spec['point_load-{}'.format(self.c)] = dict(node_id=node_id, Fx=Fx, Fy=Fy, rotation=rotation)
+        self.spec["point_load-{}".format(self.c)] = dict(
+            node_id=node_id, Fx=Fx, Fy=Fy, rotation=rotation
+        )
 
     def moment_load(self, node_id, Ty):
         """
@@ -46,7 +51,7 @@ class LoadCase:
         :param Ty: (flt/ list) Moments acting on the node.
         """
         self.c += 1
-        self.spec['moment_load-{}'.format(self.c)] = dict(node_id=node_id, Ty=Ty)
+        self.spec["moment_load-{}".format(self.c)] = dict(node_id=node_id, Ty=Ty)
 
     def dead_load(self, element_id, g):
         """
@@ -56,10 +61,10 @@ class LoadCase:
         :param g: (flt/ list) Weight per meter. [kN/m] / [N/m]
         """
         self.c += 1
-        self.spec['dead_load-{}'.format(self.c)] = dict(element_id=element_id, g=g)
+        self.spec["dead_load-{}".format(self.c)] = dict(element_id=element_id, g=g)
 
     def __str__(self):
-        return 'Loadcase {}:\n'.format(self.name) + pprint.pformat(self.spec)
+        return "Loadcase {}:\n".format(self.name) + pprint.pformat(self.spec)
 
 
 class LoadCombination:
@@ -78,7 +83,15 @@ class LoadCombination:
         for i in range(len(lc)):
             self.spec[lc[i].name] = [lc[i], factor[i]]
 
-    def solve(self, system, force_linear=False, verbosity=0, max_iter=200, geometrical_non_linear=False, **kwargs):
+    def solve(
+        self,
+        system,
+        force_linear=False,
+        verbosity=0,
+        max_iter=200,
+        geometrical_non_linear=False,
+        **kwargs
+    ):
         """
         Evaluate the Load Combination.
 
@@ -101,14 +114,17 @@ class LoadCombination:
 
             ss.load_factor = factor
             ss.apply_load_case(lc)
-            ss.solve(force_linear, verbosity, max_iter, geometrical_non_linear, **kwargs)
+            ss.solve(
+                force_linear, verbosity, max_iter, geometrical_non_linear, **kwargs
+            )
             results[lc.name] = ss
 
         ss_combination = copy.deepcopy(system)
         for lc_ss in results.values():
             for k in ss_combination.element_map:
-                ss_combination.element_map[k] = ss_combination.element_map[k] + lc_ss.element_map[k]
+                ss_combination.element_map[k] = (
+                    ss_combination.element_map[k] + lc_ss.element_map[k]
+                )
 
-        results['combination'] = ss_combination
+        results["combination"] = ss_combination
         return results
-

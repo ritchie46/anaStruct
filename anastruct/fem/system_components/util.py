@@ -19,7 +19,12 @@ def ensure_single_hinge(system, spring, node_id1, node_id2):
                 system.node_map[node_id].hinge = True
 
                 if len(system.node_map[node_id].elements) > 0:
-                    pass_hinge = not all([el.hinge == node for el in system.node_map[node_id].elements.values()])
+                    pass_hinge = not all(
+                        [
+                            el.hinge == node
+                            for el in system.node_map[node_id].elements.values()
+                        ]
+                    )
                 else:
                     pass_hinge = True
                 if not pass_hinge:
@@ -69,7 +74,9 @@ def det_node_ids(system, point_1, point_2):
 
 def support_check(system, node_id):
     if system.node_map[node_id].hinge:
-        raise FEMException("Flawed inputs", "You cannot add a support to a hinged node.")
+        raise FEMException(
+            "Flawed inputs", "You cannot add a support to a hinged node."
+        )
 
 
 def force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp):

@@ -6,6 +6,7 @@ class Vertex:
     """
     Utility point in 2D.
     """
+
     def __init__(self, x, y=None):
         """
         :param x: Can be any of int, float, coordinate list, or other vertex.
@@ -37,7 +38,7 @@ class Vertex:
         return self.coordinates[1] * -1
 
     def modulus(self):
-        return np.sqrt(np.sum(self.coordinates**2))
+        return np.sqrt(np.sum(self.coordinates ** 2))
 
     def unit(self):
         return 1 / self.modulus() * self
@@ -105,5 +106,3 @@ class Vertex:
 def vertex_range(v1, v2, n):
     dv = v2 - v1
     return [v1 + dv * i / n for i in range(n + 1)]
-
-

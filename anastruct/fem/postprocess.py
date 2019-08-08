@@ -96,9 +96,12 @@ class ElementLevel:
         # Global coordinates system
         element.node_map[element.node_id1] = Node(
             id=element.node_id1,
-            Fx=element.element_force_vector[0] + element.element_primary_force_vector[0],
-            Fz=element.element_force_vector[1] + element.element_primary_force_vector[1],
-            Ty=element.element_force_vector[2] + element.element_primary_force_vector[2],
+            Fx=element.element_force_vector[0]
+            + element.element_primary_force_vector[0],
+            Fz=element.element_force_vector[1]
+            + element.element_primary_force_vector[1],
+            Ty=element.element_force_vector[2]
+            + element.element_primary_force_vector[2],
             ux=element.element_displacement_vector[0],
             uz=element.element_displacement_vector[1],
             phi_y=element.element_displacement_vector[2],
@@ -106,19 +109,22 @@ class ElementLevel:
 
         element.node_map[element.node_id2] = Node(
             id=element.node_id2,
-            Fx=element.element_force_vector[3] + element.element_primary_force_vector[3],
-            Fz=element.element_force_vector[4] + element.element_primary_force_vector[4],
-            Ty=element.element_force_vector[5] + element.element_primary_force_vector[5],
+            Fx=element.element_force_vector[3]
+            + element.element_primary_force_vector[3],
+            Fz=element.element_force_vector[4]
+            + element.element_primary_force_vector[4],
+            Ty=element.element_force_vector[5]
+            + element.element_primary_force_vector[5],
             ux=element.element_displacement_vector[3],
             uz=element.element_displacement_vector[4],
-            phi_y=element.element_displacement_vector[5]
+            phi_y=element.element_displacement_vector[5],
         )
 
         # Local coordinate system. With inclined supports
         for i in range(1, 3):
-            a_n = getattr(element, 'a{}'.format(i))
+            a_n = getattr(element, "a{}".format(i))
             if a_n != element.angle:
-                node = element.node_map[getattr(element, 'node_id{}'.format(i))]
+                node = element.node_map[getattr(element, "node_id{}".format(i))]
                 angle = a_n - element.angle
                 c = np.cos(angle)
                 s = np.sin(angle)
@@ -133,8 +139,12 @@ class ElementLevel:
 
     @staticmethod
     def determine_axial_force(element):
-        N_1 = (math.sin(element.angle) * element.node_1.Fz) + -(math.cos(element.angle) * element.node_1.Fx)
-        N_2 = -(math.sin(element.angle) * element.node_2.Fz) + (math.cos(element.angle) * element.node_2.Fx)
+        N_1 = (math.sin(element.angle) * element.node_1.Fz) + -(
+            math.cos(element.angle) * element.node_1.Fx
+        )
+        N_2 = -(math.sin(element.angle) * element.node_2.Fz) + (
+            math.cos(element.angle) * element.node_2.Fx
+        )
 
         element.N_1 = N_1
         element.N_2 = N_2
@@ -148,7 +158,7 @@ class ElementLevel:
         m_val = element.node_1.Ty + iteration_factor * dT
         if element.all_q_load:
             q = element.all_q_load
-            q_part = (-0.5 * -q * x ** 2 + 0.5 * -q * element.l * x)
+            q_part = -0.5 * -q * x ** 2 + 0.5 * -q * element.l * x
             m_val += q_part
 
         element.bending_moment = m_val
@@ -188,14 +198,19 @@ class ElementLevel:
         c = Translate the parabola. Translate it so that w[0] = 0
         """
 
-        if element.type == 'general':
+        if element.type == "general":
             dx = element.l / (len(element.bending_moment) - 1)
 
             # Take the average of cumulative integration from both sides. This is due to numerical differences, that
             # would be observable in symmetrical structures.
-            phi_neg = -0.5 * (
-                        integrate_array(element.bending_moment, dx) + integrate_array(element.bending_moment[::-1],
-                                                                                      dx)) / element.EI
+            phi_neg = (
+                -0.5
+                * (
+                    integrate_array(element.bending_moment, dx)
+                    + integrate_array(element.bending_moment[::-1], dx)
+                )
+                / element.EI
+            )
             w = integrate_array(phi_neg, dx)
 
             # Angle between last w and elements axis. The w array will be corrected so that this angle == 0.

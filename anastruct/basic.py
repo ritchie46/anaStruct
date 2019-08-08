@@ -1,5 +1,6 @@
 import numpy as np
 import collections
+
 try:
     from anastruct.cython.cbasic import converge, angle_x_axis
 except ImportError:
@@ -14,7 +15,7 @@ def find_nearest(array, value):
     """
     # Subtract the value of the value's in the array. Make the values absolute.
     # The lowest value is the nearest.
-    index = (np.abs(array-value)).argmin()
+    index = (np.abs(array - value)).argmin()
     return array[index], index
 
 

@@ -67,7 +67,9 @@ class SystemElements:
         self.supports_spring_z = []
         self.supports_spring_y = []
         self.supports_roll_direction = []
-        self.inclined_roll = {}  # map node ids to inclination angle relative to global x-axis.
+        self.inclined_roll = (
+            {}
+        )  # map node ids to inclination angle relative to global x-axis.
 
         # save tuples of the arguments for copying purposes.
         self.supports_spring_args = []
@@ -81,7 +83,9 @@ class SystemElements:
         # results
         self.reaction_forces = {}  # node objects
         self.non_linear = False
-        self.non_linear_elements = {}  # keys are element ids, values are dicts: {node_index: max moment capacity}
+        self.non_linear_elements = (
+            {}
+        )  # keys are element ids, values are dicts: {node_index: max moment capacity}
         self.buckling_factor = None
 
         # previous point of element
@@ -107,7 +111,9 @@ class SystemElements:
     def id_last_node(self):
         return max(self.node_map.keys())
 
-    def add_element_grid(self, x, y, EA=None, EI=None, g=None, mp=None, spring=None, **kwargs):
+    def add_element_grid(
+        self, x, y, EA=None, EI=None, g=None, mp=None, spring=None, **kwargs
+    ):
         """
         Add multiple elements defined by two containers with coordinates.
 
@@ -134,7 +140,15 @@ class SystemElements:
         g = g * a
 
         for i in range(len(x) - 1):
-            self.add_element([[x[i], y[i]], [x[i + 1], y[i + 1]]], EA[i], EI[i], g[i], mp, spring, **kwargs)
+            self.add_element(
+                [[x[i], y[i]], [x[i + 1], y[i + 1]]],
+                EA[i],
+                EI[i],
+                g[i],
+                mp,
+                spring,
+                **kwargs
+            )
 
     def add_truss_element(self, location, EA=None, **kwargs):
         """
@@ -156,9 +170,11 @@ class SystemElements:
         :param EA: (flt) EA
         :return: (int) Elements ID.
         """
-        return self.add_element(location, EA, element_type='truss',  **kwargs)
+        return self.add_element(location, EA, element_type="truss", **kwargs)
 
-    def add_element(self, location, EA=None, EI=None, g=0, mp=None, spring=None, **kwargs):
+    def add_element(
+        self, location, EA=None, EI=None, g=0, mp=None, spring=None, **kwargs
+    ):
         """
         :param location: (list/ Vertex) The two nodes of the element or the next node of the element.
 
@@ -204,19 +220,19 @@ class SystemElements:
 
         EA = self.EA if EA is None else EA
         EI = self.EI if EI is None else EI
-        
-        section_name = ''
+
+        section_name = ""
         # change EA EI and g if steel section specified
-        if 'steelsection' in kwargs:
+        if "steelsection" in kwargs:
             section_name, EA, EI, g = properties.steel_section_properties(**kwargs)
         # change EA EI and g if rectangle section specified
-        if 'h' in kwargs:
+        if "h" in kwargs:
             section_name, EA, EI, g = properties.rectangle_properties(**kwargs)
         # change EA EI and g if circle section specified
-        if 'd' in kwargs:
+        if "d" in kwargs:
             section_name, EA, EI, g = properties.circle_properties(**kwargs)
-        
-        if element_type == 'truss':
+
+        if element_type == "truss":
             EI = 1e-14
 
         # add the element number
@@ -225,19 +241,33 @@ class SystemElements:
         point_1, point_2 = system_components.util.det_vertices(self, location)
         node_id1, node_id2 = system_components.util.det_node_ids(self, point_1, point_2)
 
-        point_1, point_2, node_id1, node_id2, spring, mp, angle = \
-            system_components.util.force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp)
+        point_1, point_2, node_id1, node_id2, spring, mp, angle = system_components.util.force_elements_orientation(
+            point_1, point_2, node_id1, node_id2, spring, mp
+        )
 
-        system_components.util.append_node_id(self, point_1, point_2, node_id1, node_id2)
+        system_components.util.append_node_id(
+            self, point_1, point_2, node_id1, node_id2
+        )
         system_components.util.ensure_single_hinge(self, spring, node_id1, node_id2)
 
         # add element
-        element = Element(self.count, EA, EI, (point_2 - point_1).modulus(), angle, point_1, point_2, spring)
+        element = Element(
+            self.count,
+            EA,
+            EI,
+            (point_2 - point_1).modulus(),
+            angle,
+            point_1,
+            point_2,
+            spring,
+        )
         element.node_id1 = node_id1
         element.node_id2 = node_id2
-        element.node_map = {node_id1: self.node_map[node_id1],
-                            node_id2: self.node_map[node_id2]}
-        
+        element.node_map = {
+            node_id1: self.node_map[node_id1],
+            node_id2: self.node_map[node_id2],
+        }
+
         # needed for element annotations
         element.section_name = section_name
 
@@ -263,8 +293,18 @@ class SystemElements:
 
         return self.count
 
-    def add_multiple_elements(self, location, n=None, dl=None, EA=None, EI=None, g=0, mp=None, spring=None,
-                              **kwargs):
+    def add_multiple_elements(
+        self,
+        location,
+        n=None,
+        dl=None,
+        EA=None,
+        EI=None,
+        g=0,
+        mp=None,
+        spring=None,
+        **kwargs
+    ):
         """
         Add multiple elements defined by the first and the last point.
 
@@ -323,23 +363,49 @@ class SystemElements:
         direction = (point_2 - point_1).unit()
 
         if type(n) == type(dl):
-            raise FEMException("Wrong parameters", "One, and only one, of n and dl should be passed as argument.")
+            raise FEMException(
+                "Wrong parameters",
+                "One, and only one, of n and dl should be passed as argument.",
+            )
         elif n:
             dl = length / n
 
         point = point_1 + direction * dl
         elements = [
-            self.add_element((point_1, point), first["EA"], first["EI"], first["g"], first["mp"], first["spring"],
-                             element_type=first["element_type"], **kwargs)]
+            self.add_element(
+                (point_1, point),
+                first["EA"],
+                first["EI"],
+                first["g"],
+                first["mp"],
+                first["spring"],
+                element_type=first["element_type"],
+                **kwargs
+            )
+        ]
 
         l = 2 * dl
         while l < length:
             point += direction * dl
-            elements.append(self.add_element(point, EA, EI, g, mp, spring, element_type=element_type, **kwargs))
+            elements.append(
+                self.add_element(
+                    point, EA, EI, g, mp, spring, element_type=element_type, **kwargs
+                )
+            )
             l += dl
 
-        elements.append(self.add_element(point_2, last["EA"], last["EI"], last["g"], last["mp"], last["spring"],
-                                         element_type=last["element_type"], **kwargs))
+        elements.append(
+            self.add_element(
+                point_2,
+                last["EA"],
+                last["EI"],
+                last["g"],
+                last["mp"],
+                last["spring"],
+                element_type=last["element_type"],
+                **kwargs
+            )
+        )
         return elements
 
     def insert_node(self, element_id, location=None, factor=None):
@@ -363,15 +429,23 @@ class SystemElements:
 
         :param: factor: (flt) Value between 0 and 1 to determine the new node location.
         """
-        ss = SystemElements(EA=self.EA, EI=self.EI, load_factor=self.load_factor,
-                            mesh=self.plotter.mesh)
+        ss = SystemElements(
+            EA=self.EA, EI=self.EI, load_factor=self.load_factor, mesh=self.plotter.mesh
+        )
 
         for element in self.element_map.values():
             g = self.element_map[element.id].dead_load
-            mp = self.non_linear_elements[element.id] if element.id in self.non_linear_elements else None
+            mp = (
+                self.non_linear_elements[element.id]
+                if element.id in self.non_linear_elements
+                else None
+            )
             if element_id == element.id:
                 if factor is not None:
-                    location = factor * (element.vertex_2 - element.vertex_1) + element.vertex_1
+                    location = (
+                        factor * (element.vertex_2 - element.vertex_1)
+                        + element.vertex_1
+                    )
                 else:
                     location = Vertex(location)
 
@@ -387,15 +461,42 @@ class SystemElements:
                     if 2 in element.springs:
                         spring2 = {2: element.springs[2]}
 
-                ss.add_element([element.vertex_1, location], EA=element.EA, EI=element.EI, g=g, mp=mp1, spring=spring1)
-                ss.add_element([location, element.vertex_2], EA=element.EA, EI=element.EI, g=g, mp=mp2, spring=spring2)
+                ss.add_element(
+                    [element.vertex_1, location],
+                    EA=element.EA,
+                    EI=element.EI,
+                    g=g,
+                    mp=mp1,
+                    spring=spring1,
+                )
+                ss.add_element(
+                    [location, element.vertex_2],
+                    EA=element.EA,
+                    EI=element.EI,
+                    g=g,
+                    mp=mp2,
+                    spring=spring2,
+                )
 
             else:
-                ss.add_element([element.vertex_1, element.vertex_2], EA=element.EA,
-                               EI=element.EI, g=g, mp=mp, spring=element.springs)
+                ss.add_element(
+                    [element.vertex_1, element.vertex_2],
+                    EA=element.EA,
+                    EI=element.EI,
+                    g=g,
+                    mp=mp,
+                    spring=element.springs,
+                )
         self.__dict__ = ss.__dict__.copy()
 
-    def solve(self, force_linear=False, verbosity=0, max_iter=200, geometrical_non_linear=False, **kwargs):
+    def solve(
+        self,
+        force_linear=False,
+        verbosity=0,
+        max_iter=200,
+        geometrical_non_linear=False,
+        **kwargs
+    ):
 
         """
         Compute the results of current model.
@@ -423,35 +524,51 @@ class SystemElements:
 
         if not naked:
             if not self.validate():
-                if all(['general' in element.type for element in self.element_map.values()]):
-                    raise FEMException('StabilityError', 'The eigenvalues of the stiffness matrix are non zero, '
-                                                         'which indicates a instable structure. '
-                                                         'Check your support conditions')
+                if all(
+                    ["general" in element.type for element in self.element_map.values()]
+                ):
+                    raise FEMException(
+                        "StabilityError",
+                        "The eigenvalues of the stiffness matrix are non zero, "
+                        "which indicates a instable structure. "
+                        "Check your support conditions",
+                    )
 
         # (Re)set force vectors
         for el in self.element_map.values():
             el.reset()
         system_components.assembly.prep_matrix_forces(self)
-        assert (self.system_force_vector is not None), "There are no forces on the structure"
+        assert (
+            self.system_force_vector is not None
+        ), "There are no forces on the structure"
 
         if self.non_linear and not force_linear:
-            return system_components.solver.stiffness_adaptation(self, verbosity, max_iter)
+            return system_components.solver.stiffness_adaptation(
+                self, verbosity, max_iter
+            )
 
         system_components.assembly.assemble_system_matrix(self)
         if geometrical_non_linear:
-            discretize_kwargs = kwargs.get('discretize_kwargs', None)
-            self.buckling_factor = system_components.solver.geometrically_non_linear(self, verbosity,
-                                                                                     discretize_kwargs=discretize_kwargs)
+            discretize_kwargs = kwargs.get("discretize_kwargs", None)
+            self.buckling_factor = system_components.solver.geometrically_non_linear(
+                self, verbosity, discretize_kwargs=discretize_kwargs
+            )
             return self.system_displacement_vector
 
         system_components.assembly.process_conditions(self)
 
         # solution of the reduced system (reduced due to support conditions)
-        reduced_displacement_vector = np.linalg.solve(self.reduced_system_matrix, self.reduced_force_vector)
+        reduced_displacement_vector = np.linalg.solve(
+            self.reduced_system_matrix, self.reduced_force_vector
+        )
 
         # add the solution of the reduced system in the complete system displacement vector
         self.system_displacement_vector = np.zeros(self.shape_system_matrix)
-        np.put(self.system_displacement_vector, self._remainder_indexes, reduced_displacement_vector)
+        np.put(
+            self.system_displacement_vector,
+            self._remainder_indexes,
+            reduced_displacement_vector,
+        )
 
         # determine the displacement vector of the elements
         for el in self.element_map.values():
@@ -459,9 +576,13 @@ class SystemElements:
             index_node_2 = (el.node_2.id - 1) * 3
 
             # node 1 ux, uz, phi
-            el.element_displacement_vector[:3] = self.system_displacement_vector[index_node_1: index_node_1 + 3]
+            el.element_displacement_vector[:3] = self.system_displacement_vector[
+                index_node_1 : index_node_1 + 3
+            ]
             # node 2 ux, uz, phi
-            el.element_displacement_vector[3:] = self.system_displacement_vector[index_node_2: index_node_2 + 3]
+            el.element_displacement_vector[3:] = self.system_displacement_vector[
+                index_node_2 : index_node_2 + 3
+            ]
             el.determine_force_vector()
 
         if not naked:
@@ -472,9 +593,11 @@ class SystemElements:
             self.post_processor.element_results()
 
             # check the values in the displacement vector for extreme values, indicating a flawed calculation
-            assert (np.any(self.system_displacement_vector < 1e6)), "The displacements of the structure exceed 1e6. " \
-                                                                    "Check your support conditions," \
-                                                                    "or your elements Young's modulus"
+            assert np.any(self.system_displacement_vector < 1e6), (
+                "The displacements of the structure exceed 1e6. "
+                "Check your support conditions,"
+                "or your elements Young's modulus"
+            )
 
         return self.system_displacement_vector
 
@@ -489,7 +612,9 @@ class SystemElements:
 
         ss = copy.copy(self)
         system_components.assembly.prep_matrix_forces(ss)
-        assert (np.abs(ss.system_force_vector).sum() != 0), "There are no forces on the structure"
+        assert (
+            np.abs(ss.system_force_vector).sum() != 0
+        ), "There are no forces on the structure"
         ss._remainder_indexes = []
         system_components.assembly.assemble_system_matrix(ss)
 
@@ -514,7 +639,7 @@ class SystemElements:
             # add the support to the support list for the plotter
             self.supports_hinged.append(self.node_map[id_])
 
-    def add_support_roll(self, node_id, direction='x', angle=None):
+    def add_support_roll(self, node_id, direction="x", angle=None):
         """
         Adds a rolling support at a given node.
 
@@ -530,9 +655,9 @@ class SystemElements:
             id_ = _negative_index_to_id(id_, self.node_map.keys())
             system_components.util.support_check(self, id_)
 
-            if direction == 'x':
+            if direction == "x":
                 direction = 2
-            elif direction == 'y':
+            elif direction == "y":
                 direction = 1
 
             if angle is not None:
@@ -631,11 +756,15 @@ class SystemElements:
 
         for i in range(len(node_id)):
             id_ = _negative_index_to_id(node_id[i], self.node_map.keys())
-            self.plotter.max_system_point_load = max(self.plotter.max_system_point_load,
-                                                     (Fx[i] ** 2 + Fy[i] ** 2) ** 0.5)
+            self.plotter.max_system_point_load = max(
+                self.plotter.max_system_point_load, (Fx[i] ** 2 + Fy[i] ** 2) ** 0.5
+            )
             cos = math.cos(math.radians(rotation[i]))
             sin = math.sin(math.radians(rotation[i]))
-            self.loads_point[id_] = (Fx[i] * cos + Fy[i] * sin, Fy[i] * self.orientation_cs * cos + Fx[i] * sin)
+            self.loads_point[id_] = (
+                Fx[i] * cos + Fy[i] * sin,
+                Fy[i] * self.orientation_cs * cos + Fx[i] * sin,
+            )
 
     def moment_load(self, node_id, Ty):
         """
@@ -650,8 +779,17 @@ class SystemElements:
             id_ = _negative_index_to_id(node_id[i], self.node_map.keys())
             self.loads_moment[id_] = Ty[i]
 
-    def show_structure(self, verbosity=0, scale=1., offset=(0, 0), figsize=None, show=True, supports=True,
-                       values_only=False, annotations=False):
+    def show_structure(
+        self,
+        verbosity=0,
+        scale=1.0,
+        offset=(0, 0),
+        figsize=None,
+        show=True,
+        supports=True,
+        values_only=False,
+        annotations=False,
+    ):
         """
         Plot the structure.
 
@@ -669,10 +807,20 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         if values_only:
             return self.plot_values.structure()
-        return self.plotter.plot_structure(figsize, verbosity, show, supports, scale, offset, annotations=annotations)
+        return self.plotter.plot_structure(
+            figsize, verbosity, show, supports, scale, offset, annotations=annotations
+        )
 
-    def show_bending_moment(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
-                            values_only=False):
+    def show_bending_moment(
+        self,
+        factor=None,
+        verbosity=0,
+        scale=1,
+        offset=(0, 0),
+        figsize=None,
+        show=True,
+        values_only=False,
+    ):
         """
         Plot the bending moment.
 
@@ -688,10 +836,20 @@ class SystemElements:
         if values_only:
             return self.plot_values.bending_moment(factor)
         figsize = self.figsize if figsize is None else figsize
-        return self.plotter.bending_moment(factor, figsize, verbosity, scale, offset, show)
+        return self.plotter.bending_moment(
+            factor, figsize, verbosity, scale, offset, show
+        )
 
-    def show_axial_force(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
-                         values_only=False):
+    def show_axial_force(
+        self,
+        factor=None,
+        verbosity=0,
+        scale=1,
+        offset=(0, 0),
+        figsize=None,
+        show=True,
+        values_only=False,
+    ):
         """
         Plot the axial force.
 
@@ -709,8 +867,16 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         return self.plotter.axial_force(factor, figsize, verbosity, scale, offset, show)
 
-    def show_shear_force(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
-                         values_only=False):
+    def show_shear_force(
+        self,
+        factor=None,
+        verbosity=0,
+        scale=1,
+        offset=(0, 0),
+        figsize=None,
+        show=True,
+        values_only=False,
+    ):
         """
         Plot the shear force.
         :param factor: (flt) Influence the plotting scale.
@@ -727,7 +893,9 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         return self.plotter.shear_force(factor, figsize, verbosity, scale, offset, show)
 
-    def show_reaction_force(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+    def show_reaction_force(
+        self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True
+    ):
         """
         Plot the reaction force.
 
@@ -741,8 +909,17 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         return self.plotter.reaction_force(figsize, verbosity, scale, offset, show)
 
-    def show_displacement(self, factor=None, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True,
-                          linear=False, values_only=False):
+    def show_displacement(
+        self,
+        factor=None,
+        verbosity=0,
+        scale=1,
+        offset=(0, 0),
+        figsize=None,
+        show=True,
+        linear=False,
+        values_only=False,
+    ):
         """
         Plot the displacement.
 
@@ -759,9 +936,13 @@ class SystemElements:
         if values_only:
             return self.plot_values.displacements(factor, linear)
         figsize = self.figsize if figsize is None else figsize
-        return self.plotter.displacements(factor, figsize, verbosity, scale, offset, show, linear)
+        return self.plotter.displacements(
+            factor, figsize, verbosity, scale, offset, show, linear
+        )
 
-    def show_results(self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True):
+    def show_results(
+        self, verbosity=0, scale=1, offset=(0, 0), figsize=None, show=True
+    ):
         """
         Plot all the results in one window.
 
@@ -804,11 +985,13 @@ class SystemElements:
                 "Ty": node.Ty,
                 "ux": node.ux,
                 "uy": -node.uz,
-                "phi_y": node.phi_y
+                "phi_y": node.phi_y,
             }
         else:
             for node in self.node_map.values():
-                result_list.append((node.id, node.Fx, node.Fy, node.Ty, node.ux, -node.uz, node.phi_y))
+                result_list.append(
+                    (node.id, node.Fx, node.Fy, node.Ty, node.ux, -node.uz, node.phi_y)
+                )
         return result_list
 
     def get_node_displacements(self, node_id=0):
@@ -832,7 +1015,7 @@ class SystemElements:
                 "id": node.id,
                 "ux": -node.ux,
                 "uy": node.uz,  # - * -  = +
-                "phi_y": node.phi_y
+                "phi_y": node.phi_y,
             }
         else:
             for node in self.node_map.values():
@@ -883,20 +1066,21 @@ class SystemElements:
                     "Mmin": np.min(el.bending_moment),
                     "Mmax": np.max(el.bending_moment),
                     "M": el.bending_moment if verbose else None,
-                    "q": el.q_load
+                    "q": el.q_load,
                 }
         else:
             result_list = []
             for el in self.element_map.values():
 
                 if el.type == "truss":
-                    result_list.append({
-                        "id": el.id,
-                        "length": el.l,
-                        "alpha": el.angle,
-                        "u": el.extension[0],
-                        "N": el.N_1,
-                    }
+                    result_list.append(
+                        {
+                            "id": el.id,
+                            "length": el.l,
+                            "alpha": el.angle,
+                            "u": el.extension[0],
+                            "N": el.N_1,
+                        }
                     )
 
                 else:
@@ -913,7 +1097,7 @@ class SystemElements:
                             "Mmin": np.min(el.bending_moment),
                             "Mmax": np.max(el.bending_moment),
                             "M": el.bending_moment if verbose else None,
-                            "q": el.q_load
+                            "q": el.q_load,
                         }
                     )
             return result_list
@@ -964,9 +1148,13 @@ class SystemElements:
             vertex = Vertex(vertex)
         try:
             tol = 1e-9
-            return next(filter(lambda x: math.isclose(x.vertex.x, vertex.x, abs_tol=tol)
-                                         and math.isclose(x.vertex.y, vertex.y, abs_tol=tol),
-                               self.node_map.values())).id
+            return next(
+                filter(
+                    lambda x: math.isclose(x.vertex.x, vertex.x, abs_tol=tol)
+                    and math.isclose(x.vertex.y, vertex.y, abs_tol=tol),
+                    self.node_map.values(),
+                )
+            ).id
         except StopIteration:
             return None
 
@@ -979,11 +1167,18 @@ class SystemElements:
         """
         return list(
             map(
-                lambda x: x.vertex.x if dimension == 'x'
-                else x.vertex.z if dimension == 'z' else x.vertex.y if dimension == 'y'
-                else (x.vertex.x, x.vertex.y) if dimension == "both"
+                lambda x: x.vertex.x
+                if dimension == "x"
+                else x.vertex.z
+                if dimension == "z"
+                else x.vertex.y
+                if dimension == "y"
+                else (x.vertex.x, x.vertex.y)
+                if dimension == "both"
                 else None,
-                self.node_map.values()))
+                self.node_map.values(),
+            )
+        )
 
     def nearest_node(self, dimension, val):
         """
@@ -994,12 +1189,15 @@ class SystemElements:
         :return: (int) ID of the node.
         """
         if dimension == "both":
-            match = list(map(lambda x: x[1],
-                             filter(lambda x: x[0][0] == val[0] and x[0][1] == val[1],
-                                    zip(self.nodes_range("both"), self.node_map.keys())
-                                    )
-                             )
-                         )
+            match = list(
+                map(
+                    lambda x: x[1],
+                    filter(
+                        lambda x: x[0][0] == val[0] and x[0][1] == val[1],
+                        zip(self.nodes_range("both"), self.node_map.keys()),
+                    ),
+                )
+            )
             return match[0] if len(match) > 0 else None
         else:
             return np.argmin(np.abs(np.array(self.nodes_range(dimension)) - val))
@@ -1010,12 +1208,17 @@ class SystemElements:
 
         :param n: (int) Divide the elements into n sub-elements.
         """
-        ss = SystemElements(EA=self.EA, EI=self.EI, load_factor=self.load_factor,
-                            mesh=self.plotter.mesh)
+        ss = SystemElements(
+            EA=self.EA, EI=self.EI, load_factor=self.load_factor, mesh=self.plotter.mesh
+        )
 
         for element in self.element_map.values():
             g = self.element_map[element.id].dead_load
-            mp = self.non_linear_elements[element.id] if element.id in self.non_linear_elements else None
+            mp = (
+                self.non_linear_elements[element.id]
+                if element.id in self.non_linear_elements
+                else None
+            )
 
             for i, v in enumerate(vertex_range(element.vertex_1, element.vertex_2, n)):
                 if i == 0:
@@ -1023,7 +1226,14 @@ class SystemElements:
                     continue
 
                 loc = [last_v, v]
-                ss.add_element(loc, EA=element.EA, EI=element.EI, g=g, mp=mp, spring=element.springs)
+                ss.add_element(
+                    loc,
+                    EA=element.EA,
+                    EI=element.EI,
+                    g=g,
+                    mp=mp,
+                    spring=element.springs,
+                )
                 last_v = v
 
         # supports
@@ -1038,13 +1248,17 @@ class SystemElements:
 
         # loads
         for node_id, forces in self.loads_point.items():
-            ss.point_load((node_id - 1) * n + 1, Fx=forces[0], Fy=forces[1] / self.orientation_cs)
+            ss.point_load(
+                (node_id - 1) * n + 1, Fx=forces[0], Fy=forces[1] / self.orientation_cs
+            )
         for node_id, forces in self.loads_moment.items():
             ss.moment_load((node_id - 1) * n + 1, forces)
         for element_id, forces in self.loads_q.items():
-            ss.q_load(q=forces / self.orientation_cs / self.load_factor,
-                      element_id=element_id,
-                      direction=self.element_map[element_id].q_direction)
+            ss.q_load(
+                q=forces / self.orientation_cs / self.load_factor,
+                element_id=element_id,
+                direction=self.element_map[element_id].q_direction,
+            )
 
         self.__dict__ = ss.__dict__.copy()
 
@@ -1072,12 +1286,12 @@ class SystemElements:
         :return:
         """
         for method, kwargs in loadcase.spec.items():
-            method = method.split('-')[0]
-            kwargs = re.sub(r"[{}]", '', str(kwargs))
+            method = method.split("-")[0]
+            kwargs = re.sub(r"[{}]", "", str(kwargs))
             # pass the groups that match back to the replace
-            kwargs = re.sub(r".??(\w+).?:", r'\1=', kwargs)
+            kwargs = re.sub(r".??(\w+).?:", r"\1=", kwargs)
 
-            exec('self.{}({})'.format(method, kwargs))
+            exec("self.{}({})".format(method, kwargs))
 
     def __deepcopy__(self, memo):
         system = copy.copy(self)
@@ -1099,5 +1313,3 @@ def _negative_index_to_id(idx, collection):
         return idx
     else:
         return max(collection) + (idx + 1)
-
-

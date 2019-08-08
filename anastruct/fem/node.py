@@ -30,13 +30,25 @@ class Node:
     def __str__(self):
         if self.vertex:
             return "[id = {}, Fx = {}, Fz = {}, Ty = {}, ux = {}, uz = {}, phi_y = {}, x = {}, y = {}]".format(
-                self.id, self.Fx, self.Fz, self.Ty, self.ux, self.uz, self.phi_y, self.vertex.x, self.vertex.y)
+                self.id,
+                self.Fx,
+                self.Fz,
+                self.Ty,
+                self.ux,
+                self.uz,
+                self.phi_y,
+                self.vertex.x,
+                self.vertex.y,
+            )
         else:
             return "[id = {}, Fx = {}, Fz = {}, Ty = {}, ux = {}, uz = {}, phi_y = {}]".format(
-                self.id, self.Fx, self.Fz, self.Ty, self.ux, self.uz, self.phi_y)
+                self.id, self.Fx, self.Fz, self.Ty, self.ux, self.uz, self.phi_y
+            )
 
     def __add__(self, other):
-        assert(self.id == other.id), "Cannot add nodes as the ID's don't match. The nodes positions don't match."
+        assert (
+            self.id == other.id
+        ), "Cannot add nodes as the ID's don't match. The nodes positions don't match."
         Fx = self.Fx + other.Fx
         Fz = self.Fz + other.Fz
         Ty = self.Ty + other.Ty
@@ -44,7 +56,9 @@ class Node:
         return Node(self.id, Fx, Fz, Ty, self.ux, self.uz, self.phi_y, self.vertex)
 
     def __sub__(self, other):
-        assert (self.id == other.id), "Cannot subtract nodes as the ID's don't match. The nodes positions don't match."
+        assert (
+            self.id == other.id
+        ), "Cannot subtract nodes as the ID's don't match. The nodes positions don't match."
         Fx = self.Fx - other.Fx
         Fz = self.Fz - other.Fz
         Ty = self.Ty - other.Ty
@@ -53,5 +67,3 @@ class Node:
 
     def reset(self):
         self.Fx = self.Fz = self.Ty = self.ux = self.uz = self.phi_y = 0
-
-

@@ -70,7 +70,7 @@ class Element:
         self.nodes_plastic = [False, False]
         self.compile_constitutive_matrix(self.EA, self.EI, l)
         self.compile_stiffness_matrix()
-        self.section_name = ''  # needed for element annotation
+        self.section_name = ""  # needed for element annotation
 
     @property
     def all_q_load(self):
@@ -84,8 +84,10 @@ class Element:
             elif self.q_direction == "element" or self.q_direction is None:
                 q_factor = 1
             elif self.q_direction is not None:
-                raise FEMException('Wrong parameters',
-                                   "q-loads direction is not set property. Please choose 'x', 'y', or 'element'")
+                raise FEMException(
+                    "Wrong parameters",
+                    "q-loads direction is not set property. Please choose 'x', 'y', or 'element'",
+                )
             q = self.q_load * q_factor
 
         return q + self.dead_load * cos(self.angle)
@@ -99,11 +101,15 @@ class Element:
         return self.node_map[self.node_id2]
 
     def determine_force_vector(self):
-        self.element_force_vector = np.dot(self.stiffness_matrix, self.element_displacement_vector)
+        self.element_force_vector = np.dot(
+            self.stiffness_matrix, self.element_displacement_vector
+        )
         return self.element_force_vector
 
     def compile_stiffness_matrix(self):
-        self.stiffness_matrix = stiffness_matrix(self.constitutive_matrix, self.kinematic_matrix)
+        self.stiffness_matrix = stiffness_matrix(
+            self.constitutive_matrix, self.kinematic_matrix
+        )
 
     def compile_kinematic_matrix(self, a1, a2, l):
         self.kinematic_matrix = kinematic_matrix(a1, a2, l)
@@ -124,7 +130,9 @@ class Element:
 
     def compile_geometric_non_linear_stiffness_matrix(self):
         self.compile_stiffness_matrix()
-        self.stiffness_matrix += geometric_stiffness_matrix(self.l, self.N_1, self.a1, self.a2)
+        self.stiffness_matrix += geometric_stiffness_matrix(
+            self.l, self.N_1, self.a1, self.a2
+        )
 
     def reset(self):
         self.element_displacement_vector = np.zeros(6)
@@ -132,15 +140,27 @@ class Element:
 
     def __add__(self, other):
         if self.id != other.id:
-            raise FEMException('Wrong element:', 'only elements with the same id can be added.')
+            raise FEMException(
+                "Wrong element:", "only elements with the same id can be added."
+            )
         el = copy.deepcopy(self)
-        for unit in ['bending_moment', 'shear_force', 'deflection', 'extension', 'N_1', 'N_2']:
+        for unit in [
+            "bending_moment",
+            "shear_force",
+            "deflection",
+            "extension",
+            "N_1",
+            "N_2",
+        ]:
             if getattr(el, unit) is None:
                 setattr(el, unit, getattr(other, unit))
             else:
                 setattr(el, unit, getattr(el, unit) + getattr(other, unit))
-        el.max_deflection = other.max_deflection if el.max_deflection is None else \
-            max(el.max_deflection, other.max_deflection)
+        el.max_deflection = (
+            other.max_deflection
+            if el.max_deflection is None
+            else max(el.max_deflection, other.max_deflection)
+        )
 
         el.node_map[self.node_id1] = el.node_1 + other.node_1
         el.node_map[self.node_id2] = el.node_2 + other.node_2
@@ -165,9 +185,13 @@ def kinematic_matrix(a1, a2, l):
     s1 = sin(a1)
     c2 = cos(a2)
     s2 = sin(a2)
-    return np.array([[-c1, s1, 0, c2, -s2, 0],
-                     [s1 / l, c1 / l, -1, -s2 / l, -c2 / l, 0],
-                     [-s1 / l, -c1 / l, 0, s2 / l, c2 / l, 1]])
+    return np.array(
+        [
+            [-c1, s1, 0, c2, -s2, 0],
+            [s1 / l, c1 / l, -1, -s2 / l, -c2 / l, 0],
+            [-s1 / l, -c1 / l, 0, s2 / l, c2 / l, 1],
+        ]
+    )
 
 
 def constitutive_matrix(EA, EI, l, spring=None):
@@ -178,9 +202,9 @@ def constitutive_matrix(EA, EI, l, spring=None):
     :param spring: (int) 1 or 2. Apply a hinge on the first of the second node.
     :return: (array)
     """
-    matrix = np.array([[EA / l, 0, 0],
-                      [0, 4 * EI / l, -2 * EI / l],
-                      [0, -2 * EI / l, 4 * EI / l]])
+    matrix = np.array(
+        [[EA / l, 0, 0], [0, 4 * EI / l, -2 * EI / l], [0, -2 * EI / l, 4 * EI / l]]
+    )
 
     if spring is not None:
         """
@@ -212,7 +236,9 @@ def constitutive_matrix(EA, EI, l, spring=None):
 
 
 def stiffness_matrix(var_constitutive_matrix, var_kinematic_matrix):
-    kinematic_transposed_times_constitutive = np.dot(var_kinematic_matrix.transpose(), var_constitutive_matrix)
+    kinematic_transposed_times_constitutive = np.dot(
+        var_kinematic_matrix.transpose(), var_constitutive_matrix
+    )
     return np.dot(kinematic_transposed_times_constitutive, var_kinematic_matrix)
 
 
@@ -229,13 +255,63 @@ def geometric_stiffness_matrix(l, N, a1, a2):
     c2 = cos(a2)
     s2 = sin(a2)
     # http://people.duke.edu/~hpgavin/cee421/frame-finite-def.pdf
-    return N/l * np.array([[6/5*s1**2, -6/5*s1*c1, -l/10*s1, -6/5*s2**2, 6/5*s2*c2, -l/10*s2],
-                    [-6/5*s1*c1, 6/5*c1**2, l/10*c1, 6/5*s2*c2, -6/5*c2**2, l/10*c2],
-                    [-l/10*s1, l/10*c1, 2*l**2/15, l/10*s2, -l/10*c2, -l**2/30],
-                    [-6/5*s1**2, 6/5*s1*c1, l/10*s1, 6/5*s2**2, -6/5*s1*c2, l/10*s2],
-                    [6/5*s1*c1, -6/5*c1**2, -l/10*c1, -6/5*s2*c2, 6/5*c2**2, -l/10*c2],
-                    [-l/10*s1, l/10*c1, -l**2/30, l/10*s2, -l/10*c2, 2*l**2/15]]) \
-                * np.array([1, -1, 1, 1, -1, 1])  # conversion from coordinate system
+    return (
+        N
+        / l
+        * np.array(
+            [
+                [
+                    6 / 5 * s1 ** 2,
+                    -6 / 5 * s1 * c1,
+                    -l / 10 * s1,
+                    -6 / 5 * s2 ** 2,
+                    6 / 5 * s2 * c2,
+                    -l / 10 * s2,
+                ],
+                [
+                    -6 / 5 * s1 * c1,
+                    6 / 5 * c1 ** 2,
+                    l / 10 * c1,
+                    6 / 5 * s2 * c2,
+                    -6 / 5 * c2 ** 2,
+                    l / 10 * c2,
+                ],
+                [
+                    -l / 10 * s1,
+                    l / 10 * c1,
+                    2 * l ** 2 / 15,
+                    l / 10 * s2,
+                    -l / 10 * c2,
+                    -l ** 2 / 30,
+                ],
+                [
+                    -6 / 5 * s1 ** 2,
+                    6 / 5 * s1 * c1,
+                    l / 10 * s1,
+                    6 / 5 * s2 ** 2,
+                    -6 / 5 * s1 * c2,
+                    l / 10 * s2,
+                ],
+                [
+                    6 / 5 * s1 * c1,
+                    -6 / 5 * c1 ** 2,
+                    -l / 10 * c1,
+                    -6 / 5 * s2 * c2,
+                    6 / 5 * c2 ** 2,
+                    -l / 10 * c2,
+                ],
+                [
+                    -l / 10 * s1,
+                    l / 10 * c1,
+                    -l ** 2 / 30,
+                    l / 10 * s2,
+                    -l / 10 * c2,
+                    2 * l ** 2 / 15,
+                ],
+            ]
+        )
+        * np.array([1, -1, 1, 1, -1, 1])
+    )  # conversion from coordinate system
 
 
 @lru_cache(CACHE_BOUND)
@@ -250,4 +326,3 @@ def det_axial(EA, L, q, x):
     :return: (flt)
     """
     return EA * (L * q / (2 * EA) - q * x / EA)
-

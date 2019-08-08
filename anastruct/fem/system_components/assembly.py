@@ -20,7 +20,9 @@ def set_force_vector(system, force_list):
 
 
 def prep_matrix_forces(system):
-    system.system_force_vector = system.system_force_vector = np.zeros(len(system._vertices) * 3)
+    system.system_force_vector = system.system_force_vector = np.zeros(
+        len(system._vertices) * 3
+    )
     apply_perpendicular_q_load(system)
     apply_point_load(system)
     apply_moment_load(system)
@@ -35,7 +37,13 @@ def apply_point_load(system):
     for node_id in system.loads_point:
         Fx, Fz = system.loads_point[node_id]
         # system force vector.
-        set_force_vector(system, [(node_id, 1, Fx * system.load_factor), (node_id, 2, Fz * system.load_factor)])
+        set_force_vector(
+            system,
+            [
+                (node_id, 1, Fx * system.load_factor),
+                (node_id, 2, Fz * system.load_factor),
+            ],
+        )
 
 
 def apply_perpendicular_q_load(system):
@@ -45,7 +53,11 @@ def apply_perpendicular_q_load(system):
 
         if q_perpendicular == 0:
             continue
-        elif element.q_direction == "x" or element.q_direction == "y" or element.dead_load:
+        elif (
+            element.q_direction == "x"
+            or element.q_direction == "y"
+            or element.dead_load
+        ):
             apply_parallel_q_load(system, element)
 
         kl = element.constitutive_matrix[1][1] * 1e6
@@ -59,9 +71,13 @@ def apply_perpendicular_q_load(system):
         else:
             # minus because of systems positive rotation
             left_moment = det_moment(kl, kr, q_perpendicular, 0, element.EI, element.l)
-            right_moment = -det_moment(kl, kr, q_perpendicular, element.l, element.EI, element.l)
+            right_moment = -det_moment(
+                kl, kr, q_perpendicular, element.l, element.EI, element.l
+            )
             rleft = det_shear(kl, kr, q_perpendicular, 0, element.EI, element.l)
-            rright = -det_shear(kl, kr, q_perpendicular, element.l, element.EI, element.l)
+            rright = -det_shear(
+                kl, kr, q_perpendicular, element.l, element.EI, element.l
+            )
 
         rleft_x = rleft * math.sin(element.angle)
         rright_x = rright * math.sin(element.angle)
@@ -69,16 +85,22 @@ def apply_perpendicular_q_load(system):
         rleft_z = rleft * math.cos(element.angle)
         rright_z = rright * math.cos(element.angle)
 
-        if element.type == 'truss':
+        if element.type == "truss":
             left_moment = 0
             right_moment = 0
 
-        primary_force = np.array([rleft_x, rleft_z, left_moment, rright_x, rright_z, right_moment])
+        primary_force = np.array(
+            [rleft_x, rleft_z, left_moment, rright_x, rright_z, right_moment]
+        )
         element.element_primary_force_vector -= primary_force
 
         # Set force vector
-        system.system_force_vector[(element.node_id1 - 1) * 3: (element.node_id1 - 1) * 3 + 3] += primary_force[0:3]
-        system.system_force_vector[(element.node_id2 - 1) * 3: (element.node_id2 - 1) * 3 + 3] += primary_force[3:]
+        system.system_force_vector[
+            (element.node_id1 - 1) * 3 : (element.node_id1 - 1) * 3 + 3
+        ] += primary_force[0:3]
+        system.system_force_vector[
+            (element.node_id2 - 1) * 3 : (element.node_id2 - 1) * 3 + 3
+        ] += primary_force[3:]
 
 
 def apply_parallel_q_load(system, element):
@@ -92,9 +114,15 @@ def apply_parallel_q_load(system, element):
         element.element_primary_force_vector[3] -= Fx
         element.element_primary_force_vector[4] -= Fz
 
-        set_force_vector(system, [
-            (element.node_1.id, 2, Fz), (element.node_2.id, 2, Fz),
-            (element.node_1.id, 1, Fx), (element.node_2.id, 1, Fx)])
+        set_force_vector(
+            system,
+            [
+                (element.node_1.id, 2, Fz),
+                (element.node_2.id, 2, Fz),
+                (element.node_1.id, 1, Fx),
+                (element.node_2.id, 1, Fx),
+            ],
+        )
 
     if direction == "x":
         factor = abs(math.cos(element.angle))
@@ -102,7 +130,13 @@ def apply_parallel_q_load(system, element):
         for q_element in (element.q_load * factor, element.dead_load * factor_dl):
             # q_load working at parallel to the elements x-axis          # set the proper direction
             Fx = -q_element * math.cos(element.angle) * element.l * 0.5
-            Fz = q_element * abs(math.sin(element.angle)) * element.l * 0.5 * np.sign(math.sin(element.angle))
+            Fz = (
+                q_element
+                * abs(math.sin(element.angle))
+                * element.l
+                * 0.5
+                * np.sign(math.sin(element.angle))
+            )
 
             update(Fx, Fz)
 
@@ -114,7 +148,13 @@ def apply_parallel_q_load(system, element):
 
         for q_element in (element.q_load * factor, element.dead_load * factor_dl):
             # q_load working at parallel to the elements x-axis          # set the proper direction
-            Fx = q_element * math.cos(element.angle) * element.l * 0.5 * -np.sign(math.sin(element.angle))
+            Fx = (
+                q_element
+                * math.cos(element.angle)
+                * element.l
+                * 0.5
+                * -np.sign(math.sin(element.angle))
+            )
             Fz = q_element * abs(math.sin(element.angle)) * element.l * 0.5
 
             update(Fx, Fz)
@@ -168,11 +208,11 @@ def assemble_system_matrix(system, validate=False, geometric_matrix=False):
         # n1 and n2 are starting indexes of the rows and the columns for node 1 and node 2
         n1 = (element.node_1.id - 1) * 3
         n2 = (element.node_2.id - 1) * 3
-        system.system_matrix[n1: n1 + 3, n1: n1 + 3] += element_matrix[0:3, :3]
-        system.system_matrix[n1: n1 + 3, n2: n2 + 3] += element_matrix[0:3, 3:]
+        system.system_matrix[n1 : n1 + 3, n1 : n1 + 3] += element_matrix[0:3, :3]
+        system.system_matrix[n1 : n1 + 3, n2 : n2 + 3] += element_matrix[0:3, 3:]
 
-        system.system_matrix[n2: n2 + 3, n1: n1 + 3] += element_matrix[3:6, :3]
-        system.system_matrix[n2: n2 + 3, n2: n2 + 3] += element_matrix[3:6, 3:]
+        system.system_matrix[n2 : n2 + 3, n1 : n1 + 3] += element_matrix[3:6, :3]
+        system.system_matrix[n2 : n2 + 3, n2 : n2 + 3] += element_matrix[3:6, 3:]
 
     # returns True if symmetrical.
     if validate:
@@ -196,8 +236,11 @@ def set_displacement_vector(system, nodes_list):
         try:
             system.system_displacement_vector[index] = 0
         except IndexError as e:
-            raise IndexError(e, 'This often occurs if you set supports before the all the elements are modelled. '
-                                'First finish the model.')
+            raise IndexError(
+                e,
+                "This often occurs if you set supports before the all the elements are modelled. "
+                "First finish the model.",
+            )
     return system.system_displacement_vector
 
 
@@ -210,7 +253,9 @@ def process_conditions(system):
         else:
             system._remainder_indexes.append(i)
 
-    system.system_displacement_vector = np.delete(system.system_displacement_vector, indexes, 0)
+    system.system_displacement_vector = np.delete(
+        system.system_displacement_vector, indexes, 0
+    )
     system.reduced_force_vector = np.delete(system.system_force_vector, indexes, 0)
     system.reduced_system_matrix = np.delete(system.system_matrix, indexes, 0)
     system.reduced_system_matrix = np.delete(system.reduced_system_matrix, indexes, 1)
@@ -221,7 +266,9 @@ def process_supports(system):
         set_displacement_vector(system, [(node.id, 1), (node.id, 2)])
 
     for i in range(len(system.supports_roll)):
-        set_displacement_vector(system, [(system.supports_roll[i].id, system.supports_roll_direction[i])])
+        set_displacement_vector(
+            system, [(system.supports_roll[i].id, system.supports_roll_direction[i])]
+        )
 
     for node in system.supports_fixed:
         set_displacement_vector(system, [(node.id, 1), (node.id, 2), (node.id, 3)])
@@ -247,5 +294,3 @@ def process_supports(system):
 
             el.compile_kinematic_matrix(el.a1, el.a2, el.l)
             el.compile_stiffness_matrix()
-
-
