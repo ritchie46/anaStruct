@@ -453,12 +453,25 @@ class Plotter(PlottingValues):
         )
 
     def plot_result(
-        self, axis_values, force_1=None, force_2=None, digits=2, node_results=True
+        self,
+        axis_values,
+        force_1=None,
+        force_2=None,
+        digits=2,
+        node_results=True,
+        fill_polygon=True,
+        color=0
     ):
+        if fill_polygon:
+            rec = plt.Polygon(
+                np.vstack(axis_values).T, color="C{}".format(color), alpha=0.3
+            )
+            self.one_fig.add_patch(rec)
         # plot force
         x_val = axis_values[0]
         y_val = axis_values[1]
-        self.one_fig.plot(x_val, y_val, color="b")
+
+        self.one_fig.plot(x_val, y_val, color="C{}".format(color))
 
         if node_results:
             self._add_node_values(x_val, y_val, force_1, force_2, digits)
@@ -492,8 +505,10 @@ class Plotter(PlottingValues):
                 continue
             else:
                 axis_values = plot_values_axial_force(el, factor)
-
-                self.plot_result(axis_values, el.N_1, el.N_2, node_results=not bool(verbosity))
+                color = 1 if el.N_1 < 0 else 0
+                self.plot_result(
+                    axis_values, el.N_1, el.N_2, node_results=not bool(verbosity), color=color
+                )
 
                 point = (el.vertex_2 - el.vertex_1) / 2 + el.vertex_1
                 if el.N_1 < 0:
@@ -613,7 +628,9 @@ class Plotter(PlottingValues):
         include_structure=True,
     ):
         if include_structure:
-            self.plot_structure(figsize, 1, scale=scale, offset=offset, gridplot=gridplot)
+            self.plot_structure(
+                figsize, 1, scale=scale, offset=offset, gridplot=gridplot
+            )
         if factor is None:
             max_force = max(
                 map(
@@ -635,7 +652,9 @@ class Plotter(PlottingValues):
             shear_1 = el.shear_force[0]
             shear_2 = el.shear_force[-1]
 
-            self.plot_result(axis_values, shear_1, shear_2, node_results=not bool(verbosity))
+            self.plot_result(
+                axis_values, shear_1, shear_2, node_results=not bool(verbosity)
+            )
         if show:
             self.plot()
         else:
@@ -780,7 +799,7 @@ class Plotter(PlottingValues):
 
         for el in self.system.element_map.values():
             axis_values = plot_values_deflection(el, factor, linear)
-            self.plot_result(axis_values, node_results=False)
+            self.plot_result(axis_values, node_results=False, fill_polygon=False)
 
             if el.type == "general":
                 # index of the max deflection
