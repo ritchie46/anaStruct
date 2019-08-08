@@ -478,7 +478,6 @@ class Plotter(PlottingValues):
     ):
         self.plot_structure(figsize, 1, scale=scale, offset=offset, gridplot=gridplot)
 
-        node_results = True if verbosity == 0 else False
         if factor is None:
             max_force = max(
                 map(
@@ -494,7 +493,7 @@ class Plotter(PlottingValues):
             else:
                 axis_values = plot_values_axial_force(el, factor)
 
-                self.plot_result(axis_values, el.N_1, el.N_2, node_results=node_results)
+                self.plot_result(axis_values, el.N_1, el.N_2, node_results=not bool(verbosity))
 
                 point = (el.vertex_2 - el.vertex_1) / 2 + el.vertex_1
                 if el.N_1 < 0:
@@ -611,8 +610,10 @@ class Plotter(PlottingValues):
         offset=(0, 0),
         show=True,
         gridplot=False,
+        include_structure=True,
     ):
-        self.plot_structure(figsize, 1, scale=scale, offset=offset, gridplot=gridplot)
+        if include_structure:
+            self.plot_structure(figsize, 1, scale=scale, offset=offset, gridplot=gridplot)
         if factor is None:
             max_force = max(
                 map(
@@ -634,12 +635,7 @@ class Plotter(PlottingValues):
             shear_1 = el.shear_force[0]
             shear_2 = el.shear_force[-1]
 
-            if verbosity == 0:
-                node_results = True
-            else:
-                node_results = False
-
-            self.plot_result(axis_values, shear_1, shear_2, node_results=node_results)
+            self.plot_result(axis_values, shear_1, shear_2, node_results=not bool(verbosity))
         if show:
             self.plot()
         else:
