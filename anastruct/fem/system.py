@@ -1066,6 +1066,9 @@ class SystemElements:
                     "Mmin": np.min(el.bending_moment),
                     "Mmax": np.max(el.bending_moment),
                     "M": el.bending_moment if verbose else None,
+                    "Qmin": np.min(el.shear_force),
+                    "Qmax": np.max(el.shear_force),
+                    "Q": el.shear_force if verbose else None,
                     "q": el.q_load,
                 }
         else:
