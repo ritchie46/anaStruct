@@ -1,4 +1,3 @@
-from anastruct import __version__
 import sys
 from setuptools import setup
 
@@ -11,6 +10,7 @@ except Exception:
 if sys.version_info[0] == 3 and sys.version_info[1] < 5:
     sys.exit('Sorry, Python < 3.5 is not supported')
 
+exec(open('anastruct/_version.py').read())
 setup(
     name='anastruct',
     version=__version__,
