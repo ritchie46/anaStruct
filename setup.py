@@ -1,4 +1,4 @@
-
+from anastruct import __version__
 import sys
 from setuptools import setup
 
@@ -13,7 +13,7 @@ if sys.version_info[0] == 3 and sys.version_info[1] < 5:
 
 setup(
     name='anastruct',
-    version='1.1.0a1',
+    version=__version__,
     description='analyse 2D structures.',
     author='Ritchie Vink',
     author_email='ritchie46@gmail.com',

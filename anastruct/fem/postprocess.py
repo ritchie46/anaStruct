@@ -218,7 +218,7 @@ class ElementLevel:
 
             lx = np.linspace(0, element.l, con)
 
-            w = w - lx * np.sin(alpha)
+            w = w - lx * np.tan(alpha)
             element.deflection = -w
             element.max_deflection = np.max(np.abs(w))
 

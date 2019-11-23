@@ -245,7 +245,7 @@ class SimpleTest(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 [el.deflection.max() for el in ss.element_map.values()],
-                [0.10318963656044, 0.10318963656044],
+                [0.10319826420638535, 0.10319826420638542],
             )
         )
 
