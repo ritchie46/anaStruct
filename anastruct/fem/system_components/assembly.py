@@ -79,11 +79,11 @@ def apply_perpendicular_q_load(system):
                 kl, kr, q_perpendicular, element.l, element.EI, element.l
             )
 
-        rleft_x = rleft * math.sin(element.angle)
-        rright_x = rright * math.sin(element.angle)
+        rleft_x = rleft * math.sin(element.a1)
+        rright_x = rright * math.sin(element.a2)
 
-        rleft_z = rleft * math.cos(element.angle)
-        rright_z = rright * math.cos(element.angle)
+        rleft_z = rleft * math.cos(element.a1)
+        rright_z = rright * math.cos(element.a2)
 
         if element.type == "truss":
             left_moment = 0

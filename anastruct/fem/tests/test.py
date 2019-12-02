@@ -309,6 +309,17 @@ class SimpleTest(unittest.TestCase):
         ss.solve()
         self.assertAlmostEqual(50, ss.get_node_results_system(3)["Fx"])
 
+    def test_inclined_roll_and_qload(self):
+        ss = se.SystemElements(EA=356000, EI=1330)
+        ss.add_element(location=[[0, 0], [10, 0]])
+        ss.add_support_hinged(node_id=1)
+        ss.add_support_roll(node_id=-1, angle=45)
+        ss.q_load(q=-1, element_id=1, direction="element")
+        ss.solve()
+        self.assertAlmostEqual(-5, ss.get_node_results_system(1)['Fx'])
+        self.assertAlmostEqual(-5, ss.get_node_results_system(1)['Fy'])
+        self.assertAlmostEqual(-5, ss.get_element_results(1)['N'])
+
 
 if __name__ == "__main__":
     unittest.main()
