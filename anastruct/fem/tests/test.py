@@ -245,7 +245,7 @@ class SimpleTest(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 [el.deflection.max() for el in ss.element_map.values()],
-                [0.10319826420638535, 0.10319826420638542],
+                [0.10211865035814169, 0.10211865035814176],
             )
         )
 
@@ -319,6 +319,17 @@ class SimpleTest(unittest.TestCase):
         self.assertAlmostEqual(-5, ss.get_node_results_system(1)['Fx'])
         self.assertAlmostEqual(-5, ss.get_node_results_system(1)['Fy'])
         self.assertAlmostEqual(-5, ss.get_element_results(1)['N'])
+
+    def test_deflection_averaging(self):
+        from anastruct.fem.examples.ex_26_deflection import ss
+        ss.solve()
+        self.assertTrue(
+            np.allclose(
+                [el.deflection.max() for el in ss.element_map.values()],
+                [0.012466198717546239, 6.1000892498263e-07],
+            )
+        )
+
 
 
 if __name__ == "__main__":
