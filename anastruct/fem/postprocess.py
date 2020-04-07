@@ -1,6 +1,7 @@
 import copy
 import math
 import numpy as np
+import functions
 
 from anastruct.fem.node import Node
 from anastruct.basic import integrate_array
@@ -106,7 +107,6 @@ class ElementLevel:
             uz=element.element_displacement_vector[1],
             phi_y=element.element_displacement_vector[2],
         )
-
         element.node_map[element.node_id2] = Node(
             id=element.node_id2,
             Fx=element.element_force_vector[3]
@@ -158,8 +158,18 @@ class ElementLevel:
         m_val = element.node_1.Ty + iteration_factor * dT
         if element.all_q_load:
             q = element.all_q_load
-            q_part = -0.5 * -q * x ** 2 + 0.5 * -q * element.l * x
+            qi = element.all_qi_load
+            if q == qi:
+                q_part = -0.5 * -q * x ** 2 + 0.5 * -q * element.l * x
+            elif q != qi:
+                if q == 0 or qi == 0:
+                    q_part = q / (6 * element.l) * (x - element.vertex_1.x) ** 3 - q * 0.5 * element.l * 1/3 * x
+                elif q != 0 and qi != 0:
+                    q_part = 0.5 * qi * (x - element.vertex_1.x) ** 2 + (q - qi) / (6 * element.l) * \
+                             (x - element.vertex_1.x) ** 3 + -(((q + qi) / 2) + qi / 2) * element.l * (1 / 3) * x
             m_val += q_part
+
+        functions.eq.append(np.polyfit(x, m_val, 3))
 
         element.bending_moment = m_val
 
@@ -169,15 +179,24 @@ class ElementLevel:
         Determines the shear force by differentiating the bending moment.
         :param element: (object) of the Element class
         """
-        dV = np.diff(element.bending_moment)
-        dx = element.l / (con - 1)
-        shear_force = dV / dx
+        # dV = np.diff(element.bending_moment)
+        # dx = element.l / (con - 1)
+        # shear_force = dV / dx
+        #
+        # # Due to differentiation the first and the last values must be corrected.
+        # correction = shear_force[1] - shear_force[0]
+        # shear_force = np.insert(shear_force, 0, [shear_force[0] - 0.5 * correction])
+        # shear_force = np.insert(shear_force, con, [shear_force[-1] + 0.5 * correction])
+        # element.shear_force = shear_force
 
-        # Due to differentiation the first and the last values must be corrected.
-        correction = shear_force[1] - shear_force[0]
-        shear_force = np.insert(shear_force, 0, [shear_force[0] - 0.5 * correction])
-        shear_force = np.insert(shear_force, con, [shear_force[-1] + 0.5 * correction])
+        iteration_factor = np.linspace(0, 1, con)
+        x = iteration_factor * element.l
+        eq = functions.eq
+        c = functions.c
+        shear_force = eq[c][0] * 3 * x ** 2 + eq[c][1] * 2 * x + eq[c][2]
         element.shear_force = shear_force
+        c += 1
+
 
     @staticmethod
     def determine_displacements(element, con):
@@ -200,26 +219,27 @@ class ElementLevel:
 
         if element.type == "general":
             dx = element.l / (len(element.bending_moment) - 1)
+
+            # Take the average of cumulative integration from both sides. This is due to numerical differences, that
+            # would be observable in symmetrical structures.
+            phi_neg = (
+                -0.5
+                * (
+                    integrate_array(element.bending_moment, dx)
+                    + integrate_array(element.bending_moment[::-1], dx)
+                )
+                / element.EI
+            )
+            w = integrate_array(phi_neg, dx)
+
+            # Angle between last w and elements axis. The w array will be corrected so that this angle == 0.
+            alpha = np.arctan(w[-1] / element.l)
+
             lx = np.linspace(0, element.l, con)
 
-            # Next we are going to compute w by integrating from both sides.
-            # Due to numerical differences we need to take this two sided approach.
-            phi_neg1 = -integrate_array(element.bending_moment, dx) / element.EI
-            w1 = integrate_array(phi_neg1, dx)
-
-            # Angle between last w and elements axis. The w array will be corrected so that this angle == 0.
-            alpha1 = np.arctan(w1[-1] / element.l)
-            w1 = w1 - lx * np.tan(alpha1)
-
-            phi_neg2 = -integrate_array(element.bending_moment[::-1], dx) / element.EI
-            w2 = integrate_array(phi_neg2, dx)
-
-            # Angle between last w and elements axis. The w array will be corrected so that this angle == 0.
-            alpha2 = np.arctan(w2[-1] / element.l)
-            w2 = w2[::-1] - lx[::-1] * np.tan(alpha2)
-
-            element.deflection = -(w1 + w2) / 2.0
-            element.max_deflection = np.max(np.abs(element.deflection))
+            w = w - lx * np.tan(alpha)
+            element.deflection = -w
+            element.max_deflection = np.max(np.abs(w))
 
         # Extension
         u = 0.5 * (element.N_1 + element.N_2) / element.EA * element.l

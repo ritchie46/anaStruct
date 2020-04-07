@@ -725,7 +725,7 @@ class SystemElements:
             else:
                 self.supports_spring_y.append((self.node_map[id_], roll))
 
-    def q_load(self, q, element_id, direction="element"):
+    def q_load(self, q, qi, element_id, direction="element"):
         """
         Apply a q-load to an element.
 
@@ -733,14 +733,15 @@ class SystemElements:
         :param q: (flt) value of the q-load
         :param direction: (str) "element", "x", "y"
         """
-        q, element_id, direction = args_to_lists(q, element_id, direction)
-
+        q, qi, element_id, direction = args_to_lists(q, qi, element_id, direction)
         for i in range(len(element_id)):
             id_ = _negative_index_to_id(element_id[i], self.element_map.keys())
             self.plotter.max_q = max(self.plotter.max_q, abs(q[i]))
+            self.plotter.max_qi = max(self.plotter.max_qi, abs(qi[i]))
             self.loads_q[id_] = q[i] * self.orientation_cs * self.load_factor
             el = self.element_map[id_]
             el.q_load = q[i] * self.orientation_cs * self.load_factor
+            el.qi_load = qi[i] * self.orientation_cs * self.load_factor
             el.q_direction = direction[i]
 
     def point_load(self, node_id, Fx=0, Fy=0, rotation=0):

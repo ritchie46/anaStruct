@@ -1,3 +1,4 @@
+import functions
 import numpy as np
 import math
 import matplotlib.pyplot as plt
@@ -22,6 +23,7 @@ class Plotter(PlottingValues):
         self.system = system
         self.one_fig = None
         self.max_q = 0
+        self.max_qi = 0
         self.max_system_point_load = 0
 
     def __start_plot(self, figsize):
@@ -195,12 +197,15 @@ class Plotter(PlottingValues):
 
         for q_id in self.system.loads_q.keys():
             el = self.system.element_map[q_id]
-            if el.q_load > 0:
+            if el.q_load > 0 or el.qi_load > 0:
                 direction = 1
             else:
                 direction = -1
 
-            h = 0.05 * max_val * abs(el.q_load) / self.max_q
+            if abs(el.q_load) >= abs(el.qi_load):
+                h = 0.05 * max_val * abs(el.q_load) / self.max_q
+            elif abs(el.q_load) < abs(el.qi_load):
+                h = 0.05 * max_val * abs(el.qi_load) / self.max_qi
             x1 = el.vertex_1.x
             y1 = el.vertex_1.y
             x2 = el.vertex_2.x
@@ -218,33 +223,80 @@ class Plotter(PlottingValues):
             yn1 = y1 + np.cos(ai) * h * direction
             xn2 = x2 + np.sin(ai) * h * direction
             yn2 = y2 + np.cos(ai) * h * direction
+            q = el.q_load
+            qi = el.qi_load
+            if q != qi:
+                if qi == 0:
+                    yn1 = y1
+                    xn1 = x1
+                elif q == 0:
+                    yn2 = y2
+                    xn2 = x2
+                else:
+                    if q < qi:
+                        yn2 = y2 + np.cos(ai) * h * direction * 0.5
+                        xn2 = x2 + np.sin(ai) * h * direction * 0.5
+                    elif qi < q:
+                        yn1 = y1 + np.cos(ai) * h * direction * 0.5
+                        xn1 = x1 + np.sin(ai) * h * direction * 0.5
             coordinates = ([x1, xn1, xn2, x2], [y1, yn1, yn2, y2])
-            self.one_fig.plot(*coordinates, color="g")
-            rec = plt.Polygon(np.vstack(coordinates).T, color="g", alpha=0.3)
+            self.one_fig.plot(*coordinates, color="b")
+            rec = plt.Polygon(np.vstack(coordinates).T, color="b", alpha=0.1)
             self.one_fig.add_patch(rec)
 
             if verbosity == 0:
                 # arrow
                 xa_1 = (x2 - x1) * 0.2 + x1 + np.sin(ai) * 0.8 * h * direction
+                xb_1 = (x2 - x1) + x1 + np.sin(ai) * 0.8 * h * direction
+                if q != qi:
+                    if q == 0:
+                        xa_1 = x1 + np.sin(ai) * 0.8 * h * direction
+                    elif qi == 0:
+                        xa_1 = (x2 - x1) * 0.2 + x1 + np.sin(ai) * 0.8 * h * direction
+                    else:
+                        xa_1 = x1 + np.sin(ai) * 0.8 * h * direction
                 ya_1 = (y2 - y1) * 0.2 + y1 + np.cos(ai) * 0.8 * h * direction
+                yb_1 = (y2 - y1) + y1 + np.cos(ai) * 0.8 * h * direction
                 len_x = np.sin(ai - np.pi) * 0.6 * h * direction
                 len_y = np.cos(ai - np.pi) * 0.6 * h * direction
                 xt = xa_1 + np.sin(-el.angle) * 0.4 * h * direction
+                xtb = xb_1 + np.sin(-el.angle) * 0.4 * h * direction
                 yt = ya_1 + np.cos(-el.angle) * 0.4 * h * direction
+                ytb = yb_1 + np.cos(-el.angle) * 0.4 * h * direction
                 # fc = face color, ec = edge color
-                self.one_fig.arrow(
-                    xa_1,
-                    ya_1,
-                    len_x,
-                    len_y,
-                    head_width=h * 0.25,
-                    head_length=0.2 * h,
-                    ec="g",
-                    fc="g",
-                )
-                self.one_fig.text(
-                    xt, yt, "q=%d" % el.q_load, color="k", fontsize=9, zorder=10
-                )
+                # self.one_fig.arrow(
+                #     xa_1,
+                #     ya_1,
+                #     len_x,
+                #     len_y,
+                #     head_width=h * 0.25,
+                #     head_length=0.2 * h,
+                #     ec="black",
+                #     fc="black",
+                # )
+                if q != qi:
+                    if q == 0:
+                        self.one_fig.text(
+                            xt, yt, "q=%d" % el.qi_load, color="k", fontsize=12, zorder=10)
+                    elif qi == 0:
+                        self.one_fig.text(
+                            xt, yt, "q=%d" % el.q_load, color="k", fontsize=12, zorder=10)
+                    else:
+                        if q > qi:
+                            self.one_fig.text(
+                                xt, yt, "q=%d" % el.qi_load, color="k", fontsize=12, zorder=10)
+                            self.one_fig.text(
+                                xtb, ytb, "q=%d" % el.q_load, color="k", fontsize=12, zorder=10)
+                        else:
+                            self.one_fig.text(
+                                xt, yt, "q=%d" % el.qi_load, color="k", fontsize=12, zorder=10)
+                            self.one_fig.text(
+                                xtb, ytb, "q=%d" % el.q_load, color="k", fontsize=12, zorder=10)
+                else:
+                    self.one_fig.text(
+                        xt, yt, "q=%d" % el.q_load, color="k", fontsize=12, zorder=10)
+                # self.one_fig.text(
+                #          xt, yt, "q=%d" % el.q_load, color="k", fontsize=12, zorder=10)
 
     @staticmethod
     def __arrow_patch_values(Fx, Fz, node, h):
@@ -257,6 +309,7 @@ class Plotter(PlottingValues):
         """
 
         F = (Fx ** 2 + Fz ** 2) ** 0.5
+        #print(F) #força dos apoios
         len_x = Fx / F * h
         len_y = -Fz / F * h
         x = node.vertex.x - len_x * 1.2
@@ -460,18 +513,20 @@ class Plotter(PlottingValues):
         digits=2,
         node_results=True,
         fill_polygon=True,
-        color=0
+        color=0,
+        label = ''
     ):
         if fill_polygon:
             rec = plt.Polygon(
-                np.vstack(axis_values).T, color="C{}".format(color), alpha=0.3
+                np.vstack(axis_values).T, color=f"C{color}", alpha=0.4, label = f"{label}"
             )
             self.one_fig.add_patch(rec)
         # plot force
         x_val = axis_values[0]
         y_val = axis_values[1]
 
-        self.one_fig.plot(x_val, y_val, color="C{}".format(color))
+        self.one_fig.plot(x_val, y_val, color=f"C{color}")
+        plt.legend(loc='upper right')
 
         if node_results:
             self._add_node_values(x_val, y_val, force_1, force_2, digits)
@@ -582,6 +637,9 @@ class Plotter(PlottingValues):
             factor = det_scaling_factor(max_moment, self.max_val_structure)
 
         # determine the axis values
+        c = 0
+        ce = 0
+
         for el in self.system.element_map.values():
             if (
                 math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
@@ -591,6 +649,19 @@ class Plotter(PlottingValues):
                 # If True there is no bending moment, so no need for plotting.
                 continue
             axis_values = plot_values_bending_moment(el, factor, con)
+            axis_eq = plot_values_bending_moment(el, 1, con)
+
+            axismx = list(axis_eq[0])
+            del axismx[0], axismx[-1]
+            axismy = list(axis_eq[1])
+            del axismy[0], axismy[-1]
+
+            cores = [4, 2, 3, 1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+            colorpick = cores[c]
+
+            eq = functions.eq
+            coefstr = f'{eq[ce][0]:.2f}x³ + {eq[ce][1]:.2f}x² + {eq[ce][2]:.2f}x + {eq[ce][3]:.2f}'
+
             if verbosity == 0:
                 node_results = True
             else:
@@ -600,7 +671,14 @@ class Plotter(PlottingValues):
                 abs(el.node_1.Ty),
                 abs(el.node_2.Ty),
                 node_results=node_results,
+                color=colorpick,
+                label=coefstr,
             )
+
+            ce += 1
+            c += 1
+            if c > len(cores)-1:
+                c = 0
 
             if el.all_q_load:
                 m_sag = min(el.bending_moment)
@@ -640,6 +718,9 @@ class Plotter(PlottingValues):
             )
             factor = det_scaling_factor(max_force, self.max_val_structure)
 
+        c = 0
+        ce = 0
+
         for el in self.system.element_map.values():
             if (
                 math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
@@ -649,12 +730,30 @@ class Plotter(PlottingValues):
                 # If True there is no bending moment and no shear, thus no shear force, so no need for plotting.
                 continue
             axis_values = plot_values_shear_force(el, factor)
-            shear_1 = el.shear_force[0]
-            shear_2 = el.shear_force[-1]
+            axis_eq = plot_values_shear_force(el, 1)
+
+            axisvx = list(axis_eq[0])
+            del axisvx[0], axisvx[-1]
+            axisvy = list(axis_eq[1] * -1)
+            del axisvy[0], axisvy[-1]
+
+            cores = [4, 2, 3, 1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+            colorpick = cores[c]
+
+            eq = functions.eq
+            coefstr = f'{eq[ce][0] * 3:.2f}x² + {eq[ce][1] * 2:.2f}x + {eq[ce][2]:.2f}'
+
+            shear_1 = -el.shear_force[0]
+            shear_2 = -el.shear_force[-1]
 
             self.plot_result(
-                axis_values, shear_1, shear_2, node_results=not bool(verbosity)
+                axis_values, -shear_1, -shear_2, node_results=not bool(verbosity), color=colorpick,label=coefstr
             )
+            ce += 1
+            c += 1
+            if c > len(cores)-1:
+                c = 0
+
         if show:
             self.plot()
         else:

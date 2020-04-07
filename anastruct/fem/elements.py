@@ -4,6 +4,7 @@ import numpy as np
 from functools import lru_cache
 import copy
 
+
 try:
     from anastruct.fem.cython.celements import det_shear, det_moment
 except ImportError:
@@ -58,6 +59,7 @@ class Element:
         self.element_primary_force_vector = np.zeros(6)  # acting external forces
         self.element_force_vector = None
         self.q_load = 0
+        self.qi_load = 0
         self.q_direction = None
         self.dead_load = 0
         self.N_1 = None
@@ -91,6 +93,27 @@ class Element:
             q = self.q_load * q_factor
 
         return q + self.dead_load * cos(self.angle)
+
+
+    @property
+    def all_qi_load(self):
+        if self.qi_load is None:
+            qi = 0
+        else:
+            if self.q_direction == "x":
+                q_factor = -sin(self.angle)
+            elif self.q_direction == "y":
+                q_factor = cos(self.angle)
+            elif self.q_direction == "element" or self.q_direction is None:
+                q_factor = 1
+            elif self.q_direction is not None:
+                raise FEMException(
+                    "Wrong parameters",
+                    "q-loads direction is not set property. Please choose 'x', 'y', or 'element'",
+                )
+            qi = self.qi_load * q_factor
+
+        return qi + self.dead_load * cos(self.angle)
 
     @property
     def node_1(self):
