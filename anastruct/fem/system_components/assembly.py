@@ -50,8 +50,9 @@ def apply_perpendicular_q_load(system):
     for element_id in system.loads_dead_load:
         element = system.element_map[element_id]
         q_perpendicular = element.all_q_load
+        qi_perpendicular = element.all_qi_load
 
-        if q_perpendicular == 0:
+        if q_perpendicular == 0 and qi_perpendicular == 0:
             continue
         elif (
             element.q_direction == "x"
@@ -64,20 +65,16 @@ def apply_perpendicular_q_load(system):
         kr = element.constitutive_matrix[2][2] * 1e6
 
         if math.isclose(kl, kr):
-            left_moment = det_moment(kl, kr, q_perpendicular, 0, element.EI, element.l)
-            right_moment = -left_moment
-            rleft = det_shear(kl, kr, q_perpendicular, 0, element.EI, element.l)
-            rright = rleft
+            left_moment = det_moment(kl, kr, qi_perpendicular, q_perpendicular, 0, element.EI, element.l)
+            right_moment = -det_moment(kl, kr, qi_perpendicular, q_perpendicular, element.l, element.EI, element.l)
+            rleft = det_shear(kl, kr, qi_perpendicular, q_perpendicular, 0, element.EI, element.l)
+            rright = -det_shear(kl, kr, qi_perpendicular, q_perpendicular, element.l, element.EI, element.l)
         else:
             # minus because of systems positive rotation
-            left_moment = det_moment(kl, kr, q_perpendicular, 0, element.EI, element.l)
-            right_moment = -det_moment(
-                kl, kr, q_perpendicular, element.l, element.EI, element.l
-            )
-            rleft = det_shear(kl, kr, q_perpendicular, 0, element.EI, element.l)
-            rright = -det_shear(
-                kl, kr, q_perpendicular, element.l, element.EI, element.l
-            )
+            left_moment = det_moment(kl, kr, qi_perpendicular, q_perpendicular, 0, element.EI, element.l)
+            right_moment = -det_moment(kl, kr, qi_perpendicular, q_perpendicular, element.l, element.EI, element.l)
+            rleft = det_shear(kl, kr, qi_perpendicular, q_perpendicular, 0, element.EI, element.l)
+            rright = -det_shear(kl, kr, qi_perpendicular, q_perpendicular, element.l, element.EI, element.l)
 
         rleft_x = rleft * math.sin(element.a1)
         rright_x = rright * math.sin(element.a2)
