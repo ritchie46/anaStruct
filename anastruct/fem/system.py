@@ -77,6 +77,7 @@ class SystemElements:
         # keep track of the loads
         self.loads_point = {}  # node ids with a point loads
         self.loads_q = {}  # element ids with a q-load
+        self.loads_qi = {}
         self.loads_moment = {}
         self.loads_dead_load = set()  # element ids with q-load due to dead load
 
@@ -739,6 +740,7 @@ class SystemElements:
             self.plotter.max_q = max(self.plotter.max_q, abs(q[i]))
             self.plotter.max_qi = max(self.plotter.max_qi, abs(qi[i]))
             self.loads_q[id_] = q[i] * self.orientation_cs * self.load_factor
+            self.loads_qi[id_] = qi[i] * self.orientation_cs * self.load_factor
             el = self.element_map[id_]
             el.q_load = q[i] * self.orientation_cs * self.load_factor
             el.qi_load = qi[i] * self.orientation_cs * self.load_factor
@@ -1071,6 +1073,7 @@ class SystemElements:
                     "Qmax": np.max(el.shear_force),
                     "Q": el.shear_force if verbose else None,
                     "q": el.q_load,
+                    "qi": el.qi_load,
                 }
         else:
             result_list = []
@@ -1105,6 +1108,7 @@ class SystemElements:
                             "Qmax": np.max(el.shear_force),
                             "Q": el.shear_force if verbose else None,
                             "q": el.q_load,
+                            "q": el.qi_load
                         }
                     )
             return result_list
@@ -1266,6 +1270,12 @@ class SystemElements:
                 element_id=element_id,
                 direction=self.element_map[element_id].q_direction,
             )
+        for element_id, forces in self.loads_qi.items():
+            ss.qi_load(
+                qi=forces / self.orientation_cs / self.load_factor,
+                element_id=element_id,
+                direction=self.element_map[element_id].q_direction,
+            )
 
         self.__dict__ = ss.__dict__.copy()
 
@@ -1278,10 +1288,12 @@ class SystemElements:
 
         self.loads_point = {}
         self.loads_q = {}
+        self.loads_qi = {}
         self.loads_moment = {}
 
         for k in self.element_map:
             self.element_map[k].q_load = 0
+            self.element_map[k].qi_load = 0
             if dead_load:
                 self.element_map[k].dead_load = 0
         if dead_load:

@@ -119,7 +119,6 @@ class ElementLevel:
             uz=element.element_displacement_vector[4],
             phi_y=element.element_displacement_vector[5],
         )
-
         # Local coordinate system. With inclined supports
         for i in range(1, 3):
             a_n = getattr(element, "a{}".format(i))
@@ -145,7 +144,6 @@ class ElementLevel:
         N_2 = -(math.sin(element.angle) * element.node_2.Fz) + (
             math.cos(element.angle) * element.node_2.Fx
         )
-
         element.N_1 = N_1
         element.N_2 = N_2
 
@@ -156,17 +154,12 @@ class ElementLevel:
         iteration_factor = np.linspace(0, 1, con)
         x = iteration_factor * element.l
         m_val = element.node_1.Ty + iteration_factor * dT
-        if element.all_q_load:
+        if element.all_q_load or element.all_qi_load:
             q = element.all_q_load
             qi = element.all_qi_load
-            if q == qi:
-                q_part = -0.5 * -q * x ** 2 + 0.5 * -q * element.l * x
-            elif q != qi:
-                if q == 0 or qi == 0:
-                    q_part = q / (6 * element.l) * (x - element.vertex_1.x) ** 3 - q * 0.5 * element.l * 1/3 * x
-                elif q != 0 and qi != 0:
-                    q_part = 0.5 * qi * (x - element.vertex_1.x) ** 2 + (q - qi) / (6 * element.l) * \
-                             (x - element.vertex_1.x) ** 3 + -(((q + qi) / 2) + qi / 2) * element.l * (1 / 3) * x
+
+            q_part = -((qi - q) / (6 * element.l)) * x ** 3 + (qi / 2) * x ** 2 - (((2 * qi) + q) / 6) * element.l * x
+
             m_val += q_part
 
         functions.eq.append(np.polyfit(x, m_val, 3))
@@ -179,15 +172,6 @@ class ElementLevel:
         Determines the shear force by differentiating the bending moment.
         :param element: (object) of the Element class
         """
-        # dV = np.diff(element.bending_moment)
-        # dx = element.l / (con - 1)
-        # shear_force = dV / dx
-        #
-        # # Due to differentiation the first and the last values must be corrected.
-        # correction = shear_force[1] - shear_force[0]
-        # shear_force = np.insert(shear_force, 0, [shear_force[0] - 0.5 * correction])
-        # shear_force = np.insert(shear_force, con, [shear_force[-1] + 0.5 * correction])
-        # element.shear_force = shear_force
 
         iteration_factor = np.linspace(0, 1, con)
         x = iteration_factor * element.l

@@ -226,7 +226,9 @@ def constitutive_matrix(EA, EI, l, spring=None):
     :return: (array)
     """
     matrix = np.array(
-        [[EA / l, 0, 0], [0, 4 * EI / l, -2 * EI / l], [0, -2 * EI / l, 4 * EI / l]]
+        [[EA / l, 0, 0],
+        [0, 4 * EI / l, -2 * EI / l],
+        [0, -2 * EI / l, 4 * EI / l]]
     )
 
     if spring is not None:
@@ -338,7 +340,7 @@ def geometric_stiffness_matrix(l, N, a1, a2):
 
 
 @lru_cache(CACHE_BOUND)
-def det_axial(EA, L, q, x):
+def det_axial(EA, L, qi, q, x):
     """
     See notebook in: anastruct/fem/background/distributed_ax_force.ipynb
 
@@ -348,4 +350,4 @@ def det_axial(EA, L, q, x):
     :param L: (flt) Length of the beam
     :return: (flt)
     """
-    return EA * (L * q / (2 * EA) - q * x / EA)
+    return EA*(x*(-L*qi/2 + x*(-q + qi)/3)/(EA*L) + (L**2*(q + 2*qi)/6 - L*qi*x/2 + x**2*(-q + qi)/6)/(EA*L))
