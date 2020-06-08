@@ -65,18 +65,13 @@ def plot_values_bending_moment(element, factor, n):
     x_val = x1 + interpolate * dx
     y_val = y1 + interpolate * dy
 
-    if element.q_load or element.dead_load:
+    if element.q_load or element.qi_load or element.dead_load:
         q = element.all_q_load
         qi = element.all_qi_load
         x = interpolate * element.l
-        if q == qi:
-            q_part = -0.5 * -q * x ** 2 + 0.5 * -q * element.l * x
-        elif q != qi:
-            if q == 0 or qi == 0:
-                q_part = q / (6 * element.l) * (x - element.vertex_1.x) ** 3 - q * 0.5 * element.l * 1/3 * x
-            elif qi != 0 and q != 0:
-                q_part = 0.5 * qi * (x - element.vertex_1.x) ** 2 + (q - qi) / (6 * element.l) * \
-                         (x - element.vertex_1.x) ** 3 + -(((q + qi) / 2) + qi / 2) * element.l * (1 / 3) * x
+
+        q_part = -((qi - q) / (6 * element.l)) * x ** 3 + (qi / 2) * x ** 2 - (((2 * qi) + q) / 6) * element.l * x
+
         x_val += sin * q_part * factor
         y_val += cos * q_part * factor
 
@@ -112,18 +107,6 @@ def plot_values_shear_force(element, factor):
     y1 = -element.vertex_1.z
     x2 = element.vertex_2.x
     y2 = -element.vertex_2.z
-
-    # shear_1 = element.shear_force[0]
-    # shear_2 = element.shear_force[-1]
-
-    # apply angle ai
-    # x_1 = x1 + shear_1 * math.sin(-element.angle) * factor
-    # y_1 = y1 + shear_1 * math.cos(-element.angle) * factor
-    # x_2 = x2 + shear_2 * math.sin(-element.angle) * factor
-    # y_2 = y2 + shear_2 * math.cos(-element.angle) * factor
-    #
-    # x_val = np.array([x1, x_1, x_2, x2])
-    # y_val = np.array([y1, y_1, y_2, y2])
 
     n = len(element.shear_force)
 

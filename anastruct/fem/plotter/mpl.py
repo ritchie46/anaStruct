@@ -277,26 +277,26 @@ class Plotter(PlottingValues):
                 if q != qi:
                     if q == 0:
                         self.one_fig.text(
-                            xt, yt, "q=%d" % el.qi_load, color="k", fontsize=12, zorder=10)
+                            xt, yt, "q=%d" % el.qi_load, color="k", fontsize=functions.size, zorder=10)
                     elif qi == 0:
                         self.one_fig.text(
-                            xt, yt, "q=%d" % el.q_load, color="k", fontsize=12, zorder=10)
+                            xt, yt, "q=%d" % el.q_load, color="k", fontsize=functions.size, zorder=10)
                     else:
                         if q > qi:
                             self.one_fig.text(
-                                xt, yt, "q=%d" % el.qi_load, color="k", fontsize=12, zorder=10)
+                                xt, yt, "q=%d" % el.qi_load, color="k", fontsize=functions.size, zorder=10)
                             self.one_fig.text(
-                                xtb, ytb, "q=%d" % el.q_load, color="k", fontsize=12, zorder=10)
+                                xtb, ytb, "q=%d" % el.q_load, color="k", fontsize=functions.size, zorder=10)
                         else:
                             self.one_fig.text(
-                                xt, yt, "q=%d" % el.qi_load, color="k", fontsize=12, zorder=10)
+                                xt, yt, "q=%d" % el.qi_load, color="k", fontsize=functions.size, zorder=10)
                             self.one_fig.text(
-                                xtb, ytb, "q=%d" % el.q_load, color="k", fontsize=12, zorder=10)
+                                xtb, ytb, "q=%d" % el.q_load, color="k", fontsize=functions.size, zorder=10)
                 else:
                     self.one_fig.text(
-                        xt, yt, "q=%d" % el.q_load, color="k", fontsize=12, zorder=10)
+                        xt, yt, "q=%d" % el.q_load, color="k", fontsize=functions.size, zorder=10)
                 # self.one_fig.text(
-                #          xt, yt, "q=%d" % el.q_load, color="k", fontsize=12, zorder=10)
+                #          xt, yt, "q=%d" % el.q_load, color="k", fontsize=functions.size, zorder=10)
 
     @staticmethod
     def __arrow_patch_values(Fx, Fz, node, h):
@@ -341,7 +341,7 @@ class Plotter(PlottingValues):
                 zorder=11,
             )
             if verbosity == 0:
-                self.one_fig.text(x, y, "F=%d" % F, color="k", fontsize=9, zorder=10)
+                self.one_fig.text(x, y, "F=%d" % F, color="k", fontsize=functions.size, zorder=10)
 
     def __moment_load_patch(self, max_val):
 
@@ -370,7 +370,7 @@ class Plotter(PlottingValues):
                 -node.vertex.z + h * 0.2,
                 "T=%d" % v,
                 color="k",
-                fontsize=9,
+                fontsize=functions.size,
                 zorder=10,
             )
 
@@ -425,7 +425,7 @@ class Plotter(PlottingValues):
                     y_val[0] + ax_range,
                     "%d" % el.node_id1,
                     color="g",
-                    fontsize=9,
+                    fontsize=functions.size,
                     zorder=10,
                 )
                 self.one_fig.text(
@@ -433,7 +433,7 @@ class Plotter(PlottingValues):
                     y_val[-1] + ax_range,
                     "%d" % el.node_id2,
                     color="g",
-                    fontsize=9,
+                    fontsize=functions.size,
                     zorder=10,
                 )
 
@@ -443,7 +443,7 @@ class Plotter(PlottingValues):
                 y_val = (y_val[0] + y_val[-1]) / 2 + np.cos(el.angle) * factor
 
                 self.one_fig.text(
-                    x_val, y_val, str(el.id), color="r", fontsize=9, zorder=10
+                    x_val, y_val, str(el.id), color="r", fontsize=functions.size, zorder=10
                 )
 
                 # add element annotation to plot
@@ -452,7 +452,7 @@ class Plotter(PlottingValues):
                     x_val += +np.sin(el.angle) * factor * 2.3
                     y_val += -np.cos(el.angle) * factor * 2.3
                     self.one_fig.text(
-                        x_val, y_val, el.section_name, color="b", fontsize=9, zorder=10
+                        x_val, y_val, el.section_name, color="b", fontsize=functions.size, zorder=10
                     )
 
         # add supports
@@ -470,7 +470,7 @@ class Plotter(PlottingValues):
             self.__moment_load_patch(max_plot_range)
 
         if show:
-            self.plot()
+            plt.plot()
         else:
             return self.fig
 
@@ -482,7 +482,7 @@ class Plotter(PlottingValues):
             x_val[1] - offset,
             y_val[1] + offset,
             "%s" % round(value_1, digits),
-            fontsize=9,
+            fontsize=functions.size,
             ha="center",
             va="center",
         )
@@ -490,7 +490,7 @@ class Plotter(PlottingValues):
             x_val[-2] - offset,
             y_val[-2] + offset,
             "%s" % round(value_2, digits),
-            fontsize=9,
+            fontsize=functions.size,
             ha="center",
             va="center",
         )
@@ -500,7 +500,7 @@ class Plotter(PlottingValues):
             x_val[index],
             y_val[index],
             "%s" % round(value, digits),
-            fontsize=9,
+            fontsize=functions.size,
             ha="center",
             va="center",
         )
@@ -526,7 +526,7 @@ class Plotter(PlottingValues):
         y_val = axis_values[1]
 
         self.one_fig.plot(x_val, y_val, color=f"C{color}")
-        plt.legend(loc='upper right')
+        plt.legend(loc='upper right', prop={"size":functions.eqsize})
 
         if node_results:
             self._add_node_values(x_val, y_val, force_1, force_2, digits)
@@ -580,7 +580,7 @@ class Plotter(PlottingValues):
                             "-",
                             ha="center",
                             va="center",
-                            fontsize=20,
+                            fontsize=functions.size,
                             color="b",
                         )
                 if el.N_1 > 0:
@@ -597,7 +597,7 @@ class Plotter(PlottingValues):
                             "+",
                             ha="center",
                             va="center",
-                            fontsize=14,
+                            fontsize=functions.size,
                             color="b",
                         )
 
@@ -605,6 +605,7 @@ class Plotter(PlottingValues):
             self.plot()
         else:
             return self.fig
+
 
     def bending_moment(
         self,
@@ -626,7 +627,7 @@ class Plotter(PlottingValues):
                         abs(el.node_1.Ty),
                         abs(
                             (el.node_1.Ty - el.node_2.Ty) * 0.5
-                            - 1 / 8 * el.all_q_load * el.l ** 2
+                            - ((el.all_qi_load + el.all_qi_load) / 16) * el.l ** 2
                         ),
                     )
                     if el.type == "general"
@@ -644,17 +645,11 @@ class Plotter(PlottingValues):
             if (
                 math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
-                and not el.all_q_load
+                and not el.all_q_load and not el.all_qi_load
             ):
                 # If True there is no bending moment, so no need for plotting.
                 continue
             axis_values = plot_values_bending_moment(el, factor, con)
-            axis_eq = plot_values_bending_moment(el, 1, con)
-
-            axismx = list(axis_eq[0])
-            del axismx[0], axismx[-1]
-            axismy = list(axis_eq[1])
-            del axismy[0], axismy[-1]
 
             cores = [4, 2, 3, 1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
             colorpick = cores[c]
@@ -680,7 +675,7 @@ class Plotter(PlottingValues):
             if c > len(cores)-1:
                 c = 0
 
-            if el.all_q_load:
+            if el.all_q_load or el.all_qi_load:
                 m_sag = min(el.bending_moment)
                 index = find_nearest(el.bending_moment, m_sag)[1]
                 offset = -self.max_val_structure * 0.05
@@ -688,7 +683,7 @@ class Plotter(PlottingValues):
                 if verbosity == 0:
                     x = axis_values[0][index] + np.sin(-el.angle) * offset
                     y = axis_values[1][index] + np.cos(-el.angle) * offset
-                    self.one_fig.text(x, y, "%s" % round(m_sag, 1), fontsize=9)
+                    self.one_fig.text(x, y, "%s" % round(m_sag, 1), fontsize=functions.size)
         if show:
             self.plot()
         else:
@@ -725,17 +720,12 @@ class Plotter(PlottingValues):
             if (
                 math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
-                and el.q_load is None
+                and el.q_load is None and el.qi_load is None
             ):
                 # If True there is no bending moment and no shear, thus no shear force, so no need for plotting.
                 continue
             axis_values = plot_values_shear_force(el, factor)
             axis_eq = plot_values_shear_force(el, 1)
-
-            axisvx = list(axis_eq[0])
-            del axisvx[0], axisvx[-1]
-            axisvy = list(axis_eq[1] * -1)
-            del axisvy[0], axisvy[-1]
 
             cores = [4, 2, 3, 1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
             colorpick = cores[c]
@@ -800,7 +790,7 @@ class Plotter(PlottingValues):
                         y,
                         "R=%s" % round(node.Fx, 2),
                         color="k",
-                        fontsize=9,
+                        fontsize=functions.size,
                         zorder=10,
                     )
 
@@ -831,7 +821,7 @@ class Plotter(PlottingValues):
                         y,
                         "R=%s" % round(node.Fz, 2),
                         color="k",
-                        fontsize=9,
+                        fontsize=functions.size,
                         zorder=10,
                     )
 
@@ -862,7 +852,7 @@ class Plotter(PlottingValues):
                         -node.vertex.z + h * 0.2,
                         "T=%s" % round(node.Ty, 2),
                         color="k",
-                        fontsize=9,
+                        fontsize=functions.size,
                         zorder=10,
                     )
         if show:
@@ -936,24 +926,24 @@ class Plotter(PlottingValues):
         self.fig = plt.figure(figsize=figsize)
         a = 320
         self.one_fig = self.fig.add_subplot(a + 1)
-        plt.title("structure")
+        plt.title("Estrutura")
         self.plot_structure(
             figsize, verbosity, show=False, scale=scale, offset=offset, gridplot=True
         )
         self.one_fig = self.fig.add_subplot(a + 2)
-        plt.title("bending moment")
+        plt.title("Momento Fletor")
         self.bending_moment(None, figsize, verbosity, scale, offset, False, True)
         self.one_fig = self.fig.add_subplot(a + 3)
-        plt.title("shear force")
+        plt.title("Força Cortante")
         self.shear_force(None, figsize, verbosity, scale, offset, False, True)
         self.one_fig = self.fig.add_subplot(a + 4)
-        plt.title("axial force")
+        plt.title("Força Normal")
         self.axial_force(None, figsize, verbosity, scale, offset, False, True)
         self.one_fig = self.fig.add_subplot(a + 5)
-        plt.title("displacements")
+        plt.title("Deslocamentos")
         self.displacements(None, figsize, verbosity, scale, offset, False, False, True)
         self.one_fig = self.fig.add_subplot(a + 6)
-        plt.title("reaction force")
+        plt.title("Reação dos Apoios")
         self.reaction_force(figsize, verbosity, scale, offset, False, True)
 
         if show:
