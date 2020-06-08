@@ -1,7 +1,7 @@
 from functools import lru_cache
 
 @lru_cache(32000)
-def det_moment(kl, kr, q, x, EI, L):
+def det_moment(kl, kr, qi, q, x, EI, L):
     """
     See notebook in: anastruct/fem/background/primary_m_v.ipynb
 
@@ -13,13 +13,15 @@ def det_moment(kl, kr, q, x, EI, L):
     :param L: (flt) Length of the beam
     :return: (flt)
     """
-    return EI*(-L**3*kl*q*(6*EI + L*kr)/(12*EI*(12*EI**2 + 4*EI*L*kl + 4*EI*L*kr + L**2*kl*kr)) +
-               L*q*x*(12*EI**2 + 5*EI*L*kl + 3*EI*L*kr +
-                      L**2*kl*kr)/(2*EI*(12*EI**2 + 4*EI*L*kl + 4*EI*L*kr + L**2*kl*kr)) - q*x**2/(2*EI))
+    return EI*(-L**3*kl*(14*EI*q + 16*EI*qi + 2*L*kr*q +
+            3*L*kr*qi)/(60*EI*(12*EI**2 + 4*EI*L*kl + 4*EI*L*kr + L**2*kl*kr)) -
+            L*x*(-2*L*(q + 4*qi)*(EI*kr + kl*(EI + L*kr)) +
+            5*(2*EI + L*kl)*(4*EI*q + 8*EI*qi + L*kr*q + 3*L*kr*qi))/(20*EI*(2*EI*L*kr - 6*EI*(2*EI + L*kr) +
+            2*L*kl*(EI + L*kr) - 3*L*kl*(2*EI + L*kr))) - qi*x**2/(2*EI) - x**3*(q - qi)/(6*EI*L))
 
 
 @lru_cache(32000)
-def det_shear(kl, kr, q, x, EI, L):
+def det_shear(kl, kr, qi, q, x, EI, L):
     """
     See notebook in: anastruct/fem/background/primary_m_v.ipynb
 
@@ -31,7 +33,9 @@ def det_shear(kl, kr, q, x, EI, L):
     :param L: (flt) Length of the beam
     :return: (flt)
     """
-    return EI*(L*q*(12*EI**2 + 5*EI*L*kl + 3*EI*L*kr + L**2*kl*kr) /
-               (2*EI*(12*EI**2 + 4*EI*L*kl + 4*EI*L*kr + L**2*kl*kr)) - q*x/EI)
+    return EI*(-L*(-2*L*(q + 4*qi)*(EI*kr + kl*(EI + L*kr)) +
+            5*(2*EI + L*kl)*(4*EI*q + 8*EI*qi + L*kr*q + 3*L*kr*qi))/(20*EI*(2*EI*L*kr - 6*EI*(2*EI + L*kr) +
+            2*L*kl*(EI + L*kr) - 3*L*kl*(2*EI + L*kr))) - qi*x/EI - x**2*(q - qi)/(2*EI*L))
+
 
 
