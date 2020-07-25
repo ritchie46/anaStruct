@@ -5,7 +5,7 @@ import numpy as np
 from functools import lru_cache
 import copy
 
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Dict, Optional, Sequence
 
 if TYPE_CHECKING:
     from anastruct.vertex import Vertex
@@ -34,6 +34,8 @@ class Element:
         angle: float,
         vertex_1: Vertex,
         vertex_2: Vertex,
+        type_: str,
+        section_name: str,
         spring: Optional[Dict[int, float]] = None,
     ):
         """
@@ -49,7 +51,7 @@ class Element:
                             2: k}
         """
         self.id = id_
-        self.type = None
+        self.type = type_
         self.EA = EA
         self.EI = EI
         self.l = l
@@ -71,15 +73,15 @@ class Element:
         self.dead_load: float = 0.0
         self.N_1: Optional[float] = None
         self.N_2: Optional[float] = None
-        self.bending_moment: Optional[float] = None
-        self.shear_force: Optional[float] = None
-        self.deflection = None
-        self.extension = None
+        self.bending_moment: Optional[np.ndarray] = None
+        self.shear_force: Optional[np.ndarray] = None
+        self.deflection: Optional[np.ndarray] = None
+        self.extension = Optional[np.ndarray]
         self.max_deflection = None
         self.nodes_plastic = [False, False]
         self.compile_constitutive_matrix(self.EA, self.EI, l)
         self.compile_stiffness_matrix()
-        self.section_name = ""  # needed for element annotation
+        self.section_name = section_name  # needed for element annotation
 
     @property
     def all_q_load(self) -> float:

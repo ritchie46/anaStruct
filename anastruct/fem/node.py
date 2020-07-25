@@ -16,7 +16,7 @@ class Node:
         ux: float = 0.0,
         uz: float = 0.0,
         phi_y: float = 0,
-        vertex: Optional[Vertex] = None,
+        vertex: Vertex = Vertex(0, 0),
     ):
         """
         :param id: ID of the node, integer

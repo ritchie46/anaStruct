@@ -2,7 +2,7 @@ import numpy as np
 import copy
 from anastruct.basic import converge
 import logging
-from scipy import linalg
+from scipy import linalg # type: ignore
 
 
 def stiffness_adaptation(system, verbosity, max_iter):
