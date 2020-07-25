@@ -127,12 +127,14 @@ class SystemElements:
 
         # Objects state
         self.count = 0
-        self.system_matrix = None
-        self.system_force_vector = None
-        self.system_displacement_vector = None
-        self.shape_system_matrix = None
-        self.reduced_force_vector = None
-        self.reduced_system_matrix = None
+        self.system_matrix: Optional[np.ndarray] = None
+        self.system_force_vector: Optional[np.ndarray] = None
+        self.system_displacement_vector: Optional[np.ndarray] = None
+        self.shape_system_matrix: Optional[
+            int
+        ] = None  # actually is the size of the square system matrix
+        self.reduced_force_vector: Optional[np.ndarray] = None
+        self.reduced_system_matrix: Optional[np.ndarray] = None
         self._vertices: Dict[Vertex, int] = {}  # maps vertices to node ids
 
     @property
@@ -631,6 +633,7 @@ class SystemElements:
         )
 
         # add the solution of the reduced system in the complete system displacement vector
+        assert self.shape_system_matrix is not None
         self.system_displacement_vector = np.zeros(self.shape_system_matrix)
         np.put(
             self.system_displacement_vector,
