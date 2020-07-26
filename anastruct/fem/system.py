@@ -119,7 +119,7 @@ class SystemElements:
         self.non_linear_elements: Dict[
             int, Dict[int, float]
         ] = {}  # keys are element ids, values are dicts: {node_index: max moment capacity}
-        self.buckling_factor = None
+        self.buckling_factor: Optional[float] = None
 
         # previous point of element
         self._previous_point = Vertex(0, 0)

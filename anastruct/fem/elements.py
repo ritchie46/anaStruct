@@ -128,7 +128,7 @@ class Element:
     def compile_constitutive_matrix(self, EA: float, EI: float, l: float):
         self.constitutive_matrix = constitutive_matrix(EA, EI, l, self.springs)
 
-    def update_stiffness(self, factor: float, node: Node):
+    def update_stiffness(self, factor: float, node: int):
         if node == 1:
             self.constitutive_matrix[1][1] *= factor
             self.constitutive_matrix[1][2] *= factor
