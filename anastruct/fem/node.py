@@ -1,5 +1,23 @@
+from __future__ import annotations
+from anastruct.vertex import Vertex
+from typing import Dict, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from anastruct.fem.elements import Element
+
+
 class Node:
-    def __init__(self, id, Fx=0, Fz=0, Ty=0, ux=0, uz=0, phi_y=0, vertex=None):
+    def __init__(
+        self,
+        id: int,
+        Fx: float = 0.0,
+        Fz: float = 0.0,
+        Ty: float = 0.0,
+        ux: float = 0.0,
+        uz: float = 0.0,
+        phi_y: float = 0,
+        vertex: Vertex = Vertex(0, 0),
+    ):
         """
         :param id: ID of the node, integer
         :param Fx: Value of Fx
@@ -21,10 +39,10 @@ class Node:
         self.phi_y = phi_y
         self.vertex = vertex
         self.hinge = False
-        self.elements = {}
+        self.elements: Dict[int, Element] = {}
 
     @property
-    def Fy(self):
+    def Fy(self) -> float:
         return -self.Fz
 
     def __str__(self):
@@ -45,7 +63,7 @@ class Node:
                 self.id, self.Fx, self.Fz, self.Ty, self.ux, self.uz, self.phi_y
             )
 
-    def __add__(self, other):
+    def __add__(self, other: Node) -> Node:
         assert (
             self.id == other.id
         ), "Cannot add nodes as the ID's don't match. The nodes positions don't match."
@@ -55,7 +73,7 @@ class Node:
 
         return Node(self.id, Fx, Fz, Ty, self.ux, self.uz, self.phi_y, self.vertex)
 
-    def __sub__(self, other):
+    def __sub__(self, other: Node) -> Node:
         assert (
             self.id == other.id
         ), "Cannot subtract nodes as the ID's don't match. The nodes positions don't match."

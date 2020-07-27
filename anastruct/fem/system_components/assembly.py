@@ -2,8 +2,16 @@ from anastruct.fem.elements import det_moment, det_shear
 import numpy as np
 import math
 
+from typing import TYPE_CHECKING, List, Tuple
 
-def set_force_vector(system, force_list):
+if TYPE_CHECKING:
+    from anastruct.fem.system import SystemElements
+    from anastruct.fem.elements import Element
+
+
+def set_force_vector(
+    system: "SystemElements", force_list: List[Tuple[int, int, float]]
+):
     """
     :param force_list: list containing tuples with the
     1. number of the node,
@@ -13,13 +21,14 @@ def set_force_vector(system, force_list):
     list may contain multiple tuples
     :return: Vector with forces on the nodes
     """
+    assert system.system_force_vector is not None
     for id_, direction, force in force_list:
         system.system_force_vector[(id_ - 1) * 3 + direction - 1] += force
 
     return system.system_force_vector
 
 
-def prep_matrix_forces(system):
+def prep_matrix_forces(system: "SystemElements"):
     system.system_force_vector = system.system_force_vector = np.zeros(
         len(system._vertices) * 3
     )
@@ -28,12 +37,12 @@ def prep_matrix_forces(system):
     apply_moment_load(system)
 
 
-def apply_moment_load(system):
+def apply_moment_load(system: "SystemElements"):
     for node_id, Ty in system.loads_moment.items():
         set_force_vector(system, [(node_id, 3, Ty * system.load_factor)])
 
 
-def apply_point_load(system):
+def apply_point_load(system: "SystemElements"):
     for node_id in system.loads_point:
         Fx, Fz = system.loads_point[node_id]
         # system force vector.
@@ -46,7 +55,7 @@ def apply_point_load(system):
         )
 
 
-def apply_perpendicular_q_load(system):
+def apply_perpendicular_q_load(system: "SystemElements"):
     for element_id in system.loads_dead_load:
         element = system.element_map[element_id]
         q_perpendicular = element.all_q_load
@@ -95,6 +104,7 @@ def apply_perpendicular_q_load(system):
         element.element_primary_force_vector -= primary_force
 
         # Set force vector
+        assert system.system_force_vector is not None
         system.system_force_vector[
             (element.node_id1 - 1) * 3 : (element.node_id1 - 1) * 3 + 3
         ] += primary_force[0:3]
@@ -103,12 +113,12 @@ def apply_perpendicular_q_load(system):
         ] += primary_force[3:]
 
 
-def apply_parallel_q_load(system, element):
+def apply_parallel_q_load(system: "SystemElements", element: "Element"):
     direction = element.q_direction
     # dead load
     factor_dl = abs(math.sin(element.angle))
 
-    def update(Fx, Fz):
+    def update(Fx: float, Fz: float):
         element.element_primary_force_vector[0] -= Fx
         element.element_primary_force_vector[1] -= Fz
         element.element_primary_force_vector[3] -= Fx
@@ -160,12 +170,14 @@ def apply_parallel_q_load(system, element):
             update(Fx, Fz)
 
 
-def dead_load(system, g, element_id):
+def dead_load(system: "SystemElements", g: float, element_id: int):
     system.loads_dead_load.add(element_id)
     system.element_map[element_id].dead_load = g
 
 
-def assemble_system_matrix(system, validate=False, geometric_matrix=False):
+def assemble_system_matrix(
+    system: "SystemElements", validate: bool = False, geometric_matrix: bool = False
+):
     """
     Shape of the matrix = n nodes * n d.o.f.
     Shape = n * 3
@@ -176,6 +188,7 @@ def assemble_system_matrix(system, validate=False, geometric_matrix=False):
         system.shape_system_matrix = shape
         system.system_matrix = np.zeros((shape, shape))
 
+    assert system.system_matrix is not None
     for matrix_index, K in system.system_spring_map.items():
         #  first index is row, second is column
         system.system_matrix[matrix_index][matrix_index] += K

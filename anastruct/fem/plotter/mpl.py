@@ -1,7 +1,7 @@
 import numpy as np
 import math
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt  # type: ignore
+import matplotlib.patches as mpatches  # type: ignore
 from anastruct.basic import find_nearest, rotate_xy
 from anastruct.fem.plotter.values import (
     PlottingValues,
@@ -460,7 +460,7 @@ class Plotter(PlottingValues):
         digits=2,
         node_results=True,
         fill_polygon=True,
-        color=0
+        color=0,
     ):
         if fill_polygon:
             rec = plt.Polygon(
@@ -507,7 +507,11 @@ class Plotter(PlottingValues):
                 axis_values = plot_values_axial_force(el, factor)
                 color = 1 if el.N_1 < 0 else 0
                 self.plot_result(
-                    axis_values, el.N_1, el.N_2, node_results=not bool(verbosity), color=color
+                    axis_values,
+                    el.N_1,
+                    el.N_2,
+                    node_results=not bool(verbosity),
+                    color=color,
                 )
 
                 point = (el.vertex_2 - el.vertex_1) / 2 + el.vertex_1

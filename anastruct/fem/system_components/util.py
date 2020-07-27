@@ -2,40 +2,67 @@ from anastruct.fem.node import Node
 from anastruct.vertex import Vertex
 from anastruct.basic import FEMException, angle_x_axis
 
+from typing import TYPE_CHECKING
 
-def ensure_single_hinge(system, spring, node_id1, node_id2):
+if TYPE_CHECKING:
+    from anastruct.fem.system import SystemElements, Spring
+
+
+def ensure_single_hinge(
+    system: "SystemElements", spring: "Spring", node_id1: int, node_id2: int
+):
+    """
+    Make sure that there is only a single hinge at a node.
+
+    Parameters
+    ----------
+    node_id1
+        Id of the node in the system
+    node_id2
+        Id of the node in the system
+    """
     if spring is not None and 0 in spring:
         """
         Must be one rotational fixed element per node. Thus keep track of the hinges (k == 0).
         """
 
-        for node in range(1, 3):
-            if spring[node] == 0:  # node is a hinged node
-                if node == 1:
+        for node_nr in range(1, 3):
+            if spring[node_nr] == 0:  # node is a hinged node
+                if node_nr == 1:
                     node_id = node_id1
                 else:
                     node_id = node_id2
 
                 system.node_map[node_id].hinge = True
 
+                # check if more elements at this node are hinged
                 if len(system.node_map[node_id].elements) > 0:
+
+                    # TODO: Can be done better / simpler
+                    # And should be tested
                     pass_hinge = not all(
                         [
-                            el.hinge == node
+                            node_id in el.hinges
                             for el in system.node_map[node_id].elements.values()
                         ]
                     )
                 else:
                     pass_hinge = True
                 if not pass_hinge:
-                    del spring[node]  # too many hinges at that element.
+                    del spring[node_nr]  # too many hinges at that element.
 
 
-def append_node_id(self, point_1, point_2, node_id1, node_id2):
-    if node_id1 not in self.node_map:
-        self.node_map[node_id1] = Node(node_id1, vertex=point_1)
-    if node_id2 not in self.node_map:
-        self.node_map[node_id2] = Node(node_id2, vertex=point_2)
+def append_node_id(
+    system: "SystemElements",
+    point_1: Vertex,
+    point_2: Vertex,
+    node_id1: int,
+    node_id2: int,
+):
+    if node_id1 not in system.node_map:
+        system.node_map[node_id1] = Node(node_id1, vertex=point_1)
+    if node_id2 not in system.node_map:
+        system.node_map[node_id2] = Node(node_id2, vertex=point_2)
 
 
 def det_vertices(system, location_list):
