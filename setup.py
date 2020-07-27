@@ -15,6 +15,7 @@ if sys.version_info[0] == 3 and sys.version_info[1] < 7:
 
 exec(open("anastruct/_version.py").read())
 setup(
+<<<<<<< Updated upstream
     name="anastruct",
     version=__version__,
     description="analyse 2D structures.",
@@ -34,6 +35,25 @@ setup(
         "anastruct.fem.plotter",
         "anastruct.fem.util",
         "anastruct.sectionbase",
+=======
+    name='anastruct',
+    version='1.0.2',
+    description='analyse 2D structures.',
+    author='Ritchie Vink',
+    author_email='ritchie46@gmail.com',
+    url='https://ritchievink.com',
+    download_url='https://github.com/ritchie46/anaStruct',
+    license='GPL-3.0',
+    packages=['anastruct', 'anastruct.fem', 'anastruct.fem.system_components', 'anastruct.fem.examples',
+              'anastruct.material', 'anastruct.cython', 'anastruct.fem.cython', 'anastruct.fem.plotter',
+              'anastruct.fem.util'],
+    package_dir='',
+    install_requires=[
+        'matplotlib',
+        'numpy',
+        'scipy'
+        'strupy'
+>>>>>>> Stashed changes
     ],
     package_data={"": ["*.xml"]},
     package_dir="",

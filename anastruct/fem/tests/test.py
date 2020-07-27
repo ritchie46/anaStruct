@@ -7,7 +7,7 @@ import sys
 
 class SimpleTest(unittest.TestCase):
     def test_example_1(self):
-        system = se.SystemElements(True)
+        system = se.SystemElements()
         system.add_element(location=[[0, 0], [3, 4]], EA=5e9, EI=8000)
         system.add_element(location=[[3, 4], [8, 4]], EA=5e9, EI=4000)
         system.q_load(element_id=2, q=-10)

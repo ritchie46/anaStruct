@@ -5,11 +5,12 @@ import numpy as np
 from functools import lru_cache
 import copy
 
-from typing import TYPE_CHECKING, Dict, Optional, Sequence
+from typing import TYPE_CHECKING, Dict, Optional, List
 
 if TYPE_CHECKING:
     from anastruct.vertex import Vertex
     from anastruct.fem.node import Node
+    from anastruct.fem.system import Spring
 
 try:
     from anastruct.fem.cython.celements import det_shear, det_moment  # type: ignore
@@ -36,7 +37,7 @@ class Element:
         vertex_2: Vertex,
         type_: str,
         section_name: str,
-        spring: Optional[Dict[int, float]] = None,
+        spring: "Spring" = {},
     ):
         """
         :param id_: integer representing the elements ID
@@ -65,9 +66,9 @@ class Element:
         self.node_id1: int
         self.node_id2: int
         self.node_map: Dict[int, Node]
-        self.element_displacement_vector = np.empty(6)
-        self.element_primary_force_vector = np.zeros(6)  # acting external forces
-        self.element_force_vector: Optional[np.ndarray] = None
+        self.element_displacement_vector: np.ndarray = np.empty(6)
+        self.element_primary_force_vector: np.ndarray = np.zeros(6)  # acting external forces
+        self.element_force_vector: np.ndarray = np.array([])
         self.q_load: float = 0.0
         self.q_direction: Optional[str] = None
         self.dead_load: float = 0.0
@@ -78,7 +79,7 @@ class Element:
         self.deflection: Optional[np.ndarray] = None
         self.extension = Optional[np.ndarray]
         self.max_deflection = None
-        self.nodes_plastic = [False, False]
+        self.nodes_plastic: List[bool] = [False, False]
         self.compile_constitutive_matrix(self.EA, self.EI, l)
         self.compile_stiffness_matrix()
         self.section_name = section_name  # needed for element annotation
@@ -110,6 +111,21 @@ class Element:
     @property
     def node_2(self) -> Node:
         return self.node_map[self.node_id2]
+
+    @property
+    def hinges(self) -> List[int]:
+        """
+        Node ids of hinges on element
+        """
+        out = []
+
+        for k, v in self.springs.items():
+            if v == 0:
+                if k == 1:
+                    out.append(self.node_id1)
+                if k == 2:
+                    out.append(self.node_id2)
+        return out
 
     def determine_force_vector(self) -> Optional[np.ndarray]:
         self.element_force_vector = np.dot(

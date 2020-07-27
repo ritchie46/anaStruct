@@ -24,6 +24,9 @@ from typing import (
     Any,
 )
 
+Spring = Dict[int, float]
+MpType = Dict[int, float]
+
 if TYPE_CHECKING:
     from anastruct.fem.node import Node
 
@@ -152,8 +155,8 @@ class SystemElements:
         EA: Optional[Union[List[float], np.ndarray]] = None,
         EI: Optional[Union[List[float], np.ndarray]] = None,
         g: Optional[Union[List[float], np.ndarray]] = None,
-        mp: Optional[Dict[int, float]] = None,
-        spring: Optional[Dict[int, float]] = None,
+        mp: MpType = {},
+        spring: Spring = {},
         **kwargs
     ):
         """
@@ -225,8 +228,8 @@ class SystemElements:
         EA: float = None,
         EI: float = None,
         g: float = 0,
-        mp: Dict[int, float] = None,
-        spring: Dict[int, float] = None,
+        mp: MpType = {},
+        spring: Spring = {},
         **kwargs
     ) -> int:
         """
@@ -348,7 +351,7 @@ class SystemElements:
         for node_id in (node_id1, node_id2):
             self.node_map[node_id].elements[element.id] = element
 
-        if mp is not None:
+        if len(mp) > 0:
             assert type(mp) == dict, "The mp parameter should be a dictionary."
             self.non_linear_elements[element.id] = mp
             self.non_linear = True
@@ -364,8 +367,8 @@ class SystemElements:
         EA: float = None,
         EI: float = None,
         g: float = 0,
-        mp: Dict[int, float] = None,
-        spring: Dict[int, float] = None,
+        mp: MpType = {},
+        spring: Spring = {},
         **kwargs
     ):
         """
@@ -507,7 +510,7 @@ class SystemElements:
             mp = (
                 self.non_linear_elements[element.id]
                 if element.id in self.non_linear_elements
-                else None
+                else {}
             )
             if element_id == element.id:
                 if factor is not None:
@@ -519,8 +522,8 @@ class SystemElements:
                     assert location is not None
                     location_vertex = Vertex(location)
 
-                mp1 = mp2 = spring1 = spring2 = None
-                if mp is not None:
+                mp1 = mp2 = spring1 = spring2 = {}
+                if len(mp) != 0:
                     if 1 in mp:
                         mp1 = {1: mp[1]}
                     if 2 in mp:
@@ -621,7 +624,7 @@ class SystemElements:
         if geometrical_non_linear:
             discretize_kwargs = kwargs.get("discretize_kwargs", None)
             self.buckling_factor = system_components.solver.geometrically_non_linear(
-                self, verbosity, discretize_kwargs=discretize_kwargs
+                self, verbosity, return_buckling_factor=True, discretize_kwargs=discretize_kwargs
             )
             return self.system_displacement_vector
 
@@ -1380,7 +1383,7 @@ class SystemElements:
             mp = (
                 self.non_linear_elements[element.id]
                 if element.id in self.non_linear_elements
-                else None
+                else {}
             )
 
             for i, v in enumerate(vertex_range(element.vertex_1, element.vertex_2, n)):

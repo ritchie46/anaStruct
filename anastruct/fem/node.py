@@ -1,6 +1,6 @@
 from __future__ import annotations
 from anastruct.vertex import Vertex
-from typing import Optional, Dict, TYPE_CHECKING
+from typing import Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from anastruct.fem.elements import Element
