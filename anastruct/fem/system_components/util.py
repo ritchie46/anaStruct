@@ -21,7 +21,7 @@ def ensure_single_hinge(
     node_id2
         Id of the node in the system
     """
-    if spring is not None and 0 in spring:
+    if spring is not None and 0 in spring.values():
         """
         Must be one rotational fixed element per node. Thus keep track of the hinges (k == 0).
         """
@@ -33,23 +33,57 @@ def ensure_single_hinge(
                 else:
                     node_id = node_id2
 
-                system.node_map[node_id].hinge = True
+                if node in spring.keys() and spring[node] == 0:  # node is a hinged node
+                    if len(system.node_map[node_id].elements) > 0:
+                        hinges = []
+                        for el in system.node_map[node_id].elements.values():
+                            if node_id == el.node_id1:
+                                hinges.append(1 in el.springs and el.springs[1] == 0)
+                            elif node_id == el.node_id2:
+                                hinges.append(2 in el.springs and el.springs[2] == 0)
+                        pass_hinge = not all(hinges)
+                    else:
+                        pass_hinge = True
+                    if not pass_hinge:
+                        system.node_map[node_id].hinge = True
+                        del spring[node]  # too many hinges at that element.
+            
+                elif node not in spring.keys() or (node in spring.keys() and spring[node] != 0):
+                    """
+                    If a fixed element is added after a hinged element,
+                    then add the removed spring release back in and set node as not hinged
+                    """
+                    system.node_map[node_id].hinge = False
+                    if len(system.node_map[node_id].elements) > 0:
+                        for el in system.node_map[node_id].elements.values():
+                            if node_id == el.node_id1:
+                                system.element_map[el.id].springs.update({
+                                    1: 0
+                                })
+                            elif node_id == el.node_id2:
+                                system.element_map[el.id].springs.update({
+                                    2: 0
+                                })
+        else:
+            """
+            If a fixed element is added after a hinged element,
+            then add the removed spring release back in and set node as not hinged
+            """
+            if system.node_map[node_id1].hinge:
+                system.node_map[node_id1].hinge = False
+                for el in system.node_map[node_id1].elements.values():
+                    system.element_map[el.id].springs.update({
+                        1: 0
+                    })
 
-                # check if more elements at this node are hinged
-                if len(system.node_map[node_id].elements) > 0:
-
-                    # TODO: Can be done better / simpler
-                    # And should be tested
-                    pass_hinge = not all(
-                        [
-                            node_id in el.hinges
-                            for el in system.node_map[node_id].elements.values()
-                        ]
-                    )
-                else:
-                    pass_hinge = True
-                if not pass_hinge:
-                    del spring[node_nr]  # too many hinges at that element.
+            if system.node_map[node_id2].hinge:
+                system.node_map[node_id2].hinge = False
+                for el in system.node_map[node_id2].elements.values():
+                    system.element_map[el.id].springs.update({
+                        2: 0
+                    })
+        
+        return spring
 
 
 def append_node_id(
@@ -102,7 +136,7 @@ def det_node_ids(system, point_1, point_2):
 def support_check(system, node_id):
     if system.node_map[node_id].hinge:
         raise FEMException(
-            "Flawed inputs", "You cannot add a support to a hinged node."
+            "Flawed inputs", "You cannot add a rotation-restraining support to a hinged node."
         )
 
 
