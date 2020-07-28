@@ -33,7 +33,9 @@ def ensure_single_hinge(
                 else:
                     node_id = node_id2
 
-                if node in spring.keys() and spring[node] == 0:  # node is a hinged node
+                if (
+                    node_nr in spring.keys() and spring[node_nr] == 0
+                ):  # node is a hinged node
                     if len(system.node_map[node_id].elements) > 0:
                         hinges = []
                         for el in system.node_map[node_id].elements.values():
@@ -46,24 +48,22 @@ def ensure_single_hinge(
                         pass_hinge = True
                     if not pass_hinge:
                         system.node_map[node_id].hinge = True
-                        del spring[node]  # too many hinges at that element.
-            
-                elif node not in spring.keys() or (node in spring.keys() and spring[node] != 0):
+                        del spring[node_nr]  # too many hinges at that element.
+
+                elif node_nr not in spring.keys() or (
+                    node_nr in spring.keys() and spring[node_nr] != 0
+                ):
                     """
                     If a fixed element is added after a hinged element,
-                    then add the removed spring release back in and set node as not hinged
+                    then add the removed spring release back in and set node_nr as not hinged
                     """
                     system.node_map[node_id].hinge = False
                     if len(system.node_map[node_id].elements) > 0:
                         for el in system.node_map[node_id].elements.values():
                             if node_id == el.node_id1:
-                                system.element_map[el.id].springs.update({
-                                    1: 0
-                                })
+                                system.element_map[el.id].springs.update({1: 0})
                             elif node_id == el.node_id2:
-                                system.element_map[el.id].springs.update({
-                                    2: 0
-                                })
+                                system.element_map[el.id].springs.update({2: 0})
         else:
             """
             If a fixed element is added after a hinged element,
@@ -72,17 +72,13 @@ def ensure_single_hinge(
             if system.node_map[node_id1].hinge:
                 system.node_map[node_id1].hinge = False
                 for el in system.node_map[node_id1].elements.values():
-                    system.element_map[el.id].springs.update({
-                        1: 0
-                    })
+                    system.element_map[el.id].springs.update({1: 0})
 
             if system.node_map[node_id2].hinge:
                 system.node_map[node_id2].hinge = False
                 for el in system.node_map[node_id2].elements.values():
-                    system.element_map[el.id].springs.update({
-                        2: 0
-                    })
-        
+                    system.element_map[el.id].springs.update({2: 0})
+
         return spring
 
 
@@ -136,7 +132,8 @@ def det_node_ids(system, point_1, point_2):
 def support_check(system, node_id):
     if system.node_map[node_id].hinge:
         raise FEMException(
-            "Flawed inputs", "You cannot add a rotation-restraining support to a hinged node."
+            "Flawed inputs",
+            "You cannot add a rotation-restraining support to a hinged node.",
         )
 
 

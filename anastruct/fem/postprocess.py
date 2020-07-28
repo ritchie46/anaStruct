@@ -93,7 +93,7 @@ class ElementLevel:
         self.system = system
 
     @staticmethod
-     def node_results(self, element: "Element"):
+    def node_results(self, element: "Element"):
         """
         Determine node results on the element level.
         """
