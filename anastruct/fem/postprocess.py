@@ -25,7 +25,7 @@ class SystemLevel:
 
         for el in self.system.element_map.values():
             # post processor element level
-            self.post_el.node_results(self, el)
+            self.post_el.node_results(el)
 
     def node_results_system(self):
         for k, v in self.system.node_element_map.items():
@@ -92,7 +92,6 @@ class ElementLevel:
     def __init__(self, system: "SystemElements"):
         self.system = system
 
-    @staticmethod
     def node_results(self, element: "Element"):
         """
         Determine node results on the element level.
