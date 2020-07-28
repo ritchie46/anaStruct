@@ -313,7 +313,7 @@ class SystemElements:
         system_components.util.append_node_id(
             self, point_1, point_2, node_id1, node_id2
         )
-        system_components.util.ensure_single_hinge(self, spring, node_id1, node_id2)
+        spring = system_components.util.ensure_single_hinge(self, spring, node_id1, node_id2)
 
         # Only for typing purposes
         EA = cast(float, EA)
