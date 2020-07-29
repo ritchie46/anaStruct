@@ -79,10 +79,7 @@ def ensure_single_hinge(
                 for el in system.node_map[node_id2].elements.values():
                     system.element_map[el.id].springs.update({2: 0})
 
-    if spring is None:
-        return {}
-    else:
-        return spring
+    return spring
 
 
 def append_node_id(
