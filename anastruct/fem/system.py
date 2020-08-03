@@ -313,7 +313,9 @@ class SystemElements:
         system_components.util.append_node_id(
             self, point_1, point_2, node_id1, node_id2
         )
-        spring = system_components.util.ensure_single_hinge(self, spring, node_id1, node_id2)
+        spring = system_components.util.ensure_single_hinge(
+            self, spring, node_id1, node_id2
+        )
 
         # Only for typing purposes
         EA = cast(float, EA)
@@ -434,10 +436,14 @@ class SystemElements:
                 "One, and only one, of n and dl should be passed as argument.",
             )
         elif n:
-            dl = length / n
+            lengths = np.linspace(start=0, stop=length, num=n)
+        else:
+            assert dl is not None
+            n = np.ceil(length / dl)
+            lengths = np.linspace(start=0, stop=(n - 1) * dl, num=n - 1)
+            lengths = np.append(lengths, length)
 
-        assert dl is not None
-        point = point_1 + direction * dl
+        point = point_1 + direction * lengths[1]
         elements = [
             self.add_element(
                 [point_1, point],
@@ -451,15 +457,13 @@ class SystemElements:
             )
         ]
 
-        l = 2 * dl
-        while l < length:
-            point += direction * dl
+        for i in range(2, n):
+            point = point_1 + direction * lengths[i]
             elements.append(
                 self.add_element(
                     point, EA, EI, g, mp, spring, element_type=element_type, **kwargs
                 )
             )
-            l += dl
 
         elements.append(
             self.add_element(
@@ -624,7 +628,10 @@ class SystemElements:
         if geometrical_non_linear:
             discretize_kwargs = kwargs.get("discretize_kwargs", None)
             self.buckling_factor = system_components.solver.geometrically_non_linear(
-                self, verbosity, return_buckling_factor=True, discretize_kwargs=discretize_kwargs
+                self,
+                verbosity,
+                return_buckling_factor=True,
+                discretize_kwargs=discretize_kwargs,
             )
             return self.system_displacement_vector
 
