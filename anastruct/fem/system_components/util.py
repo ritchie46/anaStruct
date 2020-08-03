@@ -50,9 +50,7 @@ def ensure_single_hinge(
                         system.node_map[node_id].hinge = True
                         del spring[node_nr]  # too many hinges at that element.
 
-                elif node_nr not in spring.keys() or (
-                    node_nr in spring.keys() and spring[node_nr] != 0
-                ):
+                else:
                     """
                     If a fixed element is added after a hinged element,
                     then add the removed spring release back in and set node_nr as not hinged
