@@ -17,6 +17,7 @@ class Node:
         uz: float = 0.0,
         phi_y: float = 0,
         vertex: Vertex = Vertex(0, 0),
+        hinge: bool = False,
     ):
         """
         :param id: ID of the node, integer
@@ -27,6 +28,7 @@ class Node:
         :param uz: Value of uz
         :param phi_y: Value of phi
         :param vertex: Point object
+        :param hinge: Boolean
         """
         self.id = id
         # forces
@@ -38,7 +40,7 @@ class Node:
         self.uz = uz
         self.phi_y = phi_y
         self.vertex = vertex
-        self.hinge = False
+        self.hinge = hinge
         self.elements: Dict[int, Element] = {}
 
     @property

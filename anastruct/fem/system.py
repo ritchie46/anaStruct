@@ -313,7 +313,7 @@ class SystemElements:
         system_components.util.append_node_id(
             self, point_1, point_2, node_id1, node_id2
         )
-        system_components.util.ensure_single_hinge(self, spring, node_id1, node_id2)
+        spring = system_components.util.ensure_single_hinge(self, spring, node_id1, node_id2)
 
         # Only for typing purposes
         EA = cast(float, EA)
@@ -707,7 +707,6 @@ class SystemElements:
 
         for id_ in node_id:
             id_ = _negative_index_to_id(id_, self.node_map.keys())
-            system_components.util.support_check(self, id_)
 
             # add the support to the support list for the plotter
             self.supports_hinged.append(self.node_map[id_])
@@ -737,7 +736,6 @@ class SystemElements:
 
         for id_, direction_, angle_ in zip(node_id, direction, angle):
             id_ = _negative_index_to_id(id_, self.node_map.keys())
-            system_components.util.support_check(self, id_)
 
             if direction_ == "x":
                 direction_i = 2

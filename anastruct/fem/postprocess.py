@@ -92,13 +92,17 @@ class ElementLevel:
     def __init__(self, system: "SystemElements"):
         self.system = system
 
-    @staticmethod
-    def node_results(element: "Element"):
+    def node_results(self, element: "Element"):
         """
         Determine node results on the element level.
         """
         assert element.element_force_vector is not None
         assert element.element_primary_force_vector is not None
+
+        # Check for hinges
+        hinge1 = self.system.node_map[element.node_id1].hinge
+        hinge2 = self.system.node_map[element.node_id2].hinge
+
         # Global coordinates system
         element.node_map[element.node_id1] = Node(
             id=element.node_id1,
@@ -106,11 +110,13 @@ class ElementLevel:
             + element.element_primary_force_vector[0],
             Fz=element.element_force_vector[1]
             + element.element_primary_force_vector[1],
-            Ty=element.element_force_vector[2]
-            + element.element_primary_force_vector[2],
+            Ty=element.element_force_vector[2] + element.element_primary_force_vector[2]
+            if not hinge1
+            else 0,
             ux=element.element_displacement_vector[0],
             uz=element.element_displacement_vector[1],
-            phi_y=element.element_displacement_vector[2],
+            phi_y=element.element_displacement_vector[2] if not hinge1 else 0,
+            hinge=hinge1,
         )
 
         element.node_map[element.node_id2] = Node(
@@ -119,11 +125,13 @@ class ElementLevel:
             + element.element_primary_force_vector[3],
             Fz=element.element_force_vector[4]
             + element.element_primary_force_vector[4],
-            Ty=element.element_force_vector[5]
-            + element.element_primary_force_vector[5],
+            Ty=element.element_force_vector[5] + element.element_primary_force_vector[5]
+            if not hinge2
+            else 0,
             ux=element.element_displacement_vector[3],
             uz=element.element_displacement_vector[4],
-            phi_y=element.element_displacement_vector[5],
+            phi_y=element.element_displacement_vector[5] if not hinge2 else 0,
+            hinge=hinge2,
         )
 
         # Local coordinate system. With inclined supports
