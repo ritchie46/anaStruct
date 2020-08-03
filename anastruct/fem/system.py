@@ -436,11 +436,12 @@ class SystemElements:
                 "One, and only one, of n and dl should be passed as argument.",
             )
         elif n:
-            lengths = np.linspace(start=0, stop=length, num=n + 1)
+            var_n = n
+            lengths = np.linspace(start=0, stop=length, num=var_n + 1)
         else:
             assert dl is not None
-            n = np.ceil(length / dl) - 1
-            lengths = np.linspace(start=0, stop=n * dl, num=n + 1)
+            var_n = int(np.ceil(length / dl) - 1)
+            lengths = np.linspace(start=0, stop=var_n * dl, num=var_n + 1)
             lengths = np.append(lengths, length)
 
         point = point_1 + direction * lengths[1]
@@ -457,7 +458,7 @@ class SystemElements:
             )
         ]
 
-        for i in range(2, n):
+        for i in range(2, var_n):
             point = point_1 + direction * lengths[i]
             elements.append(
                 self.add_element(
