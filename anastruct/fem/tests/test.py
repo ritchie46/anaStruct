@@ -316,12 +316,13 @@ class SimpleTest(unittest.TestCase):
         ss.add_support_roll(node_id=-1, angle=45)
         ss.q_load(q=-1, element_id=1, direction="element")
         ss.solve()
-        self.assertAlmostEqual(-5, ss.get_node_results_system(1)['Fx'])
-        self.assertAlmostEqual(-5, ss.get_node_results_system(1)['Fy'])
-        self.assertAlmostEqual(-5, ss.get_element_results(1)['N'])
+        self.assertAlmostEqual(-5, ss.get_node_results_system(1)["Fx"])
+        self.assertAlmostEqual(-5, ss.get_node_results_system(1)["Fy"])
+        self.assertAlmostEqual(-5, ss.get_element_results(1)["N"])
 
     def test_deflection_averaging(self):
         from anastruct.fem.examples.ex_26_deflection import ss
+
         ss.solve()
         self.assertTrue(
             np.allclose(
@@ -330,6 +331,31 @@ class SimpleTest(unittest.TestCase):
             )
         )
 
+    def test_truss_single_hinge(self):
+        ss = se.SystemElements(EA=68300, EI=128, mesh=50)
+        ss.add_element(
+            location=[[0.0, 0.0], [2.5, 0.0]], g=0, spring={1: 0, 2: 0},
+        )
+        ss.add_element(
+            location=[[0.0, 0.0], [2.5, 2.0]], g=0, spring={1: 0, 2: 0},
+        )
+        ss.add_element(
+            location=[[2.5, 0.0], [5.0, 0.0]], g=0, spring={1: 0, 2: 0},
+        )
+        ss.add_element(
+            location=[[2.5, 2.0], [2.5, 0.0]], g=0, spring={1: 0, 2: 0},
+        )
+        ss.add_element(
+            location=[[2.5, 2.0], [5.0, 0.0]], g=0, spring={1: 0, 2: 0},
+        )
+        ss.add_support_hinged(node_id=1)
+        ss.add_support_hinged(node_id=4)
+        ss.point_load(Fx=0, Fy=-20.0, node_id=3)
+        ss.solve()
+        self.assertAlmostEqual(-12.5, ss.get_node_results_system(1)["Fx"])
+        self.assertAlmostEqual(-10, ss.get_node_results_system(1)["Fy"])
+        self.assertAlmostEqual(0, ss.get_node_results_system(1)["Ty"])
+        self.assertAlmostEqual(0, ss.get_node_results_system(3)["Ty"])
 
 
 if __name__ == "__main__":
