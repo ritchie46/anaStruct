@@ -820,9 +820,9 @@ class SystemElements:
             self.system_spring_map[matrix_index] = k_
 
             # add the support to the support list for the plotter
-            if translation == 1:
+            if translation_ == 1:
                 self.supports_spring_x.append((self.node_map[id_], roll_))
-            elif translation == 2:
+            elif translation_ == 2:
                 self.supports_spring_z.append((self.node_map[id_], roll_))
             else:
                 self.supports_spring_y.append((self.node_map[id_], roll_))
