@@ -357,6 +357,14 @@ class SimpleTest(unittest.TestCase):
         self.assertAlmostEqual(0, ss.get_node_results_system(1)["Ty"])
         self.assertAlmostEqual(0, ss.get_node_results_system(3)["Ty"])
 
+    def test_multiple_elements_spacing(self):
+        ss = se.SystemElements(EI=5e3, EA=1e5)
+        ss.add_multiple_elements([[0, 0], [10, 0]], 100)
+        ss.add_support_fixed(1)
+        ss.point_load(ss.id_last_node, Fy=-10)
+        ss.solve()
+        self.assertAlmostEqual(2 / 3, ss.get_node_results_system(-1)["uy"])
+
     def test_vertical_spring(self):
         ss = se.SystemElements(mesh=250)
         ss.add_element(location=[(0.0, 0), (10.0, 0)], EA=356000.0, EI=1332.0000000000002)
