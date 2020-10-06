@@ -365,6 +365,16 @@ class SimpleTest(unittest.TestCase):
         ss.solve()
         self.assertAlmostEqual(2 / 3, ss.get_node_results_system(-1)["uy"])
 
+    def test_vertical_spring(self):
+        ss = se.SystemElements(mesh=250)
+        ss.add_element(location=[(0.0, 0), (10.0, 0)], EA=356000.0, EI=1332.0000000000002)
+        ss.add_support_hinged(node_id=1)
+        ss.add_support_spring(
+            node_id=2, translation=2, k=50, roll=False
+        )
+        ss.q_load(q=-1.0, element_id=1, direction="y")
+        ss.solve()
+        self.assertAlmostEqual(0.1, ss.get_node_results_system(2)["uy"])
 
 if __name__ == "__main__":
     unittest.main()
