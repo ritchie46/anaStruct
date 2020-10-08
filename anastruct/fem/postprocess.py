@@ -144,8 +144,10 @@ class ElementLevel:
         N_2 = -(math.sin(element.angle) * element.node_2.Fz) + (
             math.cos(element.angle) * element.node_2.Fx
         )
+
         element.N_1 = N_1
         element.N_2 = N_2
+        functions.n.append(N_1)
 
     @staticmethod
     def determine_bending_moment(element, con):

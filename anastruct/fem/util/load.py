@@ -16,7 +16,7 @@ class LoadCase:
         self.spec = dict()
         self.c = 0
 
-    def q_load(self, q, element_id, direction="element"):
+    def q_load(self, q, qi, element_id, direction="element"):
         """
         Apply a q-load to an element.
 
@@ -25,8 +25,8 @@ class LoadCase:
         :param direction: (str) "element", "x", "y"
         """
         self.c += 1
-        self.spec["q_load-{}".format(self.c)] = dict(
-            q=q, element_id=element_id, direction=direction
+        self.spec[f"q_load-{self.c}"] = dict(
+            q=q, qi=qi, element_id=element_id, direction=direction
         )
 
     def point_load(self, node_id, Fx=0, Fy=0, rotation=0):

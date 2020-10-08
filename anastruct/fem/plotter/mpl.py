@@ -27,8 +27,8 @@ class Plotter(PlottingValues):
         self.max_system_point_load = 0
 
     def __start_plot(self, figsize):
-        plt.close("all")
-        self.fig = plt.figure(figsize=figsize)
+        #plt.close("all")
+        self.fig = plt.figure(figsize=figsize, dpi=140)
         self.one_fig = self.fig.add_subplot(111)
         plt.tight_layout()
 
@@ -277,26 +277,26 @@ class Plotter(PlottingValues):
                 if q != qi:
                     if q == 0:
                         self.one_fig.text(
-                            xt, yt, "q=%d" % el.qi_load, color="k", fontsize=functions.size, zorder=10)
+                            xt, yt, "q=%d" % el.qi_load, color="k", fontsize=12, zorder=10)
                     elif qi == 0:
                         self.one_fig.text(
-                            xt, yt, "q=%d" % el.q_load, color="k", fontsize=functions.size, zorder=10)
+                            xt, yt, "q=%d" % el.q_load, color="k", fontsize=12, zorder=10)
                     else:
                         if q > qi:
                             self.one_fig.text(
-                                xt, yt, "q=%d" % el.qi_load, color="k", fontsize=functions.size, zorder=10)
+                                xt, yt, "q=%d" % el.qi_load, color="k", fontsize=12, zorder=10)
                             self.one_fig.text(
-                                xtb, ytb, "q=%d" % el.q_load, color="k", fontsize=functions.size, zorder=10)
+                                xtb, ytb, "q=%d" % el.q_load, color="k", fontsize=12, zorder=10)
                         else:
                             self.one_fig.text(
-                                xt, yt, "q=%d" % el.qi_load, color="k", fontsize=functions.size, zorder=10)
+                                xt, yt, "q=%d" % el.qi_load, color="k", fontsize=12, zorder=10)
                             self.one_fig.text(
-                                xtb, ytb, "q=%d" % el.q_load, color="k", fontsize=functions.size, zorder=10)
+                                xtb, ytb, "q=%d" % el.q_load, color="k", fontsize=12, zorder=10)
                 else:
                     self.one_fig.text(
-                        xt, yt, "q=%d" % el.q_load, color="k", fontsize=functions.size, zorder=10)
+                        xt, yt, "q=%d" % el.q_load, color="k", fontsize=12, zorder=10)
                 # self.one_fig.text(
-                #          xt, yt, "q=%d" % el.q_load, color="k", fontsize=functions.size, zorder=10)
+                #          xt, yt, "q=%d" % el.q_load, color="k", fontsize=12, zorder=10)
 
     @staticmethod
     def __arrow_patch_values(Fx, Fz, node, h):
@@ -341,7 +341,7 @@ class Plotter(PlottingValues):
                 zorder=11,
             )
             if verbosity == 0:
-                self.one_fig.text(x, y, "F=%d" % F, color="k", fontsize=functions.size, zorder=10)
+                self.one_fig.text(x, y, "F=%d" % F, color="k", fontsize=9, zorder=10)
 
     def __moment_load_patch(self, max_val):
 
@@ -370,7 +370,7 @@ class Plotter(PlottingValues):
                 -node.vertex.z + h * 0.2,
                 "T=%d" % v,
                 color="k",
-                fontsize=functions.size,
+                fontsize=9,
                 zorder=10,
             )
 
@@ -425,7 +425,7 @@ class Plotter(PlottingValues):
                     y_val[0] + ax_range,
                     "%d" % el.node_id1,
                     color="g",
-                    fontsize=functions.size,
+                    fontsize=9,
                     zorder=10,
                 )
                 self.one_fig.text(
@@ -433,7 +433,7 @@ class Plotter(PlottingValues):
                     y_val[-1] + ax_range,
                     "%d" % el.node_id2,
                     color="g",
-                    fontsize=functions.size,
+                    fontsize=9,
                     zorder=10,
                 )
 
@@ -443,7 +443,7 @@ class Plotter(PlottingValues):
                 y_val = (y_val[0] + y_val[-1]) / 2 + np.cos(el.angle) * factor
 
                 self.one_fig.text(
-                    x_val, y_val, str(el.id), color="r", fontsize=functions.size, zorder=10
+                    x_val, y_val, str(el.id), color="r", fontsize=9, zorder=10
                 )
 
                 # add element annotation to plot
@@ -452,7 +452,7 @@ class Plotter(PlottingValues):
                     x_val += +np.sin(el.angle) * factor * 2.3
                     y_val += -np.cos(el.angle) * factor * 2.3
                     self.one_fig.text(
-                        x_val, y_val, el.section_name, color="b", fontsize=functions.size, zorder=10
+                        x_val, y_val, el.section_name, color="b", fontsize=9, zorder=10
                     )
 
         # add supports
@@ -482,7 +482,7 @@ class Plotter(PlottingValues):
             x_val[1] - offset,
             y_val[1] + offset,
             "%s" % round(value_1, digits),
-            fontsize=functions.size,
+            fontsize=9,
             ha="center",
             va="center",
         )
@@ -490,7 +490,7 @@ class Plotter(PlottingValues):
             x_val[-2] - offset,
             y_val[-2] + offset,
             "%s" % round(value_2, digits),
-            fontsize=functions.size,
+            fontsize=9,
             ha="center",
             va="center",
         )
@@ -500,7 +500,7 @@ class Plotter(PlottingValues):
             x_val[index],
             y_val[index],
             "%s" % round(value, digits),
-            fontsize=functions.size,
+            fontsize=9,
             ha="center",
             va="center",
         )
@@ -526,7 +526,7 @@ class Plotter(PlottingValues):
         y_val = axis_values[1]
 
         self.one_fig.plot(x_val, y_val, color=f"C{color}")
-        plt.legend(loc='upper right', prop={"size":functions.eqsize})
+        plt.legend(loc='upper right', prop={"size":17})
 
         if node_results:
             self._add_node_values(x_val, y_val, force_1, force_2, digits)
@@ -580,7 +580,7 @@ class Plotter(PlottingValues):
                             "-",
                             ha="center",
                             va="center",
-                            fontsize=functions.size,
+                            fontsize=20,
                             color="b",
                         )
                 if el.N_1 > 0:
@@ -597,7 +597,7 @@ class Plotter(PlottingValues):
                             "+",
                             ha="center",
                             va="center",
-                            fontsize=functions.size,
+                            fontsize=14,
                             color="b",
                         )
 
@@ -627,7 +627,7 @@ class Plotter(PlottingValues):
                         abs(el.node_1.Ty),
                         abs(
                             (el.node_1.Ty - el.node_2.Ty) * 0.5
-                            - ((el.all_qi_load + el.all_qi_load) / 16) * el.l ** 2
+                            - 1 / 8 * el.all_q_load * el.l ** 2
                         ),
                     )
                     if el.type == "general"
@@ -636,6 +636,21 @@ class Plotter(PlottingValues):
                 )
             )
             factor = det_scaling_factor(max_moment, self.max_val_structure)
+            if factor > 10**6:
+                max_moment = max(
+                    map(
+                        lambda el: max(
+                            abs(el.node_1.Ty),
+                            abs(
+                                el.all_qi_load * el.l ** 2 / (9 * 3**(1/2))
+                            ),
+                        )
+                        if el.type == "general"
+                        else 0,
+                        self.system.element_map.values(),
+                    )
+                )
+                factor = det_scaling_factor(max_moment, self.max_val_structure)
 
         # determine the axis values
         c = 0
@@ -683,7 +698,7 @@ class Plotter(PlottingValues):
                 if verbosity == 0:
                     x = axis_values[0][index] + np.sin(-el.angle) * offset
                     y = axis_values[1][index] + np.cos(-el.angle) * offset
-                    self.one_fig.text(x, y, "%s" % round(m_sag, 1), fontsize=functions.size)
+                    self.one_fig.text(x, y, "%s" % round(m_sag, 1), fontsize=9)
         if show:
             self.plot()
         else:
@@ -790,7 +805,7 @@ class Plotter(PlottingValues):
                         y,
                         "R=%s" % round(node.Fx, 2),
                         color="k",
-                        fontsize=functions.size,
+                        fontsize=9,
                         zorder=10,
                     )
 
@@ -821,7 +836,7 @@ class Plotter(PlottingValues):
                         y,
                         "R=%s" % round(node.Fz, 2),
                         color="k",
-                        fontsize=functions.size,
+                        fontsize=9,
                         zorder=10,
                     )
 
@@ -852,7 +867,7 @@ class Plotter(PlottingValues):
                         -node.vertex.z + h * 0.2,
                         "T=%s" % round(node.Ty, 2),
                         color="k",
-                        fontsize=functions.size,
+                        fontsize=9,
                         zorder=10,
                     )
         if show:
@@ -922,8 +937,8 @@ class Plotter(PlottingValues):
         :param show: (bool)
         :return: Figure or None
         """
-        plt.close("all")
-        self.fig = plt.figure(figsize=figsize)
+        #plt.close("all")
+        self.fig = plt.figure(figsize=figsize, dpi=140)
         a = 320
         self.one_fig = self.fig.add_subplot(a + 1)
         plt.title("Estrutura")
