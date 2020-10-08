@@ -670,6 +670,7 @@ class Plotter(PlottingValues):
             colorpick = cores[c]
 
             eq = functions.eq
+
             coefstr = f'{eq[ce][0]:.2f}x³ + {eq[ce][1]:.2f}x² + {eq[ce][2]:.2f}x + {eq[ce][3]:.2f}'
 
             if verbosity == 0:
