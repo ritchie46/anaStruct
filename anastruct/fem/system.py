@@ -750,8 +750,9 @@ class SystemElements:
 
         :param node_id: Represents the nodes ID
         :param direction: Represents the direction that is free: 'x', 'y'
-        :param angle Angle in degrees relative to global x-axis.
+        :param angle: Angle in degrees relative to global x-axis.
                                 If angle is given, the support will be inclined.
+        :param rotate: If set to False, rotation at the roller will also be restrained.
         """
         if not isinstance(node_id, collections.Iterable):
             node_id = [node_id]
@@ -1433,7 +1434,7 @@ class SystemElements:
                 last_v = v
 
         # supports
-        for node, direction, angle, rotate in zip(
+        for node, direction, rotate in zip(
             self.supports_roll, self.supports_roll_direction, self.supports_roll_rotate
         ):
             ss.add_support_roll((node.id - 1) * n + 1, direction, None, rotate)

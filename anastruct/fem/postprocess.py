@@ -57,6 +57,8 @@ class SystemLevel:
             supports.append(node.id)
         for node in self.system.supports_roll:
             supports.append(node.id)
+        for node in self.system.supports_rotational:
+            supports.append(node.id)
         for node, _ in self.system.supports_spring_x:
             supports.append(node.id)
         for node, _ in self.system.supports_spring_z:
