@@ -94,14 +94,16 @@ class SystemElements:
         # keep track of the nodes of the supports
         self.supports_fixed: List[Node] = []
         self.supports_hinged: List[Node] = []
+        self.supports_rotational: List[Node] = []
         self.supports_roll: List[Node] = []
         self.supports_spring_x: List[Tuple[Node, bool]] = []
         self.supports_spring_z: List[Tuple[Node, bool]] = []
         self.supports_spring_y: List[Tuple[Node, bool]] = []
         self.supports_roll_direction: List[int] = []
-        self.inclined_roll: Dict[int, float] = (
-            {}
-        )  # map node ids to inclination angle relative to global x-axis.
+        self.inclined_roll: Dict[
+            int, float
+        ] = {}  # map node ids to inclination angle relative to global x-axis.
+        self.supports_roll_rotate: List[bool] = []
 
         # save tuples of the arguments for copying purposes.
         self.supports_spring_args: List[tuple] = []
@@ -121,7 +123,9 @@ class SystemElements:
         self.non_linear = False
         self.non_linear_elements: Dict[
             int, Dict[int, float]
-        ] = {}  # keys are element ids, values are dicts: {node_index: max moment capacity}
+        ] = (
+            {}
+        )  # keys are element ids, values are dicts: {node_index: max moment capacity}
         self.buckling_factor: Optional[float] = None
 
         # previous point of element
@@ -719,11 +723,27 @@ class SystemElements:
             # add the support to the support list for the plotter
             self.supports_hinged.append(self.node_map[id_])
 
+    def add_support_rotational(self, node_id: Union[int, Sequence[int]]):
+        """
+        Model a rotational support at a given node.
+
+        :param node_id: Represents the nodes ID
+        """
+        if not isinstance(node_id, collections.Iterable):
+            node_id = [node_id]
+
+        for id_ in node_id:
+            id_ = _negative_index_to_id(id_, self.node_map.keys())
+
+            # add the support to the support list for the plotter
+            self.supports_rotational.append(self.node_map[id_])
+
     def add_support_roll(
         self,
         node_id: Union[Sequence[int], int],
         direction: Union[Sequence[Union[str, int]], Union[str, int]] = "x",
         angle: Union[Sequence[Optional[float]], Optional[float]] = None,
+        rotate: Union[Sequence[Optional[bool]], Optional[bool]] = True,
     ):
         """
         Adds a rolling support at a given node.
@@ -739,10 +759,12 @@ class SystemElements:
             direction = [direction]
         if not isinstance(angle, collections.Iterable):
             angle = [angle]
+        if not isinstance(rotate, collections.Iterable):
+            rotate = [rotate]
 
         assert len(node_id) == len(direction) == len(angle)
 
-        for id_, direction_, angle_ in zip(node_id, direction, angle):
+        for id_, direction_, angle_, rotate_ in zip(node_id, direction, angle, rotate):
             id_ = _negative_index_to_id(id_, self.node_map.keys())
 
             if direction_ == "x":
@@ -759,9 +781,11 @@ class SystemElements:
             # add the support to the support list for the plotter
             self.supports_roll.append(self.node_map[id_])
             self.supports_roll_direction.append(direction_i)
+            self.supports_roll_rotate.append(rotate_)
 
     def add_support_fixed(
-        self, node_id: Union[Sequence[int], int],
+        self,
+        node_id: Union[Sequence[int], int],
     ):
         """
         Add a fixed support at a given node.
@@ -1409,12 +1433,16 @@ class SystemElements:
                 last_v = v
 
         # supports
-        for node, direction in zip(self.supports_roll, self.supports_roll_direction):
-            ss.add_support_roll((node.id - 1) * n + 1, direction)
+        for node, direction, angle, rotate in zip(
+            self.supports_roll, self.supports_roll_direction, self.supports_roll_rotate
+        ):
+            ss.add_support_roll((node.id - 1) * n + 1, direction, None, rotate)
         for node in self.supports_fixed:
             ss.add_support_fixed((node.id - 1) * n + 1)
         for node in self.supports_hinged:
             ss.add_support_hinged((node.id - 1) * n + 1)
+        for node in self.supports_rotational:
+            ss.add_support_rotational((node.id - 1) * n + 1)
         for args in self.supports_spring_args:
             ss.add_support_spring((args[0] - 1) * n + 1, *args[1:])
 

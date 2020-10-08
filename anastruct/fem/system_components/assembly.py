@@ -279,9 +279,22 @@ def process_supports(system):
         set_displacement_vector(system, [(node.id, 1), (node.id, 2)])
 
     for i in range(len(system.supports_roll)):
-        set_displacement_vector(
-            system, [(system.supports_roll[i].id, system.supports_roll_direction[i])]
-        )
+        if not system.supports_roll_rotate[i]:
+            set_displacement_vector(
+                system,
+                [
+                    (system.supports_roll[i].id, system.supports_roll_direction[i]),
+                    (system.supports_roll[i].id, 3),
+                ],
+            )
+        else:
+            set_displacement_vector(
+                system,
+                [(system.supports_roll[i].id, system.supports_roll_direction[i])],
+            )
+
+    for node in system.supports_rotational:
+        set_displacement_vector(system, [(node.id, 3)])
 
     for node in system.supports_fixed:
         set_displacement_vector(system, [(node.id, 1), (node.id, 2), (node.id, 3)])
