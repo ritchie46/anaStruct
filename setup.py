@@ -37,6 +37,6 @@ setup(
     ],
     package_data={"": ["*.xml"]},
     package_dir="",
-    install_requires=["matplotlib>=3.0, <3.1", "numpy>=1.15.4", "scipy>=1.1.0"],
+    install_requires=["matplotlib>=3.0", "numpy>=1.15.4", "scipy>=1.1.0"],
     ext_modules=em,
 )
