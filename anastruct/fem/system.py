@@ -95,6 +95,7 @@ class SystemElements:
         self.supports_fixed: List[Node] = []
         self.supports_hinged: List[Node] = []
         self.supports_rotational: List[Node] = []
+        self.internal_hinges: List[Node] = []
         self.supports_roll: List[Node] = []
         self.supports_spring_x: List[Tuple[Node, bool]] = []
         self.supports_spring_z: List[Tuple[Node, bool]] = []
@@ -316,9 +317,6 @@ class SystemElements:
 
         system_components.util.append_node_id(
             self, point_1, point_2, node_id1, node_id2
-        )
-        spring = system_components.util.ensure_single_hinge(
-            self, spring, node_id1, node_id2
         )
 
         # Only for typing purposes
@@ -598,6 +596,9 @@ class SystemElements:
 
         # kwargs: arguments for the iterative solver callers such as the _stiffness_adaptation method.
         #                naked (bool) Default = False, if True force lines won't be computed.
+
+        for node_id in self.node_map:
+            system_components.util.set_internal_hinges(self, node_id)
 
         if self.system_displacement_vector is None:
             system_components.assembly.process_supports(self)
