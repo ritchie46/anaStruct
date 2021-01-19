@@ -415,7 +415,7 @@ class SystemElements:
         This can be done by adding a new Vertex at any given location, or by setting a factor of the elements
         length. E.g. if you want a node at 40% of the elements length, you pass factor = 0.4.
 
-        Note: this method completely rebuilds the SystemElements object and is therefore slower then building
+        Note: this method completely rebuilds the SystemElements object and is therefore slower than building
         a model with `add_element` methods.
 
         :param element_id: (int) Id number of the element you want to insert the node.
@@ -726,7 +726,7 @@ class SystemElements:
             else:
                 self.supports_spring_y.append((self.node_map[id_], roll))
 
-    def q_load(self, q, qi, element_id, direction="element"):
+    def q_load(self, q, element_id, direction="element", qi=None):
         """
         Apply a q-load to an element.
 
@@ -734,7 +734,9 @@ class SystemElements:
         :param q: (flt) value of the q-load
         :param direction: (str) "element", "x", "y"
         """
+        if qi is None: qi = q
         q, qi, element_id, direction = args_to_lists(q, qi, element_id, direction)
+
         for i in range(len(element_id)):
             id_ = _negative_index_to_id(element_id[i], self.element_map.keys())
             self.plotter.max_q = max(self.plotter.max_q, abs(q[i]))
@@ -1108,7 +1110,7 @@ class SystemElements:
                             "Qmax": np.max(el.shear_force),
                             "Q": el.shear_force if verbose else None,
                             "q": el.q_load,
-                            "q": el.qi_load
+                            "qi": el.qi_load,
                         }
                     )
             return result_list

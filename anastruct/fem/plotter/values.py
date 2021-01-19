@@ -65,16 +65,13 @@ class PlottingValues:
     def bending_moment(self, factor):
         if factor is None:
             # maximum moment determined by comparing the node's moments and the sagging moments.
-            load = el.all_q_load
-            if el.all_q_load == 0:
-                load = el.all_qi_load
             max_moment = max(
                 map(
                     lambda el: max(
                         abs(el.node_1.Ty),
                         abs(
                             (el.node_1.Ty - el.node_2.Ty) * 0.5
-                            - 1 / 8 * load * el.l ** 2
+                            - ((el.all_qi_load + el.all_q_load) / 16) * el.l ** 2
                         ),
                     ),
                     self.system.element_map.values(),

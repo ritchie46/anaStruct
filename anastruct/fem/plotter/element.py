@@ -69,9 +69,7 @@ def plot_values_bending_moment(element, factor, n):
         q = element.all_q_load
         qi = element.all_qi_load
         x = interpolate * element.l
-
         q_part = -((qi - q) / (6 * element.l)) * x ** 3 + (qi / 2) * x ** 2 - (((2 * qi) + q) / 6) * element.l * x
-
         x_val += sin * q_part * factor
         y_val += cos * q_part * factor
 
@@ -108,8 +106,11 @@ def plot_values_shear_force(element, factor):
     x2 = element.vertex_2.x
     y2 = -element.vertex_2.z
 
+    shear_1 = element.shear_force[0]
+    shear_2 = element.shear_force[-1]
     n = len(element.shear_force)
 
+    # apply angle ai
     interpolate = np.linspace(0, 1, n)
     dx = x2 - x1
     dy = y2 - y1
@@ -127,7 +128,7 @@ def plot_values_shear_force(element, factor):
     y_val = np.append(y_val, -element.vertex_2.z)
     x_val = np.insert(x_val, 0, element.vertex_1.x)
     y_val = np.insert(y_val, 0, -element.vertex_1.z)
-
+    
     return x_val, y_val
 
 

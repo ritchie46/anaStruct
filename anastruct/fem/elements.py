@@ -4,7 +4,6 @@ import numpy as np
 from functools import lru_cache
 import copy
 
-
 try:
     from anastruct.fem.cython.celements import det_shear, det_moment
 except ImportError:
@@ -93,7 +92,6 @@ class Element:
             q = self.q_load * q_factor
 
         return q + self.dead_load * cos(self.angle)
-
 
     @property
     def all_qi_load(self):
@@ -226,9 +224,7 @@ def constitutive_matrix(EA, EI, l, spring=None):
     :return: (array)
     """
     matrix = np.array(
-        [[EA / l, 0, 0],
-        [0, 4 * EI / l, -2 * EI / l],
-        [0, -2 * EI / l, 4 * EI / l]]
+        [[EA / l, 0, 0], [0, 4 * EI / l, -2 * EI / l], [0, -2 * EI / l, 4 * EI / l]]
     )
 
     if spring is not None:

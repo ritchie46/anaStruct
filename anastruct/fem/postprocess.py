@@ -1,7 +1,6 @@
 import copy
 import math
 import numpy as np
-import functions
 
 from anastruct.fem.node import Node
 from anastruct.basic import integrate_array
@@ -107,6 +106,7 @@ class ElementLevel:
             uz=element.element_displacement_vector[1],
             phi_y=element.element_displacement_vector[2],
         )
+
         element.node_map[element.node_id2] = Node(
             id=element.node_id2,
             Fx=element.element_force_vector[3]
@@ -119,6 +119,7 @@ class ElementLevel:
             uz=element.element_displacement_vector[4],
             phi_y=element.element_displacement_vector[5],
         )
+
         # Local coordinate system. With inclined supports
         for i in range(1, 3):
             a_n = getattr(element, "a{}".format(i))
@@ -147,7 +148,6 @@ class ElementLevel:
 
         element.N_1 = N_1
         element.N_2 = N_2
-        functions.n.append(N_1)
 
     @staticmethod
     def determine_bending_moment(element, con):
@@ -159,12 +159,8 @@ class ElementLevel:
         if element.all_q_load or element.all_qi_load:
             q = element.all_q_load
             qi = element.all_qi_load
-
             q_part = -((qi - q) / (6 * element.l)) * x ** 3 + (qi / 2) * x ** 2 - (((2 * qi) + q) / 6) * element.l * x
-
             m_val += q_part
-
-        functions.eq.append(np.polyfit(x, m_val, 3))
 
         element.bending_moment = m_val
 
@@ -174,15 +170,11 @@ class ElementLevel:
         Determines the shear force by differentiating the bending moment.
         :param element: (object) of the Element class
         """
-
         iteration_factor = np.linspace(0, 1, con)
         x = iteration_factor * element.l
-        eq = functions.eq
-        c = functions.c
-        shear_force = eq[c][0] * 3 * x ** 2 + eq[c][1] * 2 * x + eq[c][2]
+        eq = np.polyfit(x, element.bending_moment, 3)
+        shear_force = eq[0] * 3 * x ** 2 + eq[1] * 2 * x + eq[2]
         element.shear_force = shear_force
-        c += 1
-
 
     @staticmethod
     def determine_displacements(element, con):
@@ -205,27 +197,26 @@ class ElementLevel:
 
         if element.type == "general":
             dx = element.l / (len(element.bending_moment) - 1)
-
-            # Take the average of cumulative integration from both sides. This is due to numerical differences, that
-            # would be observable in symmetrical structures.
-            phi_neg = (
-                -0.5
-                * (
-                    integrate_array(element.bending_moment, dx)
-                    + integrate_array(element.bending_moment[::-1], dx)
-                )
-                / element.EI
-            )
-            w = integrate_array(phi_neg, dx)
-
-            # Angle between last w and elements axis. The w array will be corrected so that this angle == 0.
-            alpha = np.arctan(w[-1] / element.l)
-
             lx = np.linspace(0, element.l, con)
 
-            w = w - lx * np.tan(alpha)
-            element.deflection = -w
-            element.max_deflection = np.max(np.abs(w))
+            # Next we are going to compute w by integrating from both sides.
+            # Due to numerical differences we need to take this two sided approach.
+            phi_neg1 = -integrate_array(element.bending_moment, dx) / element.EI
+            w1 = integrate_array(phi_neg1, dx)
+
+            # Angle between last w and elements axis. The w array will be corrected so that this angle == 0.
+            alpha1 = np.arctan(w1[-1] / element.l)
+            w1 = w1 - lx * np.tan(alpha1)
+
+            phi_neg2 = -integrate_array(element.bending_moment[::-1], dx) / element.EI
+            w2 = integrate_array(phi_neg2, dx)
+
+            # Angle between last w and elements axis. The w array will be corrected so that this angle == 0.
+            alpha2 = np.arctan(w2[-1] / element.l)
+            w2 = w2[::-1] - lx[::-1] * np.tan(alpha2)
+
+            element.deflection = -(w1 + w2) / 2.0
+            element.max_deflection = np.max(np.abs(element.deflection))
 
         # Extension
         u = 0.5 * (element.N_1 + element.N_2) / element.EA * element.l

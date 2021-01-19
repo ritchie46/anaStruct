@@ -330,6 +330,17 @@ class SimpleTest(unittest.TestCase):
             )
         )
 
+    def test_trapezoidal_load(self):
+        ss = se.SystemElements()
+        ss.add_element(location=[(0, 0), (2, 0)])
+        ss.add_support_hinged(node_id=1)
+        ss.add_support_hinged(node_id=2)
+        ss.q_load(qi=-0.1, q=-1, element_id=1, direction="y")
+        ss.solve()
+        self.assertAlmostEqual(0.1, ss.get_element_results(1)["qi"])
+        self.assertAlmostEqual(1, ss.get_element_results(1)["q"])
+        self.assertAlmostEqual(-0.4, ss.get_node_results_system(1)["Fy"])
+        self.assertAlmostEqual(-0.7, ss.get_node_results_system(2)["Fy"])
 
 
 if __name__ == "__main__":
