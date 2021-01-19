@@ -58,12 +58,14 @@ def apply_point_load(system: "SystemElements"):
 def apply_perpendicular_q_load(system: "SystemElements"):
     for element_id in system.loads_dead_load:
         element = system.element_map[element_id]
-        q_perpendicular = element.all_q_load
-
         if element.q_load is None and element.dead_load == 0:
             continue
-        elif not (math.isclose(element.q_load + element.dead_load, q_perpendicular)):
+
+        q_perpendicular = element.all_q_load
+        if not (math.isclose(element.q_load + element.dead_load, q_perpendicular)):
             apply_parallel_q_load(system, element)
+        if q_perpendicular == 0:
+            continue
 
         kl = element.constitutive_matrix[1][1] * 1e6
         kr = element.constitutive_matrix[2][2] * 1e6
