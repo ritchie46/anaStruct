@@ -860,17 +860,19 @@ class Plotter(PlottingValues):
 
             if el.type == "general":
                 # index of the max deflection
-                index = np.argmax(np.abs(el.deflection))
+                x = np.linspace(el.vertex_1.x, el.vertex_2.x, el.deflection.size)
+                y = np.linspace(el.vertex_1.y, el.vertex_2.y, el.deflection.size)
+                xd, yd = plot_values_deflection(el, 1.0, linear)
+                deflection = ((xd - x) ** 2 + (yd - y) ** 2) ** 0.5
+                index = np.argmax(np.abs(deflection))
 
                 if verbosity == 0:
-                    x = (el.node_1.ux + el.node_2.ux) / 2
-                    y = (-el.node_1.uz + -el.node_2.uz) / 2
 
                     if index != 0 or index != el.deflection.size:
                         self._add_element_values(
                             axis_values[0],
                             axis_values[1],
-                            el.deflection[index] + (x ** 2 + y ** 2) ** 0.5,
+                            deflection[index],
                             index,
                             3,
                         )
