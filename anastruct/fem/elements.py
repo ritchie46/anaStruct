@@ -67,7 +67,9 @@ class Element:
         self.node_id2: int
         self.node_map: Dict[int, Node]
         self.element_displacement_vector: np.ndarray = np.empty(6)
-        self.element_primary_force_vector: np.ndarray = np.zeros(6)  # acting external forces
+        self.element_primary_force_vector: np.ndarray = np.zeros(
+            6
+        )  # acting external forces
         self.element_force_vector: np.ndarray = np.array([])
         self.q_load: float = 0.0
         self.q_direction: Optional[str] = None
@@ -77,7 +79,7 @@ class Element:
         self.bending_moment: Optional[np.ndarray] = None
         self.shear_force: Optional[np.ndarray] = None
         self.deflection: Optional[np.ndarray] = None
-        self.extension = Optional[np.ndarray]
+        self.extension: Optional[np.ndarray] = None
         self.max_deflection = None
         self.nodes_plastic: List[bool] = [False, False]
         self.compile_constitutive_matrix(self.EA, self.EI, l)
@@ -237,14 +239,14 @@ def constitutive_matrix(
 
     if spring is not None:
         """
-        stiffness matrix K: 
+        stiffness matrix K:
         [[ k, k ]
         [ k, k ]]
-        
+
         flexibility matrix C:
         [[ c, c ]    =   [[ 1/k, 1/k ]
         `[ c, c ]]       [  1/k, 1/k ]]
-        
+
         flexibility matrix c + springs on both sides:
         [[ c11 + 1/k1, c12       ]
         [  c21      , c21 + 1/k2 ]]
