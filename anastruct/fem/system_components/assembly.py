@@ -39,7 +39,7 @@ def prep_matrix_forces(system: "SystemElements"):
 
 def apply_moment_load(system: "SystemElements"):
     for node_id, Ty in system.loads_moment.items():
-        set_force_vector(system, [(node_id, 3, Ty * system.load_factor)])
+        set_force_vector(system, [(node_id, 3, Ty)])
 
 
 def apply_point_load(system: "SystemElements"):
@@ -49,8 +49,8 @@ def apply_point_load(system: "SystemElements"):
         set_force_vector(
             system,
             [
-                (node_id, 1, Fx * system.load_factor),
-                (node_id, 2, Fz * system.load_factor),
+                (node_id, 1, Fx),
+                (node_id, 2, Fz),
             ],
         )
 
