@@ -919,8 +919,8 @@ class SystemElements:
             cos = math.cos(math.radians(rotation[i]))
             sin = math.sin(math.radians(rotation[i]))
             self.loads_point[id_] = (
-                Fx[i] * cos + Fy[i] * sin,
-                Fy[i] * self.orientation_cs * cos + Fx[i] * sin,
+                (Fx[i] * cos + Fy[i] * sin) * self.load_factor,
+                (Fy[i] * self.orientation_cs * cos + Fx[i] * sin) * self.load_factor,
             )
 
     def moment_load(
@@ -940,7 +940,7 @@ class SystemElements:
 
         for i in range(len(node_id)):
             id_ = _negative_index_to_id(node_id[i], self.node_map.keys())
-            self.loads_moment[id_] = Ty[i]
+            self.loads_moment[id_] = Ty[i] * self.load_factor
 
     def show_structure(
         self,
@@ -1450,11 +1450,13 @@ class SystemElements:
         # loads
         for node_id, forces in self.loads_point.items():
             ss.point_load(
-                (node_id - 1) * n + 1, Fx=forces[0], Fy=forces[1] / self.orientation_cs
+                (node_id - 1) * n + 1,
+                Fx=forces[0] / self.load_factor,
+                Fy=forces[1] / self.orientation_cs / self.load_factor,
             )
 
         for node_id, forces_moment in self.loads_moment.items():
-            ss.moment_load((node_id - 1) * n + 1, forces_moment)
+            ss.moment_load((node_id - 1) * n + 1, forces_moment / self.load_factor)
         for element_id, forces_q in self.loads_q.items():
             q_direction = self.element_map[element_id].q_direction
             assert q_direction is not None
@@ -1484,8 +1486,7 @@ class SystemElements:
         if dead_load:
             self.loads_dead_load = set()
 
-    @staticmethod
-    def apply_load_case(loadcase: LoadCase):
+    def apply_load_case(self, loadcase: LoadCase):
         for method, kwargs in loadcase.spec.items():
             method = method.split("-")[0]
             kwargs = re.sub(r"[{}]", "", str(kwargs))
