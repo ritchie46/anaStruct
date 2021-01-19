@@ -8,76 +8,45 @@ if TYPE_CHECKING:
     from anastruct.fem.system import SystemElements, Spring
 
 
-def ensure_single_hinge(
-    system: "SystemElements", spring: "Spring", node_id1: int, node_id2: int
-):
+def set_internal_hinges(system: "SystemElements", node_id: int):
     """
-    Make sure that there is only a single hinge at a node.
+    Identify internal hinges, set their hinge status
 
     Parameters
     ----------
-    node_id1
-        Id of the node in the system
-    node_id2
+    node_id
         Id of the node in the system
     """
-    if spring is not None and 0 in spring.values():
-        """
-        Must be one rotational fixed element per node. Thus keep track of the hinges (k == 0).
-        """
+    node = system.node_map[node_id]
 
-        for node_nr in range(1, 3):
-            if node_nr in spring and spring[node_nr] == 0:  # node is a hinged node
-                if node_nr == 1:
-                    node_id = node_id1
-                else:
-                    node_id = node_id2
-
-                if (
-                    node_nr in spring.keys() and spring[node_nr] == 0
-                ):  # node is a hinged node
-                    if len(system.node_map[node_id].elements) > 0:
-                        hinges = []
-                        for el in system.node_map[node_id].elements.values():
-                            if node_id == el.node_id1:
-                                hinges.append(1 in el.springs and el.springs[1] == 0)
-                            elif node_id == el.node_id2:
-                                hinges.append(2 in el.springs and el.springs[2] == 0)
-                        pass_hinge = not all(hinges)
-                    else:
-                        pass_hinge = True
-                    if not pass_hinge:
-                        system.node_map[node_id].hinge = True
-                        del spring[node_nr]  # too many hinges at that element.
-
-                else:
-                    """
-                    If a fixed element is added after a hinged element,
-                    then add the removed spring release back in and set node_nr as not hinged
-                    """
-                    system.node_map[node_id].hinge = False
-                    if len(system.node_map[node_id].elements) > 0:
-                        for el in system.node_map[node_id].elements.values():
-                            if node_id == el.node_id1:
-                                system.element_map[el.id].springs.update({1: 0})
-                            elif node_id == el.node_id2:
-                                system.element_map[el.id].springs.update({2: 0})
+    hinges = []
+    for el_id in node.elements:
+        el = system.element_map[el_id]
+        if (node_id == el.node_id1 and 1 in el.springs and el.springs[1] == 0) or (
+            node_id == el.node_id2 and 2 in el.springs and el.springs[2] == 0
+        ):
+            hinges.append(1)
         else:
-            """
-            If a fixed element is added after a hinged element,
-            then add the removed spring release back in and set node as not hinged
-            """
-            if system.node_map[node_id1].hinge:
-                system.node_map[node_id1].hinge = False
-                for el in system.node_map[node_id1].elements.values():
-                    system.element_map[el.id].springs.update({1: 0})
+            hinges.append(0)
 
-            if system.node_map[node_id2].hinge:
-                system.node_map[node_id2].hinge = False
-                for el in system.node_map[node_id2].elements.values():
+    if len(hinges) > 1 and len(hinges) - sum(hinges) <= 1:
+        node.hinge = True
+        system.internal_hinges.append(node)
+
+        if len(hinges) - sum(hinges) == 1:
+            for el_id in node.elements:
+                el = system.element_map[el_id]
+                if node_id == el.node_id1 and not (
+                    1 in el.springs and el.springs[1] == 0
+                ):
+                    system.element_map[el.id].springs.update({1: 0})
+                if node_id == el.node_id2 and not (
+                    2 in el.springs and el.springs[2] == 0
+                ):
                     system.element_map[el.id].springs.update({2: 0})
 
-    return spring
+    else:
+        node.hinge = False
 
 
 def append_node_id(
