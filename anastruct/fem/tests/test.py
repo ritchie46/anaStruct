@@ -1,5 +1,6 @@
 import unittest
 from anastruct.fem import system as se
+from anastruct import LoadCase, LoadCombination
 import numpy as np
 from anastruct.fem.examples.ex_8_non_linear_portal import ss as SS_8
 import sys
@@ -411,6 +412,21 @@ class SimpleTest(unittest.TestCase):
         self.assertAlmostEqual(0.0083333, ss.get_node_results_system(2)["uy"])
         self.assertAlmostEqual(0.0, ss.get_node_results_system(2)["phi_y"])
         self.assertAlmostEqual(-166.6667083, ss.get_node_results_system(2)["Ty"])
+
+    def test_load_cases(self):
+        ss = se.SystemElements()
+        ss.add_truss_element(location=[[0, 0], [1000, 0]])
+        ss.add_truss_element(location=[[0, 0], [500, 500]])
+        ss.add_truss_element(location=[[500, 500], [1000, 0]])
+        ss.add_support_hinged(node_id=2)
+        ss.add_support_roll(node_id=1, direction="x", angle=None)
+        lc_dead = LoadCase("dead")
+        lc_dead.point_load(node_id=[1], Fx=10)
+        combination = LoadCombination("ULS")
+        combination.add_load_case(lc_dead, factor=1.4)
+        results = combination.solve(ss)
+        self.assertAlmostEqual(0, results["dead"].get_node_results_system(1)["Fx"])
+        self.assertAlmostEqual(14, results["dead"].get_node_results_system(2)["Fx"])
 
 
 if __name__ == "__main__":
