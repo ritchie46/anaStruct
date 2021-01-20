@@ -428,6 +428,22 @@ class SimpleTest(unittest.TestCase):
         self.assertAlmostEqual(0, results["dead"].get_node_results_system(1)["Fx"])
         self.assertAlmostEqual(14, results["dead"].get_node_results_system(2)["Fx"])
 
+    def test_internal_hinge_symmetry(self):
+        ss = se.SystemElements()
+        ss.add_element(location=[[0, 0], [5, 0]], spring={2: 0})
+        ss.add_element(location=[[5, 0], [10, 0]])
+        ss.q_load(element_id=1, q=-9)
+        ss.q_load(element_id=2, q=-9)
+        ss.add_support_fixed(node_id=1)
+        ss.add_support_fixed(node_id=3)
+        ss.solve()
+        self.assertAlmostEqual(
+            ss.get_node_results_system(1)["Fy"], ss.get_node_results_system(3)["Fy"]
+        )
+        self.assertAlmostEqual(
+            ss.get_element_results(1)["Mmax"], ss.get_element_results(2)["Mmax"]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
