@@ -29,11 +29,16 @@ def check_internal_hinges(system: "SystemElements", node_id: int):
         else:
             hinges.append(0)
 
+    # If at least two elements are connected
+    # and no more than one is rigidly connected
     if len(hinges) > 1 and len(hinges) - sum(hinges) <= 1:
-        node.hinge = True
         system.internal_hinges.append(node)
 
-        if len(hinges) - sum(hinges) == 1:
+    if node in system.internal_hinges:
+        node.hinge = True
+
+        # If the elements aren't already all hinged, then set them to be
+        if len(hinges) - sum(hinges) >= 1:
             for el_id in node.elements:
                 el = system.element_map[el_id]
                 if node_id == el.node_id1 and not (
@@ -44,9 +49,6 @@ def check_internal_hinges(system: "SystemElements", node_id: int):
                     2 in el.springs and el.springs[2] == 0
                 ):
                     system.element_map[el.id].springs.update({2: 0})
-
-    else:
-        node.hinge = False
 
 
 def append_node_id(
