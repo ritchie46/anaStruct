@@ -160,8 +160,8 @@ class SystemElements:
         EA: Optional[Union[List[float], np.ndarray]] = None,
         EI: Optional[Union[List[float], np.ndarray]] = None,
         g: Optional[Union[List[float], np.ndarray]] = None,
-        mp: MpType = {},
-        spring: Spring = {},
+        mp: Optional[MpType] = None,
+        spring: Optional[Spring] = None,
         **kwargs
     ):
         """
@@ -233,8 +233,8 @@ class SystemElements:
         EA: float = None,
         EI: float = None,
         g: float = 0,
-        mp: MpType = {},
-        spring: Spring = {},
+        mp: Optional[MpType] = None,
+        spring: Optional[Spring] = None,
         **kwargs
     ) -> int:
         """
@@ -278,6 +278,12 @@ class SystemElements:
 
         :return: Elements ID.
         """
+
+        if mp == None:
+            mp = {}
+        if spring == None:
+            spring = {}
+
         element_type = kwargs.get("element_type", "general")
 
         EA = self.EA if EA is None else EA
@@ -371,8 +377,8 @@ class SystemElements:
         EA: float = None,
         EI: float = None,
         g: float = 0,
-        mp: MpType = {},
-        spring: Spring = {},
+        mp: Optional[MpType] = None,
+        spring: Optional[Spring] = None,
         **kwargs
     ):
         """
@@ -409,6 +415,11 @@ class SystemElements:
 
         :return: (list) Element IDs
         """
+
+        if mp == None:
+            mp = {}
+        if spring == None:
+            spring = {}
 
         first = kwargs.get("first", {})
         last = kwargs.get("last", {})
@@ -598,7 +609,7 @@ class SystemElements:
         #                naked (bool) Default = False, if True force lines won't be computed.
 
         for node_id in self.node_map:
-            system_components.util.set_internal_hinges(self, node_id)
+            system_components.util.check_internal_hinges(self, node_id)
 
         if self.system_displacement_vector is None:
             system_components.assembly.process_supports(self)
