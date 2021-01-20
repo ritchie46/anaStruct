@@ -82,7 +82,7 @@ class Element:
         self.extension: Optional[np.ndarray] = None
         self.max_deflection = None
         self.nodes_plastic: List[bool] = [False, False]
-        self.compile_constitutive_matrix(self.EA, self.EI, l)
+        self.compile_constitutive_matrix(EA, EI, l, spring)
         self.compile_stiffness_matrix()
         self.section_name = section_name  # needed for element annotation
 
