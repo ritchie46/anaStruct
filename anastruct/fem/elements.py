@@ -37,7 +37,7 @@ class Element:
         vertex_2: Vertex,
         type_: str,
         section_name: str,
-        spring: "Spring" = {},
+        spring: Spring = None,
     ):
         """
         :param id_: integer representing the elements ID
@@ -153,7 +153,7 @@ class Element:
         node_2_hinge: Optional[bool] = False,
     ):
         self.constitutive_matrix = constitutive_matrix(
-            EA, EI, l, self.springs, node_1_hinge, node_2_hinge
+            EA, EI, l, spring, node_1_hinge, node_2_hinge
         )
 
     def update_stiffness(self, factor: float, node: int):

@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from anastruct.fem.system import SystemElements, Spring
 
 
-def set_internal_hinges(system: "SystemElements", node_id: int):
+def check_internal_hinges(system: "SystemElements", node_id: int):
     """
     Identify internal hinges, set their hinge status
 
