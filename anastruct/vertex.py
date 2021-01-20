@@ -1,5 +1,8 @@
+from __future__ import annotations
 import math
 import numpy as np
+
+from typing import Union, Sequence
 
 
 class Vertex:
@@ -7,40 +10,40 @@ class Vertex:
     Utility point in 2D.
     """
 
-    def __init__(self, x, y=None):
+    def __init__(
+        self,
+        x: Union[Vertex, Sequence[int], Sequence[float], int, float],
+        y: Union[int, float, None] = None,
+    ):
         """
         :param x: Can be any of int, float, coordinate list, or other vertex.
         :param y: (int, flt)
         """
-        if isinstance(x, (tuple, list)):
+        if isinstance(x, (Sequence)):
             self.coordinates = np.array([x[0], x[1]], dtype=np.float32)
         elif isinstance(x, np.ndarray):
             self.coordinates = np.array(x, dtype=np.float32)
-        elif type(x) is Vertex:
+        elif isinstance(x, Vertex):
             self.coordinates = np.array(x.coordinates, dtype=np.float32)
         else:
             self.coordinates = np.array([x, y], dtype=np.float32)
 
     @property
-    def x(self):
-        """
-
-        :return:
-        """
-        return self.coordinates[0]
+    def x(self) -> float:
+        return float(self.coordinates[0])
 
     @property
-    def y(self):
-        return self.coordinates[1]
+    def y(self) -> float:
+        return float(self.coordinates[1])
 
     @property
-    def z(self):
-        return self.coordinates[1] * -1
+    def z(self) -> float:
+        return float(self.coordinates[1] * -1)
 
-    def modulus(self):
-        return np.sqrt(np.sum(self.coordinates ** 2))
+    def modulus(self) -> float:
+        return float(np.sqrt(np.sum(self.coordinates ** 2)))
 
-    def unit(self):
+    def unit(self) -> Vertex:
         return 1 / self.modulus() * self
 
     def displace_polar(self, alpha, radius, inverse_z_axis=False):

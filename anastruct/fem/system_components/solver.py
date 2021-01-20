@@ -2,17 +2,21 @@ import numpy as np
 import copy
 from anastruct.basic import converge
 import logging
-from scipy import linalg
+from scipy import linalg  # type: ignore
+
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from anastruct.fem.system import SystemElements
 
 
-def stiffness_adaptation(system, verbosity, max_iter):
+def stiffness_adaptation(
+    system: "SystemElements", verbosity: int, max_iter: int
+) -> np.ndarray:
     """
     Non linear solver for the nodes by adapting the stiffness of the elements (nodes).
 
-    :param system: (SystemElements)
-    :param verbosity: (int)
-    :param max_iter: (int)
-    :return: (np.array) Vector with displacements.
+    :return: Vector with displacements.
     """
     system.solve(True, naked=True)
     if verbosity == 0:
@@ -29,6 +33,7 @@ def stiffness_adaptation(system, verbosity, max_iter):
         # update the elements stiffnesses
         for k, v in system.non_linear_elements.items():
             el = system.element_map[k]
+            assert el.element_force_vector is not None
 
             for node_no, mp in v.items():
                 if node_no == 1:
@@ -66,10 +71,12 @@ def stiffness_adaptation(system, verbosity, max_iter):
         )
     elif verbosity == 0:
         logging.info("Solved in {} iterations".format(c))
+
+    assert system.system_displacement_vector is not None
     return system.system_displacement_vector
 
 
-def det_linear_buckling(system):
+def det_linear_buckling(system: "SystemElements") -> float:
     """
     Determine linear buckling by solving the generalized eigenvalue problem (k -λkg)x = 0.
 
@@ -88,13 +95,12 @@ def det_linear_buckling(system):
     Is the generalized eigenvalue problem:
     (A - λB)x = 0
 
-    :param system: (SystemElements)
-    :return: (flt) The factor the loads can be increased until the structure fails due to buckling.
+    :return: The factor the loads can be increased until the structure fails due to buckling.
     """
     system.solve()
 
     # buckling
-    k0 = system.reduced_system_matrix * 1.0  # copy
+    k0 = np.array(system.reduced_system_matrix)  # copy
 
     for el in system.element_map.values():
         el.compile_geometric_non_linear_stiffness_matrix()
@@ -105,17 +111,20 @@ def det_linear_buckling(system):
     # solve (k -λkg)x = 0
 
     eigenvalues = np.abs(linalg.eigvals(k0, kg))
-    return np.min(eigenvalues)
+    return float(np.min(eigenvalues))
 
 
 def geometrically_non_linear(
-    system, verbosity=0, buckling_factor=True, discretize_kwargs=None
-):
+    system: "SystemElements",
+    verbosity: int = 0,
+    return_buckling_factor: bool = True,
+    discretize_kwargs: Optional[dict] = None,
+) -> Optional[float]:
     """
 
     :param system: (SystemElements)
     :param verbosity: (int)
-    :param buckling_factor: (bool)
+    :param return_buckling_factor: (bool)
     :param discretize_kwargs: (dict) Containing the kwargs passed to the discretize function
     :param discretize: (function) discretize function.
     :return: buckling_factor: (flt) The factor the loads can be increased until the structure fails due to buckling.
@@ -124,14 +133,13 @@ def geometrically_non_linear(
     if verbosity == 0:
         logging.info("Starting geometrical non linear calculation")
 
-    if buckling_factor:
+    buckling_factor: Optional[float] = None
+    if return_buckling_factor:
         buckling_system = copy.copy(system)
         if discretize_kwargs is not None:
             buckling_system.discretize(**discretize_kwargs)
 
         buckling_factor = det_linear_buckling(buckling_system)
-    else:
-        buckling_factor = None
 
     system.solve()
 

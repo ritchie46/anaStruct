@@ -1,6 +1,7 @@
 # anaStruct 2D Frames and Trusses
 [![Build Status](https://travis-ci.org/ritchie46/anaStruct.svg?branch=master)](https://travis-ci.org/ritchie46/anaStruct)
 [![Documentation Status](https://readthedocs.org/projects/anastruct/badge/?version=latest)](http://anastruct.readthedocs.io/en/latest/?badge=latest)
+[![Gitter](https://badges.gitter.im/anaStruct/lobby.svg)](https://gitter.im/anaStruct/lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 Analyse 2D Frames and trusses for slender structures. Determine the bending moments, shear forces, axial forces and displacements.
 
@@ -19,6 +20,10 @@ $ pip install anastruct
 ## Read the docs!
 
 [Documentation](http://anastruct.readthedocs.io)
+
+## Questions
+
+Got a question? Please ask on [gitter](https://gitter.im/anaStruct/lobby).
 
 ## Includes
 

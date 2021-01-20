@@ -1,11 +1,12 @@
 language: python
 python:
-- '3.5'
-- '3.6'
+- '3.7'
 install:
 - python setup.py install
+- pip install mypy git+https://github.com/numpy/numpy-stubs
 script:
 - python ./anastruct/fem/tests/test.py
+- mypy
 deploy:
   provider: pypi
   user: ritchie46

@@ -1,13 +1,18 @@
 import copy
 import math
 import numpy as np
-
 from anastruct.fem.node import Node
 from anastruct.basic import integrate_array
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from anastruct.fem.system import SystemElements
+    from anastruct.fem.elements import Element
+
 
 class SystemLevel:
-    def __init__(self, system):
+    def __init__(self, system: "SystemElements"):
         self.system = system
         # post processor element level
         self.post_el = ElementLevel(self.system)
@@ -52,6 +57,8 @@ class SystemLevel:
             supports.append(node.id)
         for node in self.system.supports_roll:
             supports.append(node.id)
+        for node in self.system.supports_rotational:
+            supports.append(node.id)
         for node, _ in self.system.supports_spring_x:
             supports.append(node.id)
         for node, _ in self.system.supports_spring_z:
@@ -72,7 +79,7 @@ class SystemLevel:
 
     def element_results(self):
         """
-        Determines the element results for al elements in the system on element level.
+        Determines the element results for all elements in the system on element level.
         """
 
         for el in self.system.element_map.values():
@@ -84,15 +91,20 @@ class SystemLevel:
 
 
 class ElementLevel:
-    def __init__(self, system):
+    def __init__(self, system: "SystemElements"):
         self.system = system
 
-    @staticmethod
-    def node_results(element):
+    def node_results(self, element: "Element"):
         """
         Determine node results on the element level.
-
         """
+        assert element.element_force_vector is not None
+        assert element.element_primary_force_vector is not None
+
+        # Check for hinges
+        hinge1 = self.system.node_map[element.node_id1].hinge
+        hinge2 = self.system.node_map[element.node_id2].hinge
+
         # Global coordinates system
         element.node_map[element.node_id1] = Node(
             id=element.node_id1,
@@ -100,11 +112,13 @@ class ElementLevel:
             + element.element_primary_force_vector[0],
             Fz=element.element_force_vector[1]
             + element.element_primary_force_vector[1],
-            Ty=element.element_force_vector[2]
-            + element.element_primary_force_vector[2],
+            Ty=element.element_force_vector[2] + element.element_primary_force_vector[2]
+            if not hinge1
+            else 0,
             ux=element.element_displacement_vector[0],
             uz=element.element_displacement_vector[1],
-            phi_y=element.element_displacement_vector[2],
+            phi_y=element.element_displacement_vector[2] if not hinge1 else 0,
+            hinge=hinge1,
         )
 
         element.node_map[element.node_id2] = Node(
@@ -113,11 +127,13 @@ class ElementLevel:
             + element.element_primary_force_vector[3],
             Fz=element.element_force_vector[4]
             + element.element_primary_force_vector[4],
-            Ty=element.element_force_vector[5]
-            + element.element_primary_force_vector[5],
+            Ty=element.element_force_vector[5] + element.element_primary_force_vector[5]
+            if not hinge2
+            else 0,
             ux=element.element_displacement_vector[3],
             uz=element.element_displacement_vector[4],
-            phi_y=element.element_displacement_vector[5],
+            phi_y=element.element_displacement_vector[5] if not hinge2 else 0,
+            hinge=hinge2,
         )
 
         # Local coordinate system. With inclined supports
@@ -138,7 +154,7 @@ class ElementLevel:
                 node.uz = c * uz + s * ux
 
     @staticmethod
-    def determine_axial_force(element):
+    def determine_axial_force(element: "Element"):
         N_1 = (math.sin(element.angle) * element.node_1.Fz) + -(
             math.cos(element.angle) * element.node_1.Fx
         )
@@ -150,7 +166,7 @@ class ElementLevel:
         element.N_2 = N_2
 
     @staticmethod
-    def determine_bending_moment(element, con):
+    def determine_bending_moment(element: "Element", con: int):
         dT = -(element.node_2.Ty + element.node_1.Ty)  # T2 - (-T1)
 
         iteration_factor = np.linspace(0, 1, con)
@@ -165,7 +181,7 @@ class ElementLevel:
         element.bending_moment = m_val
 
     @staticmethod
-    def determine_shear_force(element, con):
+    def determine_shear_force(element: "Element", con: int):
         """
         Determines the shear force by differentiating the bending moment.
         :param element: (object) of the Element class
@@ -177,7 +193,7 @@ class ElementLevel:
         element.shear_force = shear_force
 
     @staticmethod
-    def determine_displacements(element, con):
+    def determine_displacements(element: "Element", con: int):
         """
         Determines the displacement by integrating the bending moment.
         :param element: (object) of the Element class
@@ -196,6 +212,7 @@ class ElementLevel:
         """
 
         if element.type == "general":
+            assert element.bending_moment is not None
             dx = element.l / (len(element.bending_moment) - 1)
             lx = np.linspace(0, element.l, con)
 
@@ -219,6 +236,8 @@ class ElementLevel:
             element.max_deflection = np.max(np.abs(element.deflection))
 
         # Extension
+        assert element.N_1 is not None
+        assert element.N_2 is not None
         u = 0.5 * (element.N_1 + element.N_2) / element.EA * element.l
         du = u / con
         element.extension = du * (np.arange(con) + 1)

@@ -1,11 +1,19 @@
+from __future__ import annotations
 from math import sin, cos
 from anastruct.basic import FEMException
 import numpy as np
 from functools import lru_cache
 import copy
 
+from typing import TYPE_CHECKING, Dict, Optional, List
+
+if TYPE_CHECKING:
+    from anastruct.vertex import Vertex
+    from anastruct.fem.node import Node
+    from anastruct.fem.system import Spring
+
 try:
-    from anastruct.fem.cython.celements import det_shear, det_moment
+    from anastruct.fem.cython.celements import det_shear, det_moment  # type: ignore
 except ImportError:
     from anastruct.fem.cython.elements import det_shear, det_moment
 
@@ -18,7 +26,19 @@ CACHE_BOUND = 32000
 
 
 class Element:
-    def __init__(self, id_, EA, EI, l, angle, vertex_1, vertex_2, spring=None):
+    def __init__(
+        self,
+        id_: int,
+        EA: float,
+        EI: float,
+        l: float,
+        angle: float,
+        vertex_1: Vertex,
+        vertex_2: Vertex,
+        type_: str,
+        section_name: str,
+        spring: "Spring" = {},
+    ):
         """
         :param id_: integer representing the elements ID
         :param EA: Young's modulus * Area
@@ -27,19 +47,12 @@ class Element:
         :param angle: angle between element and x-axis
         :param vertex_1: point object
         :param vertex_2: point object
-        :param hinge: (integer) 1 or 2. Adds an hinge ad the first or second node.
         :param spring: (dict) Set a spring at node 1 or node 2.
-                            {
-                              1: { direction: 1
-                                   k: 5e3
-                                 }
-                              2: { direction: 1
-                                   k: 5e3
-                                 }
-                            }
+                    spring={1: k
+                            2: k}
         """
         self.id = id_
-        self.type = None
+        self.type = type_
         self.EA = EA
         self.EI = EI
         self.l = l
@@ -48,33 +61,34 @@ class Element:
         self.vertex_2 = vertex_2  # location
         self.angle = self.a1 = self.a2 = angle
         self.kinematic_matrix = kinematic_matrix(angle, angle, l)
-        self.constitutive_matrix = None
-        self.stiffness_matrix = None
-        self.node_id1 = None  # int
-        self.node_id2 = None  # int
-        self.node_ids = []
-        self.node_map = None
-        self.element_displacement_vector = np.empty(6)
-        self.element_primary_force_vector = np.zeros(6)  # acting external forces
-        self.element_force_vector = None
-        self.q_load = 0
-        self.qi_load = 0
-        self.q_direction = None
-        self.dead_load = 0
-        self.N_1 = None
-        self.N_2 = None
-        self.bending_moment = None
-        self.shear_force = None
-        self.deflection = None
-        self.extension = None
+        self.constitutive_matrix: np.ndarray
+        self.stiffness_matrix: np.ndarray
+        self.node_id1: int
+        self.node_id2: int
+        self.node_map: Dict[int, Node]
+        self.element_displacement_vector: np.ndarray = np.empty(6)
+        self.element_primary_force_vector: np.ndarray = np.zeros(
+            6
+        )  # acting external forces
+        self.element_force_vector: np.ndarray = np.array([])
+        self.q_load: float = 0.0
+        self.qi_load: float = 0.0
+        self.q_direction: Optional[str] = None
+        self.dead_load: float = 0.0
+        self.N_1: Optional[float] = None
+        self.N_2: Optional[float] = None
+        self.bending_moment: Optional[np.ndarray] = None
+        self.shear_force: Optional[np.ndarray] = None
+        self.deflection: Optional[np.ndarray] = None
+        self.extension: Optional[np.ndarray] = None
         self.max_deflection = None
-        self.nodes_plastic = [False, False]
+        self.nodes_plastic: List[bool] = [False, False]
         self.compile_constitutive_matrix(self.EA, self.EI, l)
         self.compile_stiffness_matrix()
-        self.section_name = ""  # needed for element annotation
+        self.section_name = section_name  # needed for element annotation
 
     @property
-    def all_q_load(self):
+    def all_q_load(self) -> float:
         if self.q_load is None:
             q = 0
         else:
@@ -94,7 +108,7 @@ class Element:
         return q + self.dead_load * cos(self.angle)
 
     @property
-    def all_qi_load(self):
+    def all_qi_load(self) -> float:
         if self.qi_load is None:
             qi = 0
         else:
@@ -114,14 +128,29 @@ class Element:
         return qi + self.dead_load * cos(self.angle)
 
     @property
-    def node_1(self):
+    def node_1(self) -> Node:
         return self.node_map[self.node_id1]
 
     @property
-    def node_2(self):
+    def node_2(self) -> Node:
         return self.node_map[self.node_id2]
 
-    def determine_force_vector(self):
+    @property
+    def hinges(self) -> List[int]:
+        """
+        Node ids of hinges on element
+        """
+        out = []
+
+        for k, v in self.springs.items():
+            if v == 0:
+                if k == 1:
+                    out.append(self.node_id1)
+                if k == 2:
+                    out.append(self.node_id2)
+        return out
+
+    def determine_force_vector(self) -> Optional[np.ndarray]:
         self.element_force_vector = np.dot(
             self.stiffness_matrix, self.element_displacement_vector
         )
@@ -132,13 +161,13 @@ class Element:
             self.constitutive_matrix, self.kinematic_matrix
         )
 
-    def compile_kinematic_matrix(self, a1, a2, l):
+    def compile_kinematic_matrix(self, a1: float, a2: float, l: float):
         self.kinematic_matrix = kinematic_matrix(a1, a2, l)
 
-    def compile_constitutive_matrix(self, EA, EI, l):
+    def compile_constitutive_matrix(self, EA: float, EI: float, l: float):
         self.constitutive_matrix = constitutive_matrix(EA, EI, l, self.springs)
 
-    def update_stiffness(self, factor, node):
+    def update_stiffness(self, factor: float, node: int):
         if node == 1:
             self.constitutive_matrix[1][1] *= factor
             self.constitutive_matrix[1][2] *= factor
@@ -159,7 +188,7 @@ class Element:
         self.element_displacement_vector = np.zeros(6)
         self.element_primary_force_vector = np.zeros(6)
 
-    def __add__(self, other):
+    def __add__(self, other: Element) -> Element:
         if self.id != other.id:
             raise FEMException(
                 "Wrong element:", "only elements with the same id can be added."
@@ -195,7 +224,7 @@ class Element:
 
 
 @lru_cache(CACHE_BOUND)
-def kinematic_matrix(a1, a2, l):
+def kinematic_matrix(a1: float, a2: float, l: float) -> np.ndarray:
     """
     Kinematic matrix of an element dependent of the angle ai and the length of the element.
 
@@ -215,7 +244,9 @@ def kinematic_matrix(a1, a2, l):
     )
 
 
-def constitutive_matrix(EA, EI, l, spring=None):
+def constitutive_matrix(
+    EA: float, EI: float, l: float, spring: Optional[Dict[int, float]] = None
+) -> np.ndarray:
     """
     :param EA: (float) Young's modules * Area
     :param EI: (float) Young's modules * Moment of Inertia
@@ -229,14 +260,14 @@ def constitutive_matrix(EA, EI, l, spring=None):
 
     if spring is not None:
         """
-        stiffness matrix K: 
+        stiffness matrix K:
         [[ k, k ]
         [ k, k ]]
-        
+
         flexibility matrix C:
         [[ c, c ]    =   [[ 1/k, 1/k ]
         `[ c, c ]]       [  1/k, 1/k ]]
-        
+
         flexibility matrix c + springs on both sides:
         [[ c11 + 1/k1, c12       ]
         [  c21      , c21 + 1/k2 ]]
@@ -256,14 +287,16 @@ def constitutive_matrix(EA, EI, l, spring=None):
     return matrix
 
 
-def stiffness_matrix(var_constitutive_matrix, var_kinematic_matrix):
+def stiffness_matrix(
+    var_constitutive_matrix: np.ndarray, var_kinematic_matrix: np.ndarray
+) -> np.ndarray:
     kinematic_transposed_times_constitutive = np.dot(
         var_kinematic_matrix.transpose(), var_constitutive_matrix
     )
     return np.dot(kinematic_transposed_times_constitutive, var_kinematic_matrix)
 
 
-def geometric_stiffness_matrix(l, N, a1, a2):
+def geometric_stiffness_matrix(l: float, N: float, a1: float, a2: float) -> np.ndarray:
     """
 
     :param l: (float) Length.
@@ -303,7 +336,7 @@ def geometric_stiffness_matrix(l, N, a1, a2):
                     2 * l ** 2 / 15,
                     l / 10 * s2,
                     -l / 10 * c2,
-                    -l ** 2 / 30,
+                    -(l ** 2) / 30,
                 ],
                 [
                     -6 / 5 * s1 ** 2,
@@ -324,7 +357,7 @@ def geometric_stiffness_matrix(l, N, a1, a2):
                 [
                     -l / 10 * s1,
                     l / 10 * c1,
-                    -l ** 2 / 30,
+                    -(l ** 2) / 30,
                     l / 10 * s2,
                     -l / 10 * c2,
                     2 * l ** 2 / 15,
@@ -336,7 +369,7 @@ def geometric_stiffness_matrix(l, N, a1, a2):
 
 
 @lru_cache(CACHE_BOUND)
-def det_axial(EA, L, qi, q, x):
+def det_axial(EA: float, L: float, qi: float, q: float, x: float) -> float:
     """
     See notebook in: anastruct/fem/background/distributed_ax_force.ipynb
 

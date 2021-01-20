@@ -10,7 +10,7 @@ try:
 except Exception:
     em = []
 
-if sys.version_info[0] == 3 and sys.version_info[1] < 5:
+if sys.version_info[0] == 3 and sys.version_info[1] < 7:
     sys.exit("Sorry, Python < 3.5 is not supported")
 
 exec(open("anastruct/_version.py").read())
@@ -37,6 +37,6 @@ setup(
     ],
     package_data={"": ["*.xml"]},
     package_dir="",
-    install_requires=["matplotlib>=3.0, <3.1", "numpy>=1.15.4", "scipy>=1.1.0"],
+    install_requires=["matplotlib>=3.0", "numpy>=1.15.4", "scipy>=1.1.0"],
     ext_modules=em,
 )
