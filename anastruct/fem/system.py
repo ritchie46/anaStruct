@@ -750,6 +750,23 @@ class SystemElements:
             # add the support to the support list for the plotter
             self.supports_rotational.append(self.node_map[id_])
 
+    def add_internal_hinge(self, node_id: Union[int, Sequence[int]]):
+        """
+        Model an internal hinge at a given node.
+        This may alternately be done by setting spring={n: 0} when creating elements
+        but this can be an easier method of doing so
+
+        :param node_id: Represents the nodes ID
+        """
+        if not isinstance(node_id, collections.Iterable):
+            node_id = [node_id]
+
+        for id_ in node_id:
+            id_ = _negative_index_to_id(id_, self.node_map.keys())
+
+            # add the support to the support list for the plotter
+            self.internal_hinges.append(self.node_map[id_])
+
     def add_support_roll(
         self,
         node_id: Union[Sequence[int], int],
