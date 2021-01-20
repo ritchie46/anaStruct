@@ -438,7 +438,6 @@ class SimpleTest(unittest.TestCase):
         ss.point_load(node_id=1, Fx=15)
         ss.point_load(node_id=2, Fy=-5)
         ss.moment_load(node_id=3, Ty=-7)
-        ss.show_structure()
         ss.solve()
         self.assertAlmostEqual(-0.1, ss.get_element_results(2)["qi"])
         self.assertAlmostEqual(-1, ss.get_element_results(2)["q"])

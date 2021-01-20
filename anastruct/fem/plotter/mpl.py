@@ -326,7 +326,7 @@ class Plotter(PlottingValues):
                         step_len_x[counter],
                         step_len_y[counter],
                         head_width=average_h * 0.25,
-                        head_length=0.4 * np.sqrt(abs(step_len_y[counter]) ** 2 + abs(step_len_x[counter]) ** 2),
+                        head_length=0.4 * np.sqrt(step_len_y[counter] ** 2 + step_len_x[counter] ** 2),
                         ec="k",
                         fc="k",
                         shape=shape
