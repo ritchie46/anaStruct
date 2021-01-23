@@ -113,7 +113,6 @@ class SystemElements:
             int, Tuple[float, float]
         ] = {}  # node ids with a point loads {node_id: (x, y)}
         self.loads_q: Dict[int, float] = {}  # element ids with a q-load
-        self.loads_qi: Dict[int, float] = {}
         self.loads_moment: Dict[int, float] = {}
         self.loads_dead_load: Set[
             int
@@ -866,7 +865,6 @@ class SystemElements:
         q: Union[float, Sequence[float]],
         element_id: Union[int, Sequence[int]],
         direction: Union[str, Sequence[str]] = "element",
-        qi: Union[float, Sequence[float]] = None,
     ):
         """
         Apply a q-load to an element.
@@ -875,10 +873,10 @@ class SystemElements:
         :param q: value of the q-load
         :param direction: "element", "x", "y"
         """
-        if qi is None: qi = q
-        q, qi, element_id, direction = args_to_lists(q, qi, element_id, direction)
+        if not isinstance(q, tuple): q = [(q, q)]
+        else: q = [q]
+        q, element_id, direction = args_to_lists(q, element_id, direction)
         q = cast(Sequence[float], q)
-        qi = cast(Sequence[float], qi)
         element_id = cast(Sequence[int], element_id)
         direction = cast(Sequence[str], direction)
 
@@ -886,13 +884,10 @@ class SystemElements:
 
         for i in range(len(element_id)):
             id_ = _negative_index_to_id(element_id[i], self.element_map.keys())
-            self.plotter.max_q = max(self.plotter.max_q, abs(q[i]))
-            self.plotter.max_qi = max(self.plotter.max_qi, abs(qi[i]))
-            self.loads_q[id_] = q[i] * self.orientation_cs * self.load_factor
-            self.loads_qi[id_] = qi[i] * self.orientation_cs * self.load_factor
+            self.plotter.max_q = max(self.plotter.max_q, max(abs(q[i][0]), abs(q[i][1])))
+            self.loads_q[id_] = [i * self.orientation_cs * self.load_factor for i in q[i]]
             el = self.element_map[id_]
-            el.q_load = q[i] * self.orientation_cs * self.load_factor
-            el.qi_load = qi[i] * self.orientation_cs * self.load_factor
+            el.q_load = [i * self.orientation_cs * self.load_factor for i in q[i]]
             el.q_direction = direction[i]
 
     def point_load(
@@ -1258,7 +1253,6 @@ class SystemElements:
                     "Qmax": np.max(el.shear_force),
                     "Q": el.shear_force if verbose else None,
                     "q": el.q_load,
-                    "qi": el.qi_load,
                 }
         else:
             result_list = []
@@ -1298,7 +1292,6 @@ class SystemElements:
                             "Qmax": np.max(el.shear_force),
                             "Q": el.shear_force if verbose else None,
                             "q": el.q_load,
-                            "qi": el.qi_load,
                         }
                     )
             return result_list
@@ -1474,12 +1467,6 @@ class SystemElements:
                 element_id=element_id,
                 direction=q_direction,
             )
-        for element_id, forces in self.loads_qi.items():
-            ss.qi_load(
-                qi=forces / self.orientation_cs / self.load_factor,
-                element_id=element_id,
-                direction=self.element_map[element_id].q_direction,
-            )
 
         self.__dict__ = ss.__dict__.copy()
 
@@ -1492,12 +1479,10 @@ class SystemElements:
 
         self.loads_point = {}
         self.loads_q = {}
-        self.loads_qi = {}
         self.loads_moment = {}
 
         for k in self.element_map:
             self.element_map[k].q_load = 0
-            self.element_map[k].qi_load = 0
             if dead_load:
                 self.element_map[k].dead_load = 0
         if dead_load:

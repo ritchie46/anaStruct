@@ -71,8 +71,7 @@ class Element:
             6
         )  # acting external forces
         self.element_force_vector: np.ndarray = np.array([])
-        self.q_load: float = 0.0
-        self.qi_load: float = 0.0
+        self.q_load: tuple = (0.0, 0.0)
         self.q_direction: Optional[str] = None
         self.dead_load: float = 0.0
         self.N_1: Optional[float] = None
@@ -90,7 +89,7 @@ class Element:
     @property
     def all_q_load(self) -> float:
         if self.q_load is None:
-            q = 0
+            q = (0, 0)
         else:
             if self.q_direction == "x":
                 q_factor = -sin(self.angle)
@@ -103,29 +102,9 @@ class Element:
                     "Wrong parameters",
                     "q-loads direction is not set property. Please choose 'x', 'y', or 'element'",
                 )
-            q = self.q_load * q_factor
+            q = [i * q_factor for i in self.q_load]
 
-        return q + self.dead_load * cos(self.angle)
-
-    @property
-    def all_qi_load(self) -> float:
-        if self.qi_load is None:
-            qi = 0
-        else:
-            if self.q_direction == "x":
-                q_factor = -sin(self.angle)
-            elif self.q_direction == "y":
-                q_factor = cos(self.angle)
-            elif self.q_direction == "element" or self.q_direction is None:
-                q_factor = 1
-            elif self.q_direction is not None:
-                raise FEMException(
-                    "Wrong parameters",
-                    "q-loads direction is not set property. Please choose 'x', 'y', or 'element'",
-                )
-            qi = self.qi_load * q_factor
-
-        return qi + self.dead_load * cos(self.angle)
+        return [i + self.dead_load * cos(self.angle) for i in self.q_load]
 
     @property
     def node_1(self) -> Node:

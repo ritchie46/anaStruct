@@ -65,9 +65,9 @@ def plot_values_bending_moment(element, factor, n):
     x_val = x1 + interpolate * dx
     y_val = y1 + interpolate * dy
 
-    if element.q_load or element.qi_load or element.dead_load:
-        q = element.all_q_load
-        qi = element.all_qi_load
+    if element.q_load or element.dead_load:
+        qi = element.all_q_load[0]
+        q = element.all_q_load[1]
         x = interpolate * element.l
         q_part = -((qi - q) / (6 * element.l)) * x ** 3 + (qi / 2) * x ** 2 - (((2 * qi) + q) / 6) * element.l * x
         x_val += sin * q_part * factor

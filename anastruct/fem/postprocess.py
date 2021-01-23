@@ -172,9 +172,9 @@ class ElementLevel:
         iteration_factor = np.linspace(0, 1, con)
         x = iteration_factor * element.l
         m_val = element.node_1.Ty + iteration_factor * dT
-        if element.all_q_load or element.all_qi_load:
-            q = element.all_q_load
-            qi = element.all_qi_load
+        if element.all_q_load:
+            qi = element.all_q_load[0]
+            q = element.all_q_load[1]
             q_part = -((qi - q) / (6 * element.l)) * x ** 3 + (qi / 2) * x ** 2 - (((2 * qi) + q) / 6) * element.l * x
             m_val += q_part
 
