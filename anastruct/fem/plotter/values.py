@@ -70,7 +70,7 @@ class PlottingValues:
                     lambda el: max(
                         abs(el.node_1.Ty),
                         abs(
-                            ((el.all_qi_load + el.all_q_load) / 16) * el.l ** 2
+                            ((el.all_q_load[0] + el.all_q_load[1]) / 16) * el.l ** 2
                         ),
                     ),
                     self.system.element_map.values(),

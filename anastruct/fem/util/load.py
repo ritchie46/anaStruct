@@ -24,10 +24,11 @@ class LoadCase:
         :param q: (flt) value of the q-load
         :param direction: (str) "element", "x", "y"
         """
-        if qi is None: qi = q
+        if not isinstance(q, tuple): q = [(q, q)]
+        q = [q]
         self.c += 1
         self.spec[f"q_load-{self.c}"] = dict(
-            q=q, qi=qi, element_id=element_id, direction=direction
+            q=q, element_id=element_id, direction=direction
         )
 
     def point_load(self, node_id, Fx=0, Fy=0, rotation=0):

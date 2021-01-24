@@ -225,7 +225,7 @@ class SimpleTest(unittest.TestCase):
                 5.6568542494923797,
             ]
             sssol = [a[1] for a in ss.get_node_results_system()]
-            #self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, sssol)]))
+            self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, sssol)]))
 
     def test_ex_17_buckling_factor(self):
         from anastruct.fem.examples.ex_17_gnl import ss
@@ -395,10 +395,10 @@ class SimpleTest(unittest.TestCase):
         ss.q_load(q=-1000, element_id=1, direction="x")
         ss.point_load(node_id=2, Fy=-100)
         ss.solve()
-        #self.assertAlmostEqual(0.0083333, ss.get_node_results_system(2)["ux"])
+        self.assertAlmostEqual(0.0083333, ss.get_node_results_system(2)["ux"])
         self.assertAlmostEqual(0.0, ss.get_node_results_system(2)["uy"])
         self.assertAlmostEqual(0.0, ss.get_node_results_system(2)["phi_y"])
-        #self.assertAlmostEqual(166.6667083, ss.get_node_results_system(2)["Ty"])
+        self.assertAlmostEqual(166.6667083, ss.get_node_results_system(2)["Ty"])
 
     def test_rotational_support(self):
         ss = se.SystemElements()

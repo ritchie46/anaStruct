@@ -112,7 +112,7 @@ class SystemElements:
         self.loads_point: Dict[
             int, Tuple[float, float]
         ] = {}  # node ids with a point loads {node_id: (x, y)}
-        self.loads_q: Dict[int, float] = {}  # element ids with a q-load
+        self.loads_q: Dict[int, List[Union[float, Any]]] = {}  # element ids with a q-load
         self.loads_moment: Dict[int, float] = {}
         self.loads_dead_load: Set[
             int
@@ -873,10 +873,10 @@ class SystemElements:
         :param q: value of the q-load
         :param direction: "element", "x", "y"
         """
-        if not isinstance(q, tuple): q = [(q, q)]
-        else: q = [q]
+        if not isinstance(q, tuple): q = (q, q)
+        q = [q]
         q, element_id, direction = args_to_lists(q, element_id, direction)
-        q = cast(Sequence[float], q)
+        q = cast(Sequence[list], q)
         element_id = cast(Sequence[int], element_id)
         direction = cast(Sequence[str], direction)
 
@@ -1463,7 +1463,7 @@ class SystemElements:
             q_direction = self.element_map[element_id].q_direction
             assert q_direction is not None
             ss.q_load(
-                q=forces_q / self.orientation_cs / self.load_factor,
+                q=[i / self.orientation_cs / self.load_factor for i in forces_q],
                 element_id=element_id,
                 direction=q_direction,
             )

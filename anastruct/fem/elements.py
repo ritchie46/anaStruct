@@ -104,7 +104,7 @@ class Element:
                 )
             q = [i * q_factor for i in self.q_load]
 
-        return [i + self.dead_load * cos(self.angle) for i in self.q_load]
+        return [i + self.dead_load * cos(self.angle) for i in q]
 
     @property
     def node_1(self) -> Node:

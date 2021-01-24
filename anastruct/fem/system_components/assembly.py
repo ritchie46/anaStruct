@@ -72,7 +72,6 @@ def apply_perpendicular_q_load(system: "SystemElements"):
         kl = element.constitutive_matrix[1][1] * 1e6
         kr = element.constitutive_matrix[2][2] * 1e6
 
-
         # minus because of systems positive rotation
         left_moment = det_moment(kl, kr, qi_perpendicular, q_perpendicular, 0, element.EI, element.l)
         right_moment = -det_moment(kl, kr, qi_perpendicular, q_perpendicular, element.l, element.EI, element.l)
@@ -128,7 +127,7 @@ def apply_parallel_q_load(system: "SystemElements", element: "Element"):
     if direction == "x":
         factor = abs(math.cos(element.angle))
 
-        for q_element in (element.q_load * factor, element.dead_load * factor_dl):
+        for q_element in (element.q_load[0] * factor, element.dead_load * factor_dl):
             # q_load working at parallel to the elements x-axis          # set the proper direction
             Fx = -q_element * math.cos(element.angle) * element.l * 0.5
             Fz = (
