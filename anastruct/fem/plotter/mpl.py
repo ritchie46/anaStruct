@@ -673,7 +673,7 @@ class Plotter(PlottingValues):
             if (
                 math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
-                and not el.all_q_load
+                and not el.all_q_load[0] and not el.all_q_load[1]
             ):
                 # If True there is no bending moment, so no need for plotting.
                 continue
