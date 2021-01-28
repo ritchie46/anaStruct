@@ -175,7 +175,11 @@ class ElementLevel:
         if element.all_q_load:
             qi = element.all_q_load[0]
             q = element.all_q_load[1]
-            q_part = -((qi - q) / (6 * element.l)) * x ** 3 + (qi / 2) * x ** 2 - (((2 * qi) + q) / 6) * element.l * x
+            q_part = (
+                -((qi - q) / (6 * element.l)) * x ** 3
+                + (qi / 2) * x ** 2
+                - (((2 * qi) + q) / 6) * element.l * x
+            )
             m_val += q_part
 
         element.bending_moment = m_val

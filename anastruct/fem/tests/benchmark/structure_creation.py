@@ -22,5 +22,9 @@ print(f"Best of {n} = {min_} s.")
 if save:
     with open("system-creation.csv", "a") as f:
         os.chdir("../../..")
-        git_label = str(subprocess.check_output(["git", "describe", "--tags"])).replace('\\n', '').replace("'", "")[1:]
+        git_label = (
+            str(subprocess.check_output(["git", "describe", "--tags"]))
+            .replace("\\n", "")
+            .replace("'", "")[1:]
+        )
         f.write(f"{git_label}, {min_}\n")

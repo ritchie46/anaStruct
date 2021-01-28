@@ -24,7 +24,8 @@ class LoadCase:
         :param q: (flt) value of the q-load
         :param direction: (str) "element", "x", "y"
         """
-        if not isinstance(q, tuple): q = [(q, q)]
+        if not isinstance(q, tuple):
+            q = [(q, q)]
         q = [q]
         self.c += 1
         self.spec[f"q_load-{self.c}"] = dict(
@@ -92,7 +93,7 @@ class LoadCombination:
         verbosity=0,
         max_iter=200,
         geometrical_non_linear=False,
-        **kwargs
+        **kwargs,
     ):
         """
         Evaluate the Load Combination.

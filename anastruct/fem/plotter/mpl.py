@@ -281,7 +281,9 @@ class Plotter(PlottingValues):
             if verbosity == 0:
                 # arrow
                 pos = np.sqrt(((y1 - y2) ** 2) + ((x1 - x2) ** 2))
-                cg = ((pos / 3) * (el.q_load[0] + 2 * el.q_load[1])) / (el.q_load[0] + el.q_load[1])
+                cg = ((pos / 3) * (el.q_load[0] + 2 * el.q_load[1])) / (
+                    el.q_load[0] + el.q_load[1]
+                )
                 height = math.sin(el.angle) * cg
                 base = math.cos(el.angle) * cg
 
@@ -295,27 +297,25 @@ class Plotter(PlottingValues):
                 step_len_y = np.linspace(len_y1, len_y2, 11)
                 average_h = (h1 + h2) / 2
                 # fc = face color, ec = edge color
-                self.one_fig.text(
-                    xn1, yn1, f"q={qi}", color="b", fontsize=9, zorder=10)
-                self.one_fig.text(
-                    xn2, yn2, f"q={q}", color="b", fontsize=9, zorder=10)
+                self.one_fig.text(xn1, yn1, f"q={qi}", color="b", fontsize=9, zorder=10)
+                self.one_fig.text(xn2, yn2, f"q={q}", color="b", fontsize=9, zorder=10)
 
                 # add multiple arrows to fill load
                 for counter in range(len(step_x)):
                     if q + qi >= 0:
                         if counter == 0:
-                            shape = 'right'
+                            shape = "right"
                         elif counter == 10:
-                            shape = 'left'
+                            shape = "left"
                         else:
-                            shape = 'full'
+                            shape = "full"
                     else:
                         if counter == 0:
-                            shape = 'left'
+                            shape = "left"
                         elif counter == 10:
-                            shape = 'right'
+                            shape = "right"
                         else:
-                            shape = 'full'
+                            shape = "full"
 
                     self.one_fig.arrow(
                         step_x[counter],
@@ -323,10 +323,11 @@ class Plotter(PlottingValues):
                         step_len_x[counter],
                         step_len_y[counter],
                         head_width=average_h * 0.25,
-                        head_length=0.4 * np.sqrt(step_len_y[counter] ** 2 + step_len_x[counter] ** 2),
+                        head_length=0.4
+                        * np.sqrt(step_len_y[counter] ** 2 + step_len_x[counter] ** 2),
                         ec="k",
                         fc="k",
-                        shape=shape
+                        shape=shape,
                     )
 
     @staticmethod
@@ -657,9 +658,7 @@ class Plotter(PlottingValues):
                 map(
                     lambda el: max(
                         abs(el.node_1.Ty),
-                        abs(
-                            ((el.all_q_load[0] + el.all_q_load[1]) / 16) * el.l ** 2
-                        ),
+                        abs(((el.all_q_load[0] + el.all_q_load[1]) / 16) * el.l ** 2),
                     )
                     if el.type == "general"
                     else 0,
@@ -673,7 +672,8 @@ class Plotter(PlottingValues):
             if (
                 math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
-                and not el.all_q_load[0] and not el.all_q_load[1]
+                and not el.all_q_load[0]
+                and not el.all_q_load[1]
             ):
                 # If True there is no bending moment, so no need for plotting.
                 continue

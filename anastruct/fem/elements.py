@@ -358,4 +358,8 @@ def det_axial(EA: float, L: float, qi: float, q: float, x: float) -> float:
     :param L: (flt) Length of the beam
     :return: (flt)
     """
-    return EA*(x*(-L*qi/2 + x*(-q + qi)/3)/(EA*L) + (L**2*(q + 2*qi)/6 - L*qi*x/2 + x**2*(-q + qi)/6)/(EA*L))
+    return EA * (
+        x * (-L * qi / 2 + x * (-q + qi) / 3) / (EA * L)
+        + (L ** 2 * (q + 2 * qi) / 6 - L * qi * x / 2 + x ** 2 * (-q + qi) / 6)
+        / (EA * L)
+    )

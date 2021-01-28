@@ -7,8 +7,8 @@ load_factor = 3
 
 E = 210e3
 profile = HEA[180]
-EA = to_kN(E * profile['A'])
-EI = to_kNm2(E * profile['Iy'])
+EA = to_kN(E * profile["A"])
+EI = to_kNm2(E * profile["Iy"])
 mp = profile["Wy"] * 235 * 1e-6
 
 ss = SystemElements(EA=EA, EI=EI, load_factor=load_factor)
@@ -32,5 +32,3 @@ if __name__ == "__main__":
     ss.show_structure()
     ss.show_displacement()
     ss.show_bending_moment()
-
-

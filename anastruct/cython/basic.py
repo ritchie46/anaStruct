@@ -20,7 +20,7 @@ def converge(lhs, rhs):
 def angle_x_axis(delta_x, delta_z):
     # dot product v_x = [1, 0] ; v = [delta_x, delta_z]
     # dot product = 1 * delta_x + 0 * delta_z -> delta_x
-    ai = math.acos(delta_x / math.sqrt(delta_x**2 + delta_z**2))
+    ai = math.acos(delta_x / math.sqrt(delta_x ** 2 + delta_z ** 2))
     if delta_z < 0:
         ai = 2 * math.pi - ai
 

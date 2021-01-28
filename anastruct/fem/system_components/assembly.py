@@ -63,8 +63,11 @@ def apply_perpendicular_q_load(system: "SystemElements"):
 
         qi_perpendicular = element.all_q_load[0]
         q_perpendicular = element.all_q_load[1]
-        if not (math.isclose(element.q_load[0] + element.dead_load, qi_perpendicular)) and \
-                not (math.isclose(element.q_load[1] + element.dead_load, q_perpendicular)):
+        if not (
+            math.isclose(element.q_load[0] + element.dead_load, qi_perpendicular)
+        ) and not (
+            math.isclose(element.q_load[1] + element.dead_load, q_perpendicular)
+        ):
             apply_parallel_q_load(system, element)
         if q_perpendicular == 0 and qi_perpendicular == 0:
             continue
@@ -73,10 +76,18 @@ def apply_perpendicular_q_load(system: "SystemElements"):
         kr = element.constitutive_matrix[2][2] * 1e6
 
         # minus because of systems positive rotation
-        left_moment = det_moment(kl, kr, qi_perpendicular, q_perpendicular, 0, element.EI, element.l)
-        right_moment = -det_moment(kl, kr, qi_perpendicular, q_perpendicular, element.l, element.EI, element.l)
-        rleft = det_shear(kl, kr, qi_perpendicular, q_perpendicular, 0, element.EI, element.l)
-        rright = -det_shear(kl, kr, qi_perpendicular, q_perpendicular, element.l, element.EI, element.l)
+        left_moment = det_moment(
+            kl, kr, qi_perpendicular, q_perpendicular, 0, element.EI, element.l
+        )
+        right_moment = -det_moment(
+            kl, kr, qi_perpendicular, q_perpendicular, element.l, element.EI, element.l
+        )
+        rleft = det_shear(
+            kl, kr, qi_perpendicular, q_perpendicular, 0, element.EI, element.l
+        )
+        rright = -det_shear(
+            kl, kr, qi_perpendicular, q_perpendicular, element.l, element.EI, element.l
+        )
 
         rleft_x = rleft * math.sin(element.a1)
         rright_x = rright * math.sin(element.a2)

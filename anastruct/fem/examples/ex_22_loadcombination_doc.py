@@ -20,7 +20,7 @@ ss.add_element([[18, 0], [18, height]])
 ss.add_support_hinged([1, 5])
 ss.show_structure()
 
-lc_wind = LoadCase('wind')
+lc_wind = LoadCase("wind")
 lc_wind.q_load(q=-1, element_id=[10, 11, 12, 13, 5])
 
 print(lc_wind)
@@ -32,10 +32,10 @@ ss.show_structure()
 ss.remove_loads()
 
 # create another load case
-lc_cables = LoadCase('cables')
+lc_cables = LoadCase("cables")
 lc_cables.point_load(node_id=[2, 3, 4], Fy=-100)
 
-combination = LoadCombination('ULS')
+combination = LoadCombination("ULS")
 combination.add_load_case(lc_wind, 1.5)
 combination.add_load_case(lc_cables, factor=1.2)
 
