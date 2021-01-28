@@ -878,7 +878,7 @@ class SystemElements:
         if not isinstance(q, tuple):
             q = (q, q)
         if q[0] != q[1] and direction != "element":
-            raise ValueError('Non-uniform loads are only supported in element direction')
+            raise ValueError("Non-uniform loads are only supported in element direction")
         q = [q]
         q, element_id, direction = args_to_lists(q, element_id, direction)
         q = cast(Sequence[list], q)
