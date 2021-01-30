@@ -2,9 +2,9 @@ import numpy as np
 import collections
 
 try:
-    from anastruct.cython.cbasic import converge, angle_x_axis  # type: ignore
+    from anastruct.cython.cbasic import converge, angle_x_axis # type: ignore
 except ImportError:
-    from anastruct.cython.basic import converge, angle_x_axis  # type: ignore
+    from anastruct.cython.basic import converge, angle_x_axis # type: ignore
 
 
 def find_nearest(array, value):

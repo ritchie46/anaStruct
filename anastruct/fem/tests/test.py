@@ -71,9 +71,9 @@ class SimpleTest(unittest.TestCase):
         system.add_support_hinged(node_id=1)
         system.add_support_hinged(node_id=3)
         sol = np.fromstring(
-            """0.00000000e+00   0.00000000e+00  -3.25525753e-21   2.00000000e-09
-        2.49096026e-25  -2.08333293e-03   0.00000000e+00   0.00000000e+00
-        4.16666707e-03""",
+            """0.00000000e+00  0.00000000e+00  1.46957616e-25  2.00000000e-09
+        -7.34788079e-25  0.00000000e+00  0.00000000e+00  0.00000000e+00
+        3.12500040e-03""",
             float,
             sep=" ",
         )
@@ -447,6 +447,22 @@ class SimpleTest(unittest.TestCase):
         self.assertAlmostEqual(-0.825, ss.get_node_results_system(2)["Fx"])
         self.assertAlmostEqual(0, ss.get_node_results_system(1)["Ty"])
         self.assertAlmostEqual(-5.8625, ss.get_node_results_system(2)["Ty"])
+
+    def test_internal_hinge_symmetry(self):
+        ss = se.SystemElements()
+        ss.add_element(location=[[0, 0], [5, 0]], spring={2: 0})
+        ss.add_element(location=[[5, 0], [10, 0]])
+        ss.q_load(element_id=1, q=-9)
+        ss.q_load(element_id=2, q=-9)
+        ss.add_support_fixed(node_id=1)
+        ss.add_support_fixed(node_id=3)
+        ss.solve()
+        self.assertAlmostEqual(
+            ss.get_node_results_system(1)["Fy"], ss.get_node_results_system(3)["Fy"]
+        )
+        self.assertAlmostEqual(
+            ss.get_element_results(1)["Mmax"], ss.get_element_results(2)["Mmax"]
+        )
 
 
 if __name__ == "__main__":

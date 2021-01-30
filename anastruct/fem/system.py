@@ -95,6 +95,7 @@ class SystemElements:
         self.supports_fixed: List[Node] = []
         self.supports_hinged: List[Node] = []
         self.supports_rotational: List[Node] = []
+        self.internal_hinges: List[Node] = []
         self.supports_roll: List[Node] = []
         self.supports_spring_x: List[Tuple[Node, bool]] = []
         self.supports_spring_z: List[Tuple[Node, bool]] = []
@@ -161,8 +162,8 @@ class SystemElements:
         EA: Optional[Union[List[float], np.ndarray]] = None,
         EI: Optional[Union[List[float], np.ndarray]] = None,
         g: Optional[Union[List[float], np.ndarray]] = None,
-        mp: MpType = {},
-        spring: Spring = {},
+        mp: Optional[MpType] = None,
+        spring: Optional[Spring] = None,
         **kwargs
     ):
         """
@@ -234,8 +235,8 @@ class SystemElements:
         EA: float = None,
         EI: float = None,
         g: float = 0,
-        mp: MpType = {},
-        spring: Spring = {},
+        mp: Optional[MpType] = None,
+        spring: Optional[Spring] = None,
         **kwargs
     ) -> int:
         """
@@ -279,6 +280,12 @@ class SystemElements:
 
         :return: Elements ID.
         """
+
+        if mp == None:
+            mp = {}
+        if spring == None:
+            spring = {}
+
         element_type = kwargs.get("element_type", "general")
 
         EA = self.EA if EA is None else EA
@@ -318,9 +325,6 @@ class SystemElements:
 
         system_components.util.append_node_id(
             self, point_1, point_2, node_id1, node_id2
-        )
-        spring = system_components.util.ensure_single_hinge(
-            self, spring, node_id1, node_id2
         )
 
         # Only for typing purposes
@@ -375,8 +379,8 @@ class SystemElements:
         EA: float = None,
         EI: float = None,
         g: float = 0,
-        mp: MpType = {},
-        spring: Spring = {},
+        mp: Optional[MpType] = None,
+        spring: Optional[Spring] = None,
         **kwargs
     ):
         """
@@ -413,6 +417,11 @@ class SystemElements:
 
         :return: (list) Element IDs
         """
+
+        if mp == None:
+            mp = {}
+        if spring == None:
+            spring = {}
 
         first = kwargs.get("first", {})
         last = kwargs.get("last", {})
@@ -601,6 +610,9 @@ class SystemElements:
         # kwargs: arguments for the iterative solver callers such as the _stiffness_adaptation method.
         #                naked (bool) Default = False, if True force lines won't be computed.
 
+        for node_id in self.node_map:
+            system_components.util.check_internal_hinges(self, node_id)
+
         if self.system_displacement_vector is None:
             system_components.assembly.process_supports(self)
 
@@ -739,6 +751,23 @@ class SystemElements:
 
             # add the support to the support list for the plotter
             self.supports_rotational.append(self.node_map[id_])
+
+    def add_internal_hinge(self, node_id: Union[int, Sequence[int]]):
+        """
+        Model an internal hinge at a given node.
+        This may alternately be done by setting spring={n: 0} when creating elements
+        but this can be an easier method of doing so
+
+        :param node_id: Represents the nodes ID
+        """
+        if not isinstance(node_id, collections.Iterable):
+            node_id = [node_id]
+
+        for id_ in node_id:
+            id_ = _negative_index_to_id(id_, self.node_map.keys())
+
+            # add the support to the support list for the plotter
+            self.internal_hinges.append(self.node_map[id_])
 
     def add_support_roll(
         self,

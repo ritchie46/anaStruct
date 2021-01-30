@@ -297,6 +297,14 @@ def process_supports(system):
     for node in system.supports_rotational:
         set_displacement_vector(system, [(node.id, 3)])
 
+    for node in system.internal_hinges:
+        set_displacement_vector(system, [(node.id, 3)])
+        for el in system.node_element_map[node.id]:
+            el.compile_constitutive_matrix(
+                el.EA, el.EI, el.l, el.springs, el.node_1.hinge, el.node_2.hinge
+            )
+            el.compile_stiffness_matrix()
+
     for node in system.supports_fixed:
         set_displacement_vector(system, [(node.id, 1), (node.id, 2), (node.id, 3)])
 

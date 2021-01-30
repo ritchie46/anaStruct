@@ -73,7 +73,17 @@ class Node:
         Fz = self.Fz + other.Fz
         Ty = self.Ty + other.Ty
 
-        return Node(self.id, Fx, Fz, Ty, self.ux, self.uz, self.phi_y, self.vertex)
+        return Node(
+            id=self.id,
+            Fx=Fx,
+            Fz=Fz,
+            Ty=Ty,
+            ux=self.ux,
+            uz=self.uz,
+            phi_y=self.phi_y,
+            vertex=self.vertex,
+            hinge=self.hinge,
+        )
 
     def __sub__(self, other: Node) -> Node:
         assert (
@@ -83,7 +93,18 @@ class Node:
         Fz = self.Fz - other.Fz
         Ty = self.Ty - other.Ty
 
-        return Node(self.id, Fx, Fz, Ty, self.ux, self.uz, self.phi_y, self.vertex)
+        return Node(
+            self.id,
+            Fx,
+            Fz,
+            Ty,
+            self.ux,
+            self.uz,
+            self.phi_y,
+            self.vertex,
+            hinge=self.hinge,
+        )
 
     def reset(self):
         self.Fx = self.Fz = self.Ty = self.ux = self.uz = self.phi_y = 0
+        hinge = False
