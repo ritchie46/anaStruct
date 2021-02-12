@@ -79,7 +79,7 @@ class SystemLevel:
 
     def element_results(self):
         """
-        Determines the element results for al elements in the system on element level.
+        Determines the element results for all elements in the system on element level.
         """
 
         for el in self.system.element_map.values():
@@ -173,8 +173,13 @@ class ElementLevel:
         x = iteration_factor * element.l
         m_val = element.node_1.Ty + iteration_factor * dT
         if element.all_q_load:
-            q = element.all_q_load
-            q_part = -0.5 * -q * x ** 2 + 0.5 * -q * element.l * x
+            qi = element.all_q_load[0]
+            q = element.all_q_load[1]
+            q_part = (
+                -((qi - q) / (6 * element.l)) * x ** 3
+                + (qi / 2) * x ** 2
+                - (((2 * qi) + q) / 6) * element.l * x
+            )
             m_val += q_part
 
         element.bending_moment = m_val
@@ -185,14 +190,10 @@ class ElementLevel:
         Determines the shear force by differentiating the bending moment.
         :param element: (object) of the Element class
         """
-        dV = np.diff(element.bending_moment)
-        dx = element.l / (con - 1)
-        shear_force = dV / dx
-
-        # Due to differentiation the first and the last values must be corrected.
-        correction = shear_force[1] - shear_force[0]
-        shear_force = np.insert(shear_force, 0, [shear_force[0] - 0.5 * correction])
-        shear_force = np.insert(shear_force, con, [shear_force[-1] + 0.5 * correction])
+        iteration_factor = np.linspace(0, 1, con)
+        x = iteration_factor * element.l
+        eq = np.polyfit(x, element.bending_moment, 3)
+        shear_force = eq[0] * 3 * x ** 2 + eq[1] * 2 * x + eq[2]
         element.shear_force = shear_force
 
     @staticmethod

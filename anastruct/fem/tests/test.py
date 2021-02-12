@@ -428,6 +428,26 @@ class SimpleTest(unittest.TestCase):
         self.assertAlmostEqual(0, results["dead"].get_node_results_system(1)["Fx"])
         self.assertAlmostEqual(14, results["dead"].get_node_results_system(2)["Fx"])
 
+    def test_perpendicular_trapezoidal_load(self):
+        ss = se.SystemElements()
+        ss.add_element(location=[(0, 0), (1, 0)])
+        ss.add_element(location=[(1, 0), (2, 1.5)])
+        ss.add_support_fixed(node_id=1)
+        ss.add_support_fixed(node_id=2)
+        ss.q_load(q=(0.1, 1), element_id=2, direction="element")
+        ss.point_load(node_id=1, Fx=15)
+        ss.point_load(node_id=2, Fy=-5)
+        ss.moment_load(node_id=3, Ty=-7)
+        ss.solve()
+        self.assertAlmostEqual(-0.1, ss.get_element_results(2)["q"][0])
+        self.assertAlmostEqual(-1, ss.get_element_results(2)["q"][1])
+        self.assertAlmostEqual(0, ss.get_node_results_system(1)["Fy"])
+        self.assertAlmostEqual(15, ss.get_node_results_system(1)["Fx"])
+        self.assertAlmostEqual(-4.45, ss.get_node_results_system(2)["Fy"])
+        self.assertAlmostEqual(-0.825, ss.get_node_results_system(2)["Fx"])
+        self.assertAlmostEqual(0, ss.get_node_results_system(1)["Ty"])
+        self.assertAlmostEqual(-5.8625, ss.get_node_results_system(2)["Ty"])
+
     def test_internal_hinge_symmetry(self):
         ss = se.SystemElements()
         ss.add_element(location=[[0, 0], [5, 0]], spring={2: 0})

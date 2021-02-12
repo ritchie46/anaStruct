@@ -71,7 +71,7 @@ class Element:
             6
         )  # acting external forces
         self.element_force_vector: np.ndarray = np.array([])
-        self.q_load: float = 0.0
+        self.q_load: tuple = (0.0, 0.0)
         self.q_direction: Optional[str] = None
         self.dead_load: float = 0.0
         self.N_1: Optional[float] = None
@@ -89,7 +89,7 @@ class Element:
     @property
     def all_q_load(self) -> float:
         if self.q_load is None:
-            q = 0
+            q = (0, 0)
         else:
             if self.q_direction == "x":
                 q_factor = -sin(self.angle)
@@ -102,9 +102,9 @@ class Element:
                     "Wrong parameters",
                     "q-loads direction is not set property. Please choose 'x', 'y', or 'element'",
                 )
-            q = self.q_load * q_factor
+            q = [i * q_factor for i in self.q_load]
 
-        return q + self.dead_load * cos(self.angle)
+        return [i + self.dead_load * cos(self.angle) for i in q]
 
     @property
     def node_1(self) -> Node:
@@ -364,7 +364,7 @@ def geometric_stiffness_matrix(l: float, N: float, a1: float, a2: float) -> np.n
 
 
 @lru_cache(CACHE_BOUND)
-def det_axial(EA: float, L: float, q: float, x: float) -> float:
+def det_axial(EA: float, L: float, qi: float, q: float, x: float) -> float:
     """
     See notebook in: anastruct/fem/background/distributed_ax_force.ipynb
 
@@ -374,4 +374,8 @@ def det_axial(EA: float, L: float, q: float, x: float) -> float:
     :param L: (flt) Length of the beam
     :return: (flt)
     """
-    return EA * (L * q / (2 * EA) - q * x / EA)
+    return EA * (
+        x * (-L * qi / 2 + x * (-q + qi) / 3) / (EA * L)
+        + (L ** 2 * (q + 2 * qi) / 6 - L * qi * x / 2 + x ** 2 * (-q + qi) / 6)
+        / (EA * L)
+    )

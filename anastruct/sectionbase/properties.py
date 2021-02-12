@@ -3,24 +3,24 @@ import math
 
 
 def steel_section_properties(**kwargs):
-    steel_section = kwargs.get("steelsection", 'IPE 300')
-    orient = kwargs.get("orient", 'y')
+    steel_section = kwargs.get("steelsection", "IPE 300")
+    orient = kwargs.get("orient", "y")
     E = kwargs.get("E", 210e9)
     sw = kwargs.get("sw", False)
 
     param = section_base.get_section_parameters(steel_section)
-    EA = E * param['Ax']
-    if orient == 'y':
-        EI = E * param['Iy']
-    elif orient == 'z':
-        EI = E * param['Iz']
+    EA = E * param["Ax"]
+    if orient == "y":
+        EI = E * param["Iy"]
+    elif orient == "z":
+        EI = E * param["Iz"]
     else:
-        raise ValueError('Orient should be defined.')
+        raise ValueError("Orient should be defined.")
     if sw:
-        g = param['swdl']
+        g = param["swdl"]
     else:
         g = 0
-    section_name = '%s(%s)' % (steel_section, orient)
+    section_name = "%s(%s)" % (steel_section, orient)
     return section_name, EA, EI, g
 
 
@@ -39,7 +39,7 @@ def rectangle_properties(**kwargs):
         g = A * gamma
     else:
         g = 0
-    section_name = 'rect %sx%s' % (b, h)
+    section_name = "rect %sx%s" % (b, h)
     return section_name, EA, EI, g
 
 
@@ -57,5 +57,5 @@ def circle_properties(**kwargs):
         g = A * gamma
     else:
         g = 0
-    section_name = 'fi %s' % d
+    section_name = "fi %s" % d
     return section_name, EA, EI, g

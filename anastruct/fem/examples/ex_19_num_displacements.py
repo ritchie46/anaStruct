@@ -6,7 +6,7 @@ ss.add_element([20, 0])
 ss.q_load(-10, [1, 2])
 ss.add_support_hinged([1, 2, 3])
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ss.solve()
     for el in ss.element_map.values():
         print(el.deflection.max())

@@ -113,7 +113,9 @@ class SystemElements:
         self.loads_point: Dict[
             int, Tuple[float, float]
         ] = {}  # node ids with a point loads {node_id: (x, y)}
-        self.loads_q: Dict[int, float] = {}  # element ids with a q-load
+        self.loads_q: Dict[
+            int, List[Union[float, Any]]
+        ] = {}  # element ids with a q-load
         self.loads_moment: Dict[int, float] = {}
         self.loads_dead_load: Set[
             int
@@ -902,8 +904,13 @@ class SystemElements:
         :param q: value of the q-load
         :param direction: "element", "x", "y"
         """
+        if not isinstance(q, tuple):
+            q = (q, q)
+        if q[0] != q[1] and direction != "element":
+            raise ValueError("Non-uniform loads are only supported in element direction")
+        q = [q]
         q, element_id, direction = args_to_lists(q, element_id, direction)
-        q = cast(Sequence[float], q)
+        q = cast(Sequence[list], q)
         element_id = cast(Sequence[int], element_id)
         direction = cast(Sequence[str], direction)
 
@@ -911,10 +918,14 @@ class SystemElements:
 
         for i in range(len(element_id)):
             id_ = _negative_index_to_id(element_id[i], self.element_map.keys())
-            self.plotter.max_q = max(self.plotter.max_q, abs(q[i]))
-            self.loads_q[id_] = q[i] * self.orientation_cs * self.load_factor
+            self.plotter.max_q = max(
+                self.plotter.max_q, max(abs(q[i][0]), abs(q[i][1]))
+            )
+            self.loads_q[id_] = [
+                i * self.orientation_cs * self.load_factor for i in q[i]
+            ]
             el = self.element_map[id_]
-            el.q_load = q[i] * self.orientation_cs * self.load_factor
+            el.q_load = [i * self.orientation_cs * self.load_factor for i in q[i]]
             el.q_direction = direction[i]
 
     def point_load(
@@ -1490,7 +1501,7 @@ class SystemElements:
             q_direction = self.element_map[element_id].q_direction
             assert q_direction is not None
             ss.q_load(
-                q=forces_q / self.orientation_cs / self.load_factor,
+                q=[i / self.orientation_cs / self.load_factor for i in forces_q],
                 element_id=element_id,
                 direction=q_direction,
             )

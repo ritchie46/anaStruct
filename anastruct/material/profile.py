@@ -65,9 +65,9 @@ def load(st):
                 k = headers[i]
                 v = float(row[i])
 
-                if k[0] == 'W':
+                if k[0] == "W":
                     v *= 1e3
-                elif k[0] == 'I':
+                elif k[0] == "I":
                     v *= 1e4
 
                 params[k] = v
@@ -75,11 +75,13 @@ def load(st):
 
     return profile
 
+
 HEA = load(s_hea)
 IPE = load(s_ipe)
 
 if __name__ == "__main__":
     from pprint import pprint
+
     print("HEA")
     pprint(HEA)
     print("IPE")

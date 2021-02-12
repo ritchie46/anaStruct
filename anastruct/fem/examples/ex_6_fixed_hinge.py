@@ -12,4 +12,3 @@ ss.q_load(-10, 1)
 ss.solve()
 ss.show_reaction_force()
 ss.show_bending_moment()
-

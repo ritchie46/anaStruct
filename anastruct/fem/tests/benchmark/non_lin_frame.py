@@ -7,8 +7,8 @@ load_factor = 3
 
 E = 210e3
 profile = HEA[180]
-EA = to_kN(E * profile['A'])
-EI = to_kNm2(E * profile['Iy'])
+EA = to_kN(E * profile["A"])
+EI = to_kNm2(E * profile["Iy"])
 mp = profile["Wy"] * 235 * 1e-6
 
 ss = SystemElements(EA=EA, EI=EI, load_factor=load_factor)
@@ -30,6 +30,7 @@ ss.q_load(-1, 2)
 if __name__ == "__main__":
     import time
     from copy import deepcopy
+
     ELEMENT_MAP = deepcopy(ss.element_map)
     min_ = 1e8
     n = 25

@@ -1,4 +1,5 @@
 from anastruct.fem.system import SystemElements
+
 # tests parallel direction of the q-load and dead load.
 
 ss = SystemElements()

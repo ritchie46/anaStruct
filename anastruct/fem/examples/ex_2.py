@@ -18,4 +18,3 @@ ss.show_reaction_force()
 ss.show_axial_force()
 ss.show_shear_force()
 ss.show_displacement(factor=10)
-

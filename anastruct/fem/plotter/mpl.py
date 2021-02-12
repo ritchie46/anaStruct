@@ -247,12 +247,13 @@ class Plotter(PlottingValues):
 
         for q_id in self.system.loads_q.keys():
             el = self.system.element_map[q_id]
-            if el.q_load > 0:
+            if el.q_load[0] > 0:
                 direction = 1
             else:
                 direction = -1
 
-            h = 0.05 * max_val * abs(el.q_load) / self.max_q
+            h1 = 0.05 * max_val * abs(el.q_load[0]) / self.max_q
+            h2 = 0.05 * max_val * abs(el.q_load[1]) / self.max_q
             x1 = el.vertex_1.x
             y1 = el.vertex_1.y
             x2 = el.vertex_2.x
@@ -266,10 +267,12 @@ class Plotter(PlottingValues):
                 ai = -el.angle
 
             # - value, because the positive z of the system is opposite of positive y of the plotter
-            xn1 = x1 + np.sin(ai) * h * direction
-            yn1 = y1 + np.cos(ai) * h * direction
-            xn2 = x2 + np.sin(ai) * h * direction
-            yn2 = y2 + np.cos(ai) * h * direction
+            xn1 = x1 + np.sin(ai) * h1 * direction
+            yn1 = y1 + np.cos(ai) * h1 * direction
+            xn2 = x2 + np.sin(ai) * h2 * direction
+            yn2 = y2 + np.cos(ai) * h2 * direction
+            qi = el.q_load[0]
+            q = el.q_load[1]
             coordinates = ([x1, xn1, xn2, x2], [y1, yn1, yn2, y2])
             self.one_fig.plot(*coordinates, color="g")
             rec = plt.Polygon(np.vstack(coordinates).T, color="g", alpha=0.3)
@@ -277,26 +280,55 @@ class Plotter(PlottingValues):
 
             if verbosity == 0:
                 # arrow
-                xa_1 = (x2 - x1) * 0.2 + x1 + np.sin(ai) * 0.8 * h * direction
-                ya_1 = (y2 - y1) * 0.2 + y1 + np.cos(ai) * 0.8 * h * direction
-                len_x = np.sin(ai - np.pi) * 0.6 * h * direction
-                len_y = np.cos(ai - np.pi) * 0.6 * h * direction
-                xt = xa_1 + np.sin(-el.angle) * 0.4 * h * direction
-                yt = ya_1 + np.cos(-el.angle) * 0.4 * h * direction
+                pos = np.sqrt(((y1 - y2) ** 2) + ((x1 - x2) ** 2))
+                cg = ((pos / 3) * (el.q_load[0] + 2 * el.q_load[1])) / (
+                    el.q_load[0] + el.q_load[1]
+                )
+                height = math.sin(el.angle) * cg
+                base = math.cos(el.angle) * cg
+
+                len_x1 = np.sin(ai - np.pi) * 0.6 * h1 * direction
+                len_x2 = np.sin(ai - np.pi) * 0.6 * h2 * direction
+                len_y1 = np.cos(ai - np.pi) * 0.6 * h1 * direction
+                len_y2 = np.cos(ai - np.pi) * 0.6 * h2 * direction
+                step_x = np.linspace(xn1, xn2, 11)
+                step_y = np.linspace(yn1, yn2, 11)
+                step_len_x = np.linspace(len_x1, len_x2, 11)
+                step_len_y = np.linspace(len_y1, len_y2, 11)
+                average_h = (h1 + h2) / 2
                 # fc = face color, ec = edge color
-                self.one_fig.arrow(
-                    xa_1,
-                    ya_1,
-                    len_x,
-                    len_y,
-                    head_width=h * 0.25,
-                    head_length=0.2 * h,
-                    ec="g",
-                    fc="g",
-                )
-                self.one_fig.text(
-                    xt, yt, "q=%d" % el.q_load, color="k", fontsize=9, zorder=10
-                )
+                self.one_fig.text(xn1, yn1, f"q={qi}", color="b", fontsize=9, zorder=10)
+                self.one_fig.text(xn2, yn2, f"q={q}", color="b", fontsize=9, zorder=10)
+
+                # add multiple arrows to fill load
+                for counter in range(len(step_x)):
+                    if q + qi >= 0:
+                        if counter == 0:
+                            shape = "right"
+                        elif counter == 10:
+                            shape = "left"
+                        else:
+                            shape = "full"
+                    else:
+                        if counter == 0:
+                            shape = "left"
+                        elif counter == 10:
+                            shape = "right"
+                        else:
+                            shape = "full"
+
+                    self.one_fig.arrow(
+                        step_x[counter],
+                        step_y[counter],
+                        step_len_x[counter],
+                        step_len_y[counter],
+                        head_width=average_h * 0.25,
+                        head_length=0.4
+                        * np.sqrt(step_len_y[counter] ** 2 + step_len_x[counter] ** 2),
+                        ec="k",
+                        fc="k",
+                        shape=shape,
+                    )
 
     @staticmethod
     def __arrow_patch_values(Fx, Fz, node, h):
@@ -626,10 +658,7 @@ class Plotter(PlottingValues):
                 map(
                     lambda el: max(
                         abs(el.node_1.Ty),
-                        abs(
-                            (el.node_1.Ty - el.node_2.Ty) * 0.5
-                            - 1 / 8 * el.all_q_load * el.l ** 2
-                        ),
+                        abs(((el.all_q_load[0] + el.all_q_load[1]) / 16) * el.l ** 2),
                     )
                     if el.type == "general"
                     else 0,
@@ -643,7 +672,8 @@ class Plotter(PlottingValues):
             if (
                 math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
-                and not el.all_q_load
+                and not el.all_q_load[0]
+                and not el.all_q_load[1]
             ):
                 # If True there is no bending moment, so no need for plotting.
                 continue
