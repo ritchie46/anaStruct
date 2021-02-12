@@ -1,0 +1,27 @@
+name: tests and fmt
+
+on:
+  - push
+  - pull_request
+jobs:
+  test:
+    name: tests and fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black==20.8b1 mypy==0.800 git+https://github.com/numpy/numpy-stubs
+          python setup.py install
+      - name: Run formatting checks
+        run: |
+          black --check .
+      - name: Run tests
+        run: |
+          python ./anastruct/fem/tests/test.py
+#          mypy
