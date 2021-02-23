@@ -363,6 +363,7 @@ class SystemElements:
         for node_id in (node_id1, node_id2):
             self.node_map[node_id].elements[element.id] = element
 
+        assert mp is not None
         if len(mp) > 0:
             assert type(mp) == dict, "The mp parameter should be a dictionary."
             self.non_linear_elements[element.id] = mp
@@ -720,7 +721,7 @@ class SystemElements:
         system_components.assembly.process_conditions(ss)
 
         w, _ = np.linalg.eig(ss.reduced_system_matrix)
-        return np.all(w > min_eigen)
+        return bool(np.all(w > min_eigen))
 
     def add_support_hinged(self, node_id: Union[int, Sequence[int]]):
         """
@@ -774,7 +775,7 @@ class SystemElements:
         node_id: Union[Sequence[int], int],
         direction: Union[Sequence[Union[str, int]], Union[str, int]] = "x",
         angle: Union[Sequence[Optional[float]], Optional[float]] = None,
-        rotate: Union[Sequence[Optional[bool]], Optional[bool]] = True,
+        rotate: Union[Sequence[bool], bool] = True,
     ):
         """
         Adds a rolling support at a given node.
@@ -794,7 +795,7 @@ class SystemElements:
         if not isinstance(rotate, collections.Iterable):
             rotate = [rotate]
 
-        assert len(node_id) == len(direction) == len(angle)
+        assert len(node_id) == len(direction) == len(angle) == len(rotate)
 
         for id_, direction_, angle_, rotate_ in zip(node_id, direction, angle, rotate):
             id_ = _negative_index_to_id(id_, self.node_map.keys())
@@ -904,30 +905,28 @@ class SystemElements:
         :param q: value of the q-load
         :param direction: "element", "x", "y"
         """
-        if not isinstance(q, tuple):
-            q = (q, q)
+        # TODO! this function is a duck typing hell. redesign.
+        if not isinstance(q, Sequence):
+            q = [q, q]
         if q[0] != q[1] and direction != "element":
             raise ValueError(
                 "Non-uniform loads are only supported in element direction"
             )
-        q = [q]
+        q = [q]  # type: ignore
         q, element_id, direction = args_to_lists(q, element_id, direction)
-        q = cast(Sequence[list], q)
-        element_id = cast(Sequence[int], element_id)
-        direction = cast(Sequence[str], direction)
 
-        assert len(q) == len(element_id) == len(direction)
+        assert len(q) == len(element_id) == len(direction)  # type: ignore
 
-        for i in range(len(element_id)):
-            id_ = _negative_index_to_id(element_id[i], self.element_map.keys())
+        for i in range(len(element_id)):  # type: ignore
+            id_ = _negative_index_to_id(element_id[i], self.element_map.keys())  # type: ignore
             self.plotter.max_q = max(
-                self.plotter.max_q, max(abs(q[i][0]), abs(q[i][1]))
+                self.plotter.max_q, max(abs(q[i][0]), abs(q[i][1]))  # type: ignore
             )
             self.loads_q[id_] = [
-                i * self.orientation_cs * self.load_factor for i in q[i]
+                i * self.orientation_cs * self.load_factor for i in q[i]  # type: ignore
             ]
             el = self.element_map[id_]
-            el.q_load = [i * self.orientation_cs * self.load_factor for i in q[i]]
+            el.q_load = [i * self.orientation_cs * self.load_factor for i in q[i]]  # type: ignore
             el.q_direction = direction[i]
 
     def point_load(
@@ -1522,7 +1521,7 @@ class SystemElements:
         self.loads_moment = {}
 
         for k in self.element_map:
-            self.element_map[k].q_load = 0
+            self.element_map[k].q_load = (0.0, 0.0)
             if dead_load:
                 self.element_map[k].dead_load = 0
         if dead_load:

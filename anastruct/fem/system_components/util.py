@@ -22,6 +22,7 @@ def check_internal_hinges(system: "SystemElements", node_id: int):
     hinges = []
     for el_id in node.elements:
         el = system.element_map[el_id]
+        assert el.springs is not None
         if (node_id == el.node_id1 and 1 in el.springs and el.springs[1] == 0) or (
             node_id == el.node_id2 and 2 in el.springs and el.springs[2] == 0
         ):
@@ -41,14 +42,16 @@ def check_internal_hinges(system: "SystemElements", node_id: int):
         if len(hinges) - sum(hinges) >= 1:
             for el_id in node.elements:
                 el = system.element_map[el_id]
+                assert el.springs is not None
                 if node_id == el.node_id1 and not (
                     1 in el.springs and el.springs[1] == 0
                 ):
-                    system.element_map[el.id].springs.update({1: 0})
+                    el.springs.update({1: 0})
                 if node_id == el.node_id2 and not (
                     2 in el.springs and el.springs[2] == 0
                 ):
-                    system.element_map[el.id].springs.update({2: 0})
+                    el.springs.update({2: 0})
+                system.element_map[el_id].springs = el.springs
 
 
 def append_node_id(

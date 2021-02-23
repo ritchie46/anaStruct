@@ -87,9 +87,9 @@ class Element:
         self.section_name = section_name  # needed for element annotation
 
     @property
-    def all_q_load(self) -> float:
+    def all_q_load(self) -> List[float]:
         if self.q_load is None:
-            q = (0, 0)
+            q = [0.0, 0.0]
         else:
             if self.q_direction == "x":
                 q_factor = -sin(self.angle)
@@ -121,6 +121,7 @@ class Element:
         """
         out = []
 
+        assert self.springs is not None
         for k, v in self.springs.items():
             if v == 0:
                 if k == 1:
