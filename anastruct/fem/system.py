@@ -721,7 +721,7 @@ class SystemElements:
         system_components.assembly.process_conditions(ss)
 
         w, _ = np.linalg.eig(ss.reduced_system_matrix)
-        return np.all(w > min_eigen)
+        return bool(np.all(w > min_eigen))
 
     def add_support_hinged(self, node_id: Union[int, Sequence[int]]):
         """
@@ -905,32 +905,28 @@ class SystemElements:
         :param q: value of the q-load
         :param direction: "element", "x", "y"
         """
-        if isinstance(q, (float, int)):
-            q = (q, q)
-        assert len(q) == 2
+        # TODO! this function is a duck typing hell. redesign.
+        if not isinstance(q, Sequence):
+            q = [q, q]
         if q[0] != q[1] and direction != "element":
             raise ValueError(
                 "Non-uniform loads are only supported in element direction"
             )
-        q_ = [q]
-        element_id, direction = args_to_lists(element_id, direction)
-        element_id = cast(Sequence[int], element_id)
-        direction = cast(Sequence[str], direction)
+        q = [q]  # type: ignore
+        q, element_id, direction = args_to_lists(q, element_id, direction)
 
-        assert len(q_) == len(element_id) == len(direction)
+        assert len(q) == len(element_id) == len(direction)  # type: ignore
 
-        for i in range(len(element_id)):
-            id_ = _negative_index_to_id(element_id[i], self.element_map.keys())
+        for i in range(len(element_id)):  # type: ignore
+            id_ = _negative_index_to_id(element_id[i], self.element_map.keys())  # type: ignore
             self.plotter.max_q = max(
-                self.plotter.max_q, max(abs(q_[i][0]), abs(q_[i][1]))
+                self.plotter.max_q, max(abs(q[i][0]), abs(q[i][1]))  # type: ignore
             )
             self.loads_q[id_] = [
-                j * self.orientation_cs * self.load_factor for j in q_[i]
+                i * self.orientation_cs * self.load_factor for i in q[i]  # type: ignore
             ]
             el = self.element_map[id_]
-            el.q_load = tuple(
-                [j * self.orientation_cs * self.load_factor for j in q_[i]]
-            )
+            el.q_load = [i * self.orientation_cs * self.load_factor for i in q[i]]  # type: ignore
             el.q_direction = direction[i]
 
     def point_load(

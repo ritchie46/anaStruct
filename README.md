@@ -1,5 +1,5 @@
 # anaStruct 2D Frames and Trusses
-[![Build Status](https://travis-ci.org/ritchie46/anaStruct.svg?branch=master)](https://travis-ci.org/ritchie46/anaStruct)
+![tests and fmt](https://github.com/ritchie46/anaStruct/workflows/tests%20and%20fmt/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/anastruct/badge/?version=latest)](http://anastruct.readthedocs.io/en/latest/?badge=latest)
 [![Gitter](https://badges.gitter.im/anaStruct/lobby.svg)](https://gitter.im/anaStruct/lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 

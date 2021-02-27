@@ -89,7 +89,7 @@ class Element:
     @property
     def all_q_load(self) -> List[float]:
         if self.q_load is None:
-            q = (0, 0)
+            q = [0.0, 0.0]
         else:
             if self.q_direction == "x":
                 q_factor = -sin(self.angle)
