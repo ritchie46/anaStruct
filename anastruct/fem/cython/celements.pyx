@@ -38,4 +38,20 @@ def det_shear(double kl, double kr, double qi, double q, double x, double EI, do
             (2 * EI + L * kr) + 2 * L * kl * (EI + L * kr) - 3 * L * kl * (2 * EI + L * kr))) - qi * x / EI - x ** 2 *
             (q - qi) / (2 * EI * L))
 
+@lru_cache(32000)
+def det_axial(qi, q, x, EA, L):
+    """
+    See notebook in: anastruct/fem/background/distributed_ax_force.ipynb
+
+    :param q: (flt)
+    :param x: (flt) Location of the axial force
+    :param EA: (flt)
+    :param L: (flt) Length of the beam
+    :return: (flt)
+    """
+    return EA * (
+        x * (-L * qi / 2 + x * (-q + qi) / 3) / (EA * L)
+        + (L ** 2 * (q + 2 * qi) / 6 - L * qi * x / 2 + x ** 2 * (-q + qi) / 6)
+        / (EA * L)
+    )
 

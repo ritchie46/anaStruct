@@ -43,6 +43,7 @@ class SystemElements:
     :ivar node_element_map: (dict) maps node ids to element objects.
     :ivar loads_point: (dict) Maps node ids to point loads.
     :ivar loads_q: (dict) Maps element ids to q-loads.
+    :ivar loads_qn: (dict) Maps element ids to qn-loads.
     :ivar loads_moment: (dict) Maps node ids to moment loads.
     :ivar loads_dead_load: (set) Element ids that have a dead load applied.
     """
@@ -116,6 +117,9 @@ class SystemElements:
         self.loads_q: Dict[
             int, List[Union[float, Any]]
         ] = {}  # element ids with a q-load
+        self.loads_qn: Dict[
+            int, List[Union[float, Any]]
+        ] = {}  # element ids with a qn-load
         self.loads_moment: Dict[int, float] = {}
         self.loads_dead_load: Set[
             int
@@ -929,6 +933,36 @@ class SystemElements:
             el.q_load = [i * self.orientation_cs * self.load_factor for i in q[i]]  # type: ignore
             el.q_direction = direction[i]
 
+    def qn_load(
+        self,
+        qn: Union[float, Sequence[float]],
+        element_id: Union[int, Sequence[int]],
+    ):
+        """
+        Apply a qn-load to an element.
+
+        :param element_id: representing the element ID
+        :param qn: value of the qn-load
+        """
+        # TODO! this function is a duck typing hell. redesign.
+        if not isinstance(qn, Sequence):
+            qn = [qn, qn]
+        qn = [qn]  # type: ignore
+        qn, element_id = args_to_lists(qn, element_id)
+
+        assert len(qn) == len(element_id)  # type: ignore
+
+        for i in range(len(element_id)):  # type: ignore
+            id_ = _negative_index_to_id(element_id[i], self.element_map.keys())  # type: ignore
+            self.plotter.max_qn = max(
+                self.plotter.max_qn, max(abs(qn[i][0]), abs(qn[i][1]))  # type: ignore
+            )
+            self.loads_qn[id_] = [
+                i * self.orientation_cs * self.load_factor for i in qn[i]  # type: ignore
+            ]
+            el = self.element_map[id_]
+            el.qn_load = [i * self.orientation_cs * self.load_factor for i in qn[i]]  # type: ignore
+
     def point_load(
         self,
         node_id: Union[int, Sequence[int]],
@@ -1262,26 +1296,32 @@ class SystemElements:
             element_id = _negative_index_to_id(element_id, self.element_map)
             el = self.element_map[element_id]
 
-            el.extension = cast(np.ndarray, el.extension)
+            assert el.extension is not None
             assert el.deflection is not None
             assert el.shear_force is not None
             assert el.bending_moment is not None
+            assert el.axial_force is not None
 
             if el.type == "truss":
                 return {
                     "id": el.id,
                     "length": el.l,
                     "alpha": el.angle,
-                    "u": el.extension[0],
-                    "N": el.N_1,
+                    "umax": np.max(el.extension),
+                    "umin": np.min(el.extension),
+                    "u": el.extension if verbose else None,
+                    "Nmin": np.min(el.axial_force),
+                    "Nmax": np.max(el.axial_force),
+                    "N": el.axial_force if verbose else None,
                 }
             else:
                 return {
                     "id": el.id,
                     "length": el.l,
                     "alpha": el.angle,
-                    "u": el.extension[0],
-                    "N": el.N_1,
+                    "umax": np.max(el.extension),
+                    "umin": np.min(el.extension),
+                    "u": el.extension if verbose else None,
                     "wmax": np.min(el.deflection),
                     "wmin": np.max(el.deflection),
                     "w": el.deflection if verbose else None,
@@ -1291,16 +1331,21 @@ class SystemElements:
                     "Qmin": np.min(el.shear_force),
                     "Qmax": np.max(el.shear_force),
                     "Q": el.shear_force if verbose else None,
+                    "Nmin": np.min(el.axial_force),
+                    "Nmax": np.max(el.axial_force),
+                    "N": el.axial_force if verbose else None,
                     "q": el.q_load,
+                    "qn": el.qn_load,
                 }
         else:
             result_list = []
             for el in self.element_map.values():
 
-                el.extension = cast(np.ndarray, el.extension)
+                assert el.extension is not None
+                assert el.deflection is not None
                 assert el.shear_force is not None
                 assert el.bending_moment is not None
-                assert el.extension is not None
+                assert el.axial_force is not None
 
                 if el.type == "truss":
                     result_list.append(
@@ -1308,8 +1353,12 @@ class SystemElements:
                             "id": el.id,
                             "length": el.l,
                             "alpha": el.angle,
-                            "u": el.extension[0],
-                            "N": el.N_1,
+                            "umax": np.max(el.extension),
+                            "umin": np.min(el.extension),
+                            "u": el.extension if verbose else None,
+                            "Nmin": np.min(el.axial_force),
+                            "Nmax": np.max(el.axial_force),
+                            "N": el.axial_force if verbose else None,
                         }
                     )
 
@@ -1319,8 +1368,9 @@ class SystemElements:
                             "id": el.id,
                             "length": el.l,
                             "alpha": el.angle,
-                            "u": el.extension[0],
-                            "N": el.N_1,
+                            "umax": np.max(el.extension),
+                            "umin": np.min(el.extension),
+                            "u": el.extension if verbose else None,
                             "wmax": np.min(el.deflection),
                             "wmin": np.max(el.deflection),
                             "w": el.deflection if verbose else None,
@@ -1330,7 +1380,11 @@ class SystemElements:
                             "Qmin": np.min(el.shear_force),
                             "Qmax": np.max(el.shear_force),
                             "Q": el.shear_force if verbose else None,
+                            "Nmin": np.min(el.axial_force),
+                            "Nmax": np.max(el.axial_force),
+                            "N": el.axial_force if verbose else None,
                             "q": el.q_load,
+                            "qn": el.qn_load,
                         }
                     )
             return result_list
@@ -1350,7 +1404,7 @@ class SystemElements:
         elif unit == "moment":
             return [el.bending_moment[0] for el in self.element_map.values()]  # type: ignore
         elif unit == "axial":
-            return [el.N_1 for el in self.element_map.values()]  # type: ignore
+            return [el.axial_force[0] for el in self.element_map.values()]  # type: ignore
         else:
             raise NotImplementedError
 
@@ -1506,6 +1560,11 @@ class SystemElements:
                 element_id=element_id,
                 direction=q_direction,
             )
+        for element_id, forces_qn in self.loads_qn.items():
+            ss.qn_load(
+                qn=[i / self.orientation_cs / self.load_factor for i in forces_qn],
+                element_id=element_id,
+            )
 
         self.__dict__ = ss.__dict__.copy()
 
@@ -1518,6 +1577,7 @@ class SystemElements:
 
         self.loads_point = {}
         self.loads_q = {}
+        self.loads_qn = {}
         self.loads_moment = {}
 
         for k in self.element_map:

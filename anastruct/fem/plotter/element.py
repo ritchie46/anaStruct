@@ -85,22 +85,48 @@ def plot_values_bending_moment(element, factor, n):
     return x_val, y_val
 
 
-def plot_values_axial_force(element, factor):
-    x1 = element.vertex_1.x
-    y1 = -element.vertex_1.z
-    x2 = element.vertex_2.x
-    y2 = -element.vertex_2.z
+def plot_values_axial_force(element, factor, n):
+    """
+    :param element: (object) of the Element class
+    :param factor: (float) scaling the plot
+    :param n: (integer) amount of x-values
+    :return:
+    """
 
+    # Determine forces for horizontal element.angle = 0
     N1 = element.N_1
     N2 = element.N_2
 
-    x_1 = x1 + N1 * math.cos(0.5 * math.pi + element.angle) * factor
-    y_1 = y1 + N1 * math.sin(0.5 * math.pi + element.angle) * factor
-    x_2 = x2 + N2 * math.cos(0.5 * math.pi + element.angle) * factor
-    y_2 = y2 + N2 * math.sin(0.5 * math.pi + element.angle) * factor
+    cos = math.cos(0.5 * math.pi + element.angle)
+    sin = math.sin(0.5 * math.pi + element.angle)
 
-    x_val = [x1, x_1, x_2, x2]
-    y_val = [y1, y_1, y_2, y2]
+    # apply angle ai
+    x1 = element.vertex_1.x + N1 * cos * factor
+    y1 = -element.vertex_1.z + N1 * sin * factor
+    x2 = element.vertex_2.x + N2 * cos * factor
+    y2 = -element.vertex_2.z + N2 * sin * factor
+
+    interpolate = np.linspace(0, 1, n)
+    dx = x2 - x1
+    dy = y2 - y1
+
+    # determine moment for 0 < x < length of the element
+    x_val = x1 + interpolate * dx
+    y_val = y1 + interpolate * dy
+
+    if element.qn_load or element.dead_load:
+        qni = element.all_qn_load[0]
+        qn = element.all_qn_load[1]
+        x = interpolate * element.l
+        qn_part = qni + (qn - qni) * x
+        x_val += sin * qn_part * factor
+        y_val += cos * qn_part * factor
+
+    x_val = np.append(x_val, element.vertex_2.x)
+    y_val = np.append(y_val, -element.vertex_2.z)
+    x_val = np.insert(x_val, 0, element.vertex_1.x)
+    y_val = np.insert(y_val, 0, -element.vertex_1.z)
+
     return x_val, y_val
 
 

@@ -22,6 +22,7 @@ class Plotter(PlottingValues):
         self.system = system
         self.one_fig = None
         self.max_q = 0
+        self.max_qn = 0
         self.max_system_point_load = 0
 
     def __start_plot(self, figsize):
@@ -575,6 +576,7 @@ class Plotter(PlottingValues):
         gridplot=False,
     ):
         self.plot_structure(figsize, 1, scale=scale, offset=offset, gridplot=gridplot)
+        con = len(self.system.element_map[1].axial_force)
 
         if factor is None:
             max_force = max(
@@ -589,7 +591,7 @@ class Plotter(PlottingValues):
             if math.isclose(el.N_1, 0, rel_tol=1e-5, abs_tol=1e-9):
                 continue
             else:
-                axis_values = plot_values_axial_force(el, factor)
+                axis_values = plot_values_axial_force(el, factor, con)
                 color = 1 if el.N_1 < 0 else 0
                 self.plot_result(
                     axis_values,
