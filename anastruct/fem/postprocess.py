@@ -83,8 +83,8 @@ class SystemLevel:
         """
 
         for el in self.system.element_map.values():
-            self.post_el.determine_axial_force(el)
             con = self.system.plotter.mesh
+            self.post_el.determine_axial_force(el, con)
             self.post_el.determine_bending_moment(el, con)
             self.post_el.determine_shear_force(el, con)
             self.post_el.determine_displacements(el, con)
@@ -154,7 +154,7 @@ class ElementLevel:
                 node.uz = c * uz + s * ux
 
     @staticmethod
-    def determine_axial_force(element: "Element"):
+    def determine_axial_force(element: "Element", con: int):
         N_1 = (math.sin(element.angle) * element.node_1.Fz) + -(
             math.cos(element.angle) * element.node_1.Fx
         )
@@ -164,6 +164,19 @@ class ElementLevel:
 
         element.N_1 = N_1
         element.N_2 = N_2
+
+        dN = N_1 + N_2
+
+        iteration_factor = np.linspace(0, 1, con)
+        x = iteration_factor * element.l
+        n_val = N_1 + iteration_factor * dN
+        if element.all_qn_load:
+            qni = element.all_qn_load[0]
+            qn = element.all_qn_load[1]
+            qn_part = qni + (qn - qni) * x
+            n_val += qn_part
+
+        element.axial_force = n_val
 
     @staticmethod
     def determine_bending_moment(element: "Element", con: int):
@@ -240,8 +253,23 @@ class ElementLevel:
             element.max_deflection = np.max(np.abs(element.deflection))
 
         # Extension
-        assert element.N_1 is not None
-        assert element.N_2 is not None
-        u = 0.5 * (element.N_1 + element.N_2) / element.EA * element.l
-        du = u / con
-        element.extension = du * (np.arange(con) + 1)
+        assert element.axial_force is not None
+        dx = element.l / (len(element.axial_force) - 1)
+        lx = np.linspace(0, element.l, con)
+
+        # Next we are going to compute w by integrating from both sides.
+        # Due to numerical differences we need to take this two sided approach.
+        phi_neg1 = -integrate_array(element.axial_force, dx) / element.EA
+        u1 = integrate_array(phi_neg1, dx)
+
+        phi_neg2 = -integrate_array(element.axial_force[::-1], dx) / element.EA
+        u2 = integrate_array(phi_neg2, dx)
+
+        element.extension = -(u1 + u2) / 2.0
+        element.max_extension = np.max(np.abs(element.extension))
+
+        # assert element.N_1 is not None
+        # assert element.N_2 is not None
+        # u = 0.5 * (element.N_1 + element.N_2) / element.EA * element.l
+        # du = u / con
+        # element.extension = du * (np.arange(con) + 1)
