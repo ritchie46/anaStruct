@@ -165,7 +165,7 @@ class ElementLevel:
         element.N_1 = N_1
         element.N_2 = N_2
 
-        dN = N_1 + N_2
+        dN = N_1 - N_2
 
         iteration_factor = np.linspace(0, 1, con)
         x = iteration_factor * element.l
