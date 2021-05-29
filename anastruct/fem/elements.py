@@ -13,9 +13,9 @@ if TYPE_CHECKING:
     from anastruct.fem.system import Spring
 
 try:
-    from anastruct.fem.cython.celements import det_shear, det_moment  # type: ignore
+    from anastruct.fem.cython.celements import det_shear, det_moment, det_axial  # type: ignore
 except ImportError:
-    from anastruct.fem.cython.elements import det_shear, det_moment
+    from anastruct.fem.cython.elements import det_shear, det_moment, det_axial
 
 """
 The matrices underneath are for slender beams, where the most deformation occurs due to bending.
