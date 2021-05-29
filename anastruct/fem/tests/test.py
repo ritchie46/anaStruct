@@ -319,7 +319,8 @@ class SimpleTest(unittest.TestCase):
         ss.solve()
         self.assertAlmostEqual(-5, ss.get_node_results_system(1)["Fx"])
         self.assertAlmostEqual(-5, ss.get_node_results_system(1)["Fy"])
-        self.assertAlmostEqual(-5, ss.get_element_results(1)["N"])
+        self.assertAlmostEqual(-5, ss.get_element_results(1)["Nmax"])
+        self.assertAlmostEqual(-5, ss.get_element_results(1)["Nmin"])
 
     def test_deflection_averaging(self):
         from anastruct.fem.examples.ex_26_deflection import ss
