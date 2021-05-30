@@ -248,7 +248,7 @@ class Plotter(PlottingValues):
 
         for q_id in self.system.loads_q.keys():
             el = self.system.element_map[q_id]
-            if el.q_load[0] > 0:
+            if max(el.q_load[0], el.q_load[1]) > 0:
                 direction = 1
             else:
                 direction = -1
