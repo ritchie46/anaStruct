@@ -465,6 +465,31 @@ class SimpleTest(unittest.TestCase):
             ss.get_element_results(1)["Mmax"], ss.get_element_results(2)["Mmax"]
         )
 
+    def test_q_and_q_perp(self):
+        ss = se.SystemElements()
+        ss.add_element([2, 2])
+        ss.add_support_hinged(1)
+        ss.add_support_hinged(2)
+        ss.q_load([-2, -2], 1, "element", q_perp=[-1, -1])
+        ss.solve()
+        self.assertAlmostEqual(-3, ss.get_node_results_system(1)["Fy"], 6)
+        self.assertAlmostEqual(1, ss.get_node_results_system(1)["Fx"], 6)
+        self.assertAlmostEqual(np.sqrt(2), ss.get_element_results(1)["Nmax"])
+        self.assertAlmostEqual(2 * np.sqrt(2), ss.get_element_results(1)["Qmax"])
+
+    def test_parallel_trapezoidal_load(self):
+        ss = se.SystemElements()
+        ss.add_element([0, 1])
+        ss.add_element([0, 2])
+        ss.add_support_hinged(1)
+        ss.add_support_roll(3, "y")
+        ss.q_load([0, -0.5], 1, "y")
+        ss.q_load([-0.5, -1], 2, "y")
+        ss.solve()
+        self.assertAlmostEqual(-0.75, ss.get_element_results(2)["Nmin"])
+        self.assertAlmostEqual(0, ss.get_element_results(2)["Nmax"])
+        self.assertAlmostEqual(-1, ss.get_node_results_system(1)["Fy"])
+
 
 if __name__ == "__main__":
     unittest.main()
