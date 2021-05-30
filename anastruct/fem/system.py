@@ -43,7 +43,6 @@ class SystemElements:
     :ivar node_element_map: (dict) maps node ids to element objects.
     :ivar loads_point: (dict) Maps node ids to point loads.
     :ivar loads_q: (dict) Maps element ids to q-loads.
-    :ivar loads_qn: (dict) Maps element ids to qn-loads.
     :ivar loads_moment: (dict) Maps node ids to moment loads.
     :ivar loads_dead_load: (set) Element ids that have a dead load applied.
     """
@@ -115,11 +114,8 @@ class SystemElements:
             int, Tuple[float, float]
         ] = {}  # node ids with a point loads {node_id: (x, y)}
         self.loads_q: Dict[
-            int, List[Union[float, Any]]
-        ] = {}  # element ids with a q-load
-        self.loads_qn: Dict[
-            int, List[Union[float, Any]]
-        ] = {}  # element ids with a qn-load
+            int, List[Tuple[float, float]]
+        ] = {}  # element ids with a q-loadad
         self.loads_moment: Dict[int, float] = {}
         self.loads_dead_load: Set[
             int
@@ -901,63 +897,69 @@ class SystemElements:
         q: Union[float, Sequence[float]],
         element_id: Union[int, Sequence[int]],
         direction: Union[str, Sequence[str]] = "element",
+        rotation: Union[float, Sequence[float]] = None,
+        q_perp: Union[float, Sequence[float]] = [0, 0],
     ):
         """
         Apply a q-load to an element.
 
         :param element_id: representing the element ID
         :param q: value of the q-load
-        :param direction: "element", "x", "y"
+        :param direction: "element", "x", "y", "parallel"
+        :param rotation: Rotate the force clockwise. Rotation is in degrees
+        :param q_perp: value of any q-load perpendicular to the indication direction/rotation
         """
         # TODO! this function is a duck typing hell. redesign.
         if not isinstance(q, Sequence):
             q = [q, q]
+        if not isinstance(q_perp, Sequence):
+            q_perp = [q_perp, q_perp]
         q = [q]  # type: ignore
-        q, element_id, direction = args_to_lists(q, element_id, direction)
+        q_perp = [q_perp]
+        q, element_id, direction, rotation, q_perp = args_to_lists(
+            q, element_id, direction, rotation, q_perp
+        )
 
-        assert len(q) == len(element_id) == len(direction)  # type: ignore
+        assert len(q) == len(element_id) == len(direction) == len(rotation) == len(q_perp)  # type: ignore
 
         for i in range(len(element_id)):  # type: ignore
             id_ = _negative_index_to_id(element_id[i], self.element_map.keys())  # type: ignore
             self.plotter.max_q = max(
-                self.plotter.max_q, max(abs(q[i][0]), abs(q[i][1]))  # type: ignore
+                self.plotter.max_q, max((q[i][0] ** 2 + q_perp[i][0] ** 2) ** 0.5, (q[i][1] ** 2 + q_perp[i][1] ** 2) ** 0.5)  # type: ignore
             )
+
+            if rotation[i] is None:
+                if direction[i] == "x":
+                    rotation[i] = 0
+                elif direction[i] == "y":
+                    rotation[i] = np.pi / 2
+                elif direction[i] == "parallel":
+                    rotation[i] = self.element_map[element_id[i]].angle
+                else:
+                    rotation[i] = np.pi / 2 - self.element_map[element_id[i]].angle
+            else:
+                rotation[i] = math.radians(rotation[i])
+                direction[i] = "angle"
+
+            cos = math.cos(rotation[i])
+            sin = math.sin(rotation[i])
             self.loads_q[id_] = [
-                i * self.orientation_cs * self.load_factor for i in q[i]  # type: ignore
+                (
+                    (q_perp[i][0] * cos + q[i][0] * sin) * self.load_factor,
+                    (q[i][0] * self.orientation_cs * cos + q_perp[i][0] * sin)
+                    * self.load_factor,
+                ),
+                (
+                    (q_perp[i][1] * cos + q[i][1] * sin) * self.load_factor,
+                    (q[i][1] * self.orientation_cs * cos + q_perp[i][1] * sin)
+                    * self.load_factor,
+                ),
             ]
             el = self.element_map[id_]
             el.q_load = [i * self.orientation_cs * self.load_factor for i in q[i]]  # type: ignore
+            el.q_perp_load = [i * self.load_factor for i in q_perp[i]]  # type: ignore
             el.q_direction = direction[i]
-
-    def qn_load(
-        self,
-        qn: Union[float, Sequence[float]],
-        element_id: Union[int, Sequence[int]],
-    ):
-        """
-        Apply a qn-load to an element.
-
-        :param element_id: representing the element ID
-        :param qn: value of the qn-load
-        """
-        # TODO! this function is a duck typing hell. redesign.
-        if not isinstance(qn, Sequence):
-            qn = [qn, qn]
-        qn = [qn]  # type: ignore
-        qn, element_id = args_to_lists(qn, element_id)
-
-        assert len(qn) == len(element_id)  # type: ignore
-
-        for i in range(len(element_id)):  # type: ignore
-            id_ = _negative_index_to_id(element_id[i], self.element_map.keys())  # type: ignore
-            self.plotter.max_qn = max(
-                self.plotter.max_qn, max(abs(qn[i][0]), abs(qn[i][1]))  # type: ignore
-            )
-            self.loads_qn[id_] = [
-                i * self.orientation_cs * self.load_factor for i in qn[i]  # type: ignore
-            ]
-            el = self.element_map[id_]
-            el.qn_load = [i * self.orientation_cs * self.load_factor for i in qn[i]]  # type: ignore
+            el.q_angle = rotation[i]
 
     def point_load(
         self,
@@ -1331,7 +1333,6 @@ class SystemElements:
                     "Nmax": np.max(el.axial_force),
                     "N": el.axial_force if verbose else None,
                     "q": el.q_load,
-                    "qn": el.qn_load,
                 }
         else:
             result_list = []
@@ -1380,7 +1381,6 @@ class SystemElements:
                             "Nmax": np.max(el.axial_force),
                             "N": el.axial_force if verbose else None,
                             "q": el.q_load,
-                            "qn": el.qn_load,
                         }
                     )
             return result_list
@@ -1549,17 +1549,11 @@ class SystemElements:
         for node_id, forces_moment in self.loads_moment.items():
             ss.moment_load((node_id - 1) * n + 1, forces_moment / self.load_factor)
         for element_id, forces_q in self.loads_q.items():
-            q_direction = self.element_map[element_id].q_direction
-            assert q_direction is not None
             ss.q_load(
-                q=[i / self.orientation_cs / self.load_factor for i in forces_q],
+                q=[i[1] / self.orientation_cs / self.load_factor for i in forces_q],
                 element_id=element_id,
-                direction=q_direction,
-            )
-        for element_id, forces_qn in self.loads_qn.items():
-            ss.qn_load(
-                qn=[i / self.orientation_cs / self.load_factor for i in forces_qn],
-                element_id=element_id,
+                direction="y",
+                q_perp=[i[0] / self.load_factor for i in forces_q],
             )
 
         self.__dict__ = ss.__dict__.copy()
@@ -1573,7 +1567,6 @@ class SystemElements:
 
         self.loads_point = {}
         self.loads_q = {}
-        self.loads_qn = {}
         self.loads_moment = {}
 
         for k in self.element_map:

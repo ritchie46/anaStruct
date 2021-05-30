@@ -66,8 +66,8 @@ def plot_values_bending_moment(element, factor, n):
     y_val = y1 + interpolate * dy
 
     if element.q_load or element.dead_load:
-        qi = element.all_q_load[0]
-        q = element.all_q_load[1]
+        qi = element.all_qp_load[0]
+        q = element.all_qp_load[1]
         x = interpolate * element.l
         q_part = (
             -((qi - q) / (6 * element.l)) * x ** 3
@@ -114,12 +114,11 @@ def plot_values_axial_force(element, factor, n):
     x_val = x1 + interpolate * dx
     y_val = y1 + interpolate * dy
 
-    if element.qn_load or element.dead_load:
+    if element.q_load or element.dead_load:
         qni = element.all_qn_load[0]
         qn = element.all_qn_load[1]
         x = interpolate * element.l
-        # TODO CHECK THIS FORMULA
-        qn_part = (qn - qni) / element.l * (element.l - x) * x
+        qn_part = (qn - qni) / (2 * element.l) * (element.l - x) * x
         x_val += cos * qn_part * factor
         y_val += sin * qn_part * factor
 
