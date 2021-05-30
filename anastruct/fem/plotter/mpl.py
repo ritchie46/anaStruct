@@ -434,9 +434,9 @@ class Plotter(PlottingValues):
         min_y = np.min(y)
 
         center_x = (max_x - min_x) / 2 + min_x + -offset[0]
-        center_y = (max_y - min_y) / 2 + min_x + -offset[1]
+        center_y = (max_y - min_y) / 2 + min_y + -offset[1]
 
-        max_plot_range = max(max_x, max_y)
+        max_plot_range = max(max_x - min_x, max_y - min_y)
         ax_range = max_plot_range * scale
         plusxrange = center_x + ax_range
         plusyrange = center_y + ax_range * figsize[1] / figsize[0]
