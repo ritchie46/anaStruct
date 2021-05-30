@@ -936,7 +936,7 @@ class SystemElements:
                 elif direction[i] == "parallel":
                     rotation[i] = self.element_map[element_id[i]].angle
                 else:
-                    rotation[i] = np.pi / 2 - self.element_map[element_id[i]].angle
+                    rotation[i] = np.pi / 2 + self.element_map[element_id[i]].angle
             else:
                 rotation[i] = math.radians(rotation[i])
                 direction[i] = "angle"
