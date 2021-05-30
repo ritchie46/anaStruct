@@ -897,7 +897,7 @@ class SystemElements:
         q: Union[float, Sequence[float]],
         element_id: Union[int, Sequence[int]],
         direction: Union[str, Sequence[str]] = "element",
-        rotation: Union[float, Sequence[float]] = None,
+        rotation: Optional[Union[float, Sequence[float]]] = None,
         q_perp: Union[float, Sequence[float]] = [0, 0],
     ):
         """
@@ -915,7 +915,9 @@ class SystemElements:
         if not isinstance(q_perp, Sequence):
             q_perp = [q_perp, q_perp]
         q = [q]  # type: ignore
-        q_perp = [q_perp]
+        q_perp = [q_perp]  # type: ignore
+        if rotation is None:
+            direction_flag = True
         q, element_id, direction, rotation, q_perp = args_to_lists(
             q, element_id, direction, rotation, q_perp
         )
@@ -925,41 +927,45 @@ class SystemElements:
         for i in range(len(element_id)):  # type: ignore
             id_ = _negative_index_to_id(element_id[i], self.element_map.keys())  # type: ignore
             self.plotter.max_q = max(
-                self.plotter.max_q, max((q[i][0] ** 2 + q_perp[i][0] ** 2) ** 0.5, (q[i][1] ** 2 + q_perp[i][1] ** 2) ** 0.5)  # type: ignore
+                self.plotter.max_q,
+                max(
+                    (q[i][0] ** 2 + q_perp[i][0] ** 2) ** 0.5,  # type: ignore
+                    (q[i][1] ** 2 + q_perp[i][1] ** 2) ** 0.5,  # type: ignore
+                ),
             )
 
-            if rotation[i] is None:
+            if direction_flag:
                 if direction[i] == "x":
-                    rotation[i] = 0
+                    rotation[i] = 0  # type: ignore
                 elif direction[i] == "y":
-                    rotation[i] = np.pi / 2
+                    rotation[i] = np.pi / 2  # type: ignore
                 elif direction[i] == "parallel":
-                    rotation[i] = self.element_map[element_id[i]].angle
+                    rotation[i] = self.element_map[element_id[i]].angle  # type: ignore
                 else:
-                    rotation[i] = np.pi / 2 + self.element_map[element_id[i]].angle
+                    rotation[i] = np.pi / 2 + self.element_map[element_id[i]].angle  # type: ignore
             else:
-                rotation[i] = math.radians(rotation[i])
-                direction[i] = "angle"
+                rotation[i] = math.radians(rotation[i])  # type: ignore
+                direction[i] = "angle"  # type: ignore
 
-            cos = math.cos(rotation[i])
-            sin = math.sin(rotation[i])
+            cos = math.cos(rotation[i])  # type: ignore
+            sin = math.sin(rotation[i])  # type: ignore
             self.loads_q[id_] = [
                 (
-                    (q_perp[i][0] * cos + q[i][0] * sin) * self.load_factor,
-                    (q[i][0] * self.orientation_cs * cos + q_perp[i][0] * sin)
+                    (q_perp[i][0] * cos + q[i][0] * sin) * self.load_factor,  # type: ignore
+                    (q[i][0] * self.orientation_cs * cos + q_perp[i][0] * sin)  # type: ignore
                     * self.load_factor,
                 ),
                 (
-                    (q_perp[i][1] * cos + q[i][1] * sin) * self.load_factor,
-                    (q[i][1] * self.orientation_cs * cos + q_perp[i][1] * sin)
+                    (q_perp[i][1] * cos + q[i][1] * sin) * self.load_factor,  # type: ignore
+                    (q[i][1] * self.orientation_cs * cos + q_perp[i][1] * sin)  # type: ignore
                     * self.load_factor,
                 ),
             ]
             el = self.element_map[id_]
             el.q_load = [i * self.orientation_cs * self.load_factor for i in q[i]]  # type: ignore
             el.q_perp_load = [i * self.load_factor for i in q_perp[i]]  # type: ignore
-            el.q_direction = direction[i]
-            el.q_angle = rotation[i]
+            el.q_direction = direction[i]  # type: ignore
+            el.q_angle = rotation[i]  # type: ignore
 
     def point_load(
         self,
