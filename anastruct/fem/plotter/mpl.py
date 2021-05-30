@@ -246,29 +246,13 @@ class Plotter(PlottingValues):
         x1;y1  element    x2;y2
         """
 
-        for q_id in self.system.loads_q.keys():
-            el = self.system.element_map[q_id]
-            if max(el.q_load[0], el.q_load[1]) > 0:
-                direction = 1
-            else:
-                direction = -1
-
-            h1 = 0.05 * max_val * abs(el.q_load[0]) / self.max_q
-            h2 = 0.05 * max_val * abs(el.q_load[1]) / self.max_q
-            x1 = el.vertex_1.x
-            y1 = el.vertex_1.y
-            x2 = el.vertex_2.x
-            y2 = el.vertex_2.y
-
-            ai = np.pi / 2 - el.q_angle
+        def __plot_patch(h1, h2, x1, y1, x2, y2, ai, qi, q, direction, el_angle):
 
             # - value, because the positive z of the system is opposite of positive y of the plotter
             xn1 = x1 + np.sin(ai) * h1 * direction
             yn1 = y1 + np.cos(ai) * h1 * direction
             xn2 = x2 + np.sin(ai) * h2 * direction
             yn2 = y2 + np.cos(ai) * h2 * direction
-            qi = el.q_load[0]
-            q = el.q_load[1]
             coordinates = ([x1, xn1, xn2, x2], [y1, yn1, yn2, y2])
             self.one_fig.plot(*coordinates, color="g")
             rec = plt.Polygon(np.vstack(coordinates).T, color="g", alpha=0.3)
@@ -277,11 +261,9 @@ class Plotter(PlottingValues):
             if verbosity == 0:
                 # arrow
                 pos = np.sqrt(((y1 - y2) ** 2) + ((x1 - x2) ** 2))
-                cg = ((pos / 3) * (el.q_load[0] + 2 * el.q_load[1])) / (
-                    el.q_load[0] + el.q_load[1]
-                )
-                height = math.sin(el.angle) * cg
-                base = math.cos(el.angle) * cg
+                cg = ((pos / 3) * (qi + 2 * q)) / (qi + q)
+                height = math.sin(el_angle) * cg
+                base = math.cos(el_angle) * cg
 
                 len_x1 = np.sin(ai - np.pi) * 0.6 * h1 * direction
                 len_x2 = np.sin(ai - np.pi) * 0.6 * h2 * direction
@@ -325,6 +307,49 @@ class Plotter(PlottingValues):
                         fc="k",
                         shape=shape,
                     )
+
+        for q_id in self.system.loads_q.keys():
+            el = self.system.element_map[q_id]
+            qi = el.q_load[0]
+            q = el.q_load[1]
+
+            x1 = el.vertex_1.x
+            y1 = el.vertex_1.y
+            x2 = el.vertex_2.x
+            y2 = el.vertex_2.y
+
+            if max(qi, q) > 0:
+                direction = 1
+            else:
+                direction = -1
+
+            h1 = 0.05 * max_val * abs(qi) / self.max_q
+            h2 = 0.05 * max_val * abs(q) / self.max_q
+
+            ai = np.pi / 2 - el.q_angle
+            el_angle = el.angle
+            __plot_patch(h1, h2, x1, y1, x2, y2, ai, qi, q, direction, el_angle)
+
+            if el.q_perp_load[0] != 0 or el.q_perp_load[1] != 0:
+                qi = el.q_perp_load[0]
+                q = el.q_perp_load[1]
+
+                x1 = el.vertex_1.x + np.sin(ai) * h1 * direction * 2
+                y1 = el.vertex_1.y + np.cos(ai) * h1 * direction * 2
+                x2 = el.vertex_2.x + np.sin(ai) * h2 * direction * 2
+                y2 = el.vertex_2.y + np.cos(ai) * h2 * direction * 2
+
+                if max(qi, q) > 0:
+                    direction = 1
+                else:
+                    direction = -1
+
+                h1 = 0.05 * max_val * abs(qi) / self.max_q
+                h2 = 0.05 * max_val * abs(q) / self.max_q
+
+                ai = -el.q_angle
+                el_angle = el.angle
+                __plot_patch(h1, h2, x1, y1, x2, y2, ai, qi, q, direction, el_angle)
 
     @staticmethod
     def __arrow_patch_values(Fx, Fz, node, h):
