@@ -110,7 +110,7 @@ class Element:
         qn = [self.qn_load[0], self.qn_load[1]]
 
         if self.q_direction == "x":
-            q_factor = cos(self.angle)
+            q_factor = -cos(self.angle)
         elif self.q_direction == "y":
             q_factor = -sin(self.angle)
         elif self.q_direction == "element" or self.q_direction is None:
