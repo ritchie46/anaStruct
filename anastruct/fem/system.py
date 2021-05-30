@@ -912,10 +912,6 @@ class SystemElements:
         # TODO! this function is a duck typing hell. redesign.
         if not isinstance(q, Sequence):
             q = [q, q]
-        if q[0] != q[1] and direction != "element":
-            raise ValueError(
-                "Non-uniform loads are only supported in element direction"
-            )
         q = [q]  # type: ignore
         q, element_id, direction = args_to_lists(q, element_id, direction)
 

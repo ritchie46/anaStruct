@@ -110,7 +110,7 @@ def plot_values_axial_force(element, factor, n):
     dx = x2 - x1
     dy = y2 - y1
 
-    # determine moment for 0 < x < length of the element
+    # determine axial force for 0 < x < length of the element
     x_val = x1 + interpolate * dx
     y_val = y1 + interpolate * dy
 
@@ -118,9 +118,10 @@ def plot_values_axial_force(element, factor, n):
         qni = element.all_qn_load[0]
         qn = element.all_qn_load[1]
         x = interpolate * element.l
-        qn_part = qni + (qn - qni) * x
-        x_val += sin * qn_part * factor
-        y_val += cos * qn_part * factor
+        # TODO CHECK THIS FORMULA
+        qn_part = (qn - qni) / element.l * (element.l - x) * x
+        x_val += cos * qn_part * factor
+        y_val += sin * qn_part * factor
 
     x_val = np.append(x_val, element.vertex_2.x)
     y_val = np.append(y_val, -element.vertex_2.z)
