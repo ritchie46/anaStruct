@@ -173,8 +173,7 @@ class ElementLevel:
         if element.all_qn_load:
             qni = element.all_qn_load[0]
             qn = element.all_qn_load[1]
-            # TODO CHECK THIS FORMULA
-            qn_part = (qn - qni) / element.l * (element.l - x) * x
+            qn_part = (qn - qni) / (2 * element.l) * (element.l - x) * x
             n_val += qn_part
 
         element.axial_force = n_val
@@ -186,9 +185,9 @@ class ElementLevel:
         iteration_factor = np.linspace(0, 1, con)
         x = iteration_factor * element.l
         m_val = element.node_1.Ty + iteration_factor * dT
-        if element.all_q_load:
-            qi = element.all_q_load[0]
-            q = element.all_q_load[1]
+        if element.all_qp_load:
+            qi = element.all_qp_load[0]
+            q = element.all_qp_load[1]
             q_part = (
                 -((qi - q) / (6 * element.l)) * x ** 3
                 + (qi / 2) * x ** 2

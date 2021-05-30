@@ -260,12 +260,7 @@ class Plotter(PlottingValues):
             x2 = el.vertex_2.x
             y2 = el.vertex_2.y
 
-            if el.q_direction == "y":
-                ai = 0
-            elif el.q_direction == "x":
-                ai = 0.5 * np.pi
-            else:
-                ai = -el.angle
+            ai = np.pi / 2 - el.q_angle
 
             # - value, because the positive z of the system is opposite of positive y of the plotter
             xn1 = x1 + np.sin(ai) * h1 * direction
@@ -670,7 +665,7 @@ class Plotter(PlottingValues):
                     lambda el: max(
                         abs(el.node_1.Ty),
                         abs(el.node_2.Ty),
-                        abs(((el.all_q_load[0] + el.all_q_load[1]) / 16) * el.l ** 2),
+                        abs(((el.all_qp_load[0] + el.all_qp_load[1]) / 16) * el.l ** 2),
                     )
                     if el.type == "general"
                     else 0,
@@ -684,8 +679,8 @@ class Plotter(PlottingValues):
             if (
                 math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
-                and math.isclose(el.all_q_load[0], 0, rel_tol=1e-5, abs_tol=1e-9)
-                and math.isclose(el.all_q_load[1], 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.all_qp_load[0], 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.all_qp_load[1], 0, rel_tol=1e-5, abs_tol=1e-9)
             ):
                 # If True there is no bending moment, so no need for plotting.
                 continue
@@ -701,7 +696,7 @@ class Plotter(PlottingValues):
                 node_results=node_results,
             )
 
-            if el.all_q_load:
+            if el.all_qp_load:
                 m_sag = min(el.bending_moment)
                 index = find_nearest(el.bending_moment, m_sag)[1]
                 offset = -self.max_val_structure * 0.05
@@ -743,8 +738,8 @@ class Plotter(PlottingValues):
             if (
                 math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
-                and math.isclose(el.all_q_load[0], 0, rel_tol=1e-5, abs_tol=1e-9)
-                and math.isclose(el.all_q_load[1], 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.all_qp_load[0], 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.all_qp_load[1], 0, rel_tol=1e-5, abs_tol=1e-9)
             ):
                 # If True there is no bending moment and no shear, thus no shear force, so no need for plotting.
                 continue

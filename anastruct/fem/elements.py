@@ -72,8 +72,9 @@ class Element:
         )  # acting external forces
         self.element_force_vector: np.ndarray = np.array([])
         self.q_load: tuple = (0.0, 0.0)
+        self.q_perp_load: tuple = (0.0, 0.0)
         self.q_direction: Optional[str] = None
-        self.qn_load: tuple = (0.0, 0.0)
+        self.q_angle: Optional[float] = None
         self.dead_load: float = 0.0
         self.N_1: Optional[float] = None
         self.N_2: Optional[float] = None
@@ -89,41 +90,34 @@ class Element:
         self.section_name = section_name  # needed for element annotation
 
     @property
-    def all_q_load(self) -> List[float]:
-        if self.q_direction == "x":
-            q_factor = -sin(self.angle)
-        elif self.q_direction == "y":
-            q_factor = cos(self.angle)
-        elif self.q_direction == "element" or self.q_direction is None:
+    def all_qp_load(self) -> List[float]:
+        if self.q_angle is not None:
+            q_factor = sin(self.q_angle - self.angle)
+            q_perp_factor = cos(self.q_angle - self.angle)
+        else:
             q_factor = 1
-        elif self.q_direction is not None:
-            raise FEMException(
-                "Wrong parameters",
-                "q-loads direction is not set property. Please choose 'x', 'y', or 'element'",
-            )
-        q = [i * q_factor for i in self.q_load]
+            q_perp_factor = 0
+        q = [
+            i * q_factor + j * q_perp_factor
+            for i, j in zip(self.q_load, self.q_perp_load)
+        ]
 
         return [i + self.dead_load * cos(self.angle) for i in q]
 
     @property
     def all_qn_load(self) -> List[float]:
-        qn = [self.qn_load[0], self.qn_load[1]]
-
-        if self.q_direction == "x":
-            q_factor = -cos(self.angle)
-        elif self.q_direction == "y":
-            q_factor = -sin(self.angle)
-        elif self.q_direction == "element" or self.q_direction is None:
+        if self.q_angle is not None:
+            q_factor = -cos(self.q_angle - self.angle)
+            q_perp_factor = sin(self.q_angle - self.angle)
+        else:
             q_factor = 0
-        elif self.q_direction is not None:
-            raise FEMException(
-                "Wrong parameters",
-                "q-loads direction is not set property. Please choose 'x', 'y', or 'element'",
-            )
-        for i, q_val in enumerate(self.q_load):
-            qn[i] += q_val * q_factor + self.dead_load * -sin(self.angle)
+            q_perp_factor = 1
+        q = [
+            i * q_factor + j * q_perp_factor
+            for i, j in zip(self.q_load, self.q_perp_load)
+        ]
 
-        return qn
+        return [i + self.dead_load * -sin(self.angle) for i in q]
 
     @property
     def node_1(self) -> Node:

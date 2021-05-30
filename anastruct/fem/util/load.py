@@ -16,34 +16,28 @@ class LoadCase:
         self.spec = dict()
         self.c = 0
 
-    def q_load(self, q, element_id, direction="element"):
+    def q_load(self, q, element_id, direction="element", rotation=None, q_perp=[0, 0]):
         """
         Apply a q-load to an element.
 
         :param element_id: (int/ list) representing the element ID
         :param q: (flt) value of the q-load
-        :param direction: (str) "element", "x", "y"
+        :param direction: (str) "element", "x", "y", "parallel"
         """
         if not isinstance(q, tuple):
             q = [(q, q)]
+        if not isinstance(q_perp, tuple):
+            q_perp = [(q_perp, q_perp)]
         q = [q]
+        q_perp = [q_perp]
         self.c += 1
         self.spec[f"q_load-{self.c}"] = dict(
-            q=q, element_id=element_id, direction=direction
+            q=q,
+            element_id=element_id,
+            direction=direction,
+            rotation=rotation,
+            q_perp=q_perp,
         )
-
-    def qn_load(self, qn, element_id):
-        """
-        Apply a qn-load to an element.
-
-        :param element_id: (int/ list) representing the element ID
-        :param qn: (flt) value of the qn-load
-        """
-        if not isinstance(q, tuple):
-            qn = [(qn, qn)]
-        qn = [qn]
-        self.c += 1
-        self.spec[f"qn_load-{self.c}"] = dict(qn=qn, element_id=element_id)
 
     def point_load(self, node_id, Fx=0, Fy=0, rotation=0):
         """

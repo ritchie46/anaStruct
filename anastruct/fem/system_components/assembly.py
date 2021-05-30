@@ -59,8 +59,8 @@ def apply_point_load(system: "SystemElements"):
 def apply_perpendicular_q_load(system: "SystemElements"):
     for element_id in system.loads_dead_load:
         element = system.element_map[element_id]
-        qi_perpendicular = element.all_q_load[0]
-        q_perpendicular = element.all_q_load[1]
+        qi_perpendicular = element.all_qp_load[0]
+        q_perpendicular = element.all_qp_load[1]
         if q_perpendicular == 0 and qi_perpendicular == 0:
             continue
 
