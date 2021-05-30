@@ -581,14 +581,23 @@ class Plotter(PlottingValues):
         if factor is None:
             max_force = max(
                 map(
-                    lambda el: max(abs(el.N_1), abs(el.N_2)),
+                    lambda el: max(
+                        abs(el.N_1),
+                        abs(el.N_2),
+                        abs(((el.all_qn_load[0] + el.all_qn_load[1]) / 16) * el.l ** 2),
+                    ),
                     self.system.element_map.values(),
                 )
             )
             factor = det_scaling_factor(max_force, self.max_val_structure)
 
         for el in self.system.element_map.values():
-            if math.isclose(el.N_1, 0, rel_tol=1e-5, abs_tol=1e-9):
+            if (
+                math.isclose(el.N_1, 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.N_2, 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.all_qn_load[0], 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.all_qn_load[1], 0, rel_tol=1e-5, abs_tol=1e-9)
+            ):
                 continue
             else:
                 axis_values = plot_values_axial_force(el, factor, con)
@@ -660,6 +669,7 @@ class Plotter(PlottingValues):
                 map(
                     lambda el: max(
                         abs(el.node_1.Ty),
+                        abs(el.node_2.Ty),
                         abs(((el.all_q_load[0] + el.all_q_load[1]) / 16) * el.l ** 2),
                     )
                     if el.type == "general"
@@ -674,8 +684,8 @@ class Plotter(PlottingValues):
             if (
                 math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
-                and not el.all_q_load[0]
-                and not el.all_q_load[1]
+                and math.isclose(el.all_q_load[0], 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.all_q_load[1], 0, rel_tol=1e-5, abs_tol=1e-9)
             ):
                 # If True there is no bending moment, so no need for plotting.
                 continue
@@ -733,7 +743,8 @@ class Plotter(PlottingValues):
             if (
                 math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
-                and el.q_load is None
+                and math.isclose(el.all_q_load[0], 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.all_q_load[1], 0, rel_tol=1e-5, abs_tol=1e-9)
             ):
                 # If True there is no bending moment and no shear, thus no shear force, so no need for plotting.
                 continue

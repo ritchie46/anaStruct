@@ -115,11 +115,11 @@ def apply_parallel_qn_load(system: "SystemElements"):
             continue
 
         # minus because of systems positive rotation
-        rleft = det_axial(qni_parallel, qn_parallel, 0, element.EA, element.l)
-        rright = -det_axial(qni_parallel, qn_parallel, element.l, element.EA, element.l)
+        rleft = -det_axial(qni_parallel, qn_parallel, 0, element.EA, element.l)
+        rright = det_axial(qni_parallel, qn_parallel, element.l, element.EA, element.l)
 
-        rleft_x = rleft * math.cos(element.a1)
-        rright_x = rright * math.cos(element.a2)
+        rleft_x = -rleft * math.cos(element.a1)
+        rright_x = -rright * math.cos(element.a2)
 
         rleft_z = rleft * math.sin(element.a1)
         rright_z = rright * math.sin(element.a2)

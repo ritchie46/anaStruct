@@ -165,7 +165,7 @@ class ElementLevel:
         element.N_1 = N_1
         element.N_2 = N_2
 
-        dN = N_1 - N_2
+        dN = N_2 - N_1
 
         iteration_factor = np.linspace(0, 1, con)
         x = iteration_factor * element.l
@@ -173,7 +173,8 @@ class ElementLevel:
         if element.all_qn_load:
             qni = element.all_qn_load[0]
             qn = element.all_qn_load[1]
-            qn_part = qni + (qn - qni) * x
+            # TODO CHECK THIS FORMULA
+            qn_part = (qn - qni) / element.l * (element.l - x) * x
             n_val += qn_part
 
         element.axial_force = n_val
