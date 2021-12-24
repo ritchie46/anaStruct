@@ -35,7 +35,7 @@ setup(
         "anastruct.fem.util",
         "anastruct.sectionbase",
     ],
-    package_data={"": ["*.xml"]},
+    package_data={"anastruct.sectionbase": ["data/*.xml"]},
     package_dir="",
     install_requires=["matplotlib>=3.0", "numpy>=1.15.4", "scipy>=1.1.0"],
     ext_modules=em,
