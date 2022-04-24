@@ -1,4 +1,4 @@
-import math, re, collections, copy
+import math, re, collections.abc, copy
 import numpy as np
 from anastruct.basic import FEMException, args_to_lists
 from anastruct.fem.postprocess import SystemLevel as post_sl
@@ -729,7 +729,7 @@ class SystemElements:
 
         :param node_id: Represents the nodes ID
         """
-        if not isinstance(node_id, collections.Iterable):
+        if not isinstance(node_id, collections.abc.Iterable):
             node_id = [node_id]
 
         for id_ in node_id:
@@ -744,7 +744,7 @@ class SystemElements:
 
         :param node_id: Represents the nodes ID
         """
-        if not isinstance(node_id, collections.Iterable):
+        if not isinstance(node_id, collections.abc.Iterable):
             node_id = [node_id]
 
         for id_ in node_id:
@@ -761,7 +761,7 @@ class SystemElements:
 
         :param node_id: Represents the nodes ID
         """
-        if not isinstance(node_id, collections.Iterable):
+        if not isinstance(node_id, collections.abc.Iterable):
             node_id = [node_id]
 
         for id_ in node_id:
@@ -786,13 +786,13 @@ class SystemElements:
                                 If angle is given, the support will be inclined.
         :param rotate: If set to False, rotation at the roller will also be restrained.
         """
-        if not isinstance(node_id, collections.Iterable):
+        if not isinstance(node_id, collections.abc.Iterable):
             node_id = [node_id]
-        if not isinstance(direction, collections.Iterable):
+        if not isinstance(direction, collections.abc.Iterable):
             direction = [direction]
-        if not isinstance(angle, collections.Iterable):
+        if not isinstance(angle, collections.abc.Iterable):
             angle = [angle]
-        if not isinstance(rotate, collections.Iterable):
+        if not isinstance(rotate, collections.abc.Iterable):
             rotate = [rotate]
 
         assert len(node_id) == len(direction) == len(angle) == len(rotate)
@@ -825,7 +825,7 @@ class SystemElements:
 
         :param node_id: Represents the nodes ID
         """
-        if not isinstance(node_id, collections.Iterable):
+        if not isinstance(node_id, collections.abc.Iterable):
             node_id = [
                 node_id,
             ]
@@ -863,13 +863,13 @@ class SystemElements:
         self.supports_spring_args.append((node_id, translation, k, roll))
         # The stiffness of the spring is added in the system matrix at the location that represents the node and the
         # displacement.
-        if not isinstance(node_id, collections.Iterable):
+        if not isinstance(node_id, collections.abc.Iterable):
             node_id = (node_id,)
-        if not isinstance(translation, collections.Iterable):
+        if not isinstance(translation, collections.abc.Iterable):
             translation = (translation,)
-        if not isinstance(k, collections.Iterable):
+        if not isinstance(k, collections.abc.Iterable):
             k = (k,)
-        if not isinstance(roll, collections.Iterable):
+        if not isinstance(roll, collections.abc.Iterable):
             roll = (roll,)
 
         assert len(node_id) == len(translation) == len(k) == len(roll)
