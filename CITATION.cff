@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Vink"
+  given-names: "Ritchie"
+  email: ritchie46@gmail.com
+title: "anaStruct 2D Frames and Trusses"
+type: software
+version: 1.0.0
+doi: 10.5281/zenodo.1234
+date-released: 2016-08-08
+repository-code: "https://github.com/ritchie46/anaStruct"
+url: "https://anastruct.readthedocs.io/"
