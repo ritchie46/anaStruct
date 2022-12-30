@@ -1,8 +1,7 @@
 from __future__ import annotations
 import math
-import numpy as np
-
 from typing import Union, Sequence
+import numpy as np
 
 
 class Vertex:
@@ -41,7 +40,7 @@ class Vertex:
         return float(self.coordinates[1] * -1)
 
     def modulus(self) -> float:
-        return float(np.sqrt(np.sum(self.coordinates ** 2)))
+        return float(np.sqrt(np.sum(self.coordinates**2)))
 
     def unit(self) -> Vertex:
         return 1 / self.modulus() * self
@@ -103,7 +102,7 @@ class Vertex:
         return self.x == other.x and self.y == other.y
 
     def __str__(self):
-        return "Vertex({}, {})".format(self.x, self.y)
+        return f"Vertex({self.x}, {self.y})"
 
 
 def vertex_range(v1, v2, n):

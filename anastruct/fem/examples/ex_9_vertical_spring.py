@@ -1,6 +1,6 @@
 from anastruct.fem.system import SystemElements
 
-ss = SystemElements(plot_backend="plotly")
+ss = SystemElements()
 ss.add_element([[0, 0], [1, 0]])
 ss.add_element([2, 0])
 

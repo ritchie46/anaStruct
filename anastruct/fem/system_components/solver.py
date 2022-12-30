@@ -1,10 +1,10 @@
-import numpy as np
 import copy
-from anastruct.basic import converge
 import logging
-from scipy import linalg  # type: ignore
-
 from typing import TYPE_CHECKING, Optional
+import numpy as np
+from scipy import linalg  # type: ignore
+from anastruct.basic import converge
+
 
 if TYPE_CHECKING:
     from anastruct.fem.system import SystemElements
@@ -65,12 +65,10 @@ def stiffness_adaptation(
 
     if c == max_iter - 1:
         logging.warning(
-            "Couldn't solve the in the amount of iterations given. max_iter={}".format(
-                max_iter
-            )
+            f"Couldn't solve the in the amount of iterations given. max_iter={max_iter}"
         )
     elif verbosity == 0:
-        logging.info("Solved in {} iterations".format(c))
+        logging.info(f"Solved in {c} iterations")
 
     assert system.system_displacement_vector is not None
     return system.system_displacement_vector
@@ -88,7 +86,8 @@ def det_linear_buckling(system: "SystemElements") -> float:
     2nd order analysis is solved by:
     (K + λKg0)U = F
 
-    We are interested in the point that there is nog additional load F and displacement U is possible.
+    We are interested in the point that there is nog additional load F and displacement U
+    is possible.
     (K + λKg0)ΔU = ΔF = 0
     (K + λKg0) = 0
 
@@ -127,7 +126,8 @@ def geometrically_non_linear(
     :param return_buckling_factor: (bool)
     :param discretize_kwargs: (dict) Containing the kwargs passed to the discretize function
     :param discretize: (function) discretize function.
-    :return: buckling_factor: (flt) The factor the loads can be increased until the structure fails due to buckling.
+    :return: buckling_factor: (flt) The factor the loads can be increased until the structure
+                              fails due to buckling.
     """
     # https://www.ethz.ch/content/dam/ethz/special-interest/baug/ibk/structural-mechanics-dam/education/femI/Lecture_2b.pdf
     if verbosity == 0:

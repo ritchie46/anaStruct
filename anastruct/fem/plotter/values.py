@@ -1,3 +1,5 @@
+import math
+import numpy as np
 from .element import (
     plot_values_deflection,
     plot_values_bending_moment,
@@ -5,8 +7,6 @@ from .element import (
     plot_values_shear_force,
     plot_values_element,
 )
-import numpy as np
-import math
 
 
 def det_scaling_factor(max_unit, max_val_structure):
@@ -70,7 +70,7 @@ class PlottingValues:
                     lambda el: max(
                         abs(el.node_1.Ty),
                         abs(el.node_2.Ty),
-                        abs(((el.all_qp_load[0] + el.all_qp_load[1]) / 16) * el.l ** 2),
+                        abs(((el.all_qp_load[0] + el.all_qp_load[1]) / 16) * el.l**2),
                     ),
                     self.system.element_map.values(),
                 )

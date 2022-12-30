@@ -83,7 +83,7 @@ class SectionBase:
 
         element = dict(
             self.root.findall(
-                "./sectionlist/sectionlist_item[@sectionname='{}']".format(section_name)
+                f"./sectionlist/sectionlist_item[@sectionname='{section_name}']"
             )[0].items()
         )
         element["swdl"] = element["mass"]
@@ -99,9 +99,9 @@ class SectionBase:
         )  # self weight dead load unit
 
         element["mass"] = float(element["mass"]) * wu / lu
-        element["Ax"] = float(element["Ax"]) * sdu ** 2
-        element["Iy"] = float(element["Iy"]) * sdu ** 4
-        element["Iz"] = float(element["Iz"]) * sdu ** 4
+        element["Ax"] = float(element["Ax"]) * sdu**2
+        element["Iy"] = float(element["Iy"]) * sdu**4
+        element["Iz"] = float(element["Iz"]) * sdu**4
         element["swdl"] = float(element["swdl"]) * self_weight_dead_load / lu
         return element
 
