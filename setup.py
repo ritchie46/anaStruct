@@ -1,4 +1,3 @@
-import importlib_metadata
 from setuptools import setup
 
 
@@ -24,7 +23,8 @@ except Exception:  # pylint: disable=broad-except
 
 long_description = read_file("README.md")
 requirements = read_requirements("requirements.txt")
-__version__ = importlib_metadata.version("anastruct")
+__version__ = "0"
+exec(read_file("anastruct/_version.py"))  # pylint: disable=exec-used
 
 setup(
     name="anastruct",
