@@ -24,7 +24,7 @@ jobs:
       - name: Lint with pylint
         run: |
           # stop the build if there are Python syntax errors or undefined names
-          pylint --rcfile .pylintrc ./anastruct/*.py
+          pylint --rcfile .pylintrc ./anastruct
       - name: Run formatting checks
         run: |
           black --check .
