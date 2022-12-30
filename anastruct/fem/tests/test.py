@@ -1,9 +1,21 @@
+import sys
 import unittest
+import numpy as np
 from anastruct.fem import system as se
 from anastruct import LoadCase, LoadCombination
-import numpy as np
 from anastruct.fem.examples.ex_8_non_linear_portal import ss as SS_8
-import sys
+from anastruct.fem.examples.ex_7_rotational_spring import ss as SS_7
+from anastruct.fem.examples.ex_11 import ss as SS_11
+from anastruct.fem.examples.ex_12 import ss as SS_12
+from anastruct.fem.examples.ex_13 import ss as SS_13
+from anastruct.fem.examples.ex_14 import ss as SS_14
+from anastruct.fem.examples.ex_15 import ss as SS_15
+from anastruct.fem.examples.ex_16 import ss as SS_16
+from anastruct.fem.examples.ex_17_gnl import ss as SS_17
+from anastruct.fem.examples.ex_18_discretize import ss as SS_18
+from anastruct.fem.examples.ex_19_num_displacements import ss as SS_19
+from anastruct.fem.examples.ex_20_insert_node import ss as SS_20
+from anastruct.fem.examples.ex_26_deflection import ss as SS_26
 
 
 class SimpleTest(unittest.TestCase):
@@ -112,7 +124,6 @@ class SimpleTest(unittest.TestCase):
         """
         Test the rotational springs
         """
-        from anastruct.fem.examples.ex_7_rotational_spring import ss
 
         sol = np.fromstring(
             """0.          0.          0.          0.          0.23558645 -0.09665875
@@ -120,7 +131,7 @@ class SimpleTest(unittest.TestCase):
             float,
             sep=" ",
         )
-        self.assertTrue(np.allclose(ss.solve(), sol))
+        self.assertTrue(np.allclose(SS_7.solve(), sol))
 
     def test_ex_8(self):
         """
@@ -134,21 +145,21 @@ class SimpleTest(unittest.TestCase):
         self.assertAlmostEqual(u4, 106.45829880642854, places=5)
 
     def test_ex_11(self):
-        from anastruct.fem.examples.ex_11 import ss
 
-        ss.solve()
-        el = ss.element_map[1]
+        SS_11.solve()
+        el = SS_11.element_map[1]
         self.assertAlmostEqual(el.N_1, 27.8833333333, places=3)
         self.assertAlmostEqual(el.N_2, 17.8833333333, places=3)
-        self.assertAlmostEqual(ss.get_element_results(1)["length"], 5.3851647, places=5)
+        self.assertAlmostEqual(
+            SS_11.get_element_results(1)["length"], 5.3851647, places=5
+        )
 
     def test_ex_12(self):
         """
         System nodes Ty equal to 0
         """
-        from anastruct.fem.examples.ex_12 import ss
 
-        ss.solve()
+        SS_12.solve()
 
         sol = [
             6.6666666666666679,
@@ -156,16 +167,14 @@ class SimpleTest(unittest.TestCase):
             -3.5527136788005009e-15,
             -6.6666666666666679,
         ]
-        sssol = [a[3] for a in ss.get_node_results_system()]
+        sssol = [a[3] for a in SS_12.get_node_results_system()]
         self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, sssol)]))
 
     def test_ex_13(self):
         """
         System nodes Fx equal to 0
         """
-        from anastruct.fem.examples.ex_13 import ss
-
-        ss.solve()
+        SS_13.solve()
 
         sol = [
             6.6666666666666661,
@@ -173,16 +182,14 @@ class SimpleTest(unittest.TestCase):
             -8.8817841970012523e-16,
             -6.666666666666667,
         ]
-        sssol = [a[1] for a in ss.get_node_results_system()]
+        sssol = [a[1] for a in SS_13.get_node_results_system()]
         self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, sssol)]))
 
     def test_ex_14(self):
         """
         Tests dead load and parallel load on axis.
         """
-        from anastruct.fem.examples.ex_14 import ss
-
-        ss.solve()
+        SS_14.solve()
 
         sol = [
             -5.1854495715665756,
@@ -191,16 +198,14 @@ class SimpleTest(unittest.TestCase):
             1.2434497875801753e-14,
             5.1854495715665738,
         ]
-        sssol = [a[1] for a in ss.get_node_results_system()]
+        sssol = [a[1] for a in SS_14.get_node_results_system()]
         self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, sssol)]))
 
     def test_ex_15(self):
         """
         Tests dead load and parallel load on axis.
         """
-        from anastruct.fem.examples.ex_15 import ss
-
-        ss.solve()
+        SS_15.solve()
 
         sol = [
             -9.4139433815692541,
@@ -209,13 +214,11 @@ class SimpleTest(unittest.TestCase):
             3.5527136788005009e-15,
             9.4139433815692577,
         ]
-        sssol = [a[1] for a in ss.get_node_results_system()]
+        sssol = [a[1] for a in SS_15.get_node_results_system()]
         self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, sssol)]))
 
     def test_ex_16(self):
-        from anastruct.fem.examples.ex_16 import ss
-
-        ss.solve()
+        SS_16.solve()
         if sys.version_info[1] >= 6:
             sol = [
                 -4.4408920985006262e-15,
@@ -224,36 +227,28 @@ class SimpleTest(unittest.TestCase):
                 7.9936057773011271e-15,
                 5.6568542494923797,
             ]
-            sssol = [a[1] for a in ss.get_node_results_system()]
+            sssol = [a[1] for a in SS_16.get_node_results_system()]
             self.assertTrue(all([np.isclose(a, b) for a, b in zip(sol, sssol)]))
 
     def test_ex_17_buckling_factor(self):
-        from anastruct.fem.examples.ex_17_gnl import ss
-
-        ss.solve(geometrical_non_linear=True)
-        self.assertNotAlmostEqual(493.48022005446785, ss.buckling_factor)
+        SS_17.solve(geometrical_non_linear=True)
+        self.assertNotAlmostEqual(493.48022005446785, SS_17.buckling_factor)
 
     def test_ex_18_buckling_factor(self):
-        from anastruct.fem.examples.ex_18_discretize import ss
-
-        ss.solve(geometrical_non_linear=True)
-        self.assertNotAlmostEqual(493.48022005446785, ss.buckling_factor)
+        SS_18.solve(geometrical_non_linear=True)
+        self.assertNotAlmostEqual(493.48022005446785, SS_18.buckling_factor)
 
     def test_ex_19_nummerical_displacements_averaging(self):
-        from anastruct.fem.examples.ex_19_num_displacements import ss
-
-        ss.solve()
+        SS_19.solve()
         self.assertTrue(
             np.allclose(
-                [el.deflection.max() for el in ss.element_map.values()],
+                [el.deflection.max() for el in SS_19.element_map.values()],
                 [0.10211865035814169, 0.10211865035814176],
             )
         )
 
     def test_ex_20_insert_node(self):
-        from anastruct.fem.examples.ex_20_insert_node import ss
-
-        x, y = ss.show_structure(values_only=True)
+        x, y = SS_20.show_structure(values_only=True)
         self.assertTrue(np.allclose(x, np.array([0.0, 3.0, 3.0, 5.0, 5.0, 10.0])))
         self.assertTrue(np.allclose(y, np.array([0.0, 0.0, 0.0, 5.0, 5.0, 0.0])))
 
@@ -323,12 +318,10 @@ class SimpleTest(unittest.TestCase):
         self.assertAlmostEqual(-5, ss.get_element_results(1)["Nmin"])
 
     def test_deflection_averaging(self):
-        from anastruct.fem.examples.ex_26_deflection import ss
-
-        ss.solve()
+        SS_26.solve()
         self.assertTrue(
             np.allclose(
-                [el.deflection.max() for el in ss.element_map.values()],
+                [el.deflection.max() for el in SS_26.element_map.values()],
                 [0.012466198717546239, 6.1000892498263e-07],
             )
         )

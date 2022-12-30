@@ -1,7 +1,7 @@
-from anastruct.fem.system import SystemElements
 import time
 import os
 import subprocess
+from anastruct.fem.system import SystemElements
 
 save = True
 min_ = 1e8
@@ -20,7 +20,7 @@ for i in range(n):
 print(f"Best of {n} = {min_} s.")
 
 if save:
-    with open("system-creation.csv", "a") as f:
+    with open("system-creation.csv", "a", encoding="UTF-8") as f:
         os.chdir("../../..")
         git_label = (
             str(subprocess.check_output(["git", "describe", "--tags"]))

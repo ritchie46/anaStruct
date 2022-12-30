@@ -1,5 +1,5 @@
-import numpy as np
 import math
+import numpy as np
 
 
 def plot_values_deflection(element, factor, linear=False):
@@ -7,7 +7,8 @@ def plot_values_deflection(element, factor, linear=False):
     Determine the plotting values for deflection
 
     :param element: (fem.Element)
-    :param factor: (flt) Factor by which to multiply the plotting values perpendicular to the elements axis.
+    :param factor: (flt) Factor by which to multiply the plotting values perpendicular
+                   to the elements axis.
     :param linear: (bool) If True, the bending in between the elements is determined.
     :return: (np.array/ list) x and y values.
     """
@@ -70,8 +71,8 @@ def plot_values_bending_moment(element, factor, n):
         q = element.all_qp_load[1]
         x = interpolate * element.l
         q_part = (
-            -((qi - q) / (6 * element.l)) * x ** 3
-            + (qi / 2) * x ** 2
+            -((qi - q) / (6 * element.l)) * x**3
+            + (qi / 2) * x**2
             - (((2 * qi) + q) / 6) * element.l * x
         )
         x_val += sin * q_part * factor
@@ -136,8 +137,6 @@ def plot_values_shear_force(element, factor):
     x2 = element.vertex_2.x
     y2 = -element.vertex_2.z
 
-    shear_1 = element.shear_force[0]
-    shear_2 = element.shear_force[-1]
     n = len(element.shear_force)
 
     # apply angle ai

@@ -1,5 +1,5 @@
-import numpy as np
 import math
+import numpy as np
 import matplotlib.pyplot as plt  # type: ignore
 import matplotlib.patches as mpatches  # type: ignore
 from anastruct.basic import find_nearest, rotate_xy
@@ -24,6 +24,7 @@ class Plotter(PlottingValues):
         self.max_q = 0
         self.max_qn = 0
         self.max_system_point_load = 0
+        self.fig = None
 
     def __start_plot(self, figsize):
         plt.close("all")
@@ -246,7 +247,19 @@ class Plotter(PlottingValues):
         x1;y1  element    x2;y2
         """
 
-        def __plot_patch(h1, h2, x1, y1, x2, y2, ai, qi, q, direction, el_angle):
+        def __plot_patch(
+            h1,
+            h2,
+            x1,
+            y1,
+            x2,
+            y2,
+            ai,
+            qi,
+            q,
+            direction,
+            el_angle,  # pylint: disable=unused-argument
+        ):
 
             # - value, because the positive z of the system is opposite of positive y of the plotter
             xn1 = x1 + np.sin(ai) * h1 * direction
@@ -260,10 +273,10 @@ class Plotter(PlottingValues):
 
             if verbosity == 0:
                 # arrow
-                pos = np.sqrt(((y1 - y2) ** 2) + ((x1 - x2) ** 2))
-                cg = ((pos / 3) * (qi + 2 * q)) / (qi + q)
-                height = math.sin(el_angle) * cg
-                base = math.cos(el_angle) * cg
+                # pos = np.sqrt(((y1 - y2) ** 2) + ((x1 - x2) ** 2))
+                # cg = ((pos / 3) * (qi + 2 * q)) / (qi + q)
+                # height = math.sin(el_angle) * cg
+                # base = math.cos(el_angle) * cg
 
                 len_x1 = np.sin(ai - np.pi) * 0.6 * h1 * direction
                 len_x2 = np.sin(ai - np.pi) * 0.6 * h2 * direction
@@ -279,7 +292,7 @@ class Plotter(PlottingValues):
                 self.one_fig.text(xn2, yn2, f"q={q}", color="b", fontsize=9, zorder=10)
 
                 # add multiple arrows to fill load
-                for counter in range(len(step_x)):
+                for counter, step_xi in enumerate(step_x):
                     if q + qi >= 0:
                         if counter == 0:
                             shape = "right"
@@ -296,7 +309,7 @@ class Plotter(PlottingValues):
                             shape = "full"
 
                     self.one_fig.arrow(
-                        step_x[counter],
+                        step_xi,
                         step_y[counter],
                         step_len_x[counter],
                         step_len_y[counter],
@@ -361,7 +374,7 @@ class Plotter(PlottingValues):
         :return: Variables for the matplotlib plotter
         """
 
-        F = (Fx ** 2 + Fz ** 2) ** 0.5
+        F = (Fx**2 + Fz**2) ** 0.5
         len_x = Fx / F * h
         len_y = -Fz / F * h
         x = node.vertex.x - len_x * 1.2
@@ -376,7 +389,7 @@ class Plotter(PlottingValues):
 
         for k in self.system.loads_point:
             Fx, Fz = self.system.loads_point[k]
-            F = (Fx ** 2 + Fz ** 2) ** 0.5
+            F = (Fx**2 + Fz**2) ** 0.5
             node = self.system.node_map[k]
             h = 0.1 * max_plot_range * F / self.max_system_point_load
             x, y, len_x, len_y, F = self.__arrow_patch_values(Fx, Fz, node, h)
@@ -393,7 +406,7 @@ class Plotter(PlottingValues):
                 zorder=11,
             )
             if verbosity == 0:
-                self.one_fig.text(x, y, "F=%d" % F, color="k", fontsize=9, zorder=10)
+                self.one_fig.text(x, y, f"F={F}", color="k", fontsize=9, zorder=10)
 
     def __moment_load_patch(self, max_val):
 
@@ -420,7 +433,7 @@ class Plotter(PlottingValues):
             self.one_fig.text(
                 node.vertex.x + h * 0.2,
                 -node.vertex.z + h * 0.2,
-                "T=%d" % v,
+                f"T={v}",
                 color="k",
                 fontsize=9,
                 zorder=10,
@@ -440,7 +453,8 @@ class Plotter(PlottingValues):
         """
         :param show: (boolean) if True, plt.figure will plot.
         :param supports: (boolean) if True, supports are plotted.
-        :param annotations: (boolean) if True, structure annotations are plotted. It includes section name.
+        :param annotations: (boolean) if True, structure annotations are plotted.
+                            It includes section name.
         :return:
         """
         if not gridplot:
@@ -475,7 +489,7 @@ class Plotter(PlottingValues):
                 self.one_fig.text(
                     x_val[0] + ax_range,
                     y_val[0] + ax_range,
-                    "%d" % el.node_id1,
+                    f"{el.node_id1}",
                     color="g",
                     fontsize=9,
                     zorder=10,
@@ -483,7 +497,7 @@ class Plotter(PlottingValues):
                 self.one_fig.text(
                     x_val[-1] + ax_range,
                     y_val[-1] + ax_range,
-                    "%d" % el.node_id2,
+                    f"{el.node_id2}",
                     color="g",
                     fontsize=9,
                     zorder=10,
@@ -534,7 +548,7 @@ class Plotter(PlottingValues):
         self.one_fig.text(
             x_val[1] - offset,
             y_val[1] + offset,
-            "%s" % round(value_1, digits),
+            f"{round(value_1, digits)}",
             fontsize=9,
             ha="center",
             va="center",
@@ -542,7 +556,7 @@ class Plotter(PlottingValues):
         self.one_fig.text(
             x_val[-2] - offset,
             y_val[-2] + offset,
-            "%s" % round(value_2, digits),
+            f"{round(value_2, digits)}",
             fontsize=9,
             ha="center",
             va="center",
@@ -552,7 +566,7 @@ class Plotter(PlottingValues):
         self.one_fig.text(
             x_val[index],
             y_val[index],
-            "%s" % round(value, digits),
+            f"{round(value, digits)}",
             fontsize=9,
             ha="center",
             va="center",
@@ -569,15 +583,13 @@ class Plotter(PlottingValues):
         color=0,
     ):
         if fill_polygon:
-            rec = plt.Polygon(
-                np.vstack(axis_values).T, color="C{}".format(color), alpha=0.3
-            )
+            rec = plt.Polygon(np.vstack(axis_values).T, color=f"C{color}", alpha=0.3)
             self.one_fig.add_patch(rec)
         # plot force
         x_val = axis_values[0]
         y_val = axis_values[1]
 
-        self.one_fig.plot(x_val, y_val, color="C{}".format(color))
+        self.one_fig.plot(x_val, y_val, color=f"C{color}")
 
         if node_results:
             self._add_node_values(x_val, y_val, force_1, force_2, digits)
@@ -604,7 +616,7 @@ class Plotter(PlottingValues):
                     lambda el: max(
                         abs(el.N_1),
                         abs(el.N_2),
-                        abs(((el.all_qn_load[0] + el.all_qn_load[1]) / 16) * el.l ** 2),
+                        abs(((el.all_qn_load[0] + el.all_qn_load[1]) / 16) * el.l**2),
                     ),
                     self.system.element_map.values(),
                 )
@@ -690,7 +702,7 @@ class Plotter(PlottingValues):
                     lambda el: max(
                         abs(el.node_1.Ty),
                         abs(el.node_2.Ty),
-                        abs(((el.all_qp_load[0] + el.all_qp_load[1]) / 16) * el.l ** 2),
+                        abs(((el.all_qp_load[0] + el.all_qp_load[1]) / 16) * el.l**2),
                     )
                     if el.type == "general"
                     else 0,
@@ -724,12 +736,12 @@ class Plotter(PlottingValues):
             if el.all_qp_load:
                 m_sag = min(el.bending_moment)
                 index = find_nearest(el.bending_moment, m_sag)[1]
-                offset = -self.max_val_structure * 0.05
+                offset = self.max_val_structure * -0.05
 
                 if verbosity == 0:
                     x = axis_values[0][index] + np.sin(-el.angle) * offset
                     y = axis_values[1][index] + np.cos(-el.angle) * offset
-                    self.one_fig.text(x, y, "%s" % round(m_sag, 1), fontsize=9)
+                    self.one_fig.text(x, y, f"{round(m_sag, 1)}", fontsize=9)
         if show:
             self.plot()
         else:
@@ -766,7 +778,8 @@ class Plotter(PlottingValues):
                 and math.isclose(el.all_qp_load[0], 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.all_qp_load[1], 0, rel_tol=1e-5, abs_tol=1e-9)
             ):
-                # If True there is no bending moment and no shear, thus no shear force, so no need for plotting.
+                # If True there is no bending moment and no shear, thus no shear force,
+                # so no need for plotting.
                 continue
             axis_values = plot_values_shear_force(el, factor)
             shear_1 = el.shear_force[0]
@@ -819,7 +832,7 @@ class Plotter(PlottingValues):
                     self.one_fig.text(
                         x,
                         y,
-                        "R=%s" % round(node.Fx, 2),
+                        f"R={round(node.Fx, 2)}",
                         color="k",
                         fontsize=9,
                         zorder=10,
@@ -850,7 +863,7 @@ class Plotter(PlottingValues):
                     self.one_fig.text(
                         x,
                         y,
-                        "R=%s" % round(node.Fz, 2),
+                        f"R={round(node.Fz, 2)}",
                         color="k",
                         fontsize=9,
                         zorder=10,
@@ -881,7 +894,7 @@ class Plotter(PlottingValues):
                     self.one_fig.text(
                         node.vertex.x + h * 0.2,
                         -node.vertex.z + h * 0.2,
-                        "T=%s" % round(node.Ty, 2),
+                        f"T={round(node.Ty, 2)}",
                         color="k",
                         fontsize=9,
                         zorder=10,
@@ -891,7 +904,7 @@ class Plotter(PlottingValues):
         else:
             return self.fig
 
-    def displacements(
+    def displacements(  # pylint: disable=arguments-renamed
         self,
         factor=None,
         figsize=None,

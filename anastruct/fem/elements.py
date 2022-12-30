@@ -1,11 +1,11 @@
 from __future__ import annotations
 from math import sin, cos
-from anastruct.basic import FEMException
-import numpy as np
 from functools import lru_cache
 import copy
-
 from typing import TYPE_CHECKING, Dict, Optional, List
+import numpy as np
+from anastruct.basic import FEMException
+
 
 if TYPE_CHECKING:
     from anastruct.vertex import Vertex
@@ -13,7 +13,11 @@ if TYPE_CHECKING:
     from anastruct.fem.system import Spring
 
 try:
-    from anastruct.fem.cython.celements import det_shear, det_moment, det_axial  # type: ignore
+    from anastruct.fem.cython.celements import (  # type: ignore # pylint: disable=unused-import
+        det_shear,
+        det_moment,
+        det_axial,
+    )
 except ImportError:
     from anastruct.fem.cython.elements import det_shear, det_moment, det_axial
 
@@ -326,52 +330,52 @@ def geometric_stiffness_matrix(l: float, N: float, a1: float, a2: float) -> np.n
         * np.array(
             [
                 [
-                    6 / 5 * s1 ** 2,
+                    6 / 5 * s1**2,
                     -6 / 5 * s1 * c1,
                     -l / 10 * s1,
-                    -6 / 5 * s2 ** 2,
+                    -6 / 5 * s2**2,
                     6 / 5 * s2 * c2,
                     -l / 10 * s2,
                 ],
                 [
                     -6 / 5 * s1 * c1,
-                    6 / 5 * c1 ** 2,
+                    6 / 5 * c1**2,
                     l / 10 * c1,
                     6 / 5 * s2 * c2,
-                    -6 / 5 * c2 ** 2,
+                    -6 / 5 * c2**2,
                     l / 10 * c2,
                 ],
                 [
                     -l / 10 * s1,
                     l / 10 * c1,
-                    2 * l ** 2 / 15,
+                    2 * l**2 / 15,
                     l / 10 * s2,
                     -l / 10 * c2,
-                    -(l ** 2) / 30,
+                    -(l**2) / 30,
                 ],
                 [
-                    -6 / 5 * s1 ** 2,
+                    -6 / 5 * s1**2,
                     6 / 5 * s1 * c1,
                     l / 10 * s1,
-                    6 / 5 * s2 ** 2,
+                    6 / 5 * s2**2,
                     -6 / 5 * s1 * c2,
                     l / 10 * s2,
                 ],
                 [
                     6 / 5 * s1 * c1,
-                    -6 / 5 * c1 ** 2,
+                    -6 / 5 * c1**2,
                     -l / 10 * c1,
                     -6 / 5 * s2 * c2,
-                    6 / 5 * c2 ** 2,
+                    6 / 5 * c2**2,
                     -l / 10 * c2,
                 ],
                 [
                     -l / 10 * s1,
                     l / 10 * c1,
-                    -(l ** 2) / 30,
+                    -(l**2) / 30,
                     l / 10 * s2,
                     -l / 10 * c2,
-                    2 * l ** 2 / 15,
+                    2 * l**2 / 15,
                 ],
             ]
         )

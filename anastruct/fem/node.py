@@ -1,6 +1,6 @@
 from __future__ import annotations
-from anastruct.vertex import Vertex
 from typing import Dict, TYPE_CHECKING
+from anastruct.vertex import Vertex
 
 if TYPE_CHECKING:
     from anastruct.fem.elements import Element
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 class Node:
     def __init__(
         self,
-        id: int,
+        id: int,  # pylint: disable=redefined-builtin
         Fx: float = 0.0,
         Fz: float = 0.0,
         Ty: float = 0.0,
@@ -49,20 +49,14 @@ class Node:
 
     def __str__(self):
         if self.vertex:
-            return "[id = {}, Fx = {}, Fz = {}, Ty = {}, ux = {}, uz = {}, phi_y = {}, x = {}, y = {}]".format(
-                self.id,
-                self.Fx,
-                self.Fz,
-                self.Ty,
-                self.ux,
-                self.uz,
-                self.phi_y,
-                self.vertex.x,
-                self.vertex.y,
+            return (
+                f"[id = {self.id}, Fx = {self.Fx}, Fz = {self.Fz}, Ty = {self.Ty}, ux = {self.ux}, "
+                f"uz = {self.uz}, phi_y = {self.phi_y}, x = {self.vertex.x}, y = {self.vertex.y}]"
             )
         else:
-            return "[id = {}, Fx = {}, Fz = {}, Ty = {}, ux = {}, uz = {}, phi_y = {}]".format(
-                self.id, self.Fx, self.Fz, self.Ty, self.ux, self.uz, self.phi_y
+            return (
+                f"[id = {self.id}, Fx = {self.Fx}, Fz = {self.Fz}, Ty = {self.Ty}, ux = {self.ux}, "
+                f"uz = {self.uz}, phi_y = {self.phi_y}]"
             )
 
     def __add__(self, other: Node) -> Node:
@@ -107,4 +101,4 @@ class Node:
 
     def reset(self):
         self.Fx = self.Fz = self.Ty = self.ux = self.uz = self.phi_y = 0
-        hinge = False
+        self.hinge = False

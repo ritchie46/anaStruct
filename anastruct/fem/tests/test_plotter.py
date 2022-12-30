@@ -1,6 +1,6 @@
 import unittest
-from anastruct.fem import system as se
 import numpy as np
+from anastruct.fem import system as se
 
 
 class SimpleTest(unittest.TestCase):
