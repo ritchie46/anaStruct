@@ -212,7 +212,9 @@ class SystemElements:
 
     def add_truss_element(
         self,
-        location: Union[Sequence[Sequence[float]], Sequence[Vertex]],
+        location: Union[
+            Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex
+        ],
         EA: float = None,
         **kwargs,
     ) -> int:
@@ -239,7 +241,9 @@ class SystemElements:
 
     def add_element(
         self,
-        location: Union[Sequence[Sequence[float]], Sequence[Vertex]],
+        location: Union[
+            Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex
+        ],
         EA: float = None,
         EI: float = None,
         g: float = 0,
@@ -382,7 +386,9 @@ class SystemElements:
 
     def add_multiple_elements(
         self,
-        location: Union[Sequence[Sequence[float]], Sequence[Vertex]],
+        location: Union[
+            Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex
+        ],
         n: Optional[int] = None,
         dl: Optional[float] = None,
         EA: float = None,
