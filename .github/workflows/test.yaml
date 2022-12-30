@@ -21,16 +21,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r test_requirements.txt
-      - name: Lint with pylint
+      - name: Run linting check with pylint
         run: |
           # stop the build if there are Python syntax errors or undefined names
           pylint --rcfile .pylintrc ./anastruct
-      - name: Run formatting checks
+      - name: Run formatting checks with black
         run: |
           black --check .
-      - name: Run type checks
+      - name: Run type checks with mypy
         run: |
           mypy
-      - name: Run FEM tests
+      - name: Run FEM tests with unittest
         run: |
           python ./anastruct/fem/tests/test.py

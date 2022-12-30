@@ -1476,7 +1476,7 @@ class SystemElements:
             vertex = Vertex(vertex)
         try:
             tol = 1e-9
-            return next(
+            return next(  # type: ignore
                 filter(
                     lambda x: math.isclose(x.vertex.x, vertex.x, abs_tol=tol)  # type: ignore
                     and math.isclose(x.vertex.y, vertex.y, abs_tol=tol),  # type: ignore
