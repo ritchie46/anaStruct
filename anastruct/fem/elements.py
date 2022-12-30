@@ -13,9 +13,9 @@ if TYPE_CHECKING:
     from anastruct.fem.system import Spring
 
 try:
-    from anastruct.fem.cython.celements import det_shear, det_moment  # type: ignore
+    from anastruct.fem.cython.celements import det_shear, det_moment, det_axial  # type: ignore
 except ImportError:
-    from anastruct.fem.cython.elements import det_shear, det_moment
+    from anastruct.fem.cython.elements import det_shear, det_moment, det_axial
 
 """
 The matrices underneath are for slender beams, where the most deformation occurs due to bending.
@@ -72,39 +72,53 @@ class Element:
         )  # acting external forces
         self.element_force_vector: np.ndarray = np.array([])
         self.q_load: tuple = (0.0, 0.0)
+        self.q_perp_load: tuple = (0.0, 0.0)
         self.q_direction: Optional[str] = None
+        self.q_angle: Optional[float] = None
         self.dead_load: float = 0.0
         self.N_1: Optional[float] = None
         self.N_2: Optional[float] = None
         self.bending_moment: Optional[np.ndarray] = None
         self.shear_force: Optional[np.ndarray] = None
+        self.axial_force: Optional[np.ndarray] = None
         self.deflection: Optional[np.ndarray] = None
         self.extension: Optional[np.ndarray] = None
         self.max_deflection = None
+        self.max_extension = None
         self.nodes_plastic: List[bool] = [False, False]
         self.compile_constitutive_matrix(EA, EI, l, spring)
         self.compile_stiffness_matrix()
         self.section_name = section_name  # needed for element annotation
 
     @property
-    def all_q_load(self) -> List[float]:
-        if self.q_load is None:
-            q = [0.0, 0.0]
+    def all_qp_load(self) -> List[float]:
+        if self.q_angle is not None:
+            q_factor = sin(self.q_angle - self.angle)
+            q_perp_factor = cos(self.q_angle - self.angle)
         else:
-            if self.q_direction == "x":
-                q_factor = -sin(self.angle)
-            elif self.q_direction == "y":
-                q_factor = cos(self.angle)
-            elif self.q_direction == "element" or self.q_direction is None:
-                q_factor = 1
-            elif self.q_direction is not None:
-                raise FEMException(
-                    "Wrong parameters",
-                    "q-loads direction is not set property. Please choose 'x', 'y', or 'element'",
-                )
-            q = [i * q_factor for i in self.q_load]
+            q_factor = 1
+            q_perp_factor = 0
+        q = [
+            i * q_factor + j * q_perp_factor
+            for i, j in zip(self.q_load, self.q_perp_load)
+        ]
 
         return [i + self.dead_load * cos(self.angle) for i in q]
+
+    @property
+    def all_qn_load(self) -> List[float]:
+        if self.q_angle is not None:
+            q_factor = -cos(self.q_angle - self.angle)
+            q_perp_factor = sin(self.q_angle - self.angle)
+        else:
+            q_factor = 0
+            q_perp_factor = 1
+        q = [
+            i * q_factor + j * q_perp_factor
+            for i, j in zip(self.q_load, self.q_perp_load)
+        ]
+
+        return [i + self.dead_load * -sin(self.angle) for i in q]
 
     @property
     def node_1(self) -> Node:
@@ -191,6 +205,7 @@ class Element:
             "extension",
             "N_1",
             "N_2",
+            "axial_force",
         ]:
             if getattr(el, unit) is None:
                 setattr(el, unit, getattr(other, unit))
@@ -362,21 +377,3 @@ def geometric_stiffness_matrix(l: float, N: float, a1: float, a2: float) -> np.n
         )
         * np.array([1, -1, 1, 1, -1, 1])
     )  # conversion from coordinate system
-
-
-@lru_cache(CACHE_BOUND)
-def det_axial(EA: float, L: float, qi: float, q: float, x: float) -> float:
-    """
-    See notebook in: anastruct/fem/background/distributed_ax_force.ipynb
-
-    :param q: (flt)
-    :param x: (flt) Location of the axial force
-    :param EA: (flt)
-    :param L: (flt) Length of the beam
-    :return: (flt)
-    """
-    return EA * (
-        x * (-L * qi / 2 + x * (-q + qi) / 3) / (EA * L)
-        + (L ** 2 * (q + 2 * qi) / 6 - L * qi * x / 2 + x ** 2 * (-q + qi) / 6)
-        / (EA * L)
-    )

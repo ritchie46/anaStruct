@@ -22,6 +22,7 @@ class Plotter(PlottingValues):
         self.system = system
         self.one_fig = None
         self.max_q = 0
+        self.max_qn = 0
         self.max_system_point_load = 0
 
     def __start_plot(self, figsize):
@@ -245,34 +246,13 @@ class Plotter(PlottingValues):
         x1;y1  element    x2;y2
         """
 
-        for q_id in self.system.loads_q.keys():
-            el = self.system.element_map[q_id]
-            if el.q_load[0] > 0:
-                direction = 1
-            else:
-                direction = -1
-
-            h1 = 0.05 * max_val * abs(el.q_load[0]) / self.max_q
-            h2 = 0.05 * max_val * abs(el.q_load[1]) / self.max_q
-            x1 = el.vertex_1.x
-            y1 = el.vertex_1.y
-            x2 = el.vertex_2.x
-            y2 = el.vertex_2.y
-
-            if el.q_direction == "y":
-                ai = 0
-            elif el.q_direction == "x":
-                ai = 0.5 * np.pi
-            else:
-                ai = -el.angle
+        def __plot_patch(h1, h2, x1, y1, x2, y2, ai, qi, q, direction, el_angle):
 
             # - value, because the positive z of the system is opposite of positive y of the plotter
             xn1 = x1 + np.sin(ai) * h1 * direction
             yn1 = y1 + np.cos(ai) * h1 * direction
             xn2 = x2 + np.sin(ai) * h2 * direction
             yn2 = y2 + np.cos(ai) * h2 * direction
-            qi = el.q_load[0]
-            q = el.q_load[1]
             coordinates = ([x1, xn1, xn2, x2], [y1, yn1, yn2, y2])
             self.one_fig.plot(*coordinates, color="g")
             rec = plt.Polygon(np.vstack(coordinates).T, color="g", alpha=0.3)
@@ -281,11 +261,9 @@ class Plotter(PlottingValues):
             if verbosity == 0:
                 # arrow
                 pos = np.sqrt(((y1 - y2) ** 2) + ((x1 - x2) ** 2))
-                cg = ((pos / 3) * (el.q_load[0] + 2 * el.q_load[1])) / (
-                    el.q_load[0] + el.q_load[1]
-                )
-                height = math.sin(el.angle) * cg
-                base = math.cos(el.angle) * cg
+                cg = ((pos / 3) * (qi + 2 * q)) / (qi + q)
+                height = math.sin(el_angle) * cg
+                base = math.cos(el_angle) * cg
 
                 len_x1 = np.sin(ai - np.pi) * 0.6 * h1 * direction
                 len_x2 = np.sin(ai - np.pi) * 0.6 * h2 * direction
@@ -329,6 +307,49 @@ class Plotter(PlottingValues):
                         fc="k",
                         shape=shape,
                     )
+
+        for q_id in self.system.loads_q.keys():
+            el = self.system.element_map[q_id]
+            qi = el.q_load[0]
+            q = el.q_load[1]
+
+            x1 = el.vertex_1.x
+            y1 = el.vertex_1.y
+            x2 = el.vertex_2.x
+            y2 = el.vertex_2.y
+
+            if max(qi, q) > 0:
+                direction = 1
+            else:
+                direction = -1
+
+            h1 = 0.05 * max_val * abs(qi) / self.max_q
+            h2 = 0.05 * max_val * abs(q) / self.max_q
+
+            ai = np.pi / 2 - el.q_angle
+            el_angle = el.angle
+            __plot_patch(h1, h2, x1, y1, x2, y2, ai, qi, q, direction, el_angle)
+
+            if el.q_perp_load[0] != 0 or el.q_perp_load[1] != 0:
+                qi = el.q_perp_load[0]
+                q = el.q_perp_load[1]
+
+                x1 = el.vertex_1.x + np.sin(ai) * h1 * direction * 2
+                y1 = el.vertex_1.y + np.cos(ai) * h1 * direction * 2
+                x2 = el.vertex_2.x + np.sin(ai) * h2 * direction * 2
+                y2 = el.vertex_2.y + np.cos(ai) * h2 * direction * 2
+
+                if max(qi, q) > 0:
+                    direction = 1
+                else:
+                    direction = -1
+
+                h1 = 0.05 * max_val * abs(qi) / self.max_q
+                h2 = 0.05 * max_val * abs(q) / self.max_q
+
+                ai = -el.q_angle
+                el_angle = el.angle
+                __plot_patch(h1, h2, x1, y1, x2, y2, ai, qi, q, direction, el_angle)
 
     @staticmethod
     def __arrow_patch_values(Fx, Fz, node, h):
@@ -433,9 +454,9 @@ class Plotter(PlottingValues):
         min_y = np.min(y)
 
         center_x = (max_x - min_x) / 2 + min_x + -offset[0]
-        center_y = (max_y - min_y) / 2 + min_x + -offset[1]
+        center_y = (max_y - min_y) / 2 + min_y + -offset[1]
 
-        max_plot_range = max(max_x, max_y)
+        max_plot_range = max(max_x - min_x, max_y - min_y)
         ax_range = max_plot_range * scale
         plusxrange = center_x + ax_range
         plusyrange = center_y + ax_range * figsize[1] / figsize[0]
@@ -575,21 +596,31 @@ class Plotter(PlottingValues):
         gridplot=False,
     ):
         self.plot_structure(figsize, 1, scale=scale, offset=offset, gridplot=gridplot)
+        con = len(self.system.element_map[1].axial_force)
 
         if factor is None:
             max_force = max(
                 map(
-                    lambda el: max(abs(el.N_1), abs(el.N_2)),
+                    lambda el: max(
+                        abs(el.N_1),
+                        abs(el.N_2),
+                        abs(((el.all_qn_load[0] + el.all_qn_load[1]) / 16) * el.l ** 2),
+                    ),
                     self.system.element_map.values(),
                 )
             )
             factor = det_scaling_factor(max_force, self.max_val_structure)
 
         for el in self.system.element_map.values():
-            if math.isclose(el.N_1, 0, rel_tol=1e-5, abs_tol=1e-9):
+            if (
+                math.isclose(el.N_1, 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.N_2, 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.all_qn_load[0], 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.all_qn_load[1], 0, rel_tol=1e-5, abs_tol=1e-9)
+            ):
                 continue
             else:
-                axis_values = plot_values_axial_force(el, factor)
+                axis_values = plot_values_axial_force(el, factor, con)
                 color = 1 if el.N_1 < 0 else 0
                 self.plot_result(
                     axis_values,
@@ -658,7 +689,8 @@ class Plotter(PlottingValues):
                 map(
                     lambda el: max(
                         abs(el.node_1.Ty),
-                        abs(((el.all_q_load[0] + el.all_q_load[1]) / 16) * el.l ** 2),
+                        abs(el.node_2.Ty),
+                        abs(((el.all_qp_load[0] + el.all_qp_load[1]) / 16) * el.l ** 2),
                     )
                     if el.type == "general"
                     else 0,
@@ -672,8 +704,8 @@ class Plotter(PlottingValues):
             if (
                 math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
-                and not el.all_q_load[0]
-                and not el.all_q_load[1]
+                and math.isclose(el.all_qp_load[0], 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.all_qp_load[1], 0, rel_tol=1e-5, abs_tol=1e-9)
             ):
                 # If True there is no bending moment, so no need for plotting.
                 continue
@@ -689,7 +721,7 @@ class Plotter(PlottingValues):
                 node_results=node_results,
             )
 
-            if el.all_q_load:
+            if el.all_qp_load:
                 m_sag = min(el.bending_moment)
                 index = find_nearest(el.bending_moment, m_sag)[1]
                 offset = -self.max_val_structure * 0.05
@@ -731,7 +763,8 @@ class Plotter(PlottingValues):
             if (
                 math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
-                and el.q_load is None
+                and math.isclose(el.all_qp_load[0], 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.all_qp_load[1], 0, rel_tol=1e-5, abs_tol=1e-9)
             ):
                 # If True there is no bending moment and no shear, thus no shear force, so no need for plotting.
                 continue

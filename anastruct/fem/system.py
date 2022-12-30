@@ -1,4 +1,4 @@
-import math, re, collections, copy
+import math, re, collections.abc, copy
 import numpy as np
 from anastruct.basic import FEMException, args_to_lists
 from anastruct.fem.postprocess import SystemLevel as post_sl
@@ -114,8 +114,8 @@ class SystemElements:
             int, Tuple[float, float]
         ] = {}  # node ids with a point loads {node_id: (x, y)}
         self.loads_q: Dict[
-            int, List[Union[float, Any]]
-        ] = {}  # element ids with a q-load
+            int, List[Tuple[float, float]]
+        ] = {}  # element ids with a q-loadad
         self.loads_moment: Dict[int, float] = {}
         self.loads_dead_load: Set[
             int
@@ -729,7 +729,7 @@ class SystemElements:
 
         :param node_id: Represents the nodes ID
         """
-        if not isinstance(node_id, collections.Iterable):
+        if not isinstance(node_id, collections.abc.Iterable):
             node_id = [node_id]
 
         for id_ in node_id:
@@ -744,7 +744,7 @@ class SystemElements:
 
         :param node_id: Represents the nodes ID
         """
-        if not isinstance(node_id, collections.Iterable):
+        if not isinstance(node_id, collections.abc.Iterable):
             node_id = [node_id]
 
         for id_ in node_id:
@@ -761,7 +761,7 @@ class SystemElements:
 
         :param node_id: Represents the nodes ID
         """
-        if not isinstance(node_id, collections.Iterable):
+        if not isinstance(node_id, collections.abc.Iterable):
             node_id = [node_id]
 
         for id_ in node_id:
@@ -786,13 +786,13 @@ class SystemElements:
                                 If angle is given, the support will be inclined.
         :param rotate: If set to False, rotation at the roller will also be restrained.
         """
-        if not isinstance(node_id, collections.Iterable):
+        if not isinstance(node_id, collections.abc.Iterable):
             node_id = [node_id]
-        if not isinstance(direction, collections.Iterable):
+        if not isinstance(direction, collections.abc.Iterable):
             direction = [direction]
-        if not isinstance(angle, collections.Iterable):
+        if not isinstance(angle, collections.abc.Iterable):
             angle = [angle]
-        if not isinstance(rotate, collections.Iterable):
+        if not isinstance(rotate, collections.abc.Iterable):
             rotate = [rotate]
 
         assert len(node_id) == len(direction) == len(angle) == len(rotate)
@@ -825,7 +825,7 @@ class SystemElements:
 
         :param node_id: Represents the nodes ID
         """
-        if not isinstance(node_id, collections.Iterable):
+        if not isinstance(node_id, collections.abc.Iterable):
             node_id = [
                 node_id,
             ]
@@ -863,13 +863,13 @@ class SystemElements:
         self.supports_spring_args.append((node_id, translation, k, roll))
         # The stiffness of the spring is added in the system matrix at the location that represents the node and the
         # displacement.
-        if not isinstance(node_id, collections.Iterable):
+        if not isinstance(node_id, collections.abc.Iterable):
             node_id = (node_id,)
-        if not isinstance(translation, collections.Iterable):
+        if not isinstance(translation, collections.abc.Iterable):
             translation = (translation,)
-        if not isinstance(k, collections.Iterable):
+        if not isinstance(k, collections.abc.Iterable):
             k = (k,)
-        if not isinstance(roll, collections.Iterable):
+        if not isinstance(roll, collections.abc.Iterable):
             roll = (roll,)
 
         assert len(node_id) == len(translation) == len(k) == len(roll)
@@ -897,37 +897,75 @@ class SystemElements:
         q: Union[float, Sequence[float]],
         element_id: Union[int, Sequence[int]],
         direction: Union[str, Sequence[str]] = "element",
+        rotation: Optional[Union[float, Sequence[float]]] = None,
+        q_perp: Union[float, Sequence[float]] = [0, 0],
     ):
         """
         Apply a q-load to an element.
 
         :param element_id: representing the element ID
         :param q: value of the q-load
-        :param direction: "element", "x", "y"
+        :param direction: "element", "x", "y", "parallel"
+        :param rotation: Rotate the force clockwise. Rotation is in degrees
+        :param q_perp: value of any q-load perpendicular to the indication direction/rotation
         """
         # TODO! this function is a duck typing hell. redesign.
         if not isinstance(q, Sequence):
             q = [q, q]
-        if q[0] != q[1] and direction != "element":
-            raise ValueError(
-                "Non-uniform loads are only supported in element direction"
-            )
+        if not isinstance(q_perp, Sequence):
+            q_perp = [q_perp, q_perp]
         q = [q]  # type: ignore
-        q, element_id, direction = args_to_lists(q, element_id, direction)
+        q_perp = [q_perp]  # type: ignore
+        if rotation is None:
+            direction_flag = True
+        q, element_id, direction, rotation, q_perp = args_to_lists(
+            q, element_id, direction, rotation, q_perp
+        )
 
-        assert len(q) == len(element_id) == len(direction)  # type: ignore
+        assert len(q) == len(element_id) == len(direction) == len(rotation) == len(q_perp)  # type: ignore
 
         for i in range(len(element_id)):  # type: ignore
             id_ = _negative_index_to_id(element_id[i], self.element_map.keys())  # type: ignore
             self.plotter.max_q = max(
-                self.plotter.max_q, max(abs(q[i][0]), abs(q[i][1]))  # type: ignore
+                self.plotter.max_q,
+                max(
+                    (q[i][0] ** 2 + q_perp[i][0] ** 2) ** 0.5,  # type: ignore
+                    (q[i][1] ** 2 + q_perp[i][1] ** 2) ** 0.5,  # type: ignore
+                ),
             )
+
+            if direction_flag:
+                if direction[i] == "x":
+                    rotation[i] = 0  # type: ignore
+                elif direction[i] == "y":
+                    rotation[i] = np.pi / 2  # type: ignore
+                elif direction[i] == "parallel":
+                    rotation[i] = self.element_map[element_id[i]].angle  # type: ignore
+                else:
+                    rotation[i] = np.pi / 2 + self.element_map[element_id[i]].angle  # type: ignore
+            else:
+                rotation[i] = math.radians(rotation[i])  # type: ignore
+                direction[i] = "angle"  # type: ignore
+
+            cos = math.cos(rotation[i])  # type: ignore
+            sin = math.sin(rotation[i])  # type: ignore
             self.loads_q[id_] = [
-                i * self.orientation_cs * self.load_factor for i in q[i]  # type: ignore
+                (
+                    (q_perp[i][0] * cos + q[i][0] * sin) * self.load_factor,  # type: ignore
+                    (q[i][0] * self.orientation_cs * cos + q_perp[i][0] * sin)  # type: ignore
+                    * self.load_factor,
+                ),
+                (
+                    (q_perp[i][1] * cos + q[i][1] * sin) * self.load_factor,  # type: ignore
+                    (q[i][1] * self.orientation_cs * cos + q_perp[i][1] * sin)  # type: ignore
+                    * self.load_factor,
+                ),
             ]
             el = self.element_map[id_]
             el.q_load = [i * self.orientation_cs * self.load_factor for i in q[i]]  # type: ignore
-            el.q_direction = direction[i]
+            el.q_perp_load = [i * self.load_factor for i in q_perp[i]]  # type: ignore
+            el.q_direction = direction[i]  # type: ignore
+            el.q_angle = rotation[i]  # type: ignore
 
     def point_load(
         self,
@@ -1262,26 +1300,32 @@ class SystemElements:
             element_id = _negative_index_to_id(element_id, self.element_map)
             el = self.element_map[element_id]
 
-            el.extension = cast(np.ndarray, el.extension)
+            assert el.extension is not None
             assert el.deflection is not None
             assert el.shear_force is not None
             assert el.bending_moment is not None
+            assert el.axial_force is not None
 
             if el.type == "truss":
                 return {
                     "id": el.id,
                     "length": el.l,
                     "alpha": el.angle,
-                    "u": el.extension[0],
-                    "N": el.N_1,
+                    "umax": np.max(el.extension),
+                    "umin": np.min(el.extension),
+                    "u": el.extension if verbose else None,
+                    "Nmin": np.min(el.axial_force),
+                    "Nmax": np.max(el.axial_force),
+                    "N": el.axial_force if verbose else None,
                 }
             else:
                 return {
                     "id": el.id,
                     "length": el.l,
                     "alpha": el.angle,
-                    "u": el.extension[0],
-                    "N": el.N_1,
+                    "umax": np.max(el.extension),
+                    "umin": np.min(el.extension),
+                    "u": el.extension if verbose else None,
                     "wmax": np.min(el.deflection),
                     "wmin": np.max(el.deflection),
                     "w": el.deflection if verbose else None,
@@ -1291,16 +1335,20 @@ class SystemElements:
                     "Qmin": np.min(el.shear_force),
                     "Qmax": np.max(el.shear_force),
                     "Q": el.shear_force if verbose else None,
+                    "Nmin": np.min(el.axial_force),
+                    "Nmax": np.max(el.axial_force),
+                    "N": el.axial_force if verbose else None,
                     "q": el.q_load,
                 }
         else:
             result_list = []
             for el in self.element_map.values():
 
-                el.extension = cast(np.ndarray, el.extension)
+                assert el.extension is not None
+                assert el.deflection is not None
                 assert el.shear_force is not None
                 assert el.bending_moment is not None
-                assert el.extension is not None
+                assert el.axial_force is not None
 
                 if el.type == "truss":
                     result_list.append(
@@ -1308,8 +1356,12 @@ class SystemElements:
                             "id": el.id,
                             "length": el.l,
                             "alpha": el.angle,
-                            "u": el.extension[0],
-                            "N": el.N_1,
+                            "umax": np.max(el.extension),
+                            "umin": np.min(el.extension),
+                            "u": el.extension if verbose else None,
+                            "Nmin": np.min(el.axial_force),
+                            "Nmax": np.max(el.axial_force),
+                            "N": el.axial_force if verbose else None,
                         }
                     )
 
@@ -1319,8 +1371,9 @@ class SystemElements:
                             "id": el.id,
                             "length": el.l,
                             "alpha": el.angle,
-                            "u": el.extension[0],
-                            "N": el.N_1,
+                            "umax": np.max(el.extension),
+                            "umin": np.min(el.extension),
+                            "u": el.extension if verbose else None,
                             "wmax": np.min(el.deflection),
                             "wmin": np.max(el.deflection),
                             "w": el.deflection if verbose else None,
@@ -1330,6 +1383,9 @@ class SystemElements:
                             "Qmin": np.min(el.shear_force),
                             "Qmax": np.max(el.shear_force),
                             "Q": el.shear_force if verbose else None,
+                            "Nmin": np.min(el.axial_force),
+                            "Nmax": np.max(el.axial_force),
+                            "N": el.axial_force if verbose else None,
                             "q": el.q_load,
                         }
                     )
@@ -1350,7 +1406,7 @@ class SystemElements:
         elif unit == "moment":
             return [el.bending_moment[0] for el in self.element_map.values()]  # type: ignore
         elif unit == "axial":
-            return [el.N_1 for el in self.element_map.values()]  # type: ignore
+            return [el.axial_force[0] for el in self.element_map.values()]  # type: ignore
         else:
             raise NotImplementedError
 
@@ -1499,12 +1555,11 @@ class SystemElements:
         for node_id, forces_moment in self.loads_moment.items():
             ss.moment_load((node_id - 1) * n + 1, forces_moment / self.load_factor)
         for element_id, forces_q in self.loads_q.items():
-            q_direction = self.element_map[element_id].q_direction
-            assert q_direction is not None
             ss.q_load(
-                q=[i / self.orientation_cs / self.load_factor for i in forces_q],
+                q=[i[1] / self.orientation_cs / self.load_factor for i in forces_q],
                 element_id=element_id,
-                direction=q_direction,
+                direction="y",
+                q_perp=[i[0] / self.load_factor for i in forces_q],
             )
 
         self.__dict__ = ss.__dict__.copy()
