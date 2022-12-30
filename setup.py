@@ -1,4 +1,5 @@
 from setuptools import setup
+import importlib
 
 
 def read_requirements(file):
@@ -22,8 +23,8 @@ except Exception:  # pylint: disable=broad-except
 
 
 long_description = read_file("README.md")
-__version__ = read_file("anastruct/_version.py")
 requirements = read_requirements("requirements.txt")
+__version__ = importlib.metadata.version('anastruct')
 
 setup(
     name="anastruct",
