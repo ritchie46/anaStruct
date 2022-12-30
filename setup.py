@@ -1,5 +1,15 @@
-import sys
 from setuptools import setup
+
+
+def read_requirements(file):
+    with open(file, encoding="UTF-8") as f:
+        return f.read().splitlines()
+
+
+def read_file(file):
+    with open(file, encoding="UTF-8") as f:
+        return f.read()
+
 
 try:
     from Cython.Build import cythonize
@@ -7,17 +17,20 @@ try:
     em = cythonize(
         ["anastruct/cython/cbasic.pyx", "anastruct/fem/cython/celements.pyx"]
     )
-except Exception:
+except Exception:  # pylint: disable=broad-except
     em = []
 
-if sys.version_info[0] == 3 and sys.version_info[1] < 7:
-    sys.exit("Sorry, Python < 3.5 is not supported")
 
-exec(open("anastruct/_version.py").read())
+long_description = read_file("README.rst")
+__version__ = read_file("anastruct/_version.py")
+requirements = read_requirements("requirements.txt")
+
 setup(
     name="anastruct",
     version=__version__,
     description="analyse 2D structures.",
+    long_description_content_type="text/x-rst",
+    long_description=long_description,
     author="Ritchie Vink",
     author_email="ritchie46@gmail.com",
     url="https://ritchievink.com",
@@ -36,7 +49,6 @@ setup(
         "anastruct.sectionbase",
     ],
     package_data={"anastruct.sectionbase": ["data/*.xml"]},
-    package_dir="",
-    install_requires=["matplotlib>=3.0", "numpy>=1.15.4", "scipy>=1.1.0"],
+    install_requires=requirements,
     ext_modules=em,
 )
