@@ -947,9 +947,10 @@ class SystemElements:
             q_perp,
         ) = args_to_lists(q, element_id, direction, rotation, q_perp)
 
-        assert len(q) == (  # type: ignore
-            len(element_id) == len(direction) == len(rotation) == len(q_perp)  # type: ignore
-        )
+        assert len(q) == len(element_id)  # type: ignore
+        assert len(q) == len(direction)  # type: ignore
+        assert len(q) == len(rotation)  # type: ignore
+        assert len(q) == len(q_perp)  # type: ignore
 
         for i, element_idi in enumerate(element_id):  # type: ignore
             id_ = _negative_index_to_id(element_idi, self.element_map.keys())  # type: ignore
