@@ -98,7 +98,7 @@ def det_node_ids(system, point_1, point_2):
             node_id = len(system._vertices) + 1
             system._vertices[k] = node_id
         node_ids.append(node_id)
-    return node_id[0], node_id[1]
+    return node_ids[0], node_ids[1]
 
 
 def support_check(system, node_id):
