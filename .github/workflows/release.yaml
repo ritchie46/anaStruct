@@ -6,7 +6,7 @@ on:
   #   tags:
   #     - 'release-v*' # Push events to matching release-v*, i.e. release-v1.0, release-v20.15.10
   release:
-    types: [published]
+    types: [published, edited]
 jobs:
   build:
     name: Build Python Release Package
