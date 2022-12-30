@@ -23,7 +23,6 @@ jobs:
           pip install -r test_requirements.txt
       - name: Run linting check with pylint
         run: |
-          # stop the build if there are Python syntax errors or undefined names
           pylint --rcfile .pylintrc ./anastruct
       - name: Run formatting checks with black
         run: |
@@ -33,4 +32,5 @@ jobs:
           mypy
       - name: Run FEM tests with unittest
         run: |
+          python setup.py install
           python ./anastruct/fem/tests/test.py
