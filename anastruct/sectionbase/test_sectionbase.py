@@ -37,7 +37,7 @@ class SimpleUnitTest(unittest.TestCase):
 
         section_base.set_unit_system(length="ft", mass_unit="kg", force_unit="N")
         param = section_base.get_section_parameters("HE 100 B")
-        self.assertAlmostEqual(param["Ax"] / (26e-4 / (0.3048 ** 2)), 1, places=2)
+        self.assertAlmostEqual(param["Ax"] / (26e-4 / (0.3048**2)), 1, places=2)
         self.assertAlmostEqual(param["mass"] / (20.4 * 0.3048), 1, places=2)
         self.assertAlmostEqual(param["Iy"] / (449.5e-8 / (0.3048) ** 4), 1, places=2)
         self.assertAlmostEqual(param["Iz"] / (167.3e-8 / (0.3048) ** 4), 1, places=2)
@@ -45,7 +45,7 @@ class SimpleUnitTest(unittest.TestCase):
 
         section_base.set_unit_system(length="inch", mass_unit="kg", force_unit="N")
         param = section_base.get_section_parameters("HE 100 B")
-        self.assertAlmostEqual(param["Ax"] / (26e-4 / (0.0254 ** 2)), 1, places=2)
+        self.assertAlmostEqual(param["Ax"] / (26e-4 / (0.0254**2)), 1, places=2)
         self.assertAlmostEqual(param["mass"] / (20.4 * 0.0254), 1, places=2)
         self.assertAlmostEqual(param["Iy"] / (449.5e-8 / (0.0254) ** 4), 1, places=2)
         self.assertAlmostEqual(param["Iz"] / (167.3e-8 / (0.0254) ** 4), 1, places=2)
@@ -53,7 +53,7 @@ class SimpleUnitTest(unittest.TestCase):
 
         section_base.set_unit_system(length="ft", mass_unit="lb", force_unit="N")
         param = section_base.get_section_parameters("HE 100 B")
-        self.assertAlmostEqual(param["Ax"] / (26e-4 / (0.3048 ** 2)), 1, places=2)
+        self.assertAlmostEqual(param["Ax"] / (26e-4 / (0.3048**2)), 1, places=2)
         self.assertAlmostEqual(param["mass"] / (20.4 * 0.3048 / 0.454), 1, places=2)
         self.assertAlmostEqual(param["Iy"] / (449.5e-8 / (0.3048) ** 4), 1, places=2)
         self.assertAlmostEqual(param["Iz"] / (167.3e-8 / (0.3048) ** 4), 1, places=2)
@@ -61,7 +61,7 @@ class SimpleUnitTest(unittest.TestCase):
 
         section_base.set_unit_system(length="ft", mass_unit="lb", force_unit="lbf")
         param = section_base.get_section_parameters("HE 100 B")
-        self.assertAlmostEqual(param["Ax"] / (26e-4 / (0.3048 ** 2)), 1, places=2)
+        self.assertAlmostEqual(param["Ax"] / (26e-4 / (0.3048**2)), 1, places=2)
         self.assertAlmostEqual(param["mass"] / (20.4 * 0.3048 / 0.454), 1, places=2)
         self.assertAlmostEqual(param["Iy"] / (449.5e-8 / (0.3048) ** 4), 1, places=2)
         self.assertAlmostEqual(param["Iz"] / (167.3e-8 / (0.3048) ** 4), 1, places=2)
