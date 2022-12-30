@@ -21,7 +21,7 @@ except Exception:  # pylint: disable=broad-except
     em = []
 
 
-long_description = read_file("README.rst")
+long_description = read_file("README.md")
 __version__ = read_file("anastruct/_version.py")
 requirements = read_requirements("requirements.txt")
 
@@ -29,7 +29,7 @@ setup(
     name="anastruct",
     version=__version__,
     description="analyse 2D structures.",
-    long_description_content_type="text/x-rst",
+    long_description_content_type="text/markdown",
     long_description=long_description,
     author="Ritchie Vink",
     author_email="ritchie46@gmail.com",
