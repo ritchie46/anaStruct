@@ -13,11 +13,11 @@ if TYPE_CHECKING:
     from anastruct.fem.system import Spring
 
 try:
-    from anastruct.fem.cython.celements import (  # pylint: disable=unused-import
+    from anastruct.fem.cython.celements import (  # type: ignore # pylint: disable=unused-import
         det_shear,
         det_moment,
         det_axial,
-    )  # type: ignore
+    )
 except ImportError:
     from anastruct.fem.cython.elements import det_shear, det_moment, det_axial
 

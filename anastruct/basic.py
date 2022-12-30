@@ -2,10 +2,10 @@ import collections.abc
 import numpy as np
 
 try:
-    from anastruct.cython.cbasic import (  # pylint: disable=unused-import
+    from anastruct.cython.cbasic import (  # type: ignore # pylint: disable=unused-import
         converge,
         angle_x_axis,
-    )  # type: ignore
+    )
 except ImportError:
     from anastruct.cython.basic import converge, angle_x_axis  # type: ignore
 
