@@ -81,7 +81,7 @@ Intermediate
 
     for el in ss.element_map.values():
         # apply wind load on elements that are vertical
-        if np.isclose(np.sin(el.ai), 1):
+        if np.isclose(np.sin(el.angle), 1):
             ss.q_load(
                 q=1,
                 element_id=el.id,
