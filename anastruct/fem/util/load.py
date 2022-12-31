@@ -31,8 +31,6 @@ class LoadCase:
             q = [q, q]
         if not isinstance(q_perp, Sequence):
             q_perp = [q_perp, q_perp]
-        q = [q]
-        q_perp = [q_perp]
         self.c += 1
         self.spec[f"q_load-{self.c}"] = dict(
             q=q,
