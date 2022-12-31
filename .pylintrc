@@ -1,0 +1,2 @@
+[MESSAGES CONTROL]
+disable=R,missing-docstring,too-many-lines,bad-continuation,invalid-name,pointless-string-statement,protected-access,fixme,logging-fstring-interpolation

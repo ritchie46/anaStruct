@@ -1,0 +1,3 @@
+black[jupyter]==22.12.0
+mypy==0.991
+pylint==2.15.9

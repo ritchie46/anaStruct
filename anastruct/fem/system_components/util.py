@@ -1,8 +1,8 @@
+from typing import TYPE_CHECKING
 from anastruct.fem.node import Node
 from anastruct.vertex import Vertex
 from anastruct.basic import FEMException, angle_x_axis
 
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from anastruct.fem.system import SystemElements, Spring
@@ -98,7 +98,7 @@ def det_node_ids(system, point_1, point_2):
             node_id = len(system._vertices) + 1
             system._vertices[k] = node_id
         node_ids.append(node_id)
-    return node_ids
+    return node_ids[0], node_ids[1]
 
 
 def support_check(system, node_id):
@@ -111,8 +111,9 @@ def support_check(system, node_id):
 
 def force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp):
     """
-    Forces the elements to be in the first and the last quadrant of the unity circle. Meaning the first node is
-    always left and the last node is always right. Or the are both on one vertical line.
+    Forces the elements to be in the first and the last quadrant of the unity circle.
+    Meaning the first node is always left and the last node is always right. Or they
+    are both on one vertical line.
 
     The angle of the element will thus always be between -90 till +90 degrees.
     :return: point_1, point_2, node_id1, node_id2, spring, mp, ai
@@ -130,7 +131,9 @@ def force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp)
         angle = -angle_x_axis(-delta_x, -delta_z)
 
         if spring is not None:
-            assert type(spring) == dict, "The spring parameter should be a dictionary."
+            assert isinstance(
+                spring, dict
+            ), "The spring parameter should be a dictionary."
             if 1 in spring and 2 in spring:
                 spring[1], spring[2] = spring[2], spring[1]
             elif 1 in spring:

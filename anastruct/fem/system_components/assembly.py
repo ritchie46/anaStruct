@@ -1,8 +1,8 @@
-from anastruct.fem.elements import det_moment, det_shear, det_axial
-import numpy as np
 import math
-
 from typing import TYPE_CHECKING, List, Tuple
+import numpy as np
+from anastruct.fem.elements import det_moment, det_shear, det_axial
+
 
 if TYPE_CHECKING:
     from anastruct.fem.system import SystemElements
@@ -207,7 +207,8 @@ def set_displacement_vector(system, nodes_list):
     :param nodes_list: list containing tuples with
     1.the node
     2. the d.o.f. that is set
-    :return: Vector with the displacements of the nodes (If displacement is not known, the value is set
+    :return: Vector with the displacements of the nodes (If displacement is not known,
+             the value is set
     to NaN)
     """
     if system.system_displacement_vector is None:
@@ -223,7 +224,7 @@ def set_displacement_vector(system, nodes_list):
                 e,
                 "This often occurs if you set supports before the all the elements are modelled. "
                 "First finish the model.",
-            )
+            ) from e
     return system.system_displacement_vector
 
 
@@ -248,19 +249,19 @@ def process_supports(system):
     for node in system.supports_hinged:
         set_displacement_vector(system, [(node.id, 1), (node.id, 2)])
 
-    for i in range(len(system.supports_roll)):
+    for i, supports_rolli in enumerate(system.supports_roll):
         if not system.supports_roll_rotate[i]:
             set_displacement_vector(
                 system,
                 [
-                    (system.supports_roll[i].id, system.supports_roll_direction[i]),
-                    (system.supports_roll[i].id, 3),
+                    (supports_rolli.id, system.supports_roll_direction[i]),
+                    (supports_rolli.id, 3),
                 ],
             )
         else:
             set_displacement_vector(
                 system,
-                [(system.supports_roll[i].id, system.supports_roll_direction[i])],
+                [(supports_rolli.id, system.supports_roll_direction[i])],
             )
 
     for node in system.supports_rotational:

@@ -1,10 +1,10 @@
 import copy
 import math
+from typing import TYPE_CHECKING
 import numpy as np
 from anastruct.fem.node import Node
 from anastruct.basic import integrate_array
 
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from anastruct.fem.system import SystemElements
@@ -40,8 +40,8 @@ class SystemLevel:
                 self.system.node_map[k].Fx += Fx
                 self.system.node_map[k].Fz += Fz
 
-            for i in range(len(v)):
-                node = v[i].node_map[k]
+            for vi in v:
+                node = vi.node_map[k]
                 self.system.node_map[k] -= node
 
                 # The displacements are not summarized. Should be assigned only once
@@ -138,9 +138,9 @@ class ElementLevel:
 
         # Local coordinate system. With inclined supports
         for i in range(1, 3):
-            a_n = getattr(element, "a{}".format(i))
+            a_n = getattr(element, f"a{i}")
             if a_n != element.angle:
-                node = element.node_map[getattr(element, "node_id{}".format(i))]
+                node = element.node_map[getattr(element, f"node_id{i}")]
                 angle = a_n - element.angle
                 c = np.cos(angle)
                 s = np.sin(angle)
@@ -189,8 +189,8 @@ class ElementLevel:
             qi = element.all_qp_load[0]
             q = element.all_qp_load[1]
             q_part = (
-                -((qi - q) / (6 * element.l)) * x ** 3
-                + (qi / 2) * x ** 2
+                -((qi - q) / (6 * element.l)) * x**3
+                + (qi / 2) * x**2
                 - (((2 * qi) + q) / 6) * element.l * x
             )
             m_val += q_part
@@ -206,7 +206,7 @@ class ElementLevel:
         iteration_factor = np.linspace(0, 1, con)
         x = iteration_factor * element.l
         eq = np.polyfit(x, element.bending_moment, 3)
-        shear_force = eq[0] * 3 * x ** 2 + eq[1] * 2 * x + eq[2]
+        shear_force = eq[0] * 3 * x**2 + eq[1] * 2 * x + eq[2]
         element.shear_force = shear_force
 
     @staticmethod
@@ -222,8 +222,9 @@ class ElementLevel:
         w = -aMx +bx + c
 
         a = already defined by the integral
-        b = Scale the slope of the parabola. This is the rotation of the deflection. You can think of this as
-            the angle of the deflection beam. By rotating the beam so that the last deflection w = 0 you get the correct
+        b = Scale the slope of the parabola. This is the rotation of the deflection.
+            You can think of this as the angle of the deflection beam. By rotating
+            the beam so that the last deflection w = 0 you get the correct
             value for b. w[-1] = 0.
         c = Translate the parabola. Translate it so that w[0] = 0
         """
@@ -238,14 +239,16 @@ class ElementLevel:
             phi_neg1 = -integrate_array(element.bending_moment, dx) / element.EI
             w1 = integrate_array(phi_neg1, dx)
 
-            # Angle between last w and elements axis. The w array will be corrected so that this angle == 0.
+            # Angle between last w and elements axis. The w array will be corrected so that
+            # this angle == 0.
             alpha1 = np.arctan(w1[-1] / element.l)
             w1 = w1 - lx * np.tan(alpha1)
 
             phi_neg2 = -integrate_array(element.bending_moment[::-1], dx) / element.EI
             w2 = integrate_array(phi_neg2, dx)
 
-            # Angle between last w and elements axis. The w array will be corrected so that this angle == 0.
+            # Angle between last w and elements axis. The w array will be corrected so that
+            # this angle == 0.
             alpha2 = np.arctan(w2[-1] / element.l)
             w2 = w2[::-1] - lx[::-1] * np.tan(alpha2)
 
