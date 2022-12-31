@@ -939,6 +939,8 @@ class SystemElements:
         q_perp = [q_perp]  # type: ignore
         if rotation is None:
             direction_flag = True
+        else:
+            direction_flag = False
         (  # pylint: disable=unbalanced-tuple-unpacking
             q,
             element_id,
