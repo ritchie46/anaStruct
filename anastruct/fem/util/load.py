@@ -1,5 +1,6 @@
 import pprint
 import copy
+from typing import Sequence
 from anastruct.basic import args_to_lists
 
 
@@ -26,12 +27,10 @@ class LoadCase:
         """
         if q_perp is None:
             q_perp = [0, 0]
-        if not isinstance(q, tuple):
-            q = [(q, q)]
-        if not isinstance(q_perp, tuple):
-            q_perp = [(q_perp, q_perp)]
-        q = [q]
-        q_perp = [q_perp]
+        if not isinstance(q, Sequence):
+            q = [q, q]
+        if not isinstance(q_perp, Sequence):
+            q_perp = [q_perp, q_perp]
         self.c += 1
         self.spec[f"q_load-{self.c}"] = dict(
             q=q,
