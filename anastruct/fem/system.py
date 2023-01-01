@@ -1027,6 +1027,12 @@ class SystemElements:
 
         for i, node_idi in enumerate(node_id):
             id_ = _negative_index_to_id(node_idi, self.node_map.keys())
+            if id_ in self.inclined_roll:
+                raise FEMException(
+                    "StabilityError",
+                    "Point loads may not be placed at the location of "
+                    "inclined roller supports",
+                )
             self.plotter.max_system_point_load = max(
                 self.plotter.max_system_point_load, (Fx[i] ** 2 + Fy[i] ** 2) ** 0.5
             )
