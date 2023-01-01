@@ -1347,9 +1347,6 @@ class SystemElements:
             el = self.element_map[element_id]
 
             assert el.extension is not None
-            assert el.deflection is not None
-            assert el.shear_force is not None
-            assert el.bending_moment is not None
             assert el.axial_force is not None
 
             if el.type == "truss":
@@ -1365,6 +1362,10 @@ class SystemElements:
                     "N": el.axial_force if verbose else None,
                 }
             else:
+                assert el.deflection is not None
+                assert el.shear_force is not None
+                assert el.bending_moment is not None
+
                 return {
                     "id": el.id,
                     "length": el.l,
@@ -1391,9 +1392,6 @@ class SystemElements:
             for el in self.element_map.values():
 
                 assert el.extension is not None
-                assert el.deflection is not None
-                assert el.shear_force is not None
-                assert el.bending_moment is not None
                 assert el.axial_force is not None
 
                 if el.type == "truss":
@@ -1412,6 +1410,10 @@ class SystemElements:
                     )
 
                 else:
+                    assert el.deflection is not None
+                    assert el.shear_force is not None
+                    assert el.bending_moment is not None
+
                     result_list.append(
                         {
                             "id": el.id,
