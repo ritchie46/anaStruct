@@ -513,23 +513,51 @@ class SimpleTest(unittest.TestCase):
         combination.add_load_case(lc_cables, factor=1.2)
 
         results = combination.solve(ss)
+        wind_Qmin = -12.5054911
+        wind_Qmax = 2.4945089
+        wind_Fx = 37.5
+        wind_Fy = -17.0454545
+        cables_Qmin = -38.2209899
+        cables_Qmax = -38.2209899
+        cables_Fx = 66.0413922
+        cables_Fy = -180
         self.assertAlmostEqual(
-            -12.5054911, results["wind"].get_element_results(5)["Qmin"]
+            wind_Qmin, results["wind"].get_element_results(5)["Qmin"]
         )
         self.assertAlmostEqual(
-            2.4945089, results["wind"].get_element_results(5)["Qmax"]
+            wind_Qmax, results["wind"].get_element_results(5)["Qmax"]
         )
         self.assertAlmostEqual(
-            -38.2209899, results["cables"].get_element_results(5)["Qmin"]
+            wind_Fx, results["wind"].get_node_results_system(5)["Fx"]
         )
         self.assertAlmostEqual(
-            -38.2209899, results["cables"].get_element_results(5)["Qmax"]
+            wind_Fy, results["wind"].get_node_results_system(5)["Fy"]
         )
         self.assertAlmostEqual(
-            -50.7264810, results["combination"].get_element_results(5)["Qmin"]
+            cables_Qmin, results["cables"].get_element_results(5)["Qmin"]
         )
         self.assertAlmostEqual(
-            -35.7264810, results["combination"].get_element_results(5)["Qmax"]
+            cables_Qmax, results["cables"].get_element_results(5)["Qmax"]
+        )
+        self.assertAlmostEqual(
+            cables_Fx, results["cables"].get_node_results_system(5)["Fx"]
+        )
+        self.assertAlmostEqual(
+            cables_Fy, results["cables"].get_node_results_system(5)["Fy"]
+        )
+        self.assertAlmostEqual(
+            wind_Qmin + cables_Qmin,
+            results["combination"].get_element_results(5)["Qmin"],
+        )
+        self.assertAlmostEqual(
+            wind_Qmax + cables_Qmax,
+            results["combination"].get_element_results(5)["Qmax"],
+        )
+        self.assertAlmostEqual(
+            wind_Fx + cables_Fx, results["combination"].get_node_results_system(5)["Fx"]
+        )
+        self.assertAlmostEqual(
+            wind_Fy + cables_Fy, results["combination"].get_node_results_system(5)["Fy"]
         )
 
 
