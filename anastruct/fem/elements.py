@@ -215,11 +215,7 @@ class Element:
                 setattr(el, unit, getattr(other, unit))
             else:
                 setattr(el, unit, getattr(el, unit) + getattr(other, unit))
-        el.max_deflection = (
-            other.max_deflection
-            if el.max_deflection is None
-            else max(el.max_deflection, other.max_deflection)
-        )
+        el.max_deflection = np.max(np.abs(el.deflection))
 
         el.node_map[self.node_id1] = el.node_1 + other.node_1
         el.node_map[self.node_id2] = el.node_2 + other.node_2
