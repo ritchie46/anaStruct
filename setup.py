@@ -24,6 +24,7 @@ except Exception:  # pylint: disable=broad-except
 long_description = read_file("README.md")
 requirements = read_requirements("requirements.txt")
 plot_requirements = read_requirements("plot_requirements.txt")
+test_requirements = read_requirements("test_requirements.txt")
 __version__ = "0"
 exec(read_file("anastruct/_version.py"))  # pylint: disable=exec-used
 
@@ -52,6 +53,6 @@ setup(
     ],
     package_data={"anastruct.sectionbase": ["data/*.xml"]},
     install_requires=requirements,
-    extras_require={"plotting": plot_requirements},
+    extras_require={"plot": plot_requirements, "test": test_requirements},
     ext_modules=em,
 )
