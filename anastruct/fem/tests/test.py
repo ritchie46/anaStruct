@@ -2,7 +2,7 @@ import sys
 import unittest
 import numpy as np
 from anastruct.fem import system as se
-from anastruct import LoadCase, LoadCombination
+from anastruct import LoadCase, LoadCombination, SystemElements
 from anastruct.fem.examples.ex_8_non_linear_portal import ss as SS_8
 from anastruct.fem.examples.ex_7_rotational_spring import ss as SS_7
 from anastruct.fem.examples.ex_11 import ss as SS_11
@@ -482,6 +482,83 @@ class SimpleTest(unittest.TestCase):
         self.assertAlmostEqual(-0.75, ss.get_element_results(2)["Nmin"])
         self.assertAlmostEqual(0, ss.get_element_results(2)["Nmax"])
         self.assertAlmostEqual(-1, ss.get_node_results_system(1)["Fy"])
+
+    def test_load_cases_example(self):
+        # Example as in https://anastruct.readthedocs.io/en/latest/loadcases.html
+        ss = SystemElements()
+        height = 10
+
+        x = np.cumsum([0, 4, 7, 7, 4])
+        y = np.zeros(x.shape)
+        x = np.append(x, x[::-1])
+        y = np.append(y, y + height)
+
+        ss.add_element_grid(x, y)
+        ss.add_element([[0, 0], [0, height]])
+        ss.add_element([[4, 0], [4, height]])
+        ss.add_element([[11, 0], [11, height]])
+        ss.add_element([[18, 0], [18, height]])
+        ss.add_support_hinged([1, 5])
+
+        lc_wind = LoadCase("wind")
+        lc_wind.q_load(q=-1, element_id=[10, 11, 12, 13, 5])
+        ss.apply_load_case(lc_wind)
+        ss.remove_loads()
+
+        lc_cables = LoadCase("cables")
+        lc_cables.point_load(node_id=[2, 3, 4], Fy=-100)
+
+        combination = LoadCombination("ULS")
+        combination.add_load_case(lc_wind, 1.5)
+        combination.add_load_case(lc_cables, factor=1.2)
+
+        results = combination.solve(ss)
+        wind_Qmin = -12.5054911
+        wind_Qmax = 2.4945089
+        wind_Fx = 37.5
+        wind_Fy = -17.0454545
+        cables_Qmin = -38.2209899
+        cables_Qmax = -38.2209899
+        cables_Fx = 66.0413922
+        cables_Fy = -180
+        self.assertAlmostEqual(
+            wind_Qmin, results["wind"].get_element_results(5)["Qmin"]
+        )
+        self.assertAlmostEqual(
+            wind_Qmax, results["wind"].get_element_results(5)["Qmax"]
+        )
+        self.assertAlmostEqual(
+            wind_Fx, results["wind"].get_node_results_system(5)["Fx"]
+        )
+        self.assertAlmostEqual(
+            wind_Fy, results["wind"].get_node_results_system(5)["Fy"]
+        )
+        self.assertAlmostEqual(
+            cables_Qmin, results["cables"].get_element_results(5)["Qmin"]
+        )
+        self.assertAlmostEqual(
+            cables_Qmax, results["cables"].get_element_results(5)["Qmax"]
+        )
+        self.assertAlmostEqual(
+            cables_Fx, results["cables"].get_node_results_system(5)["Fx"]
+        )
+        self.assertAlmostEqual(
+            cables_Fy, results["cables"].get_node_results_system(5)["Fy"]
+        )
+        self.assertAlmostEqual(
+            wind_Qmin + cables_Qmin,
+            results["combination"].get_element_results(5)["Qmin"],
+        )
+        self.assertAlmostEqual(
+            wind_Qmax + cables_Qmax,
+            results["combination"].get_element_results(5)["Qmax"],
+        )
+        self.assertAlmostEqual(
+            wind_Fx + cables_Fx, results["combination"].get_node_results_system(5)["Fx"]
+        )
+        self.assertAlmostEqual(
+            wind_Fy + cables_Fy, results["combination"].get_node_results_system(5)["Fy"]
+        )
 
 
 if __name__ == "__main__":

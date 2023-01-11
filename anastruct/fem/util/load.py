@@ -1,5 +1,6 @@
 import pprint
 import copy
+from typing import Sequence
 from anastruct.basic import args_to_lists
 
 
@@ -26,12 +27,10 @@ class LoadCase:
         """
         if q_perp is None:
             q_perp = [0, 0]
-        if not isinstance(q, tuple):
-            q = [(q, q)]
-        if not isinstance(q_perp, tuple):
-            q_perp = [(q_perp, q_perp)]
-        q = [q]
-        q_perp = [q_perp]
+        if not isinstance(q, Sequence):
+            q = [q, q]
+        if not isinstance(q_perp, Sequence):
+            q_perp = [q_perp, q_perp]
         self.c += 1
         self.spec[f"q_load-{self.c}"] = dict(
             q=q,
@@ -138,11 +137,15 @@ class LoadCombination:
             results[lc.name] = ss
 
         ss_combination = copy.deepcopy(system)
+        ss_combination.post_processor.node_results_system()
         for lc_ss in results.values():
             for k in ss_combination.element_map:
                 ss_combination.element_map[k] = (
                     ss_combination.element_map[k] + lc_ss.element_map[k]
                 )
+            for k in ss_combination.node_map:
+                ss_combination.node_map[k].add_results(lc_ss.node_map[k])
+        ss_combination.post_processor.reaction_forces()
 
         results["combination"] = ss_combination
         return results

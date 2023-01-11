@@ -939,6 +939,8 @@ class SystemElements:
         q_perp = [q_perp]  # type: ignore
         if rotation is None:
             direction_flag = True
+        else:
+            direction_flag = False
         (  # pylint: disable=unbalanced-tuple-unpacking
             q,
             element_id,
@@ -1025,6 +1027,12 @@ class SystemElements:
 
         for i, node_idi in enumerate(node_id):
             id_ = _negative_index_to_id(node_idi, self.node_map.keys())
+            if id_ in self.inclined_roll:
+                raise FEMException(
+                    "StabilityError",
+                    "Point loads may not be placed at the location of "
+                    "inclined roller supports",
+                )
             self.plotter.max_system_point_load = max(
                 self.plotter.max_system_point_load, (Fx[i] ** 2 + Fy[i] ** 2) ** 0.5
             )
@@ -1345,9 +1353,6 @@ class SystemElements:
             el = self.element_map[element_id]
 
             assert el.extension is not None
-            assert el.deflection is not None
-            assert el.shear_force is not None
-            assert el.bending_moment is not None
             assert el.axial_force is not None
 
             if el.type == "truss":
@@ -1363,6 +1368,10 @@ class SystemElements:
                     "N": el.axial_force if verbose else None,
                 }
             else:
+                assert el.deflection is not None
+                assert el.shear_force is not None
+                assert el.bending_moment is not None
+
                 return {
                     "id": el.id,
                     "length": el.l,
@@ -1389,9 +1398,6 @@ class SystemElements:
             for el in self.element_map.values():
 
                 assert el.extension is not None
-                assert el.deflection is not None
-                assert el.shear_force is not None
-                assert el.bending_moment is not None
                 assert el.axial_force is not None
 
                 if el.type == "truss":
@@ -1410,6 +1416,10 @@ class SystemElements:
                     )
 
                 else:
+                    assert el.deflection is not None
+                    assert el.shear_force is not None
+                    assert el.bending_moment is not None
+
                     result_list.append(
                         {
                             "id": el.id,
