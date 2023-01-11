@@ -137,11 +137,15 @@ class LoadCombination:
             results[lc.name] = ss
 
         ss_combination = copy.deepcopy(system)
+        ss_combination.post_processor.node_results_system()
         for lc_ss in results.values():
             for k in ss_combination.element_map:
                 ss_combination.element_map[k] = (
                     ss_combination.element_map[k] + lc_ss.element_map[k]
                 )
+            for k in ss_combination.node_map:
+                ss_combination.node_map[k].add_results(lc_ss.node_map[k])
+        ss_combination.post_processor.reaction_forces()
 
         results["combination"] = ss_combination
         return results

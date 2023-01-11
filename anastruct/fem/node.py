@@ -102,3 +102,14 @@ class Node:
     def reset(self):
         self.Fx = self.Fz = self.Ty = self.ux = self.uz = self.phi_y = 0
         self.hinge = False
+
+    def add_results(self, other: Node):
+        assert (
+            self.id == other.id
+        ), "Cannot add nodes as the ID's don't match. The nodes positions don't match."
+        self.Fx = self.Fx + other.Fx
+        self.Fz = self.Fz + other.Fz
+        self.Ty = self.Ty + other.Ty
+        self.ux = self.ux + other.ux
+        self.uz = self.uz + other.uz
+        self.phi_y = self.phi_y + other.phi_y
