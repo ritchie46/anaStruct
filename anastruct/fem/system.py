@@ -1027,7 +1027,10 @@ class SystemElements:
 
         for i, node_idi in enumerate(node_id):
             id_ = _negative_index_to_id(node_idi, self.node_map.keys())
-            if id_ in self.inclined_roll:
+            if (
+                id_ in self.inclined_roll
+                and np.mod(self.inclined_roll[id_], np.pi / 2) != 0
+            ):
                 raise FEMException(
                     "StabilityError",
                     "Point loads may not be placed at the location of "
