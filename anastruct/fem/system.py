@@ -606,7 +606,6 @@ class SystemElements:
         geometrical_non_linear: int = False,
         **kwargs,
     ):
-
         """
         Compute the results of current model.
 
@@ -1397,7 +1396,6 @@ class SystemElements:
         else:
             result_list = []
             for el in self.element_map.values():
-
                 assert el.extension is not None
                 assert el.axial_force is not None
 
