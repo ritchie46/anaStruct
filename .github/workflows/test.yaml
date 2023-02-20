@@ -1,6 +1,6 @@
 name: Python tests
 
-on: [push, pull_request, pull_request_review]
+on: [pull_request]
 
 jobs:
   min_build:
