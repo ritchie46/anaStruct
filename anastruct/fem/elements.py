@@ -218,6 +218,11 @@ class Element:
         el.max_deflection = (
             None if el.deflection is None else np.max(np.abs(el.deflection))
         )
+        el.q_load = (el.q_load[0] + other.q_load[0], el.q_load[1] + other.q_load[1])
+        el.q_perp_load = (
+            el.q_perp_load[0] + other.q_perp_load[0],
+            el.q_perp_load[1] + other.q_perp_load[1],
+        )
 
         el.node_map[self.node_id1] = el.node_1 + other.node_1
         el.node_map[self.node_id2] = el.node_2 + other.node_2
