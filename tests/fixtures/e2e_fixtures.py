@@ -20,49 +20,61 @@ from anastruct.fem.examples.ex_26_deflection import ss as SS_ex26
 def SS_7():
     return SS_ex7
 
+
 @pytest.fixture
 def SS_8():
     return SS_ex8
+
 
 @pytest.fixture
 def SS_11():
     return SS_ex11
 
+
 @pytest.fixture
 def SS_12():
     return SS_ex12
+
 
 @pytest.fixture
 def SS_13():
     return SS_ex13
 
+
 @pytest.fixture
 def SS_14():
     return SS_ex14
+
 
 @pytest.fixture
 def SS_15():
     return SS_ex15
 
+
 @pytest.fixture
 def SS_16():
     return SS_ex16
+
 
 @pytest.fixture
 def SS_17():
     return SS_ex17
 
+
 @pytest.fixture
 def SS_18():
     return SS_ex18
+
 
 @pytest.fixture
 def SS_19():
     return SS_ex19
 
+
 @pytest.fixture
 def SS_20():
     return SS_ex20
+
 
 @pytest.fixture
 def SS_26():
