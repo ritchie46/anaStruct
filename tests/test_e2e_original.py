@@ -1,8 +1,8 @@
 import numpy as np
 from pytest import approx, raises
+from anastruct import LoadCase, LoadCombination, SystemElements
 from .utils import pspec_context
 from .fixtures.fem_fixtures import *
-from anastruct import LoadCase, LoadCombination, SystemElements
 
 """
 NOTE: Several tests in this file validate that the correct numerical engineering results
@@ -448,7 +448,8 @@ def describe_end_to_end_tests():
 
     def context_multiple_elements_spacing():
         @pspec_context(
-            "Tests bug fix for ensuring even spacing of multiple elements regardless of any floating point roundoff"
+            "Tests bug fix for ensuring even spacing of multiple elements "
+            + "regardless of any floating point roundoff"
         )
         def describe():
             pass
@@ -609,10 +610,10 @@ def describe_end_to_end_tests():
         def it_results_in_correct_reactions():
             assert system.get_node_results_system(1)["Fy"] == approx(-3)
             assert system.get_node_results_system(1)["Fx"] == approx(1)
-        
+
         def it_results_in_correct_element_demands():
             assert system.get_element_results(1)["Nmax"] == approx(np.sqrt(2))
-            assert system.get_element_results(1)["Qmax"] == approx(2*np.sqrt(2))
+            assert system.get_element_results(1)["Qmax"] == approx(2 * np.sqrt(2))
 
     def context_parallel_trapezoidal_load():
         @pspec_context("Test additional of parallel trapezoidal loads")
@@ -636,7 +637,10 @@ def describe_end_to_end_tests():
             assert system.get_node_results_system(1)["Fy"] == approx(-1)
 
     def context_load_case_example():
-        @pspec_context("Test documentation example of load cases from https://anastruct.readthedocs.io/en/latest/loadcases.html")
+        @pspec_context(
+            "Test documentation example of load cases from "
+            + "https://anastruct.readthedocs.io/en/latest/loadcases.html"
+        )
         def describe():
             pass
 
@@ -678,19 +682,43 @@ def describe_end_to_end_tests():
         cables_Fy = -180
 
         def it_results_in_correct_wind_demands_reactions():
-            assert wind_Qmin, results["wind"].get_element_results(5)["Qmin"] == approx(wind_Qmin)
-            assert wind_Qmax, results["wind"].get_element_results(5)["Qmax"] == approx(wind_Qmax)
-            assert wind_Fx, results["wind"].get_node_results_system(5)["Fx"] == approx(wind_Fx)
-            assert wind_Fy, results["wind"].get_node_results_system(5)["Fy"] == approx(wind_Fy)
+            assert wind_Qmin, results["wind"].get_element_results(5)["Qmin"] == approx(
+                wind_Qmin
+            )
+            assert wind_Qmax, results["wind"].get_element_results(5)["Qmax"] == approx(
+                wind_Qmax
+            )
+            assert wind_Fx, results["wind"].get_node_results_system(5)["Fx"] == approx(
+                wind_Fx
+            )
+            assert wind_Fy, results["wind"].get_node_results_system(5)["Fy"] == approx(
+                wind_Fy
+            )
 
         def it_results_in_correct_cables_demands_reactions():
-            assert cables_Qmin, results["cables"].get_element_results(5)["Qmin"] == approx(cables_Qmin)
-            assert cables_Qmax, results["cables"].get_element_results(5)["Qmax"] == approx(cables_Qmax)
-            assert cables_Fx, results["cables"].get_node_results_system(5)["Fx"] == approx(cables_Fx)
-            assert cables_Fy, results["cables"].get_node_results_system(5)["Fy"] == approx(cables_Fy)
-        
+            assert cables_Qmin, results["cables"].get_element_results(5)[
+                "Qmin"
+            ] == approx(cables_Qmin)
+            assert cables_Qmax, results["cables"].get_element_results(5)[
+                "Qmax"
+            ] == approx(cables_Qmax)
+            assert cables_Fx, results["cables"].get_node_results_system(5)[
+                "Fx"
+            ] == approx(cables_Fx)
+            assert cables_Fy, results["cables"].get_node_results_system(5)[
+                "Fy"
+            ] == approx(cables_Fy)
+
         def it_results_in_correct_combination_demands_reactions():
-            assert results["combination"].get_element_results(5)["Qmin"] == approx(wind_Qmin + cables_Qmin)
-            assert results["combination"].get_element_results(5)["Qmax"] == approx(wind_Qmax + cables_Qmax)
-            assert results["combination"].get_node_results_system(5)["Fx"] == approx(wind_Fx + cables_Fx)
-            assert results["combination"].get_node_results_system(5)["Fy"] == approx(wind_Fy + cables_Fy)
+            assert results["combination"].get_element_results(5)["Qmin"] == approx(
+                wind_Qmin + cables_Qmin
+            )
+            assert results["combination"].get_element_results(5)["Qmax"] == approx(
+                wind_Qmax + cables_Qmax
+            )
+            assert results["combination"].get_node_results_system(5)["Fx"] == approx(
+                wind_Fx + cables_Fx
+            )
+            assert results["combination"].get_node_results_system(5)["Fy"] == approx(
+                wind_Fy + cables_Fy
+            )
