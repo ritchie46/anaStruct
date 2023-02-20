@@ -5,7 +5,7 @@ install:
 - python setup.py install
 - pip install mypy git+https://github.com/numpy/numpy-stubs
 script:
-- python ./anastruct/fem/tests/test.py
+- python -m pytest --pspec tests/
 - mypy
 deploy:
   provider: pypi

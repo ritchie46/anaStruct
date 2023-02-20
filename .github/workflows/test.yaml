@@ -57,5 +57,5 @@ jobs:
       - name: Run FEM tests with unittest
         run: |
           python setup.py install
-          python ./anastruct/fem/tests/test.py
+          python -m pytest --pspec tests/
   
