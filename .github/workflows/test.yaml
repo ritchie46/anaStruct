@@ -1,6 +1,6 @@
 name: Python tests
 
-on: [push]
+on: [push, pull_request, pull_request_review]
 
 jobs:
   min_build:
@@ -33,7 +33,7 @@ jobs:
       - name: Run FEM tests with unittest
         run: |
           python setup.py install
-          python ./anastruct/fem/tests/test.py
+          python -m pytest --pspec tests/
   build:
     name: Run FEM Testing Suite with Most Recent Dependencies
     runs-on: ubuntu-latest
@@ -57,5 +57,5 @@ jobs:
       - name: Run FEM tests with unittest
         run: |
           python setup.py install
-          python ./anastruct/fem/tests/test.py
+          python -m pytest --pspec tests/
   
