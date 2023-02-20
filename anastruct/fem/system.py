@@ -958,10 +958,8 @@ class SystemElements:
             id_ = _negative_index_to_id(element_idi, self.element_map.keys())  # type: ignore
             self.plotter.max_q = max(
                 self.plotter.max_q,
-                max(
-                    (q[i][0] ** 2 + q_perp[i][0] ** 2) ** 0.5,  # type: ignore
-                    (q[i][1] ** 2 + q_perp[i][1] ** 2) ** 0.5,  # type: ignore
-                ),
+                (q[i][0] ** 2 + q_perp[i][0] ** 2) ** 0.5,  # type: ignore
+                (q[i][1] ** 2 + q_perp[i][1] ** 2) ** 0.5,  # type: ignore
             )
 
             if direction_flag:
