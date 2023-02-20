@@ -260,7 +260,6 @@ class Plotter(PlottingValues):
             direction,
             el_angle,  # pylint: disable=unused-argument
         ):
-
             # - value, because the positive z of the system is opposite of positive y of the plotter
             xn1 = x1 + np.sin(ai) * h1 * direction
             yn1 = y1 + np.cos(ai) * h1 * direction
@@ -409,10 +408,8 @@ class Plotter(PlottingValues):
                 self.one_fig.text(x, y, f"F={F}", color="k", fontsize=9, zorder=10)
 
     def __moment_load_patch(self, max_val):
-
         h = 0.2 * max_val
         for k, v in self.system.loads_moment.items():
-
             node = self.system.node_map[k]
             if v > 0:
                 self.one_fig.plot(
@@ -943,7 +940,6 @@ class Plotter(PlottingValues):
                 index = np.argmax(np.abs(deflection))
 
                 if verbosity == 0:
-
                     if index != 0 or index != el.deflection.size:
                         self._add_element_values(
                             axis_values[0],
