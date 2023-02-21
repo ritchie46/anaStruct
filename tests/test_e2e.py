@@ -723,6 +723,7 @@ def describe_end_to_end_tests():
                 wind_Fy + cables_Fy
             )
 
+
 def describe_analytical_validation_tests():
     @pspec_context("Validation tests of results, based upon analytical equations")
     def describe():
@@ -737,7 +738,7 @@ def describe_analytical_validation_tests():
         l = 2
         EI = 10000
         EA = 1000
-        
+
         system = SystemElements(EI=EI, EA=EA, mesh=10000)
         system.add_element([[0, 0], [l, 0]])
         system.add_support_hinged([1, 2])
@@ -753,4 +754,6 @@ def describe_analytical_validation_tests():
             assert system.get_node_results_system(2)["Fy"] == approx(w * l / 2)
 
         def it_results_in_correct_deflections():
-            assert system.get_element_results(1)["wmax"] == approx(-5 * w * l**4 / (384 * EI))
+            assert system.get_element_results(1)["wmax"] == approx(
+                -5 * w * l**4 / (384 * EI)
+            )
