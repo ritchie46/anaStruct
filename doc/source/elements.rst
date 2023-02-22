@@ -1,28 +1,25 @@
 Elements
 ========
 
-The SystemElements class has several methods that help you model a structure. These methods are;
+The :code:`SystemElements` class has several methods that help you model a structure. These methods are;
 
-* add_truss_element
-* add_element
-* add_multiple_elements
-* discretize
+.. code-block:: python
 
+    add_truss_element
+    add_element
+    add_multiple_elements
+    discretize
 
 A structure is defined by elements, which have their own state.
 
-The elements are stored in `SystemElement.element_map`. This is a dictionary with keys representing the element ids, and
-values being the element objects. The element objects ar implicitly created by the SystemElements object.
+The elements are stored in :code:`SystemElement.element_map`. This is a dictionary with keys representing the element ids, and values being the element objects. The element objects are implicitly created by the :code:`SystemElements` object.
 
-The state of an element can be interesting when
-post-processing results. For now we'll focus on the modelling part. Below you see the different methods for modelling
-a structure.
+The state of an element can be interesting when post-processing results. For now we'll focus on the modelling part. Below you see the different methods for modelling a structure.
 
 Standard elements
 -----------------
 
-Standard elements have bending and axial stiffness and therefore will implement shear force, bending moment, axial force,
-extension, and deflection. Standard elements can be added with the following methods.
+Standard elements have bending and axial stiffness and therefore will implement shear force, bending moment, axial force, extension, and deflection. Standard elements can be added with the following methods.
 
 Add a single element
 ####################
