@@ -1,8 +1,23 @@
 Examples
-========
+########
 
-Simple
-#######
+Examples below a side variety of the structures which aim to show capabilities of the package. The same as any other packages, anaStruct should be called and imported.
+
+.. code-block:: python
+
+    import anastruct as anas
+
+And for a mater of minimalism and making calls and coding more efficient, different classes can be called separately.
+
+.. code-block:: python
+
+    anas.LoadCase
+    anas.LoadCombination
+    anas.SystemElements
+    anas.Vertex
+
+Simple example - Truss
+**********************
 
 .. code-block:: python
 
