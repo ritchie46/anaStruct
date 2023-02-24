@@ -1,3 +1,2 @@
-scipy
 matplotlib
 sphinx_autodoc_typehints
