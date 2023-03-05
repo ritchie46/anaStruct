@@ -10,17 +10,17 @@ jobs:
       matrix:
         python-version: ["3.8"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r plot_requirements.txt
-          pip install -r test_requirements.txt
+          pip install .
+          pip install .[plot]
+          pip install .[test]
       - name: Run linting check with pylint
         run: |
           pylint --rcfile .pylintrc ./anastruct
@@ -30,9 +30,8 @@ jobs:
       - name: Run type checks with mypy
         run: |
           mypy
-      - name: Run FEM tests with unittest
+      - name: Run FEM tests with pytest
         run: |
-          python setup.py install
           python -m pytest --pspec tests/
   build:
     name: Run FEM Testing Suite with Most Recent Dependencies
@@ -40,22 +39,22 @@ jobs:
     strategy:
       max-parallel: 3
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.10", "3.11"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r dev_requirements.txt
-          pip install -r test_requirements.txt
+          pip install .
+          pip install .[dev]
+          pip install .[test]
 
-      - name: Run FEM tests with unittest
+      - name: Run FEM tests with pytest
         run: |
-          python setup.py install
           python -m pytest --pspec tests/
   
