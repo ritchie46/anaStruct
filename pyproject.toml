@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=61.0", "cython"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anastruct"
+authors = [
+    {name = "Ritchie Vink", email = "ritchie46@gmail.com"},
+]
+maintainers= [
+    {name = "Brooks Smith", email = "smith120bh@gmail.com"}
+]
+description = "Finite element analysis of 2D structures"
+requires-python = ">=3.8"
+keywords = ["FEA", "finite element", "structural engineering", "structural analysis"]
+license = {text = "GPL-3.0"}
+classifiers = [
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+]
+dynamic = ["version", "readme", "dependencies", "optional-dependencies"]
+
+[tool.setuptools.dynamic]
+version = {attr = "anastruct._version.__version__"}
+readme = {file = ["README.md"]}
+dependencies = {file = "requirements.txt"}
+optional-dependencies.plot = {file = "plot_requirements.txt"}
+optional-dependencies.test = {file = "test_requirements.txt"}
+optional-dependencies.dev = {file = "dev_requirements.txt"}
+
+[project.urls]
+homepage = "https://github.com/ritchie46/anaStruct"
+documentation = "http://anastruct.readthedocs.io"
+author = "https://ritchievink.com"
+
+[tool.setuptools]
+packages = [
+    "anastruct",
+    "anastruct.fem",
+    "anastruct.fem.system_components",
+    "anastruct.fem.examples",
+    "anastruct.material",
+    "anastruct.cython",
+    "anastruct.fem.cython",
+    "anastruct.fem.plotter",
+    "anastruct.fem.util",
+    "anastruct.sectionbase",
+    "anastruct.sectionbase.data",
+]
+py-modules = ["_custom_build"]
+
+[tool.setuptools.cmdclass]
+build_py = "_custom_build.build_py"
