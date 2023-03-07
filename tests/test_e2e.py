@@ -787,6 +787,7 @@ def describea_analytical_validation_tests():
         assert system.get_node_results_system(4)["Fy"] == approx(p)
 
     def it_results_in_correct_deflections():
-        assert system.get_element_results(2)["wmax"] == approx(
+        assert system.get_node_results_system(3)["uy"] + ...
+        system.get_element_results(2)["wmax"] == approx(
             -((p * a) / (24 * EI)) * (3 * (l**2) - 4 * (a**2))
         )
