@@ -757,3 +757,34 @@ def describe_analytical_validation_tests():
             assert system.get_element_results(1)["wmax"] == approx(
                 -5 * w * l**4 / (384 * EI)
             )
+
+    def context_simply_supported_beam_point_load_validation():
+        @pspec_context("Simply-supported beam with point load at center validation")
+        def describe():
+            pass
+
+        w = 1
+        l = 2
+        EI = 10000
+        EA = 1000
+        p = 1
+
+        system = SystemElements(EI=EI, EA=EA, mesh=10000)
+        system.add_element([[0, 0], [l / 2, 0]])
+        system.add_element([[l / 2, 0], [l, 0]])
+        system.add_support_hinged([1, 3])
+        system.point_load(2, Fx=0, Fy=p, rotation=0)
+        system.solve()
+
+        def it_results_in_correct_moment_shear():
+            assert system.get_element_results(1)["Mmax"] == approx(p * l / 4)
+            assert system.get_element_results(1)["Qmax"] == approx(p / 2)
+
+        def it_results_in_correct_reactions():
+            assert system.get_node_results_system(1)["Fy"] == approx(p / 2)
+            assert system.get_node_results_system(3)["Fy"] == approx(p / 2)
+
+        def it_results_in_correct_deflections():
+            assert system.get_node_results_system(2)["uy"] == approx(
+                -p * l**3 / (48 * EI)
+            )
