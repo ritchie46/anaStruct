@@ -757,3 +757,36 @@ def describe_analytical_validation_tests():
             assert system.get_element_results(1)["wmax"] == approx(
                 -5 * w * l**4 / (384 * EI)
             )
+
+
+def describea_analytical_validation_tests():
+    @pspec_context("Validation tests of results, based upon analytical equations")
+    def describe():
+        pass
+
+    p = 80
+    l = 5
+    a = l / 3
+    EI = 14000
+
+    system = SystemElements(EI=EI, mesh=10000)
+    system.add_element([[0, 0], [a, 0]])
+    system.add_element([[a, 0], [2 * a, 0]])
+    system.add_element([[2 * a, 0], [l, 0]])
+    system.add_support_hinged([1, 4])
+    system.point_load(node_id=2, Fy=p)
+    system.point_load(node_id=3, Fy=p)
+    system.solve()
+
+    def it_results_in_correct_moment_shear():
+        assert system.get_element_results(2)["Mmax"] == approx(p * a)
+        assert system.get_element_results(1)["Qmax"] == approx(p)
+
+    def it_results_in_correct_reactions():
+        assert system.get_node_results_system(1)["Fy"] == approx(p)
+        assert system.get_node_results_system(4)["Fy"] == approx(p)
+
+    def it_results_in_correct_deflections():
+        assert system.get_element_results(2)["wmax"] == approx(
+            -((p * a) / (24 * EI)) * (3 * (l**2) - 4 * (a**2))
+        )
