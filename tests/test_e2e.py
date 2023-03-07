@@ -758,6 +758,7 @@ def describe_analytical_validation_tests():
                 -5 * w * l**4 / (384 * EI)
             )
 
+
 def context_simply_supported_two_point_loads():
     @pspec_context("Validation tests of results, based upon analytical equations")
     def describe():
