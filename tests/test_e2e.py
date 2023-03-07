@@ -759,7 +759,7 @@ def describe_analytical_validation_tests():
             )
 
 
-def describea_analytical_validation_tests():
+def context_simply_supported_two_point_loads():
     @pspec_context("Validation tests of results, based upon analytical equations")
     def describe():
         pass
@@ -787,7 +787,6 @@ def describea_analytical_validation_tests():
         assert system.get_node_results_system(4)["Fy"] == approx(p)
 
     def it_results_in_correct_deflections():
-        assert system.get_node_results_system(3)["uy"] + ...
-        system.get_element_results(2)["wmax"] == approx(
-            -((p * a) / (24 * EI)) * (3 * (l**2) - 4 * (a**2))
-        )
+        assert system.get_node_results_system(3)["uy"] + system.get_element_results(2)[
+            "wmax"
+        ] == approx(-((p * a) / (24 * EI)) * (3 * (l**2) - 4 * (a**2)))
