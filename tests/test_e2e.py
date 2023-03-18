@@ -857,7 +857,9 @@ def context_fixed_ends_beam_point_load_validation():
 
 
 def context_3_span_continuous_beam_2_UDL_loads_validation():
-    @pspec_context("Beam fixed at both ends with concentrated load at center")
+    @pspec_context(
+        "Continuous Beam spanning over three supports with two UDL in the outer spans"
+    )
     def describe():
         pass
 
