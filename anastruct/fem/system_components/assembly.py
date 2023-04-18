@@ -48,11 +48,7 @@ def apply_point_load(system: "SystemElements"):
         Fx, Fz = system.loads_point[node_id]
         # system force vector.
         set_force_vector(
-            system,
-            [
-                (node_id, 1, Fx),
-                (node_id, 2, Fz),
-            ],
+            system, [(node_id, 1, Fx), (node_id, 2, Fz),],
         )
 
 
@@ -260,8 +256,7 @@ def process_supports(system):
             )
         else:
             set_displacement_vector(
-                system,
-                [(supports_rolli.id, system.supports_roll_direction[i])],
+                system, [(supports_rolli.id, system.supports_roll_direction[i])],
             )
 
     for node in system.supports_rotational:

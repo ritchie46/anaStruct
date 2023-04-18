@@ -869,18 +869,19 @@ def describe_analytical_validation_tests():
         p = 1  # KN
         l = 2  # m
 
-        system = SystemElements(EA=EA, EI=EI)
-        system.add_element([[0, 0], [l / 2, 0]])
+        system = SystemElements(EA=EA, EI=EI, mesh=20000)
+        system.add_element([[0, 0], [l * (1 / 5) ** 0.5, 0]])
+        system.add_element([[l * (1 / 5) ** 0.5, 0], [l / 2, 0]])
         system.add_element([[l / 2, 0], [l, 0]])
         system.add_support_hinged(1)
-        system.add_support_fixed(3)
-        system.point_load(2, Fx=0, Fy=p, rotation=0)
+        system.add_support_fixed(4)
+        system.point_load(3, Fx=0, Fy=p, rotation=0)
         system.solve()
 
         def it_results_in_correct_reactions():
-            assert system.get_node_results_system(1)["Fy"] == approx(5 * p / 15)
-            assert system.get_node_results_system(3)["Fy"] == approx(11 * p / 16)
-            assert system.get_node_results_system(2)["Ty"] == approx(-3 * p * l / 16)
+            assert system.get_node_results_system(1)["Fy"] == approx(5 * p / 16)
+            assert system.get_node_results_system(4)["Fy"] == approx(11 * p / 16)
+            assert system.get_node_results_system(4)["Ty"] == approx(-3 * p * l / 16)
 
         def it_results_in_correct_deflections():
             assert system.get_node_results_system(2)["uy"] == approx(
@@ -897,7 +898,7 @@ def describe_analytical_validation_tests():
         w = 1  # KN/m
         l = 2  # m
 
-        system = SystemElements()
+        system = SystemElements(EA=EA, EI=EI, mesh=2000)
         system.add_element([[0, 0], [l, 0]])
         system.add_support_fixed([1, 2])
         system.q_load(w, 1)
@@ -906,7 +907,7 @@ def describe_analytical_validation_tests():
         def it_results_in_correct_reactions():
             assert system.get_node_results_system(1)["Fy"] == approx(w * l / 2)
             assert system.get_node_results_system(2)["Fy"] == approx(w * l / 2)
-            assert system.get_node_results_system(1)["Ty"] == approx(-w * l**2 / 12)
+            assert system.get_node_results_system(1)["Ty"] == approx(w * l**2 / 12)
             assert system.get_node_results_system(2)["Ty"] == approx(-w * l**2 / 12)
 
         def it_results_in_correct_deflections():

@@ -189,8 +189,8 @@ class ElementLevel:
             qi = element.all_qp_load[0]
             q = element.all_qp_load[1]
             q_part = (
-                -((qi - q) / (6 * element.l)) * x**3
-                + (qi / 2) * x**2
+                -((qi - q) / (6 * element.l)) * x ** 3
+                + (qi / 2) * x ** 2
                 - (((2 * qi) + q) / 6) * element.l * x
             )
             m_val += q_part
@@ -206,7 +206,7 @@ class ElementLevel:
         iteration_factor = np.linspace(0, 1, con)
         x = iteration_factor * element.l
         eq = np.polyfit(x, element.bending_moment, 3)
-        shear_force = eq[0] * 3 * x**2 + eq[1] * 2 * x + eq[2]
+        shear_force = eq[0] * 3 * x ** 2 + eq[1] * 2 * x + eq[2]
         element.shear_force = shear_force
 
     @staticmethod

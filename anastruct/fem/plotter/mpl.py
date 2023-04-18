@@ -373,7 +373,7 @@ class Plotter(PlottingValues):
         :return: Variables for the matplotlib plotter
         """
 
-        F = (Fx**2 + Fz**2) ** 0.5
+        F = (Fx ** 2 + Fz ** 2) ** 0.5
         len_x = Fx / F * h
         len_y = -Fz / F * h
         x = node.vertex.x - len_x * 1.2
@@ -388,7 +388,7 @@ class Plotter(PlottingValues):
 
         for k in self.system.loads_point:
             Fx, Fz = self.system.loads_point[k]
-            F = (Fx**2 + Fz**2) ** 0.5
+            F = (Fx ** 2 + Fz ** 2) ** 0.5
             node = self.system.node_map[k]
             h = 0.1 * max_plot_range * F / self.max_system_point_load
             x, y, len_x, len_y, F = self.__arrow_patch_values(Fx, Fz, node, h)
@@ -613,7 +613,7 @@ class Plotter(PlottingValues):
                     lambda el: max(
                         abs(el.N_1),
                         abs(el.N_2),
-                        abs(((el.all_qn_load[0] + el.all_qn_load[1]) / 16) * el.l**2),
+                        abs(((el.all_qn_load[0] + el.all_qn_load[1]) / 16) * el.l ** 2),
                     ),
                     self.system.element_map.values(),
                 )
@@ -699,7 +699,7 @@ class Plotter(PlottingValues):
                     lambda el: max(
                         abs(el.node_1.Ty),
                         abs(el.node_2.Ty),
-                        abs(((el.all_qp_load[0] + el.all_qp_load[1]) / 16) * el.l**2),
+                        abs(((el.all_qp_load[0] + el.all_qp_load[1]) / 16) * el.l ** 2),
                     )
                     if el.type == "general"
                     else 0,
@@ -942,11 +942,7 @@ class Plotter(PlottingValues):
                 if verbosity == 0:
                     if index != 0 or index != el.deflection.size:
                         self._add_element_values(
-                            axis_values[0],
-                            axis_values[1],
-                            deflection[index],
-                            index,
-                            3,
+                            axis_values[0], axis_values[1], deflection[index], index, 3,
                         )
         if show:
             self.plot()
