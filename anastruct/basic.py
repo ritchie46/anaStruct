@@ -1,13 +1,7 @@
 import collections.abc
 import numpy as np
 
-try:
-    from anastruct.cython.cbasic import (  # type: ignore # pylint: disable=unused-import
-        converge,
-        angle_x_axis,
-    )
-except ImportError:
-    from anastruct.cython.basic import converge, angle_x_axis  # type: ignore
+from anastruct.cython.basic import converge, angle_x_axis
 
 
 def find_nearest(array, value):
