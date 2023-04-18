@@ -849,4 +849,3 @@ def context_simply_supported_two_point_loads():
             assert system.get_node_results_system(1)["uy"] == approx(
                 -w * l**4 / (8 * EI)
             )
-
