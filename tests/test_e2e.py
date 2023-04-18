@@ -758,38 +758,37 @@ def describe_analytical_validation_tests():
                 -5 * w * l**4 / (384 * EI)
             )
 
+    def context_simply_supported_two_point_loads():
+        @pspec_context("Validation tests of results, based upon analytical equations")
+        def describe():
+            pass
 
-def context_simply_supported_two_point_loads():
-    @pspec_context("Validation tests of results, based upon analytical equations")
-    def describe():
-        pass
+        p = 80
+        l = 5
+        a = l / 3
+        EI = 14000
 
-    p = 80
-    l = 5
-    a = l / 3
-    EI = 14000
+        system = SystemElements(EI=EI, mesh=10000)
+        system.add_element([[0, 0], [a, 0]])
+        system.add_element([[a, 0], [2 * a, 0]])
+        system.add_element([[2 * a, 0], [l, 0]])
+        system.add_support_hinged([1, 4])
+        system.point_load(node_id=2, Fy=p)
+        system.point_load(node_id=3, Fy=p)
+        system.solve()
 
-    system = SystemElements(EI=EI, mesh=10000)
-    system.add_element([[0, 0], [a, 0]])
-    system.add_element([[a, 0], [2 * a, 0]])
-    system.add_element([[2 * a, 0], [l, 0]])
-    system.add_support_hinged([1, 4])
-    system.point_load(node_id=2, Fy=p)
-    system.point_load(node_id=3, Fy=p)
-    system.solve()
+        def it_results_in_correct_moment_shear():
+            assert system.get_element_results(2)["Mmax"] == approx(p * a)
+            assert system.get_element_results(1)["Qmax"] == approx(p)
 
-    def it_results_in_correct_moment_shear():
-        assert system.get_element_results(2)["Mmax"] == approx(p * a)
-        assert system.get_element_results(1)["Qmax"] == approx(p)
+        def it_results_in_correct_reactions():
+            assert system.get_node_results_system(1)["Fy"] == approx(p)
+            assert system.get_node_results_system(4)["Fy"] == approx(p)
 
-    def it_results_in_correct_reactions():
-        assert system.get_node_results_system(1)["Fy"] == approx(p)
-        assert system.get_node_results_system(4)["Fy"] == approx(p)
-
-    def it_results_in_correct_deflections():
-        assert system.get_node_results_system(3)["uy"] + system.get_element_results(2)[
-            "wmax"
-        ] == approx(-((p * a) / (24 * EI)) * (3 * (l**2) - 4 * (a**2)))
+        def it_results_in_correct_deflections():
+            assert system.get_node_results_system(3)["uy"] + system.get_element_results(
+                2
+            )["wmax"] == approx(-((p * a) / (24 * EI)) * (3 * (l**2) - 4 * (a**2)))
 
     def context_simply_supported_beam_point_load_validation():
         @pspec_context("Simply-supported beam with point load at center validation")
@@ -820,4 +819,97 @@ def context_simply_supported_two_point_loads():
         def it_results_in_correct_deflections():
             assert system.get_node_results_system(2)["uy"] == approx(
                 -p * l**3 / (48 * EI)
+            )
+
+    def context_fixed1end_simplySupported_UDL_validation():
+        @pspec_context(
+            "beam fixed at one end and simply supported at the other with UDL"
+        )
+        def describe():
+            pass
+
+        EA = 3420000  # KN.m/m
+        EI = 83100  # KN.m^2
+        w = 1  # KN/m
+        l = 2  # m
+        # l1 = l * (1 + 33**0.5) / 16
+
+        system = SystemElements(EA=EA, EI=EI)
+        system.add_element([[0, 0], [l, 0]])
+        # system.add_element([[0, 0], [l1, 0]])
+        # system.add_element([[l1, 0], [l, 0]])
+        system.add_support_hinged(1)
+        system.add_support_fixed(2)
+        system.q_load(w, element_id=1)
+        system.solve()
+
+        def it_results_in_correct_reactions():
+            assert system.get_node_results_system(1)["Fy"] == approx(3 * w * l / 8)
+            assert system.get_node_results_system(2)["Fy"] == approx(5 * w * l / 8)
+            assert system.get_node_results_system(2)["Ty"] == approx(-w * (l**2) / 8)
+
+        def it_results_in_correct_deflections():
+            assert system.get_element_results(1)["wmax"] == approx(
+                -w * (l**4) / (185 * EI), rel=1e-3
+            )
+
+        # assert system.get_node_results_system(2)["uy"] == approx(
+        #    -w * (l**4) / (185 * EI)
+        # )
+
+    def context_fixed1end_simplySupported_pointLoad_validation():
+        @pspec_context(
+            "beam fixed at one end and simply supported on other with point load at the middle"
+        )
+        def describe():
+            pass
+
+        EA = 3420000  # KN.m/m
+        EI = 83100  # KN.m^2
+        p = 1  # KN
+        l = 2  # m
+
+        system = SystemElements(EA=EA, EI=EI)
+        system.add_element([[0, 0], [l / 2, 0]])
+        system.add_element([[l / 2, 0], [l, 0]])
+        system.add_support_hinged(1)
+        system.add_support_fixed(3)
+        system.point_load(2, Fx=0, Fy=p, rotation=0)
+        system.solve()
+
+        def it_results_in_correct_reactions():
+            assert system.get_node_results_system(1)["Fy"] == approx(5 * p / 15)
+            assert system.get_node_results_system(3)["Fy"] == approx(11 * p / 16)
+            assert system.get_node_results_system(2)["Ty"] == approx(-3 * p * l / 16)
+
+        def it_results_in_correct_deflections():
+            assert system.get_node_results_system(2)["uy"] == approx(
+                -p * (l**3) / (48 * EI * 5**0.5)
+            )
+
+    def context_beam_fixed_on_both_ends_UDL():
+        @pspec_context("beam with fixed supports at both ends and UDL")
+        def describe():
+            pass
+
+        EA = 3420000  # KN.m/m
+        EI = 83100  # KN.m^2
+        w = 1  # KN/m
+        l = 2  # m
+
+        system = SystemElements()
+        system.add_element([[0, 0], [l, 0]])
+        system.add_support_fixed([1, 2])
+        system.q_load(w, 1)
+        system.solve()
+
+        def it_results_in_correct_reactions():
+            assert system.get_node_results_system(1)["Fy"] == approx(w * l / 2)
+            assert system.get_node_results_system(2)["Fy"] == approx(w * l / 2)
+            assert system.get_node_results_system(1)["Ty"] == approx(-w * l**2 / 12)
+            assert system.get_node_results_system(2)["Ty"] == approx(-w * l**2 / 12)
+
+        def it_results_in_correct_deflections():
+            assert system.get_element_results(1)["wmax"] == approx(
+                -w * l**4 / (384 * EI)
             )
