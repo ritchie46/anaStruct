@@ -906,4 +906,31 @@ def describe_analytical_validation_tests():
         def it_results_in_correct_deflections():
             assert system.get_element_results(1)["wmax"] == approx(
                 -w * l**4 / (384 * EI)
+
+    def context_cantilever_UDL_validation():
+        @pspec_context("Cantilever beam with UDL validation")
+        def describe():
+            pass
+
+        w = 10
+        l = 3
+        EI = 10000
+        EA = 1000
+
+        system = SystemElements(EI=EI, EA=EA, mesh=100)
+        system.add_element([[0, 0], [l, 0]])
+        system.add_support_fixed([2])
+        system.q_load(w, element_id=1)
+        system.solve()
+
+        def it_results_in_correct_moment_shear():
+            assert system.get_element_results(1)["Mmin"] == approx(-w * l**2 / 2)
+            assert system.get_element_results(1)["Qmin"] == approx(-w * l)
+
+        def it_results_in_correct_reactions():
+            assert system.get_node_results_system(2)["Fy"] == approx(w * l)
+
+        def it_results_in_correct_deflections():
+            assert system.get_node_results_system(1)["uy"] == approx(
+                -w * l**4 / (8 * EI)
             )
