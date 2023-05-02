@@ -862,7 +862,7 @@ def describe_analytical_validation_tests():
         p = 1  # KN
         l = 2  # m
 
-        system = SystemElements(EA=EA, EI=EI, mesh=20000)
+        system = SystemElements(EA=EA, EI=EI, mesh=10000)
         system.add_element([[0, 0], [l * (1 / 5) ** 0.5, 0]])
         system.add_element([[l * (1 / 5) ** 0.5, 0], [l / 2, 0]])
         system.add_element([[l / 2, 0], [l, 0]])
