@@ -832,12 +832,9 @@ def describe_analytical_validation_tests():
         EI = 83100  # KN.m^2
         w = 1  # KN/m
         l = 2  # m
-        # l1 = l * (1 + 33**0.5) / 16
 
         system = SystemElements(EA=EA, EI=EI)
         system.add_element([[0, 0], [l, 0]])
-        # system.add_element([[0, 0], [l1, 0]])
-        # system.add_element([[l1, 0], [l, 0]])
         system.add_support_hinged(1)
         system.add_support_fixed(2)
         system.q_load(w, element_id=1)
@@ -852,10 +849,6 @@ def describe_analytical_validation_tests():
             assert system.get_element_results(1)["wmax"] == approx(
                 -w * (l**4) / (185 * EI), rel=1e-3
             )
-
-        # assert system.get_node_results_system(2)["uy"] == approx(
-        #    -w * (l**4) / (185 * EI)
-        # )
 
     def context_fixed1end_simplySupported_pointLoad_validation():
         @pspec_context(
