@@ -32,7 +32,7 @@ def rectangle_properties(**kwargs):
     sw = kwargs.get("sw", False)
 
     A = b * h
-    I = b * h ** 3 / 12
+    I = b * h**3 / 12
     EA = E * A
     EI = E * I
     if sw:
@@ -49,8 +49,8 @@ def circle_properties(**kwargs):
     gamma = kwargs.get("gamma", 10000)
     sw = kwargs.get("sw", False)
 
-    A = math.pi * d ** 2 / 4
-    I = math.pi * d ** 4 / 64
+    A = math.pi * d**2 / 4
+    I = math.pi * d**4 / 64
     EA = E * A
     EI = E * I
     if sw:

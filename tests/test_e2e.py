@@ -906,6 +906,7 @@ def describe_analytical_validation_tests():
         def it_results_in_correct_deflections():
             assert system.get_element_results(1)["wmax"] == approx(
                 -w * l**4 / (384 * EI)
+            )
 
     def context_cantilever_UDL_validation():
         @pspec_context("Cantilever beam with UDL validation")

@@ -40,7 +40,7 @@ class Vertex:
         return float(self.coordinates[1] * -1)
 
     def modulus(self) -> float:
-        return float(np.sqrt(np.sum(self.coordinates ** 2)))
+        return float(np.sqrt(np.sum(self.coordinates**2)))
 
     def unit(self) -> Vertex:
         return 1 / self.modulus() * self

@@ -132,7 +132,9 @@ class SystemElements:
         # results
         self.reaction_forces: Dict[int, Node] = {}  # node objects
         self.non_linear = False
-        self.non_linear_elements: Dict[int, Dict[int, float]] = (
+        self.non_linear_elements: Dict[
+            int, Dict[int, float]
+        ] = (
             {}
         )  # keys are element ids, values are dicts: {node_index: max moment capacity}
         self.buckling_factor: Optional[float] = None
@@ -833,7 +835,8 @@ class SystemElements:
             self.supports_roll_rotate.append(rotate_)
 
     def add_support_fixed(
-        self, node_id: Union[Sequence[int], int],
+        self,
+        node_id: Union[Sequence[int], int],
     ):
         """
         Add a fixed support at a given node.

@@ -189,8 +189,8 @@ class ElementLevel:
             qi = element.all_qp_load[0]
             q = element.all_qp_load[1]
             q_part = (
-                -((qi - q) / (6 * element.l)) * x ** 3
-                + (qi / 2) * x ** 2
+                -((qi - q) / (6 * element.l)) * x**3
+                + (qi / 2) * x**2
                 - (((2 * qi) + q) / 6) * element.l * x
             )
             m_val += q_part
@@ -206,7 +206,7 @@ class ElementLevel:
         iteration_factor = np.linspace(0, 1, con)
         x = iteration_factor * element.l
         eq = np.polyfit(x, element.bending_moment, 3)
-        shear_force = eq[0] * 3 * x ** 2 + eq[1] * 2 * x + eq[2]
+        shear_force = eq[0] * 3 * x**2 + eq[1] * 2 * x + eq[2]
         element.shear_force = shear_force
 
     @staticmethod
@@ -276,3 +276,25 @@ class ElementLevel:
         # u = 0.5 * (element.N_1 + element.N_2) / element.EA * element.l
         # du = u / con
         # element.extension = du * (np.arange(con) + 1)
+
+        ux1 = element.node_1.ux
+        uz1 = -element.node_1.uz
+        ux2 = element.node_2.ux
+        uz2 = -element.node_2.uz
+
+        x1 = element.vertex_1.x + ux1
+        y1 = -element.vertex_1.z + uz1
+        x2 = element.vertex_2.x + ux2
+        y2 = -element.vertex_2.z + uz2
+
+        if element.type == "general":
+            n = len(element.deflection)
+            x_val = np.linspace(x1, x2, n)
+            y_val = np.linspace(y1, y2, n)
+
+            x_val = x_val + element.deflection * math.sin(element.angle)
+            y_val = y_val + element.deflection * -math.cos(element.angle)
+
+        else:  # truss element has no bending
+            x_val = np.array([x1, x2])
+            y_val = np.array([y1, y2])
