@@ -821,6 +821,77 @@ def describe_analytical_validation_tests():
                 -p * l**3 / (48 * EI)
             )
 
+    def context_fixed_ends_beam_point_load_validation():
+        @pspec_context("Beam fixed at both ends with concentrated load at center")
+        def describe():
+            pass
+
+        p = 200
+        l = 8
+        x = 3
+        EI = 23000
+
+        system = SystemElements(EI=EI, mesh=9000)
+        system.add_element([[0, 0], [x, 0]])
+        system.add_element([[x, 0], [l / 2, 0]])
+        system.add_element([[l / 2, 0], [l, 0]])
+        system.add_support_fixed([1, 4])
+        system.point_load(3, Fx=0, Fy=200, rotation=0)
+        system.solve()
+
+        def it_results_in_correct_moment_shear():
+            assert system.get_element_results(2)["Mmin"] == approx(p / 8 * (4 * x - l))
+            assert system.get_element_results(2)["Qmax"] == approx(p / 2)
+
+        def it_results_in_correct_reactions():
+            assert system.get_node_results_system(1)["Fy"] == approx(p / 2)
+            assert system.get_node_results_system(4)["Fy"] == approx(p / 2)
+
+        def it_results_in_correct_deflections():
+            assert system.get_node_results_system(2)["uy"] == approx(
+                -p * x**2 / (48 * EI) * (3 * l - 4 * x)
+            )
+
+    def context_3_span_continuous_beam_2_UDL_loads_validation():
+        @pspec_context(
+            "Continuous Beam spanning over three supports with two UDL in the outer spans"
+        )
+        def describe():
+            pass
+
+        w = 70
+        l = 5
+        EI = 15000
+
+        system = SystemElements(EI=EI, mesh=20000)
+        system.add_element([[0, 0], [l, 0]])
+        system.add_element([[l, 0], [2 * l, 0]])
+        system.add_element([[2 * l, 0], [3 * l, 0]])
+        system.add_support_hinged([1, 2, 3, 4])
+        system.q_load(w, element_id=1)
+        system.q_load(w, element_id=3)
+        system.solve()
+
+        def it_results_in_correct_moment_shear():
+            assert system.get_element_results(1)["Mmax"] == approx(0.10125 * w * l**2)
+            assert system.get_element_results(2)["Mmax"] == approx(-0.050 * w * l**2)
+            assert system.get_element_results(1)["Qmin"] == approx(-0.55 * w * l)
+            assert system.get_element_results(2)["Qmax"] == approx(0)
+
+        def it_results_in_correct_reactions():
+            assert system.get_node_results_system(1)["Fy"] == approx(0.45 * w * l)
+            assert system.get_node_results_system(3)["Fy"] == approx(0.55 * w * l)
+
+        def it_results_in_correct_deflections():
+            assert system.get_element_results(1)["wmax"] == approx(
+                -0.009917469 * w * l**4 / EI
+            )
+
+            def it_results_in_correct_deflections():
+                assert system.get_node_results_system(2)["uy"] == approx(
+                    -p * l**3 / (48 * EI)
+                )
+
     def context_fixed1end_simplySupported_UDL_validation():
         @pspec_context(
             "beam fixed at one end and simply supported at the other with UDL"
