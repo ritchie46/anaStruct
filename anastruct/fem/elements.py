@@ -86,6 +86,7 @@ class Element:
         self.shear_force: Optional[np.ndarray] = None
         self.axial_force: Optional[np.ndarray] = None
         self.deflection: Optional[np.ndarray] = None
+        self.total_deflection: Optional[np.ndarray] = None
         self.extension: Optional[np.ndarray] = None
         self.max_deflection = None
         self.max_extension = None
@@ -333,52 +334,52 @@ def geometric_stiffness_matrix(l: float, N: float, a1: float, a2: float) -> np.n
         * np.array(
             [
                 [
-                    6 / 5 * s1 ** 2,
+                    6 / 5 * s1**2,
                     -6 / 5 * s1 * c1,
                     -l / 10 * s1,
-                    -6 / 5 * s2 ** 2,
+                    -6 / 5 * s2**2,
                     6 / 5 * s2 * c2,
                     -l / 10 * s2,
                 ],
                 [
                     -6 / 5 * s1 * c1,
-                    6 / 5 * c1 ** 2,
+                    6 / 5 * c1**2,
                     l / 10 * c1,
                     6 / 5 * s2 * c2,
-                    -6 / 5 * c2 ** 2,
+                    -6 / 5 * c2**2,
                     l / 10 * c2,
                 ],
                 [
                     -l / 10 * s1,
                     l / 10 * c1,
-                    2 * l ** 2 / 15,
+                    2 * l**2 / 15,
                     l / 10 * s2,
                     -l / 10 * c2,
-                    -(l ** 2) / 30,
+                    -(l**2) / 30,
                 ],
                 [
-                    -6 / 5 * s1 ** 2,
+                    -6 / 5 * s1**2,
                     6 / 5 * s1 * c1,
                     l / 10 * s1,
-                    6 / 5 * s2 ** 2,
+                    6 / 5 * s2**2,
                     -6 / 5 * s1 * c2,
                     l / 10 * s2,
                 ],
                 [
                     6 / 5 * s1 * c1,
-                    -6 / 5 * c1 ** 2,
+                    -6 / 5 * c1**2,
                     -l / 10 * c1,
                     -6 / 5 * s2 * c2,
-                    6 / 5 * c2 ** 2,
+                    6 / 5 * c2**2,
                     -l / 10 * c2,
                 ],
                 [
                     -l / 10 * s1,
                     l / 10 * c1,
-                    -(l ** 2) / 30,
+                    -(l**2) / 30,
                     l / 10 * s2,
                     -l / 10 * c2,
-                    2 * l ** 2 / 15,
+                    2 * l**2 / 15,
                 ],
             ]
         )
