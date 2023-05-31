@@ -276,3 +276,30 @@ class ElementLevel:
         # u = 0.5 * (element.N_1 + element.N_2) / element.EA * element.l
         # du = u / con
         # element.extension = du * (np.arange(con) + 1)
+
+        ux1 = element.node_1.ux
+        uz1 = -element.node_1.uz
+        ux2 = element.node_2.ux
+        uz2 = -element.node_2.uz
+
+        if element.type == "general":
+            n = len(element.deflection)
+            x_val = np.linspace(ux1, ux2, n)
+            y_val = np.linspace(uz1, uz2, n)
+
+            total_deflection = (
+                element.deflection
+                + x_val * math.sin(element.angle)
+                + y_val * math.cos(element.angle)
+            )
+
+        else:  # truss element has no bending
+            n = len(element.extension)
+            x_val = np.linspace(ux1, ux2, n)
+            y_val = np.linspace(uz1, uz2, n)
+
+            total_deflection = x_val * math.sin(element.angle) + y_val * math.cos(
+                element.angle
+            )
+
+        element.total_deflection = total_deflection
