@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 import math
-from typing import Union, Sequence
+from typing import Sequence, Union
+
 import numpy as np
 
 
@@ -11,7 +13,7 @@ class Vertex:
 
     def __init__(
         self,
-        x: Union[Vertex, Sequence[int], Sequence[float], int, float],
+        x: Union[Vertex, Sequence[int], Sequence[float], np.ndarray, int, float],
         y: Union[int, float, None] = None,
     ):
         """
@@ -43,9 +45,11 @@ class Vertex:
         return float(np.sqrt(np.sum(self.coordinates**2)))
 
     def unit(self) -> Vertex:
-        return 1 / self.modulus() * self
+        return (1 / self.modulus()) * self
 
-    def displace_polar(self, alpha, radius, inverse_z_axis=False):
+    def displace_polar(
+        self, alpha: float, radius: float, inverse_z_axis: bool = False
+    ) -> None:
         if inverse_z_axis:
             self.coordinates[0] += math.cos(alpha) * radius
             self.coordinates[1] -= math.sin(alpha) * radius
@@ -53,7 +57,7 @@ class Vertex:
             self.coordinates[0] += math.cos(alpha) * radius
             self.coordinates[1] += math.sin(alpha) * radius
 
-    def __add__(self, other):
+    def __add__(self, other: Union[Vertex, tuple, list, np.ndarray, float]) -> Vertex:
         if isinstance(other, (tuple, list)):
             other = np.asarray(other)
         if isinstance(other, Vertex):
@@ -62,10 +66,10 @@ class Vertex:
         coordinates = self.coordinates + other
         return Vertex(coordinates)
 
-    def __radd__(self, other):
+    def __radd__(self, other: Union[Vertex, tuple, list, np.ndarray, float]) -> Vertex:
         return self.__add__(other)
 
-    def __sub__(self, other):
+    def __sub__(self, other: Union[Vertex, tuple, list, np.ndarray, float]) -> Vertex:
         if isinstance(other, (tuple, list)):
             other = np.asarray(other)
         if isinstance(other, Vertex):
@@ -74,10 +78,10 @@ class Vertex:
         coordinates = self.coordinates - other
         return Vertex(coordinates)
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: Union[Vertex, tuple, list, np.ndarray, float]) -> Vertex:
         return self.__sub__(other)
 
-    def __mul__(self, other):
+    def __mul__(self, other: Union[Vertex, tuple, list, np.ndarray, float]) -> Vertex:
         if isinstance(other, (tuple, list)):
             other = np.asarray(other)
         if isinstance(other, Vertex):
@@ -86,10 +90,12 @@ class Vertex:
         coordinates = self.coordinates * other
         return Vertex(coordinates)
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: Union[Vertex, tuple, list, np.ndarray, float]) -> Vertex:
         return self.__mul__(other)
 
-    def __truediv__(self, other):
+    def __truediv__(
+        self, other: Union[Vertex, tuple, list, np.ndarray, float]
+    ) -> Vertex:
         if isinstance(other, (tuple, list)):
             other = np.asarray(other)
         if isinstance(other, Vertex):
@@ -98,13 +104,18 @@ class Vertex:
         coordinates = self.coordinates / other
         return Vertex(coordinates)
 
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Vertex):
+            return self.x == other.x and self.y == other.y
+        return NotImplemented
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Vertex({self.x}, {self.y})"
 
+    def __hash__(self) -> int:
+        return hash(str(self))
 
-def vertex_range(v1, v2, n):
+
+def vertex_range(v1: Vertex, v2: Vertex, n: int) -> list:
     dv = v2 - v1
     return [v1 + dv * i / n for i in range(n + 1)]

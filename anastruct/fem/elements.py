@@ -1,25 +1,27 @@
 from __future__ import annotations
-from math import sin, cos
-from functools import lru_cache
+
 import copy
-from typing import TYPE_CHECKING, Dict, Optional, List
+from functools import lru_cache
+from math import cos, sin
+from typing import TYPE_CHECKING, Dict, List, Optional
+
 import numpy as np
+
 from anastruct.basic import FEMException
 
-
 if TYPE_CHECKING:
-    from anastruct.vertex import Vertex
     from anastruct.fem.node import Node
     from anastruct.fem.system import Spring
+    from anastruct.vertex import Vertex
 
 try:
-    from anastruct.fem.cython.celements import (  # type: ignore # pylint: disable=unused-import
-        det_shear,
-        det_moment,
+    from anastruct.fem.cython.celements import (  # pylint: disable=unused-import
         det_axial,
+        det_moment,
+        det_shear,
     )
 except ImportError:
-    from anastruct.fem.cython.elements import det_shear, det_moment, det_axial
+    from anastruct.fem.cython.elements import det_axial, det_moment, det_shear
 
 """
 The matrices underneath are for slender beams, where the most deformation occurs due to bending.
@@ -41,7 +43,7 @@ class Element:
         vertex_2: Vertex,
         type_: str,
         section_name: str,
-        spring: Spring = None,
+        spring: Optional[Spring] = None,
     ):
         """
         :param id_: integer representing the elements ID
@@ -154,12 +156,12 @@ class Element:
         )
         return self.element_force_vector
 
-    def compile_stiffness_matrix(self):
+    def compile_stiffness_matrix(self) -> None:
         self.stiffness_matrix = stiffness_matrix(
             self.constitutive_matrix, self.kinematic_matrix
         )
 
-    def compile_kinematic_matrix(self, a1: float, a2: float, l: float):
+    def compile_kinematic_matrix(self, a1: float, a2: float, l: float) -> None:
         self.kinematic_matrix = kinematic_matrix(a1, a2, l)
 
     def compile_constitutive_matrix(
@@ -170,12 +172,12 @@ class Element:
         spring: Optional[Dict[int, float]] = None,
         node_1_hinge: Optional[bool] = False,
         node_2_hinge: Optional[bool] = False,
-    ):
+    ) -> None:
         self.constitutive_matrix = constitutive_matrix(
             EA, EI, l, spring, node_1_hinge, node_2_hinge
         )
 
-    def update_stiffness(self, factor: float, node: int):
+    def update_stiffness(self, factor: float, node: int) -> None:
         if node == 1:
             self.constitutive_matrix[1][1] *= factor
             self.constitutive_matrix[1][2] *= factor
@@ -186,13 +188,14 @@ class Element:
             self.constitutive_matrix[2][2] *= factor
         self.compile_stiffness_matrix()
 
-    def compile_geometric_non_linear_stiffness_matrix(self):
+    def compile_geometric_non_linear_stiffness_matrix(self) -> None:
         self.compile_stiffness_matrix()
+        assert self.N_1 is not None
         self.stiffness_matrix += geometric_stiffness_matrix(
             self.l, self.N_1, self.a1, self.a2
         )
 
-    def reset(self):
+    def reset(self) -> None:
         self.element_displacement_vector = np.zeros(6)
         self.element_primary_force_vector = np.zeros(6)
 
@@ -308,10 +311,10 @@ def constitutive_matrix(
 def stiffness_matrix(
     var_constitutive_matrix: np.ndarray, var_kinematic_matrix: np.ndarray
 ) -> np.ndarray:
-    kinematic_transposed_times_constitutive = np.dot(
-        var_kinematic_matrix.transpose(), var_constitutive_matrix
+    kinematic_transposed_times_constitutive = (
+        var_kinematic_matrix.transpose() @ var_constitutive_matrix
     )
-    return np.dot(kinematic_transposed_times_constitutive, var_kinematic_matrix)
+    return kinematic_transposed_times_constitutive @ var_kinematic_matrix  # type: ignore
 
 
 def geometric_stiffness_matrix(l: float, N: float, a1: float, a2: float) -> np.ndarray:
@@ -327,7 +330,7 @@ def geometric_stiffness_matrix(l: float, N: float, a1: float, a2: float) -> np.n
     c2 = cos(a2)
     s2 = sin(a2)
     # http://people.duke.edu/~hpgavin/cee421/frame-finite-def.pdf
-    return (
+    return (  # type: ignore
         N
         / l
         * np.array(

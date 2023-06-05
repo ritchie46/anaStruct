@@ -7,9 +7,9 @@ profile units:
 """
 
 
-def to_kN(v):
+def to_kN(v: float) -> float:
     return v / 1e3
 
 
-def to_kNm2(v):
+def to_kNm2(v: float) -> float:
     return v * 1e-9

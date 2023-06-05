@@ -1,8 +1,15 @@
 import math
+from typing import TYPE_CHECKING, Tuple
+
 import numpy as np
 
+if TYPE_CHECKING:
+    from anastruct.fem.elements import Element
 
-def plot_values_deflection(element, factor, linear=False):
+
+def plot_values_deflection(
+    element: "Element", factor: float, linear: bool = False
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Determine the plotting values for deflection
 
@@ -37,7 +44,9 @@ def plot_values_deflection(element, factor, linear=False):
     return x_val, y_val
 
 
-def plot_values_bending_moment(element, factor, n):
+def plot_values_bending_moment(
+    element: "Element", factor: float, n: int
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     :param element: (object) of the Element class
     :param factor: (float) scaling the plot
@@ -86,7 +95,9 @@ def plot_values_bending_moment(element, factor, n):
     return x_val, y_val
 
 
-def plot_values_axial_force(element, factor, n):
+def plot_values_axial_force(
+    element: "Element", factor: float, n: int
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     :param element: (object) of the Element class
     :param factor: (float) scaling the plot
@@ -131,7 +142,9 @@ def plot_values_axial_force(element, factor, n):
     return x_val, y_val
 
 
-def plot_values_shear_force(element, factor):
+def plot_values_shear_force(
+    element: "Element", factor: float
+) -> Tuple[np.ndarray, np.ndarray]:
     x1 = element.vertex_1.x
     y1 = -element.vertex_1.z
     x2 = element.vertex_2.x
@@ -161,7 +174,7 @@ def plot_values_shear_force(element, factor):
     return x_val, y_val
 
 
-def plot_values_element(element):
-    x_val = [element.vertex_1.x, element.vertex_2.x]
-    y_val = [-element.vertex_1.z, -element.vertex_2.z]
+def plot_values_element(element: "Element") -> Tuple[np.ndarray, np.ndarray]:
+    x_val = np.array([element.vertex_1.x, element.vertex_2.x])
+    y_val = np.array([-element.vertex_1.z, -element.vertex_2.z])
     return x_val, y_val

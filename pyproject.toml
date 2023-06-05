@@ -29,9 +29,11 @@ dynamic = ["version", "readme", "dependencies", "optional-dependencies"]
 version = {attr = "anastruct._version.__version__"}
 readme = {file = ["README.md"]}
 dependencies = {file = "requirements.txt"}
-optional-dependencies.plot = {file = "plot_requirements.txt"}
-optional-dependencies.test = {file = "test_requirements.txt"}
-optional-dependencies.dev = {file = "dev_requirements.txt"}
+
+[tool.setuptools.dynamic.optional-dependencies]
+plot = {file = "plot_requirements.txt"}
+test = {file = "test_requirements.txt"}
+dev = {file = "dev_requirements.txt"}
 
 [project.urls]
 homepage = "https://github.com/ritchie46/anaStruct"
@@ -56,3 +58,22 @@ py-modules = ["_custom_build"]
 
 [tool.setuptools.cmdclass]
 build_py = "_custom_build.build_py"
+
+[tool.setuptools.package-data]
+anastruct = ["py.typed"]
+
+[tool.mypy]
+packages = "anastruct"
+python_version = "3.8"
+strict = true
+allow_any_generics = true
+implicit_reexport = true
+strict_optional = false
+
+[[tool.mypy.overrides]]
+module = [
+    "matplotlib.*",
+    "anastruct.fem.cython.celements",
+    "anastruct.fem.cython.cbasic"
+]
+ignore_missing_imports = true
