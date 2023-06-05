@@ -2,8 +2,18 @@ import collections.abc
 import copy
 import math
 import re
-from typing import (TYPE_CHECKING, Any, Collection, Dict, List, Optional,
-                    Sequence, Set, Tuple, Union)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Collection,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 
