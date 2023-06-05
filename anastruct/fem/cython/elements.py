@@ -2,7 +2,9 @@ from functools import lru_cache
 
 
 @lru_cache(32000)
-def det_moment(kl, kr, qi, q, x, EI, L):
+def det_moment(
+    kl: float, kr: float, qi: float, q: float, x: float, EI: float, L: float
+) -> float:
     """
     See notebook in: anastruct/fem/background/primary_m_v.ipynb
 
@@ -47,7 +49,9 @@ def det_moment(kl, kr, qi, q, x, EI, L):
 
 
 @lru_cache(32000)
-def det_shear(kl, kr, qi, q, x, EI, L):
+def det_shear(
+    kl: float, kr: float, qi: float, q: float, x: float, EI: float, L: float
+) -> float:
     """
     See notebook in: anastruct/fem/background/primary_m_v.ipynb
 
@@ -83,7 +87,7 @@ def det_shear(kl, kr, qi, q, x, EI, L):
 
 
 @lru_cache(32000)
-def det_axial(qi, q, x, EA, L):
+def det_axial(qi: float, q: float, x: float, EA: float, L: float) -> float:
     """
     See notebook in: anastruct/fem/background/distributed_ax_force.ipynb
 

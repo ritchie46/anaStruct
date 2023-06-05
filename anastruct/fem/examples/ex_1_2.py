@@ -1,7 +1,7 @@
 from anastruct.fem import system as se
 
 
-def run():
+def run() -> None:
     system = se.SystemElements()
     system.add_element(location=[[3, 4], [0, 0]], EA=5e9, EI=8000)
     system.add_element(location=[[8, 4], [3, 4]], EA=5e9, EI=4000)

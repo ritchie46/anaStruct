@@ -1,14 +1,14 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Union
+
+from anastruct.basic import FEMException, angle_x_axis
 from anastruct.fem.node import Node
 from anastruct.vertex import Vertex
-from anastruct.basic import FEMException, angle_x_axis
-
 
 if TYPE_CHECKING:
-    from anastruct.fem.system import SystemElements, Spring
+    from anastruct.fem.system import Spring, SystemElements
 
 
-def check_internal_hinges(system: "SystemElements", node_id: int):
+def check_internal_hinges(system: "SystemElements", node_id: int) -> None:
     """
     Identify internal hinges, set their hinge status
 
@@ -60,27 +60,40 @@ def append_node_id(
     point_2: Vertex,
     node_id1: int,
     node_id2: int,
-):
+) -> None:
     if node_id1 not in system.node_map:
         system.node_map[node_id1] = Node(node_id1, vertex=point_1)
     if node_id2 not in system.node_map:
         system.node_map[node_id2] = Node(node_id2, vertex=point_2)
 
 
-def det_vertices(system, location_list):
+def det_vertices(
+    system: "SystemElements",
+    location_list: Union[
+        Vertex,
+        Sequence[Vertex],
+        Sequence[int],
+        Sequence[float],
+        Sequence[Sequence[float]],
+    ],
+) -> Tuple[Vertex, Vertex]:
     if isinstance(location_list, Vertex):
         point_1 = system._previous_point
         point_2 = Vertex(location_list)
-    elif len(location_list) == 1:
+    elif len(location_list) == 1 and isinstance(location_list[0], Sequence):
         point_1 = system._previous_point
         point_2 = Vertex(location_list[0][0], location_list[0][1])
-    elif isinstance(location_list[0], (int, float)):
+    elif isinstance(location_list[0], (int, float)) and isinstance(
+        location_list[1], (int, float)
+    ):
         point_1 = system._previous_point
         point_2 = Vertex(location_list[0], location_list[1])
-    elif isinstance(location_list[0], Vertex):
+    elif isinstance(location_list[0], Vertex) and isinstance(location_list[1], Vertex):
         point_1 = location_list[0]
         point_2 = location_list[1]
-    else:
+    elif isinstance(location_list[0], Sequence) and isinstance(
+        location_list[1], Sequence
+    ):
         point_1 = Vertex(location_list[0][0], location_list[0][1])
         point_2 = Vertex(location_list[1][0], location_list[1][1])
     system._previous_point = point_2
@@ -88,10 +101,13 @@ def det_vertices(system, location_list):
     return point_1, point_2
 
 
-def det_node_ids(system, point_1, point_2):
+def det_node_ids(
+    system: "SystemElements", point_1: Vertex, point_2: Vertex
+) -> Tuple[int, int]:
     node_ids = []
     for p in (point_1, point_2):
-        k = str(p)
+        # k = str(p)
+        k = p
         if k in system._vertices:
             node_id = system._vertices[k]
         else:
@@ -101,7 +117,7 @@ def det_node_ids(system, point_1, point_2):
     return node_ids[0], node_ids[1]
 
 
-def support_check(system, node_id):
+def support_check(system: "SystemElements", node_id: int) -> None:
     if system.node_map[node_id].hinge:
         raise FEMException(
             "Flawed inputs",
@@ -109,7 +125,22 @@ def support_check(system, node_id):
         )
 
 
-def force_elements_orientation(point_1, point_2, node_id1, node_id2, spring, mp):
+def force_elements_orientation(
+    point_1: Vertex,
+    point_2: Vertex,
+    node_id1: int,
+    node_id2: int,
+    spring: Optional[dict[int, float]],
+    mp: Optional[dict[int, float]],
+) -> Tuple[
+    Vertex,
+    Vertex,
+    int,
+    int,
+    Optional[dict[int, float]],
+    Optional[dict[int, float]],
+    float,
+]:
     """
     Forces the elements to be in the first and the last quadrant of the unity circle.
     Meaning the first node is always left and the last node is always right. Or they

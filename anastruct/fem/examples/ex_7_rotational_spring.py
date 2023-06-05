@@ -5,7 +5,7 @@ Test the primary force vector when applying a q_load at a hinged element.
 """
 
 ss = SystemElements()
-ss.add_element([[0, 0], [3.5, 0]])
+ss.add_element([[0.0, 0.0], [3.5, 0.0]])
 ss.add_element([7, 0], spring={1: 100})
 ss.add_support_fixed([1])
 ss.add_support_hinged(3)

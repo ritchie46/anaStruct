@@ -1,35 +1,44 @@
 import math
+from typing import Any, Tuple
+
 from anastruct.sectionbase.sectionbase import section_base
 
 
-def steel_section_properties(**kwargs):
+def steel_section_properties(
+    **kwargs: dict[str, Any]
+) -> Tuple[str, float, float, float]:
     steel_section = kwargs.get("steelsection", "IPE 300")
     orient = kwargs.get("orient", "y")
     E = kwargs.get("E", 210e9)
     sw = kwargs.get("sw", False)
 
+    assert isinstance(steel_section, str)
     param = section_base.get_section_parameters(steel_section)
-    EA = E * param["Ax"]
+    EA: float = E * param["Ax"]
     if orient == "y":
-        EI = E * param["Iy"]
+        EI: float = E * param["Iy"]
     elif orient == "z":
         EI = E * param["Iz"]
     else:
         raise ValueError("Orient should be defined.")
     if sw:
-        g = param["swdl"]
+        g: float = param["swdl"]
     else:
         g = 0
     section_name = f"{steel_section}({orient})"
     return section_name, EA, EI, g
 
 
-def rectangle_properties(**kwargs):
+def rectangle_properties(**kwargs: dict[str, Any]) -> Tuple[str, float, float, float]:
     b = kwargs.get("b", 0.1)
     h = kwargs.get("h", 0.5)
     E = kwargs.get("E", 210e9)
     gamma = kwargs.get("gamma", 10000)
     sw = kwargs.get("sw", False)
+    assert isinstance(b, float)
+    assert isinstance(h, float)
+    assert isinstance(E, float)
+    assert isinstance(gamma, float)
 
     A = b * h
     I = b * h**3 / 12
@@ -43,11 +52,14 @@ def rectangle_properties(**kwargs):
     return section_name, EA, EI, g
 
 
-def circle_properties(**kwargs):
+def circle_properties(**kwargs: dict[str, Any]) -> Tuple[str, float, float, float]:
     d = kwargs.get("d", 0.4)
     E = kwargs.get("E", 210e9)
     gamma = kwargs.get("gamma", 10000)
     sw = kwargs.get("sw", False)
+    assert isinstance(d, float)
+    assert isinstance(E, float)
+    assert isinstance(gamma, float)
 
     A = math.pi * d**2 / 4
     I = math.pi * d**4 / 64

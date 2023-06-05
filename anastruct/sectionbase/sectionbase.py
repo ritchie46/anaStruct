@@ -1,5 +1,7 @@
 import os
 import xml.etree.ElementTree as ElementTree
+from typing import Any, Optional
+
 from anastruct.sectionbase import units
 
 
@@ -10,28 +12,29 @@ class SectionBase:
 
     available_database_names = ["EU", "US", "UK"]
 
-    def __init__(self):
-        self.current_length_unit = None
-        self.current_mass_unit = None
-        self.current_force_unit = None
-        self.current_database = None
-        self.xml_length_unit = None
-        self.xml_area_unit = None
-        self.xml_weight_unit = None
-        self.xml_self_weight_dead_load = None
-        self._root = None  # xml root
+    def __init__(self) -> None:
+        self.current_length_unit: Optional[float] = None
+        self.current_mass_unit: Optional[float] = None
+        self.current_force_unit: Optional[float] = None
+        self.current_database: Optional[str] = None
+        self.xml_length_unit: Optional[float] = None
+        self.xml_area_unit: Optional[float] = None
+        self.xml_weight_unit: Optional[float] = None
+        self.xml_self_weight_dead_load: Optional[float] = None
+        self._root: Optional[ElementTree.Element] = None  # xml root
 
         self.set_unit_system()
 
     @property
-    def root(self):
+    def root(self) -> ElementTree.Element:
         if self._root is None:
             self.set_database_name("EU")
             self.load_data_from_xml()
+        assert self._root is not None
         return self._root
 
     @property
-    def available_sections(self):
+    def available_sections(self) -> list:
         return list(
             map(
                 lambda el: el.attrib["sectionname"],
@@ -40,19 +43,21 @@ class SectionBase:
         )
 
     @property
-    def available_units(self):
+    def available_units(self) -> dict[str, list[str]]:
         return {
             "length": list(units.l_dict.keys()),
             "mass": list(units.m_dict.keys()),
             "force": list(units.f_dict.keys()),
         }
 
-    def set_unit_system(self, length="m", mass_unit="kg", force_unit="N"):
+    def set_unit_system(
+        self, length: str = "m", mass_unit: str = "kg", force_unit: str = "N"
+    ) -> None:
         self.current_length_unit = units.l_dict[length]
         self.current_mass_unit = units.m_dict[mass_unit]
         self.current_force_unit = units.f_dict[force_unit]
 
-    def set_database_name(self, basename):
+    def set_database_name(self, basename: str) -> None:
         if basename == "EU" or basename == "UK":
             self.xml_length_unit = units.m
             self.xml_area_unit = units.m
@@ -71,12 +76,13 @@ class SectionBase:
 
         self.load_data_from_xml()
 
-    def load_data_from_xml(self):
+    def load_data_from_xml(self) -> None:
+        assert self.current_database is not None
         self._root = ElementTree.parse(
             os.path.join(os.path.dirname(__file__), "data", self.current_database)
         ).getroot()
 
-    def get_section_parameters(self, section_name):
+    def get_section_parameters(self, section_name: str) -> dict:
         if self.root is None:
             self.set_database_name("EU")
             self.load_data_from_xml()
@@ -90,7 +96,15 @@ class SectionBase:
         element = self.convert_units(element)
         return element
 
-    def convert_units(self, element):
+    def convert_units(self, element: dict[str, Any]) -> dict[str, Any]:
+        assert self.current_length_unit is not None
+        assert self.current_mass_unit is not None
+        assert self.current_force_unit is not None
+        assert self.xml_length_unit is not None
+        assert self.xml_area_unit is not None
+        assert self.xml_weight_unit is not None
+        assert self.xml_self_weight_dead_load is not None
+
         lu = self.xml_length_unit / self.current_length_unit  # long unit
         sdu = self.xml_area_unit / self.current_length_unit  # sect dim unit
         wu = self.xml_weight_unit / self.current_mass_unit  # weight unit

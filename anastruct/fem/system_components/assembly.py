@@ -1,17 +1,18 @@
 import math
 from typing import TYPE_CHECKING, List, Tuple
-import numpy as np
-from anastruct.fem.elements import det_moment, det_shear, det_axial
 
+import numpy as np
+
+from anastruct.fem.elements import det_axial, det_moment, det_shear
 
 if TYPE_CHECKING:
-    from anastruct.fem.system import SystemElements
     from anastruct.fem.elements import Element
+    from anastruct.fem.system import SystemElements
 
 
 def set_force_vector(
     system: "SystemElements", force_list: List[Tuple[int, int, float]]
-):
+) -> np.ndarray:
     """
     :param force_list: list containing tuples with the
     1. number of the node,
@@ -28,7 +29,7 @@ def set_force_vector(
     return system.system_force_vector
 
 
-def prep_matrix_forces(system: "SystemElements"):
+def prep_matrix_forces(system: "SystemElements") -> None:
     system.system_force_vector = system.system_force_vector = np.zeros(
         len(system._vertices) * 3
     )
@@ -38,12 +39,12 @@ def prep_matrix_forces(system: "SystemElements"):
     apply_moment_load(system)
 
 
-def apply_moment_load(system: "SystemElements"):
+def apply_moment_load(system: "SystemElements") -> None:
     for node_id, Ty in system.loads_moment.items():
         set_force_vector(system, [(node_id, 3, Ty)])
 
 
-def apply_point_load(system: "SystemElements"):
+def apply_point_load(system: "SystemElements") -> None:
     for node_id in system.loads_point:
         Fx, Fz = system.loads_point[node_id]
         # system force vector.
@@ -56,7 +57,7 @@ def apply_point_load(system: "SystemElements"):
         )
 
 
-def apply_perpendicular_q_load(system: "SystemElements"):
+def apply_perpendicular_q_load(system: "SystemElements") -> None:
     for element_id in system.loads_dead_load:
         element = system.element_map[element_id]
         qi_perpendicular = element.all_qp_load[0]
@@ -106,7 +107,7 @@ def apply_perpendicular_q_load(system: "SystemElements"):
         ] += primary_force[3:]
 
 
-def apply_parallel_qn_load(system: "SystemElements"):
+def apply_parallel_qn_load(system: "SystemElements") -> None:
     for element_id in system.loads_dead_load:
         element = system.element_map[element_id]
         qni_parallel = element.all_qn_load[0]
@@ -140,14 +141,14 @@ def apply_parallel_qn_load(system: "SystemElements"):
         )
 
 
-def dead_load(system: "SystemElements", g: float, element_id: int):
+def dead_load(system: "SystemElements", g: float, element_id: int) -> None:
     system.loads_dead_load.add(element_id)
     system.element_map[element_id].dead_load = g
 
 
 def assemble_system_matrix(
     system: "SystemElements", validate: bool = False, geometric_matrix: bool = False
-):
+) -> None:
     """
     Shape of the matrix = n nodes * n d.o.f.
     Shape = n * 3
@@ -202,7 +203,9 @@ def assemble_system_matrix(
         assert np.allclose((system.system_matrix.transpose()), system.system_matrix)
 
 
-def set_displacement_vector(system, nodes_list):
+def set_displacement_vector(
+    system: "SystemElements", nodes_list: List[Tuple[int, int]]
+) -> np.ndarray:
     """
     :param nodes_list: list containing tuples with
     1.the node
@@ -228,9 +231,11 @@ def set_displacement_vector(system, nodes_list):
     return system.system_displacement_vector
 
 
-def process_conditions(system):
+def process_conditions(system: "SystemElements") -> None:
     indexes = []
     # remove the unsolvable values from the matrix and vectors
+    assert system.shape_system_matrix is not None
+    assert system.system_displacement_vector is not None
     for i in range(system.shape_system_matrix):
         if system.system_displacement_vector[i] == 0:
             indexes.append(i)
@@ -240,12 +245,15 @@ def process_conditions(system):
     system.system_displacement_vector = np.delete(
         system.system_displacement_vector, indexes, 0
     )
+    assert system.system_force_vector is not None
+    assert system.system_matrix is not None
+    assert system.reduced_system_matrix is not None
     system.reduced_force_vector = np.delete(system.system_force_vector, indexes, 0)
     system.reduced_system_matrix = np.delete(system.system_matrix, indexes, 0)
     system.reduced_system_matrix = np.delete(system.reduced_system_matrix, indexes, 1)
 
 
-def process_supports(system):
+def process_supports(system: "SystemElements") -> None:
     for node in system.supports_hinged:
         set_displacement_vector(system, [(node.id, 1), (node.id, 2)])
 

@@ -1,7 +1,8 @@
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
-from anastruct.fem.system import SystemElements
+
 from anastruct import LoadCase, LoadCombination
+from anastruct.fem.system import SystemElements
 
 ss = SystemElements()
 
