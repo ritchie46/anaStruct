@@ -59,6 +59,9 @@ py-modules = ["_custom_build"]
 [tool.setuptools.cmdclass]
 build_py = "_custom_build.build_py"
 
+[tool.setuptools.package-data]
+anastruct = ["py.typed"]
+
 [tool.mypy]
 packages = "anastruct"
 strict = true
