@@ -2,18 +2,8 @@ import collections.abc
 import copy
 import math
 import re
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Collection,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import (TYPE_CHECKING, Any, Collection, Dict, List, Optional,
+                    Sequence, Set, Tuple, Union)
 
 import numpy as np
 
@@ -942,13 +932,13 @@ class SystemElements:
         q_perp_arr: Sequence[Sequence[float]]
         if isinstance(q, Sequence):
             q_arr = [q]
-        elif isinstance(q, float):
+        elif isinstance(q, (int, float)):
             q_arr = [[q, q]]
         if q_perp is None:
             q_perp_arr = [[0, 0]]
         elif isinstance(q_perp, Sequence):
             q_perp_arr = [q_perp]
-        elif isinstance(q_perp, float):
+        elif isinstance(q_perp, (int, float)):
             q_perp_arr = [[q_perp, q_perp]]
 
         if rotation is None:
