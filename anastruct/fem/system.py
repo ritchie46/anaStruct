@@ -956,9 +956,7 @@ class SystemElements:
         else:
             direction_flag = False
 
-        n_elems = (
-            len(element_id) if isinstance(element_id, collections.abc.Iterable) else 1
-        )
+        n_elems = len(element_id) if isinstance(element_id, Sequence) else 1
         element_id = arg_to_list(element_id, n_elems)
         direction = arg_to_list(direction, n_elems)
         rotation = arg_to_list(rotation, n_elems)
@@ -1006,8 +1004,8 @@ class SystemElements:
                 self.orientation_cs * self.load_factor * q_arr[i][1],
             )
             el.q_perp_load = (
-                q_perp_arr[0] * self.load_factor,
-                q_perp_arr[1] * self.load_factor,
+                q_perp_arr[i][0] * self.load_factor,
+                q_perp_arr[i][1] * self.load_factor,
             )
             el.q_direction = direction[i]
             el.q_angle = rotation[i]

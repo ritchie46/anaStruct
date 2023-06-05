@@ -1,5 +1,5 @@
 import collections.abc
-from typing import Any, Tuple
+from typing import Any, Sequence, Tuple
 
 import numpy as np
 
@@ -37,9 +37,11 @@ class FEMException(Exception):
         self.message = message
 
 
-def arg_to_list(arg: Any, n: int) -> list:
-    if isinstance(arg, list) and not isinstance(arg, str) and len(arg) == n:
+def arg_to_list(arg: Any, n: int) -> Sequence:
+    if isinstance(arg, Sequence) and not isinstance(arg, str) and len(arg) == n:
         return arg
+    elif isinstance(arg, Sequence) and not isinstance(arg, str) and len(arg) == 1:
+        return [arg[0] for _ in range(n)]
     else:
         return [arg for _ in range(n)]
 
