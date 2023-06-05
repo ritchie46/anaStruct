@@ -245,9 +245,6 @@ def process_conditions(system: "SystemElements") -> None:
     system.system_displacement_vector = np.delete(
         system.system_displacement_vector, indexes, 0
     )
-    assert system.system_force_vector is not None
-    assert system.system_matrix is not None
-    assert system.reduced_system_matrix is not None
     system.reduced_force_vector = np.delete(system.system_force_vector, indexes, 0)
     system.reduced_system_matrix = np.delete(system.system_matrix, indexes, 0)
     system.reduced_system_matrix = np.delete(system.reduced_system_matrix, indexes, 1)
