@@ -112,6 +112,9 @@ class Vertex:
     def __str__(self) -> str:
         return f"Vertex({self.x}, {self.y})"
 
+    def __hash__(self) -> int:
+        return hash(str(self))
+
 
 def vertex_range(v1: Vertex, v2: Vertex, n: int) -> list:
     dv = v2 - v1

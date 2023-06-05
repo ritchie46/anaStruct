@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Optional
 from anastruct.fem.plotter.values import PlottingValues
 
 if TYPE_CHECKING:
-    from matplotlib.axes import Axes  # type: ignore
-    from matplotlib.figure import Figure  # type: ignore
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
     from anastruct.fem.system import SystemElements
 

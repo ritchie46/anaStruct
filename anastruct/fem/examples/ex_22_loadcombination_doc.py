@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt  # type: ignore
+import matplotlib.pyplot as plt
 import numpy as np
 
 from anastruct import LoadCase, LoadCombination
