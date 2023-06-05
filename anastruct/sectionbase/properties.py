@@ -38,7 +38,7 @@ def rectangle_properties(**kwargs: Dict[str, Any]) -> Tuple[str, float, float, f
     assert isinstance(b, float)
     assert isinstance(h, float)
     assert isinstance(E, float)
-    assert isinstance(gamma, float)
+    assert isinstance(gamma, int)
 
     A = b * h
     I = b * h**3 / 12
@@ -59,7 +59,7 @@ def circle_properties(**kwargs: Dict[str, Any]) -> Tuple[str, float, float, floa
     sw = kwargs.get("sw", False)
     assert isinstance(d, float)
     assert isinstance(E, float)
-    assert isinstance(gamma, float)
+    assert isinstance(gamma, int)
 
     A = math.pi * d**2 / 4
     I = math.pi * d**4 / 64

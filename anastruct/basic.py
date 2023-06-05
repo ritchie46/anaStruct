@@ -37,9 +37,9 @@ class FEMException(Exception):
         self.message = message
 
 
-def arg_to_list(arg: Any, n: int) -> Sequence:
+def arg_to_list(arg: Any, n: int) -> list:
     if isinstance(arg, Sequence) and not isinstance(arg, str) and len(arg) == n:
-        return arg
+        return list(arg)
     elif isinstance(arg, Sequence) and not isinstance(arg, str) and len(arg) == 1:
         return [arg[0] for _ in range(n)]
     else:
