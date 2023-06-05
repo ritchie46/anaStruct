@@ -405,7 +405,7 @@ class SystemElements:
         mp: Optional[MpType] = None,
         spring: Optional[Spring] = None,
         **kwargs: Any,
-    ) -> list[int]:
+    ) -> List[int]:
         """
         Add multiple elements defined by the first and the last point.
 

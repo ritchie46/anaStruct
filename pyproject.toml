@@ -64,7 +64,16 @@ anastruct = ["py.typed"]
 
 [tool.mypy]
 packages = "anastruct"
+python_version = "3.8"
 strict = true
 allow_any_generics = true
 implicit_reexport = true
 strict_optional = false
+
+[[tool.mypy.overrides]]
+module = [
+    "matplotlib.*",
+    "anastruct.fem.cython.celements",
+    "anastruct.fem.cython.cbasic"
+]
+ignore_missing_imports = true

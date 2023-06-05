@@ -38,5 +38,9 @@
     "editor.codeActionsOnSave": {
         "source.organizeImports": true
     },
-    "editor.formatOnPaste": true
+    "editor.formatOnPaste": true,
+    "python.linting.mypyArgs": [
+        "--show-column-numbers",
+        "--no-pretty"
+    ]
 }

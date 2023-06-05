@@ -1,3 +1,5 @@
+from typing import Dict
+
 m: float = 1.0
 cm: float = 1.0e-2
 mm: float = 1.0e-3
@@ -11,6 +13,6 @@ lb: float = 0.4536
 lbf: float = 4.448
 kip: float = 1.0e3 * lbf
 
-l_dict: dict[str, float] = {"m": m, "cm": cm, "mm": mm, "ft": ft, "inch": inch}
-m_dict: dict[str, float] = {"kg": kg, "lb": lb}
-f_dict: dict[str, float] = {"N": N, "kN": kN, "lbf": lbf, "kip": kip}
+l_dict: Dict[str, float] = {"m": m, "cm": cm, "mm": mm, "ft": ft, "inch": inch}
+m_dict: Dict[str, float] = {"kg": kg, "lb": lb}
+f_dict: Dict[str, float] = {"N": N, "kN": kN, "lbf": lbf, "kip": kip}

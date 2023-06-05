@@ -4,7 +4,7 @@ from typing import Any, Tuple
 import numpy as np
 
 try:
-    from anastruct.cython.cbasic import (  # pylint: disable=unused-import
+    from anastruct.cython.cbasic import (  # type: ignore # pylint: disable=unused-import
         angle_x_axis,
         converge,
     )

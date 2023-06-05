@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Optional, Sequence, Tuple, Union
 
 from anastruct.basic import FEMException, angle_x_axis
 from anastruct.fem.node import Node
@@ -130,15 +130,15 @@ def force_elements_orientation(
     point_2: Vertex,
     node_id1: int,
     node_id2: int,
-    spring: Optional[dict[int, float]],
-    mp: Optional[dict[int, float]],
+    spring: Optional[Dict[int, float]],
+    mp: Optional[Dict[int, float]],
 ) -> Tuple[
     Vertex,
     Vertex,
     int,
     int,
-    Optional[dict[int, float]],
-    Optional[dict[int, float]],
+    Optional[Dict[int, float]],
+    Optional[Dict[int, float]],
     float,
 ]:
     """

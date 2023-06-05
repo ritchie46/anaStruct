@@ -1,6 +1,6 @@
 import os
 import xml.etree.ElementTree as ElementTree
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 from anastruct.sectionbase import units
 
@@ -43,7 +43,7 @@ class SectionBase:
         )
 
     @property
-    def available_units(self) -> dict[str, list[str]]:
+    def available_units(self) -> Dict[str, List[str]]:
         return {
             "length": list(units.l_dict.keys()),
             "mass": list(units.m_dict.keys()),
@@ -96,7 +96,7 @@ class SectionBase:
         element = self.convert_units(element)
         return element
 
-    def convert_units(self, element: dict[str, Any]) -> dict[str, Any]:
+    def convert_units(self, element: Dict[str, Any]) -> Dict[str, Any]:
         assert self.current_length_unit is not None
         assert self.current_mass_unit is not None
         assert self.current_force_unit is not None

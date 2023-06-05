@@ -1,6 +1,6 @@
 import copy
 import pprint
-from typing import TYPE_CHECKING, Any, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence, Union
 
 from anastruct.basic import arg_to_list
 
@@ -139,7 +139,7 @@ class LoadCombination:
         max_iter: int = 200,
         geometrical_non_linear: bool = False,
         **kwargs: Any,
-    ) -> dict[str, "SystemElements"]:
+    ) -> Dict[str, "SystemElements"]:
         """
         Evaluate the Load Combination.
 

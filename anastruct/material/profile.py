@@ -1,5 +1,6 @@
 import csv
 import io
+from typing import Dict
 
 s_hea = """profiel,G,A,h,b,tw,tf,AL,Iy,Wy,Iz,Wz
 nr.,kg/m,mm2,mm,mm,mm,mm,m2/m,mm4,mm3,mm4,mm3
@@ -51,7 +52,7 @@ nr.,kg/m,mm2,mm,mm,mm,mm,m2/m,mm4,mm3,mm4,mm3
 600,125,15598,600,220,12,19,2.01,92083,3069,3387,308"""
 
 
-def load(st: str) -> dict[int, dict]:
+def load(st: str) -> Dict[int, dict]:
     with io.StringIO(st) as f:
         r = csv.reader(f)
         profile = {}
