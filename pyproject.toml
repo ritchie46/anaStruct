@@ -27,7 +27,7 @@ dynamic = ["version", "readme", "dependencies", "optional-dependencies"]
 
 [tool.setuptools.dynamic]
 version = {attr = "anastruct._version.__version__"}
-readme = {file = ["README.md"]}
+readme = {file = "README.md", content-type = "text/markdown"}
 dependencies = {file = "requirements.txt"}
 
 [tool.setuptools.dynamic.optional-dependencies]
