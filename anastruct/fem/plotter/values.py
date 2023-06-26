@@ -120,7 +120,7 @@ class PlottingValues:
         if factor is None:
             max_force = max(
                 map(
-                    lambda el: np.max(np.abs(el.shear_force)),  # type: ignore
+                    lambda el: np.max(np.abs(el.shear_force)),
                     self.system.element_map.values(),
                 )
             )
