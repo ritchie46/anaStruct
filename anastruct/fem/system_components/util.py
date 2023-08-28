@@ -30,9 +30,11 @@ def check_internal_hinges(system: "SystemElements", node_id: int) -> None:
         else:
             hinges.append(0)
 
-    # If at least two elements are connected
-    # and no more than one is rigidly connected
-    if len(hinges) > 1 and len(hinges) - sum(hinges) <= 1:
+    # If at least one element is connected
+    # and no more than one element is rigidly connected
+    if (len(hinges) > 1 and len(hinges) - sum(hinges) <= 1) or (
+        len(hinges) == 1 and sum(hinges) == 1
+    ):
         system.internal_hinges.append(node)
 
     if node in system.internal_hinges:
