@@ -1,5 +1,7 @@
 from __future__ import annotations
-from typing import Dict, TYPE_CHECKING
+
+from typing import TYPE_CHECKING, Dict, Optional
+
 from anastruct.vertex import Vertex
 
 if TYPE_CHECKING:
@@ -13,9 +15,9 @@ class Node:
         Fx: float = 0.0,
         Fz: float = 0.0,
         Ty: float = 0.0,
-        ux: float = 0.0,
-        uz: float = 0.0,
-        phi_y: float = 0,
+        ux: Optional[float] = 0.0,
+        uz: Optional[float] = 0.0,
+        phi_y: Optional[float] = 0,
         vertex: Vertex = Vertex(0, 0),
         hinge: bool = False,
     ):
@@ -47,7 +49,7 @@ class Node:
     def Fy(self) -> float:
         return -self.Fz
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.vertex:
             return (
                 f"[id = {self.id}, Fx = {self.Fx}, Fz = {self.Fz}, Ty = {self.Ty}, ux = {self.ux}, "
@@ -99,14 +101,20 @@ class Node:
             hinge=self.hinge,
         )
 
-    def reset(self):
+    def reset(self) -> None:
         self.Fx = self.Fz = self.Ty = self.ux = self.uz = self.phi_y = 0
         self.hinge = False
 
-    def add_results(self, other: Node):
+    def add_results(self, other: Node) -> None:
         assert (
             self.id == other.id
         ), "Cannot add nodes as the ID's don't match. The nodes positions don't match."
+        assert self.phi_y is not None
+        assert self.ux is not None
+        assert self.uz is not None
+        assert other.phi_y is not None
+        assert other.ux is not None
+        assert other.uz is not None
         self.Fx = self.Fx + other.Fx
         self.Fz = self.Fz + other.Fz
         self.Ty = self.Ty + other.Ty

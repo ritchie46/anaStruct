@@ -22,6 +22,7 @@
         "Nmin",
         "numpy",
         "perp",
+        "postprocess",
         "pspec",
         "Qmax",
         "Qmin",
@@ -33,5 +34,15 @@
         "wmax",
         "wmin"
     ],
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "cSpell.diagnosticLevel": "Hint",
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+    },
+    "editor.formatOnPaste": true,
+    "python.linting.mypyArgs": [
+        "--show-column-numbers",
+        "--no-pretty"
+    ]
 }

@@ -1,15 +1,21 @@
 import math
+from typing import TYPE_CHECKING, Optional, Tuple
+
 import numpy as np
+
 from .element import (
-    plot_values_deflection,
-    plot_values_bending_moment,
     plot_values_axial_force,
-    plot_values_shear_force,
+    plot_values_bending_moment,
+    plot_values_deflection,
     plot_values_element,
+    plot_values_shear_force,
 )
 
+if TYPE_CHECKING:
+    from anastruct.fem.system import SystemElements
 
-def det_scaling_factor(max_unit, max_val_structure):
+
+def det_scaling_factor(max_unit: float, max_val_structure: float) -> float:
     if math.isclose(max_unit, 0):
         return 0.1
     else:
@@ -17,14 +23,14 @@ def det_scaling_factor(max_unit, max_val_structure):
 
 
 class PlottingValues:
-    def __init__(self, system, mesh):
-        self.system = system
-        self.mesh = max(3, mesh)
+    def __init__(self, system: "SystemElements", mesh: int):
+        self.system: "SystemElements" = system
+        self.mesh: int = max(3, mesh)
         # used for scaling the plotting values.
-        self._max_val_structure = None
+        self._max_val_structure: Optional[float] = None
 
     @property
-    def max_val_structure(self):
+    def max_val_structure(self) -> float:
         """
         Determine the maximum value of the structures dimensions.
         :return: (flt)
@@ -40,7 +46,9 @@ class PlottingValues:
             )
         return self._max_val_structure
 
-    def displacements(self, factor, linear):
+    def displacements(
+        self, factor: Optional[float], linear: bool
+    ) -> Tuple[np.ndarray, np.ndarray]:
         if factor is None:
             # needed to determine the scaling factor
             max_displacement = max(
@@ -62,7 +70,7 @@ class PlottingValues:
         )
         return xy[0, :], xy[1, :]
 
-    def bending_moment(self, factor):
+    def bending_moment(self, factor: Optional[float]) -> Tuple[np.ndarray, np.ndarray]:
         if factor is None:
             # maximum moment determined by comparing the node's moments and the sagging moments.
             max_moment = max(
@@ -86,7 +94,7 @@ class PlottingValues:
         )
         return xy[0, :], xy[1, :]
 
-    def axial_force(self, factor):
+    def axial_force(self, factor: Optional[float]) -> Tuple[np.ndarray, np.ndarray]:
         if factor is None:
             max_force = max(
                 map(
@@ -108,7 +116,7 @@ class PlottingValues:
         )
         return xy[0, :], xy[1, :]
 
-    def shear_force(self, factor):
+    def shear_force(self, factor: Optional[float]) -> Tuple[np.ndarray, np.ndarray]:
         if factor is None:
             max_force = max(
                 map(
@@ -125,7 +133,7 @@ class PlottingValues:
         )
         return xy[0, :], xy[1, :]
 
-    def structure(self):
+    def structure(self) -> Tuple[np.ndarray, np.ndarray]:
         xy = np.hstack(
             [plot_values_element(el) for el in self.system.element_map.values()]
         )

@@ -1,2 +1,3 @@
 include *.pyx
 recursive-include anastruct *.pyx
+include anastruct py.typed

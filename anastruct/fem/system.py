@@ -1,32 +1,35 @@
-import math
-import re
 import collections.abc
 import copy
+import math
+import re
 from typing import (
-    Tuple,
-    Union,
+    TYPE_CHECKING,
+    Any,
+    Collection,
+    Dict,
     List,
     Optional,
-    Dict,
-    Set,
-    TYPE_CHECKING,
     Sequence,
-    cast,
-    Collection,
-    Any,
+    Set,
+    Tuple,
+    Union,
 )
+
 import numpy as np
-from anastruct.basic import FEMException, args_to_lists
-from anastruct.fem.postprocess import SystemLevel as post_sl
-from anastruct.fem.elements import Element
-from anastruct.vertex import Vertex
+
+from anastruct.basic import FEMException, arg_to_list
 from anastruct.fem import plotter
-from anastruct.vertex import vertex_range
-from anastruct.sectionbase import properties
+from anastruct.fem.elements import Element
+from anastruct.fem.postprocess import SystemLevel as post_sl
 from anastruct.fem.util.load import LoadCase
+from anastruct.sectionbase import properties
+from anastruct.vertex import Vertex, vertex_range
+
 from . import system_components
 
 if TYPE_CHECKING:
+    from matplotlib.figure import Figure
+
     from anastruct.fem.node import Node
 
 
@@ -172,8 +175,8 @@ class SystemElements:
         g: Optional[Union[List[float], np.ndarray]] = None,
         mp: Optional[MpType] = None,
         spring: Optional[Spring] = None,
-        **kwargs,
-    ):
+        **kwargs: dict,
+    ) -> None:
         """
         Add multiple elements defined by two containers with coordinates.
 
@@ -215,8 +218,8 @@ class SystemElements:
         location: Union[
             Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex
         ],
-        EA: float = None,
-        **kwargs,
+        EA: Optional[float] = None,
+        **kwargs: dict,
     ) -> int:
         """
         .. highlight:: python
@@ -237,19 +240,28 @@ class SystemElements:
         :param EA: EA
         :return: Elements ID.
         """
-        return self.add_element(location, EA, element_type="truss", **kwargs)
+        return self.add_element(
+            location,
+            EA,
+            EI=None,
+            g=0,
+            mp=None,
+            sprint=None,
+            element_type="truss",
+            **kwargs,
+        )
 
     def add_element(
         self,
         location: Union[
             Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex
         ],
-        EA: float = None,
-        EI: float = None,
+        EA: Optional[float] = None,
+        EI: Optional[float] = None,
         g: float = 0,
         mp: Optional[MpType] = None,
         spring: Optional[Spring] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> int:
         """
         :param location: The two nodes of the element or the next node of the element.
@@ -339,10 +351,6 @@ class SystemElements:
             self, point_1, point_2, node_id1, node_id2
         )
 
-        # Only for typing purposes
-        EA = cast(float, EA)
-        EI = cast(float, EI)
-
         # add element
         element = Element(
             id_=self.count,
@@ -391,13 +399,13 @@ class SystemElements:
         ],
         n: Optional[int] = None,
         dl: Optional[float] = None,
-        EA: float = None,
-        EI: float = None,
+        EA: Optional[float] = None,
+        EI: Optional[float] = None,
         g: float = 0,
         mp: Optional[MpType] = None,
         spring: Optional[Spring] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> List[int]:
         """
         Add multiple elements defined by the first and the last point.
 
@@ -514,8 +522,8 @@ class SystemElements:
         self,
         element_id: int,
         location: Union[Sequence[float], Vertex, None] = None,
-        factor=None,
-    ):
+        factor: Optional[float] = None,
+    ) -> None:
         """
         Insert a node into an existing structure.
         This can be done by adding a new Vertex at any given location, or by setting
@@ -604,8 +612,8 @@ class SystemElements:
         verbosity: int = 0,
         max_iter: int = 200,
         geometrical_non_linear: int = False,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> np.ndarray:
         """
         Compute the results of current model.
 
@@ -633,6 +641,7 @@ class SystemElements:
 
         if self.system_displacement_vector is None:
             system_components.assembly.process_supports(self)
+            assert self.system_displacement_vector is not None
 
         naked = kwargs.get("naked", False)
 
@@ -675,6 +684,8 @@ class SystemElements:
         system_components.assembly.process_conditions(self)
 
         # solution of the reduced system (reduced due to support conditions)
+        assert self.reduced_system_matrix is not None
+        assert self.reduced_force_vector is not None
         reduced_displacement_vector = np.linalg.solve(
             self.reduced_system_matrix, self.reduced_force_vector
         )
@@ -741,7 +752,7 @@ class SystemElements:
         w, _ = np.linalg.eig(ss.reduced_system_matrix)
         return bool(np.all(w > min_eigen))
 
-    def add_support_hinged(self, node_id: Union[int, Sequence[int]]):
+    def add_support_hinged(self, node_id: Union[int, Sequence[int]]) -> None:
         """
         Model a hinged support at a given node.
 
@@ -756,7 +767,7 @@ class SystemElements:
             # add the support to the support list for the plotter
             self.supports_hinged.append(self.node_map[id_])
 
-    def add_support_rotational(self, node_id: Union[int, Sequence[int]]):
+    def add_support_rotational(self, node_id: Union[int, Sequence[int]]) -> None:
         """
         Model a rotational support at a given node.
 
@@ -771,7 +782,7 @@ class SystemElements:
             # add the support to the support list for the plotter
             self.supports_rotational.append(self.node_map[id_])
 
-    def add_internal_hinge(self, node_id: Union[int, Sequence[int]]):
+    def add_internal_hinge(self, node_id: Union[int, Sequence[int]]) -> None:
         """
         Model an internal hinge at a given node.
         This may alternately be done by setting spring={n: 0} when creating elements
@@ -794,7 +805,7 @@ class SystemElements:
         direction: Union[Sequence[Union[str, int]], Union[str, int]] = "x",
         angle: Union[Sequence[Optional[float]], Optional[float]] = None,
         rotate: Union[Sequence[bool], bool] = True,
-    ):
+    ) -> None:
         """
         Adds a rolling support at a given node.
 
@@ -837,7 +848,7 @@ class SystemElements:
     def add_support_fixed(
         self,
         node_id: Union[Sequence[int], int],
-    ):
+    ) -> None:
         """
         Add a fixed support at a given node.
 
@@ -861,7 +872,7 @@ class SystemElements:
         translation: Union[Sequence[int], int],
         k: Union[Sequence[float], float],
         roll: Union[Sequence[bool], bool] = False,
-    ):
+    ) -> None:
         """
         Add a translational support at a given node.
 
@@ -917,7 +928,7 @@ class SystemElements:
         direction: Union[str, Sequence[str]] = "element",
         rotation: Optional[Union[float, Sequence[float]]] = None,
         q_perp: Union[float, Sequence[float]] = None,
-    ):
+    ) -> None:
         """
         Apply a q-load to an element.
 
@@ -927,72 +938,77 @@ class SystemElements:
         :param rotation: Rotate the force clockwise. Rotation is in degrees
         :param q_perp: value of any q-load perpendicular to the indication direction/rotation
         """
-        # TODO! this function is a duck typing hell. redesign.
+        q_arr: Sequence[Sequence[float]]
+        q_perp_arr: Sequence[Sequence[float]]
+        if isinstance(q, Sequence):
+            q_arr = [q]
+        elif isinstance(q, (int, float)):
+            q_arr = [[q, q]]
         if q_perp is None:
-            q_perp = [0, 0]
-        if not isinstance(q, Sequence):
-            q = [q, q]
-        if not isinstance(q_perp, Sequence):
-            q_perp = [q_perp, q_perp]
-        q = [q]  # type: ignore
-        q_perp = [q_perp]  # type: ignore
+            q_perp_arr = [[0, 0]]
+        elif isinstance(q_perp, Sequence):
+            q_perp_arr = [q_perp]
+        elif isinstance(q_perp, (int, float)):
+            q_perp_arr = [[q_perp, q_perp]]
+
         if rotation is None:
             direction_flag = True
         else:
             direction_flag = False
-        (  # pylint: disable=unbalanced-tuple-unpacking
-            q,
-            element_id,
-            direction,
-            rotation,
-            q_perp,
-        ) = args_to_lists(q, element_id, direction, rotation, q_perp)
 
-        assert len(q) == len(element_id)  # type: ignore
-        assert len(q) == len(direction)  # type: ignore
-        assert len(q) == len(rotation)  # type: ignore
-        assert len(q) == len(q_perp)  # type: ignore
+        n_elems = len(element_id) if isinstance(element_id, Sequence) else 1
+        element_id = arg_to_list(element_id, n_elems)
+        direction = arg_to_list(direction, n_elems)
+        rotation = arg_to_list(rotation, n_elems)
+        q_arr = arg_to_list(q_arr, n_elems)
+        q_perp_arr = arg_to_list(q_perp_arr, n_elems)
 
-        for i, element_idi in enumerate(element_id):  # type: ignore
-            id_ = _negative_index_to_id(element_idi, self.element_map.keys())  # type: ignore
+        for i, element_idi in enumerate(element_id):
+            id_ = _negative_index_to_id(element_idi, self.element_map.keys())
             self.plotter.max_q = max(
                 self.plotter.max_q,
-                (q[i][0] ** 2 + q_perp[i][0] ** 2) ** 0.5,  # type: ignore
-                (q[i][1] ** 2 + q_perp[i][1] ** 2) ** 0.5,  # type: ignore
+                (q_arr[i][0] ** 2 + q_perp_arr[i][0] ** 2) ** 0.5,
+                (q_arr[i][1] ** 2 + q_perp_arr[i][1] ** 2) ** 0.5,
             )
 
             if direction_flag:
                 if direction[i] == "x":
-                    rotation[i] = 0  # type: ignore
+                    rotation[i] = 0
                 elif direction[i] == "y":
-                    rotation[i] = np.pi / 2  # type: ignore
+                    rotation[i] = np.pi / 2
                 elif direction[i] == "parallel":
-                    rotation[i] = self.element_map[element_id[i]].angle  # type: ignore
+                    rotation[i] = self.element_map[element_id[i]].angle
                 else:
-                    rotation[i] = np.pi / 2 + self.element_map[element_id[i]].angle  # type: ignore
+                    rotation[i] = np.pi / 2 + self.element_map[element_id[i]].angle
             else:
-                rotation[i] = math.radians(rotation[i])  # type: ignore
-                direction[i] = "angle"  # type: ignore
+                rotation[i] = math.radians(rotation[i])
+                direction[i] = "angle"
 
-            cos = math.cos(rotation[i])  # type: ignore
-            sin = math.sin(rotation[i])  # type: ignore
+            cos = math.cos(rotation[i])
+            sin = math.sin(rotation[i])
             self.loads_q[id_] = [
                 (
-                    (q_perp[i][0] * cos + q[i][0] * sin) * self.load_factor,  # type: ignore
-                    (q[i][0] * self.orientation_cs * cos + q_perp[i][0] * sin)  # type: ignore
+                    (q_perp_arr[i][0] * cos + q_arr[i][0] * sin) * self.load_factor,
+                    (q_arr[i][0] * self.orientation_cs * cos + q_perp_arr[i][0] * sin)
                     * self.load_factor,
                 ),
                 (
-                    (q_perp[i][1] * cos + q[i][1] * sin) * self.load_factor,  # type: ignore
-                    (q[i][1] * self.orientation_cs * cos + q_perp[i][1] * sin)  # type: ignore
+                    (q_perp_arr[i][1] * cos + q_arr[i][1] * sin) * self.load_factor,
+                    (q_arr[i][1] * self.orientation_cs * cos + q_perp_arr[i][1] * sin)
                     * self.load_factor,
                 ),
             ]
             el = self.element_map[id_]
-            el.q_load = [i * self.orientation_cs * self.load_factor for i in q[i]]  # type: ignore
-            el.q_perp_load = [i * self.load_factor for i in q_perp[i]]  # type: ignore
-            el.q_direction = direction[i]  # type: ignore
-            el.q_angle = rotation[i]  # type: ignore
+            el.q_load = (
+                self.orientation_cs * self.load_factor * q_arr[i][0],
+                self.orientation_cs * self.load_factor * q_arr[i][1],
+            )
+            el.q_perp_load = (
+                q_perp_arr[i][0] * self.load_factor,
+                q_perp_arr[i][1] * self.load_factor,
+            )
+            el.q_direction = direction[i]
+            el.q_angle = rotation[i]
 
     def point_load(
         self,
@@ -1000,7 +1016,7 @@ class SystemElements:
         Fx: Union[float, Sequence[float]] = 0.0,
         Fy: Union[float, Sequence[float]] = 0.0,
         rotation: Union[float, Sequence[float]] = 0,
-    ):
+    ) -> None:
         """
         Apply a point load to a node.
 
@@ -1009,18 +1025,11 @@ class SystemElements:
         :param Fy: Force in global x direction.
         :param rotation: Rotate the force clockwise. Rotation is in degrees.
         """
-        (  # pylint: disable=unbalanced-tuple-unpacking
-            node_id,
-            Fx,
-            Fy,
-            rotation,
-        ) = args_to_lists(node_id, Fx, Fy, rotation)
-        node_id = cast(Sequence[int], node_id)
-        Fx = cast(Sequence[float], Fx)
-        Fy = cast(Sequence[float], Fy)
-        rotation = cast(Sequence[float], rotation)
-
-        assert len(node_id) == len(Fx) == len(Fy) == len(rotation)
+        n = len(node_id) if isinstance(node_id, Sequence) else 1
+        node_id = arg_to_list(node_id, n)
+        Fx = arg_to_list(Fx, n)
+        Fy = arg_to_list(Fy, n)
+        rotation = arg_to_list(rotation, n)
 
         for i, node_idi in enumerate(node_id):
             id_ = _negative_index_to_id(node_idi, self.node_map.keys())
@@ -1045,20 +1054,16 @@ class SystemElements:
 
     def moment_load(
         self, node_id: Union[int, Sequence[int]], Ty: Union[float, Sequence[float]]
-    ):
+    ) -> None:
         """
         Apply a moment on a node.
 
         :param node_id: Nodes ID.
         :param Ty: Moments acting on the node.
         """
-        node_id, Ty = args_to_lists(  # pylint: disable=unbalanced-tuple-unpacking
-            node_id, Ty
-        )
-        node_id = cast(Sequence[int], node_id)
-        Ty = cast(Sequence[float], Ty)
-
-        assert len(node_id) == len(Ty)
+        n = len(node_id) if isinstance(node_id, Sequence) else 1
+        node_id = arg_to_list(node_id, n)
+        Ty = arg_to_list(Ty, n)
 
         for i, node_idi in enumerate(node_id):
             id_ = _negative_index_to_id(node_idi, self.node_map.keys())
@@ -1074,7 +1079,7 @@ class SystemElements:
         supports: bool = True,
         values_only: bool = False,
         annotations: bool = False,
-    ):
+    ) -> Union[Tuple[np.ndarray, np.ndarray], Optional["Figure"]]:
         """
         Plot the structure.
 
@@ -1105,7 +1110,7 @@ class SystemElements:
         figsize: Tuple[float, float] = None,
         show: bool = True,
         values_only: bool = False,
-    ):
+    ) -> Union[Tuple[np.ndarray, np.ndarray], Optional["Figure"]]:
         """
         Plot the bending moment.
 
@@ -1134,7 +1139,7 @@ class SystemElements:
         figsize: Optional[Tuple[float, float]] = None,
         show: bool = True,
         values_only: bool = False,
-    ):
+    ) -> Union[Tuple[np.ndarray, np.ndarray], Optional["Figure"]]:
         """
         Plot the axial force.
 
@@ -1161,7 +1166,7 @@ class SystemElements:
         figsize: Optional[Tuple[float, float]] = None,
         show: bool = True,
         values_only: bool = False,
-    ):
+    ) -> Union[Tuple[np.ndarray, np.ndarray], Optional["Figure"]]:
         """
         Plot the shear force.
 
@@ -1186,7 +1191,7 @@ class SystemElements:
         offset: Tuple[float, float] = (0, 0),
         figsize: Optional[Tuple[float, float]] = None,
         show: bool = True,
-    ):
+    ) -> Union[Tuple[np.ndarray, np.ndarray], Optional["Figure"]]:
         """
         Plot the reaction force.
 
@@ -1209,7 +1214,7 @@ class SystemElements:
         show: bool = True,
         linear: bool = False,
         values_only: bool = False,
-    ):
+    ) -> Union[Tuple[np.ndarray, np.ndarray], Optional["Figure"]]:
         """
         Plot the displacement.
 
@@ -1237,7 +1242,7 @@ class SystemElements:
         offset: Tuple[float, float] = (0, 0),
         figsize: Optional[Tuple[float, float]] = None,
         show: bool = True,
-    ):
+    ) -> Optional["Figure"]:
         """
         Plot all the results in one window.
 
@@ -1455,11 +1460,11 @@ class SystemElements:
 
         """
         if unit == "shear":
-            return [el.shear_force[0] for el in self.element_map.values()]  # type: ignore
+            return [el.shear_force[0] for el in self.element_map.values()]
         elif unit == "moment":
-            return [el.bending_moment[0] for el in self.element_map.values()]  # type: ignore
+            return [el.bending_moment[0] for el in self.element_map.values()]
         elif unit == "axial":
-            return [el.axial_force[0] for el in self.element_map.values()]  # type: ignore
+            return [el.axial_force[0] for el in self.element_map.values()]
         else:
             raise NotImplementedError
 
@@ -1489,13 +1494,13 @@ class SystemElements:
         :return:  id of the node at the location of the vertex
         """
         if isinstance(vertex, (list, tuple)):
-            vertex = Vertex(vertex)
+            vertex_v = Vertex(vertex)
         try:
             tol = 1e-9
-            return next(  # type: ignore
+            return next(
                 filter(
-                    lambda x: math.isclose(x.vertex.x, vertex.x, abs_tol=tol)  # type: ignore
-                    and math.isclose(x.vertex.y, vertex.y, abs_tol=tol),  # type: ignore
+                    lambda x: math.isclose(x.vertex.x, vertex_v.x, abs_tol=tol)
+                    and math.isclose(x.vertex.y, vertex_v.y, abs_tol=tol),
                     self.node_map.values(),
                 )
             ).id
@@ -1536,20 +1541,18 @@ class SystemElements:
         :return:  ID of the node.
         """
         if dimension == "both" and isinstance(val, Sequence):
-            match = list(
-                map(
-                    lambda x: x[1],  # type: ignore
-                    filter(
-                        lambda x: x[0][0] == val[0] and x[0][1] == val[1],  # type: ignore
-                        zip(self.nodes_range("both"), self.node_map.keys()),
-                    ),
+            return int(
+                np.argmin(
+                    np.sqrt(
+                        (np.array(self.nodes_range("x")) - val[0]) ** 2
+                        + (np.array(self.nodes_range("y")) - val[1]) ** 2
+                    )
                 )
             )
-            return match[0] if len(match) > 0 else None
         else:
             return int(np.argmin(np.abs(np.array(self.nodes_range(dimension)) - val)))
 
-    def discretize(self, n: int = 10):
+    def discretize(self, n: int = 10) -> None:
         """
         Takes an already defined :class:`.SystemElements` object and increases the number
         of elements.
@@ -1618,7 +1621,7 @@ class SystemElements:
 
         self.__dict__ = ss.__dict__.copy()
 
-    def remove_loads(self, dead_load: bool = False):
+    def remove_loads(self, dead_load: bool = False) -> None:
         """
         Remove all the applied loads from the structure.
 
@@ -1636,7 +1639,7 @@ class SystemElements:
         if dead_load:
             self.loads_dead_load = set()
 
-    def apply_load_case(self, loadcase: LoadCase):
+    def apply_load_case(self, loadcase: LoadCase) -> None:
         for method, kwargs in loadcase.spec.items():
             method = method.split("-")[0]
             kwargs = re.sub(r"[{}]", "", str(kwargs))
@@ -1645,7 +1648,7 @@ class SystemElements:
 
             exec(f"self.{method}({kwargs})")  # pylint: disable=exec-used
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, _: str) -> "SystemElements":
         system = copy.copy(self)
         mesh = self.plotter.mesh
         system.plotter = None
@@ -1655,7 +1658,7 @@ class SystemElements:
         system.__dict__ = copy.deepcopy(system.__dict__)
         system.plotter = plotter.Plotter(system, mesh)
         system.post_processor = post_sl(system)
-        system.plot_values = plotter.PlottingValues
+        system.plot_values = plotter.PlottingValues(system, mesh)
 
         return system
 

@@ -1,14 +1,15 @@
 import copy
 import math
 from typing import TYPE_CHECKING
-import numpy as np
-from anastruct.fem.node import Node
-from anastruct.basic import integrate_array
 
+import numpy as np
+
+from anastruct.basic import integrate_array
+from anastruct.fem.node import Node
 
 if TYPE_CHECKING:
-    from anastruct.fem.system import SystemElements
     from anastruct.fem.elements import Element
+    from anastruct.fem.system import SystemElements
 
 
 class SystemLevel:
@@ -17,7 +18,7 @@ class SystemLevel:
         # post processor element level
         self.post_el = ElementLevel(self.system)
 
-    def node_results_elements(self):
+    def node_results_elements(self) -> None:
         """
         Determines the node results on the system level.
         Results placed in SystemElements class: self.node_objects (list).
@@ -27,7 +28,7 @@ class SystemLevel:
             # post processor element level
             self.post_el.node_results(el)
 
-    def node_results_system(self):
+    def node_results_system(self) -> None:
         for k, v in self.system.node_element_map.items():
             # reset nodes in case of iterative calculation
             self.system.node_map[k].reset()
@@ -44,12 +45,16 @@ class SystemLevel:
                 node = vi.node_map[k]
                 self.system.node_map[k] -= node
 
+                assert node.ux is not None
+                assert node.uz is not None
+                assert node.phi_y is not None
+
                 # The displacements are not summarized. Should be assigned only once
                 self.system.node_map[k].ux = -node.ux
                 self.system.node_map[k].uz = -node.uz
                 self.system.node_map[k].phi_y = -node.phi_y
 
-    def reaction_forces(self):
+    def reaction_forces(self) -> None:
         supports = []
         for node in self.system.supports_fixed:
             supports.append(node.id)
@@ -77,7 +82,7 @@ class SystemLevel:
             node.uz = None
             node.phi_y = None
 
-    def element_results(self):
+    def element_results(self) -> None:
         """
         Determines the element results for all elements in the system on element level.
         """
@@ -94,7 +99,7 @@ class ElementLevel:
     def __init__(self, system: "SystemElements"):
         self.system = system
 
-    def node_results(self, element: "Element"):
+    def node_results(self, element: "Element") -> None:
         """
         Determine node results on the element level.
         """
@@ -154,7 +159,7 @@ class ElementLevel:
                 node.uz = c * uz + s * ux
 
     @staticmethod
-    def determine_axial_force(element: "Element", con: int):
+    def determine_axial_force(element: "Element", con: int) -> None:
         N_1 = (math.sin(element.angle) * element.node_1.Fz) + -(
             math.cos(element.angle) * element.node_1.Fx
         )
@@ -179,7 +184,7 @@ class ElementLevel:
         element.axial_force = n_val
 
     @staticmethod
-    def determine_bending_moment(element: "Element", con: int):
+    def determine_bending_moment(element: "Element", con: int) -> None:
         dT = -(element.node_2.Ty + element.node_1.Ty)  # T2 - (-T1)
 
         iteration_factor = np.linspace(0, 1, con)
@@ -198,7 +203,7 @@ class ElementLevel:
         element.bending_moment = m_val
 
     @staticmethod
-    def determine_shear_force(element: "Element", con: int):
+    def determine_shear_force(element: "Element", con: int) -> None:
         """
         Determines the shear force by differentiating the bending moment.
         :param element: (object) of the Element class
@@ -210,7 +215,7 @@ class ElementLevel:
         element.shear_force = shear_force
 
     @staticmethod
-    def determine_displacements(element: "Element", con: int):
+    def determine_displacements(element: "Element", con: int) -> None:
         """
         Determines the displacement by integrating the bending moment.
         :param element: (object) of the Element class
@@ -253,6 +258,7 @@ class ElementLevel:
             w2 = w2[::-1] - lx[::-1] * np.tan(alpha2)
 
             element.deflection = -(w1 + w2) / 2.0
+            assert element.deflection is not None
             element.max_deflection = np.max(np.abs(element.deflection))
 
         # Extension

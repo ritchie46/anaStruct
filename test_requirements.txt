@@ -1,7 +1,7 @@
-black[jupyter]==23.1.0
-mypy==1.0.1
-pylint==2.16.2
-pytest==7.2.1
-pytest-describe==2.0.1
+black[jupyter]==23.7.0
+mypy==1.5.1
+pylint==2.17.5
+pytest==7.4.0
+pytest-describe==2.1.0
 pytest-pspec==0.0.4
 pytest-raises==0.11

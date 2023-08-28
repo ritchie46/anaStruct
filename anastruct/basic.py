@@ -1,16 +1,18 @@
 import collections.abc
+from typing import Any, Sequence, Tuple
+
 import numpy as np
 
 try:
     from anastruct.cython.cbasic import (  # type: ignore # pylint: disable=unused-import
-        converge,
         angle_x_axis,
+        converge,
     )
 except ImportError:
-    from anastruct.cython.basic import converge, angle_x_axis  # type: ignore
+    from anastruct.cython.basic import angle_x_axis, converge
 
 
-def find_nearest(array, value):
+def find_nearest(array: np.ndarray, value: float) -> Tuple[float, int]:
     """
     :param array: (numpy array object)
     :param value: (float) value searched for
@@ -22,20 +24,29 @@ def find_nearest(array, value):
     return array[index], index
 
 
-def integrate_array(y, dx):
+def integrate_array(y: np.ndarray, dx: float) -> np.ndarray:
     """
     integrate array y * dx
     """
-    return np.cumsum(y) * dx
+    return np.cumsum(y) * dx  # type: ignore
 
 
 class FEMException(Exception):
-    def __init__(self, type_, message):
+    def __init__(self, type_: str, message: str):
         self.type = type_
         self.message = message
 
 
-def args_to_lists(*args):
+def arg_to_list(arg: Any, n: int) -> list:
+    if isinstance(arg, Sequence) and not isinstance(arg, str) and len(arg) == n:
+        return list(arg)
+    elif isinstance(arg, Sequence) and not isinstance(arg, str) and len(arg) == 1:
+        return [arg[0] for _ in range(n)]
+    else:
+        return [arg for _ in range(n)]
+
+
+def args_to_lists(*args: list) -> list:
     arg_lists = []
     for arg in args:
         if isinstance(arg, collections.abc.Iterable) and not isinstance(arg, str):
@@ -47,16 +58,16 @@ def args_to_lists(*args):
     if n == 1:
         return arg_lists
 
-    args = []
+    args_return = []
     for arg, l in zip(arg_lists, lengths):
         if l == n:
-            args.append(arg)
+            args_return.append(arg)
         else:
-            args.append([arg[0] for _ in range(n)])
-    return args
+            args_return.append([arg[0] for _ in range(n)])
+    return args_return
 
 
-def rotation_matrix(angle):
+def rotation_matrix(angle: float) -> np.ndarray:
     """
 
     :param angle: (flt) angle in radians
@@ -67,7 +78,7 @@ def rotation_matrix(angle):
     return np.array([[c, -s], [s, c]])
 
 
-def rotate_xy(a, angle):
+def rotate_xy(a: np.ndarray, angle: float) -> np.ndarray:
     b = np.array(a)
     b[:, 0] -= a[0, 0]
     b[:, 1] -= a[0, 1]
