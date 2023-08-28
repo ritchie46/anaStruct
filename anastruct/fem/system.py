@@ -548,6 +548,7 @@ class SystemElements:
         ss = SystemElements(
             EA=self.EA, EI=self.EI, load_factor=self.load_factor, mesh=self.plotter.mesh
         )
+        element_id = _negative_index_to_id(element_id, self.element_map)
 
         for element in self.element_map.values():
             g = self.element_map[element.id].dead_load
@@ -1015,7 +1016,7 @@ class SystemElements:
         node_id: Union[int, Sequence[int]],
         Fx: Union[float, Sequence[float]] = 0.0,
         Fy: Union[float, Sequence[float]] = 0.0,
-        rotation: Union[float, Sequence[float]] = 0,
+        rotation: Union[float, Sequence[float]] = 0.0,
     ) -> None:
         """
         Apply a point load to a node.
@@ -1317,6 +1318,7 @@ class SystemElements:
         """
         result_list = []
         if node_id != 0:
+            node_id = _negative_index_to_id(node_id, self.node_map)
             node = self.node_map[node_id]
             return {
                 "id": node.id,
@@ -1668,6 +1670,11 @@ class SystemElements:
 
 
 def _negative_index_to_id(idx: int, collection: Collection[int]) -> int:
+    if not isinstance(idx, int):
+        if int(idx) == idx:  # if it can be non-destructively cast to an integer
+            idx = int(idx)
+        else:
+            raise TypeError("Node or element id must be an integer")
     if idx > 0:
         return idx
     else:
