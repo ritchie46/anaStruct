@@ -1495,6 +1495,10 @@ class SystemElements:
         """
         if isinstance(vertex, (list, tuple)):
             vertex_v = Vertex(vertex)
+        elif isinstance(vertex, Vertex):
+            vertex_v = vertex
+        else:
+            raise TypeError("vertex must be a list, tuple or Vertex")
         try:
             tol = 1e-9
             return next(
