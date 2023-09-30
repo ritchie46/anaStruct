@@ -15,11 +15,11 @@ if TYPE_CHECKING:
     from anastruct.vertex import Vertex
 
 try:
-    from anastruct.fem.cython.celements import (
+    from anastruct.fem.cython.celements import (  # pylint: disable=unused-import
         det_axial,
         det_moment,
         det_shear,
-    )  # pylint: disable=unused-import
+    )
 except ImportError:
     from anastruct.fem.cython.elements import det_axial, det_moment, det_shear
 
