@@ -88,6 +88,7 @@ class Element:
         self.shear_force: Optional[np.ndarray] = None
         self.axial_force: Optional[np.ndarray] = None
         self.deflection: Optional[np.ndarray] = None
+        self.total_deflection: Optional[np.ndarray] = None
         self.extension: Optional[np.ndarray] = None
         self.max_deflection = None
         self.max_extension = None
