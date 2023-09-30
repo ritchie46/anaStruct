@@ -23,18 +23,16 @@ def check_internal_hinges(system: "SystemElements", node_id: int) -> None:
     for el_id in node.elements:
         el = system.element_map[el_id]
         assert el.springs is not None
-        if (node_id == el.node_id1 and 1 in el.springs and el.springs[1] == 0) or (
-            node_id == el.node_id2 and 2 in el.springs and el.springs[2] == 0
-        ):
+        if node_id == el.node_id1 and 1 in el.springs and el.springs[1] == 0:
+            hinges.append(1)
+        elif node_id == el.node_id2 and 2 in el.springs and el.springs[2] == 0:
             hinges.append(1)
         else:
             hinges.append(0)
 
     # If at least one element is connected
     # and no more than one element is rigidly connected
-    if (len(hinges) > 1 and len(hinges) - sum(hinges) <= 1) or (
-        len(hinges) == 1 and sum(hinges) == 1
-    ):
+    if (1 < len(hinges) <= 1 + sum(hinges)) or (len(hinges) == 1 and sum(hinges) == 1):
         system.internal_hinges.append(node)
 
     if node in system.internal_hinges:

@@ -18,8 +18,7 @@ if TYPE_CHECKING:
 def det_scaling_factor(max_unit: float, max_val_structure: float) -> float:
     if math.isclose(max_unit, 0):
         return 0.1
-    else:
-        return 0.15 * max_val_structure / max_unit
+    return 0.15 * max_val_structure / max_unit
 
 
 class PlottingValues:

@@ -55,11 +55,10 @@ class Node:
                 f"[id = {self.id}, Fx = {self.Fx}, Fz = {self.Fz}, Ty = {self.Ty}, ux = {self.ux}, "
                 f"uz = {self.uz}, phi_y = {self.phi_y}, x = {self.vertex.x}, y = {self.vertex.y}]"
             )
-        else:
-            return (
-                f"[id = {self.id}, Fx = {self.Fx}, Fz = {self.Fz}, Ty = {self.Ty}, ux = {self.ux}, "
-                f"uz = {self.uz}, phi_y = {self.phi_y}]"
-            )
+        return (
+            f"[id = {self.id}, Fx = {self.Fx}, Fz = {self.Fz}, Ty = {self.Ty}, ux = {self.ux}, "
+            f"uz = {self.uz}, phi_y = {self.phi_y}]"
+        )
 
     def __add__(self, other: Node) -> Node:
         assert (

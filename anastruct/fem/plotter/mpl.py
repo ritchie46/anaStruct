@@ -29,7 +29,7 @@ PATCH_SIZE = 0.03
 
 class Plotter(PlottingValues):
     def __init__(self, system: "SystemElements", mesh: int):
-        super(Plotter, self).__init__(system, mesh)
+        super().__init__(system, mesh)
         self.system: "SystemElements" = system
         self.one_fig: Optional["Axes"] = None
         self.max_q: float = 0
@@ -523,7 +523,7 @@ class Plotter(PlottingValues):
                 )
 
                 # add element annotation to plot
-                # TODO: check how this holds with multiple structure scales.
+                # TO DO: check how this holds with multiple structure scales.
                 if annotations:
                     x_val += +np.sin(el.angle) * factor * 2.3
                     y_val += -np.cos(el.angle) * factor * 2.3
@@ -549,8 +549,7 @@ class Plotter(PlottingValues):
         if show:
             self.plot()
             return None
-        else:
-            return self.fig
+        return self.fig
 
     def _add_node_values(
         self,
@@ -656,58 +655,56 @@ class Plotter(PlottingValues):
                 and math.isclose(el.all_qn_load[1], 0, rel_tol=1e-5, abs_tol=1e-9)
             ):
                 continue
-            else:
-                axis_values = plot_values_axial_force(el, factor, con)
-                color = 1 if el.N_1 < 0 else 0
-                self.plot_result(
-                    axis_values,
-                    el.N_1,
-                    el.N_2,
-                    node_results=not bool(verbosity),
-                    color=color,
+            axis_values = plot_values_axial_force(el, factor, con)
+            color = 1 if el.N_1 < 0 else 0
+            self.plot_result(
+                axis_values,
+                el.N_1,
+                el.N_2,
+                node_results=not bool(verbosity),
+                color=color,
+            )
+
+            point = (el.vertex_2 - el.vertex_1) / 2 + el.vertex_1
+            if el.N_1 < 0:
+                point.displace_polar(
+                    alpha=el.angle + 0.5 * np.pi,
+                    radius=0.5 * el.N_1 * factor,
+                    inverse_z_axis=True,
                 )
 
-                point = (el.vertex_2 - el.vertex_1) / 2 + el.vertex_1
-                if el.N_1 < 0:
-                    point.displace_polar(
-                        alpha=el.angle + 0.5 * np.pi,
-                        radius=0.5 * el.N_1 * factor,
-                        inverse_z_axis=True,
+                if verbosity == 0:
+                    self.one_fig.text(
+                        point.x,
+                        point.y,
+                        "-",
+                        ha="center",
+                        va="center",
+                        fontsize=20,
+                        color="b",
                     )
+            if el.N_1 > 0:
+                point.displace_polar(
+                    alpha=el.angle + 0.5 * np.pi,
+                    radius=0.5 * el.N_1 * factor,
+                    inverse_z_axis=True,
+                )
 
-                    if verbosity == 0:
-                        self.one_fig.text(
-                            point.x,
-                            point.y,
-                            "-",
-                            ha="center",
-                            va="center",
-                            fontsize=20,
-                            color="b",
-                        )
-                if el.N_1 > 0:
-                    point.displace_polar(
-                        alpha=el.angle + 0.5 * np.pi,
-                        radius=0.5 * el.N_1 * factor,
-                        inverse_z_axis=True,
+                if verbosity == 0:
+                    self.one_fig.text(
+                        point.x,
+                        point.y,
+                        "+",
+                        ha="center",
+                        va="center",
+                        fontsize=14,
+                        color="b",
                     )
-
-                    if verbosity == 0:
-                        self.one_fig.text(
-                            point.x,
-                            point.y,
-                            "+",
-                            ha="center",
-                            va="center",
-                            fontsize=14,
-                            color="b",
-                        )
 
         if show:
             self.plot()
             return None
-        else:
-            return self.fig
+        return self.fig
 
     def bending_moment(
         self,
@@ -748,10 +745,7 @@ class Plotter(PlottingValues):
                 # If True there is no bending moment, so no need for plotting.
                 continue
             axis_values = plot_values_bending_moment(el, factor, con)
-            if verbosity == 0:
-                node_results = True
-            else:
-                node_results = False
+            node_results = verbosity == 0
             self.plot_result(
                 axis_values,
                 abs(el.node_1.Ty),
@@ -771,8 +765,7 @@ class Plotter(PlottingValues):
         if show:
             self.plot()
             return None
-        else:
-            return self.fig
+        return self.fig
 
     def shear_force(
         self,
@@ -818,8 +811,7 @@ class Plotter(PlottingValues):
         if show:
             self.plot()
             return None
-        else:
-            return self.fig
+        return self.fig
 
     def reaction_force(
         self,
@@ -906,9 +898,7 @@ class Plotter(PlottingValues):
                     )
 
             if not math.isclose(node.Ty, 0, rel_tol=1e-5, abs_tol=1e-9):
-                """
-                '$...$': render the strings using mathtext
-                """
+                # '$...$': render the strings using mathtext
                 if node.Ty > 0:
                     self.one_fig.plot(
                         node.vertex.x,
@@ -938,8 +928,7 @@ class Plotter(PlottingValues):
         if show:
             self.plot()
             return None
-        else:
-            return self.fig
+        return self.fig
 
     def displacements(  # type: ignore  # pylint: disable=arguments-renamed
         self,
@@ -991,8 +980,7 @@ class Plotter(PlottingValues):
         if show:
             self.plot()
             return None
-        else:
-            return self.fig
+        return self.fig
 
     def results_plot(
         self,
@@ -1039,5 +1027,4 @@ class Plotter(PlottingValues):
         if show:
             self.plot()
             return None
-        else:
-            return self.fig
+        return self.fig

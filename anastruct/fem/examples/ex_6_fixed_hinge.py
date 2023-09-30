@@ -1,8 +1,6 @@
 from anastruct.fem.system import SystemElements
 
-"""
-Test the primary force vector when applying a q_load at a hinged element.
-"""
+# Test the primary force vector when applying a q_load at a hinged element.
 
 ss = SystemElements()
 ss.add_element([[0, 0], [7, 0]], spring={2: 0})

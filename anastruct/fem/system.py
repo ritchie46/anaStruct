@@ -473,7 +473,7 @@ class SystemElements:
                 "Wrong parameters",
                 "One, and only one, of n and dl should be passed as argument.",
             )
-        elif n:
+        if n:
             var_n = n
             lengths = np.linspace(start=0, stop=length, num=var_n + 1)
         else:
@@ -649,7 +649,7 @@ class SystemElements:
         if not naked:
             if not self.validate():
                 if all(
-                    ["general" in element.type for element in self.element_map.values()]
+                    "general" in element.type for element in self.element_map.values()
                 ):
                     raise FEMException(
                         "StabilityError",
@@ -952,10 +952,7 @@ class SystemElements:
         elif isinstance(q_perp, (int, float)):
             q_perp_arr = [[q_perp, q_perp]]
 
-        if rotation is None:
-            direction_flag = True
-        else:
-            direction_flag = False
+        direction_flag = rotation is None
 
         n_elems = len(element_id) if isinstance(element_id, Sequence) else 1
         element_id = arg_to_list(element_id, n_elems)
@@ -1040,8 +1037,7 @@ class SystemElements:
             ):
                 raise FEMException(
                     "StabilityError",
-                    "Point loads may not be placed at the location of "
-                    "inclined roller supports",
+                    "Point loads may not be placed at the location of inclined roller supports",
                 )
             self.plotter.max_system_point_load = max(
                 self.plotter.max_system_point_load, (Fx[i] ** 2 + Fy[i] ** 2) ** 0.5
@@ -1292,11 +1288,10 @@ class SystemElements:
                 "uy": -node.uz,
                 "phi_y": node.phi_y,
             }
-        else:
-            for node in self.node_map.values():
-                result_list.append(
-                    (node.id, node.Fx, node.Fy, node.Ty, node.ux, -node.uz, node.phi_y)
-                )
+        for node in self.node_map.values():
+            result_list.append(
+                (node.id, node.Fx, node.Fy, node.Ty, node.ux, -node.uz, node.phi_y)
+            )
         return result_list
 
     def get_node_displacements(
@@ -1326,9 +1321,8 @@ class SystemElements:
                 "uy": node.uz,  # - * -  = +
                 "phi_y": node.phi_y,
             }
-        else:
-            for node in self.node_map.values():
-                result_list.append((node.id, -node.ux, node.uz, node.phi_y))
+        for node in self.node_map.values():
+            result_list.append((node.id, -node.ux, node.uz, node.phi_y))
         return result_list
 
     def get_element_results(
@@ -1374,82 +1368,80 @@ class SystemElements:
                     "Nmax": np.max(el.axial_force),
                     "N": el.axial_force if verbose else None,
                 }
+            assert el.deflection is not None
+            assert el.shear_force is not None
+            assert el.bending_moment is not None
+
+            return {
+                "id": el.id,
+                "length": el.l,
+                "alpha": el.angle,
+                "umax": np.max(el.extension),
+                "umin": np.min(el.extension),
+                "u": el.extension if verbose else None,
+                "wmax": np.min(el.deflection),
+                "wmin": np.max(el.deflection),
+                "w": el.deflection if verbose else None,
+                "Mmin": np.min(el.bending_moment),
+                "Mmax": np.max(el.bending_moment),
+                "M": el.bending_moment if verbose else None,
+                "Qmin": np.min(el.shear_force),
+                "Qmax": np.max(el.shear_force),
+                "Q": el.shear_force if verbose else None,
+                "Nmin": np.min(el.axial_force),
+                "Nmax": np.max(el.axial_force),
+                "N": el.axial_force if verbose else None,
+                "q": el.q_load,
+            }
+        result_list = []
+        for el in self.element_map.values():
+            assert el.extension is not None
+            assert el.axial_force is not None
+
+            if el.type == "truss":
+                result_list.append(
+                    {
+                        "id": el.id,
+                        "length": el.l,
+                        "alpha": el.angle,
+                        "umax": np.max(el.extension),
+                        "umin": np.min(el.extension),
+                        "u": el.extension if verbose else None,
+                        "Nmin": np.min(el.axial_force),
+                        "Nmax": np.max(el.axial_force),
+                        "N": el.axial_force if verbose else None,
+                    }
+                )
+
             else:
                 assert el.deflection is not None
                 assert el.shear_force is not None
                 assert el.bending_moment is not None
 
-                return {
-                    "id": el.id,
-                    "length": el.l,
-                    "alpha": el.angle,
-                    "umax": np.max(el.extension),
-                    "umin": np.min(el.extension),
-                    "u": el.extension if verbose else None,
-                    "wmax": np.min(el.deflection),
-                    "wmin": np.max(el.deflection),
-                    "w": el.deflection if verbose else None,
-                    "Mmin": np.min(el.bending_moment),
-                    "Mmax": np.max(el.bending_moment),
-                    "M": el.bending_moment if verbose else None,
-                    "Qmin": np.min(el.shear_force),
-                    "Qmax": np.max(el.shear_force),
-                    "Q": el.shear_force if verbose else None,
-                    "Nmin": np.min(el.axial_force),
-                    "Nmax": np.max(el.axial_force),
-                    "N": el.axial_force if verbose else None,
-                    "q": el.q_load,
-                }
-        else:
-            result_list = []
-            for el in self.element_map.values():
-                assert el.extension is not None
-                assert el.axial_force is not None
-
-                if el.type == "truss":
-                    result_list.append(
-                        {
-                            "id": el.id,
-                            "length": el.l,
-                            "alpha": el.angle,
-                            "umax": np.max(el.extension),
-                            "umin": np.min(el.extension),
-                            "u": el.extension if verbose else None,
-                            "Nmin": np.min(el.axial_force),
-                            "Nmax": np.max(el.axial_force),
-                            "N": el.axial_force if verbose else None,
-                        }
-                    )
-
-                else:
-                    assert el.deflection is not None
-                    assert el.shear_force is not None
-                    assert el.bending_moment is not None
-
-                    result_list.append(
-                        {
-                            "id": el.id,
-                            "length": el.l,
-                            "alpha": el.angle,
-                            "umax": np.max(el.extension),
-                            "umin": np.min(el.extension),
-                            "u": el.extension if verbose else None,
-                            "wmax": np.min(el.deflection),
-                            "wmin": np.max(el.deflection),
-                            "w": el.deflection if verbose else None,
-                            "Mmin": np.min(el.bending_moment),
-                            "Mmax": np.max(el.bending_moment),
-                            "M": el.bending_moment if verbose else None,
-                            "Qmin": np.min(el.shear_force),
-                            "Qmax": np.max(el.shear_force),
-                            "Q": el.shear_force if verbose else None,
-                            "Nmin": np.min(el.axial_force),
-                            "Nmax": np.max(el.axial_force),
-                            "N": el.axial_force if verbose else None,
-                            "q": el.q_load,
-                        }
-                    )
-            return result_list
+                result_list.append(
+                    {
+                        "id": el.id,
+                        "length": el.l,
+                        "alpha": el.angle,
+                        "umax": np.max(el.extension),
+                        "umin": np.min(el.extension),
+                        "u": el.extension if verbose else None,
+                        "wmax": np.min(el.deflection),
+                        "wmin": np.max(el.deflection),
+                        "w": el.deflection if verbose else None,
+                        "Mmin": np.min(el.bending_moment),
+                        "Mmax": np.max(el.bending_moment),
+                        "M": el.bending_moment if verbose else None,
+                        "Qmin": np.min(el.shear_force),
+                        "Qmax": np.max(el.shear_force),
+                        "Q": el.shear_force if verbose else None,
+                        "Nmin": np.min(el.axial_force),
+                        "Nmax": np.max(el.axial_force),
+                        "N": el.axial_force if verbose else None,
+                        "q": el.q_load,
+                    }
+                )
+        return result_list
 
     def get_element_result_range(self, unit: str) -> List[float]:
         """
@@ -1463,12 +1455,11 @@ class SystemElements:
         """
         if unit == "shear":
             return [el.shear_force[0] for el in self.element_map.values()]
-        elif unit == "moment":
+        if unit == "moment":
             return [el.bending_moment[0] for el in self.element_map.values()]
-        elif unit == "axial":
+        if unit == "axial":
             return [el.axial_force[0] for el in self.element_map.values()]
-        else:
-            raise NotImplementedError
+        raise NotImplementedError
 
     def get_node_result_range(self, unit: str) -> List[float]:
         """
@@ -1481,12 +1472,11 @@ class SystemElements:
         """
         if unit == "uy":
             return [node.uz for node in self.node_map.values()]  # - * -  = +
-        elif unit == "ux":
+        if unit == "ux":
             return [-node.ux for node in self.node_map.values()]
-        elif unit == "phi_y":
+        if unit == "phi_y":
             return [node.phi_y for node in self.node_map.values()]
-        else:
-            raise NotImplementedError
+        raise NotImplementedError
 
     def find_node_id(self, vertex: Union[Vertex, Sequence[float]]) -> Optional[int]:
         """
@@ -1555,8 +1545,7 @@ class SystemElements:
                     )
                 )
             )
-        else:
-            return int(np.argmin(np.abs(np.array(self.nodes_range(dimension)) - val)))
+        return int(np.argmin(np.abs(np.array(self.nodes_range(dimension)) - val)))
 
     def discretize(self, n: int = 10) -> None:
         """
@@ -1677,5 +1666,4 @@ def _negative_index_to_id(idx: int, collection: Collection[int]) -> int:
             raise TypeError("Node or element id must be an integer")
     if idx > 0:
         return idx
-    else:
-        return max(collection) + (idx + 1)
+    return max(collection) + (idx + 1)

@@ -18,7 +18,7 @@ class LoadCase:
         :param name: (str) Name of the load case
         """
         self.name: str = name
-        self.spec: dict = dict()
+        self.spec: dict = {}
         self.c: int = 0
 
     def q_load(
@@ -37,13 +37,13 @@ class LoadCase:
         :param direction: (str) "element", "x", "y", "parallel"
         """
         self.c += 1
-        self.spec[f"q_load-{self.c}"] = dict(
-            q=q,
-            element_id=element_id,
-            direction=direction,
-            rotation=rotation,
-            q_perp=q_perp,
-        )
+        self.spec[f"q_load-{self.c}"] = {
+            "q": q,
+            "element_id": element_id,
+            "direction": direction,
+            "rotation": rotation,
+            "q_perp": q_perp,
+        }
 
     def point_load(
         self,
@@ -61,9 +61,12 @@ class LoadCase:
         :param rotation: (flt/ list) Rotate the force clockwise. Rotation is in degrees.
         """
         self.c += 1
-        self.spec[f"point_load-{self.c}"] = dict(
-            node_id=node_id, Fx=Fx, Fy=Fy, rotation=rotation
-        )
+        self.spec[f"point_load-{self.c}"] = {
+            "node_id": node_id,
+            "Fx": Fx,
+            "Fy": Fy,
+            "rotation": rotation,
+        }
 
     def moment_load(
         self, node_id: Union[int, Sequence[int]], Ty: Union[float, Sequence[float]]
@@ -75,7 +78,7 @@ class LoadCase:
         :param Ty: (flt/ list) Moments acting on the node.
         """
         self.c += 1
-        self.spec[f"moment_load-{self.c}"] = dict(node_id=node_id, Ty=Ty)
+        self.spec[f"moment_load-{self.c}"] = {"node_id": node_id, "Ty": Ty}
 
     def dead_load(
         self, element_id: Union[int, Sequence[int]], g: Union[float, Sequence[float]]
@@ -87,7 +90,7 @@ class LoadCase:
         :param g: (flt/ list) Weight per meter. [kN/m] / [N/m]
         """
         self.c += 1
-        self.spec[f"dead_load-{self.c}"] = dict(element_id=element_id, g=g)
+        self.spec[f"dead_load-{self.c}"] = {"element_id": element_id, "g": g}
 
     def __str__(self) -> str:
         return f"Loadcase {self.name}:\n" + pprint.pformat(self.spec)
@@ -96,7 +99,7 @@ class LoadCase:
 class LoadCombination:
     def __init__(self, name: str):
         self.name: str = name
-        self.spec: dict = dict()
+        self.spec: dict = {}
 
     def add_load_case(
         self,
