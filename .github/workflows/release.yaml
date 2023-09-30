@@ -28,7 +28,7 @@ jobs:
           pip install .[test]
       - name: Run linting check with pylint
         run: |
-          pylint --rcfile .pylintrc ./anastruct
+          pylint ./anastruct
       - name: Run formatting checks with black
         run: |
           black --check .

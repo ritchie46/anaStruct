@@ -1,10 +1,11 @@
 import copy
 import logging
 from typing import TYPE_CHECKING, Optional
+
 import numpy as np
 from scipy import linalg  # type: ignore
-from anastruct.basic import converge
 
+from anastruct.basic import converge
 
 if TYPE_CHECKING:
     from anastruct.fem.system import SystemElements
@@ -24,7 +25,7 @@ def stiffness_adaptation(
 
     # check validity
     assert all(
-        [mp > 0 for mpd in system.non_linear_elements.values() for mp in mpd]
+        mp > 0 for mpd in system.non_linear_elements.values() for mp in mpd
     ), "Cannot solve for an mp = 0. If you want a hinge set the spring stiffness equal to 0."
 
     for c in range(max_iter):

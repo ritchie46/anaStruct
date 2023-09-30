@@ -1,7 +1,4 @@
 {
-    "python.formatting.provider": "black",
-    "python.linting.pylintEnabled": true,
-    "python.linting.mypyEnabled": true,
     "cSpell.words": [
         "allclose",
         "anastruct",
@@ -34,15 +31,17 @@
         "wmax",
         "wmin"
     ],
-    "editor.formatOnSave": true,
-    "editor.formatOnType": true,
     "cSpell.diagnosticLevel": "Hint",
     "editor.codeActionsOnSave": {
         "source.organizeImports": true
     },
-    "editor.formatOnPaste": true,
-    "python.linting.mypyArgs": [
-        "--show-column-numbers",
-        "--no-pretty"
-    ]
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+        "editor.formatOnPaste": true,
+    },
+    "mypy-type-checker.reportingScope": "workspace",
+    "pylint.severity": {
+        "refactor": "Information"
+    }
 }

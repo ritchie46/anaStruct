@@ -23,10 +23,9 @@ try:
 except ImportError:
     from anastruct.fem.cython.elements import det_axial, det_moment, det_shear
 
-"""
-The matrices underneath are for slender beams, where the most deformation occurs due to bending.
-Shear deformation is not taken into account.
-"""
+
+# The matrices underneath are for slender beams, where the most deformation occurs due to bending.
+# Shear deformation is not taken into account.
 
 CACHE_BOUND = 32000
 
@@ -285,19 +284,17 @@ def constitutive_matrix(
         matrix[1][2] = matrix[2][1] = matrix[2][2] = 0
 
     if spring is not None:
-        """
-        stiffness matrix K:
-        [[ k, k ]
-        [ k, k ]]
+        # stiffness matrix K:
+        # [[ k, k ]
+        # [ k, k ]]
 
-        flexibility matrix C:
-        [[ c, c ]    =   [[ 1/k, 1/k ]
-        `[ c, c ]]       [  1/k, 1/k ]]
+        # flexibility matrix C:
+        # [[ c, c ]    =   [[ 1/k, 1/k ]
+        # `[ c, c ]]       [  1/k, 1/k ]]
 
-        flexibility matrix c + springs on both sides:
-        [[ c11 + 1/k1, c12       ]
-        [  c21      , c21 + 1/k2 ]]
-        """
+        # flexibility matrix c + springs on both sides:
+        # [[ c11 + 1/k1, c12       ]
+        # [  c21      , c21 + 1/k2 ]]
         if 1 in spring and spring[1] != 0:  # not hinge
             matrix[1][1] = 1 / (1 / matrix[1][1] + 1 / spring[1])
             matrix[2][1] = 1 / (1 / matrix[2][1] + 1 / spring[1])

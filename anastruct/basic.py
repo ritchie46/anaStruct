@@ -40,10 +40,9 @@ class FEMException(Exception):
 def arg_to_list(arg: Any, n: int) -> list:
     if isinstance(arg, Sequence) and not isinstance(arg, str) and len(arg) == n:
         return list(arg)
-    elif isinstance(arg, Sequence) and not isinstance(arg, str) and len(arg) == 1:
+    if isinstance(arg, Sequence) and not isinstance(arg, str) and len(arg) == 1:
         return [arg[0] for _ in range(n)]
-    else:
-        return [arg for _ in range(n)]
+    return [arg for _ in range(n)]
 
 
 def args_to_lists(*args: list) -> list:

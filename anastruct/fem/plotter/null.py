@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 class Plotter(PlottingValues):
     def __init__(self, system: "SystemElements", mesh: int):
-        super(Plotter, self).__init__(system, mesh)
+        super().__init__(system, mesh)
         self.system: "SystemElements" = system
         self.one_fig: Optional["Axes"] = None
         self.max_q: float = 0

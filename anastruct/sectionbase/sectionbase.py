@@ -1,6 +1,6 @@
 import os
-import xml.etree.ElementTree as ElementTree
 from typing import Any, Dict, List, Optional
+from xml.etree import ElementTree
 
 from anastruct.sectionbase import units
 
@@ -58,7 +58,7 @@ class SectionBase:
         self.current_force_unit = units.f_dict[force_unit]
 
     def set_database_name(self, basename: str) -> None:
-        if basename == "EU" or basename == "UK":
+        if basename in ("EU", "UK"):
             self.xml_length_unit = units.m
             self.xml_area_unit = units.m
             self.xml_weight_unit = units.kg
