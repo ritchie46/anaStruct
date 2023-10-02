@@ -23,8 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install .
-          pip install .[plot]
+          pip install .[dev]
           pip install .[test]
       - name: Run linting check with pylint
         run: |
