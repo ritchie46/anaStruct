@@ -46,4 +46,4 @@ for k, ss in results.items():
     ss.show_structure()
     ss.show_displacement(show=False)
     plt.title(k)
-    plt.show()
+    plt.show()  # type: ignore

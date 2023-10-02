@@ -27,9 +27,10 @@ if TYPE_CHECKING:
 PATCH_SIZE = 0.03
 
 
-class Plotter(PlottingValues):
+class Plotter:
     def __init__(self, system: "SystemElements", mesh: int):
-        super().__init__(system, mesh)
+        self.plot_values = PlottingValues(system, mesh)
+        self.mesh: int = self.plot_values.mesh
         self.system: "SystemElements" = system
         self.one_fig: Optional["Axes"] = None
         self.max_q: float = 0
@@ -37,7 +38,11 @@ class Plotter(PlottingValues):
         self.max_system_point_load: float = 0
         self.fig: Optional["Figure"] = None
 
-    def __start_plot(self, figsize: Optional[Sequence[float]]) -> None:
+    @property
+    def max_val_structure(self) -> float:
+        return self.plot_values.max_val_structure
+
+    def __start_plot(self, figsize: Optional[Tuple[float, float]]) -> None:
         plt.close("all")
         self.fig = plt.figure(figsize=figsize)
         self.one_fig = self.fig.add_subplot(111)
@@ -114,15 +119,15 @@ class Plotter(PlottingValues):
             if node.id in self.system.inclined_roll:
                 angle = self.system.inclined_roll[node.id]
                 triangle = rotate_xy(triangle, angle + np.pi * 0.5)
-                support_patch = plt.Polygon(triangle, color="r", zorder=9)
-                self.one_fig.add_patch(support_patch)
+                support_patch_poly = plt.Polygon(triangle, color="r", zorder=9)
+                self.one_fig.add_patch(support_patch_poly)
                 self.one_fig.plot(
                     triangle[1:, 0] - 0.5 * radius * np.sin(angle),
                     triangle[1:, 1] - 0.5 * radius * np.cos(angle),
                     color="r",
                 )
                 if not rotate:
-                    rect_patch = mpatches.RegularPolygon(
+                    rect_patch_regpoly = mpatches.RegularPolygon(
                         (node.vertex.x, radius - node.vertex.y),
                         numVertices=4,
                         radius=radius,
@@ -131,23 +136,23 @@ class Plotter(PlottingValues):
                         zorder=9,
                         fill=False,
                     )
-                    self.one_fig.add_patch(rect_patch)
+                    self.one_fig.add_patch(rect_patch_regpoly)
 
             elif direction == 2:  # horizontal roll
-                support_patch = mpatches.RegularPolygon(
+                support_patch_regpoly = mpatches.RegularPolygon(
                     (node.vertex.x, node.vertex.y - radius),
                     numVertices=3,
                     radius=radius,
                     color="r",
                     zorder=9,
                 )
-                self.one_fig.add_patch(support_patch)
+                self.one_fig.add_patch(support_patch_regpoly)
                 y = -node.vertex.z - 2 * radius
                 self.one_fig.plot(
                     [node.vertex.x - radius, node.vertex.x + radius], [y, y], color="r"
                 )
                 if not rotate:
-                    rect_patch = mpatches.Rectangle(
+                    rect_patch_rect = mpatches.Rectangle(
                         (node.vertex.x - radius / 2, -node.vertex.z - radius / 2),
                         radius,
                         radius,
@@ -155,12 +160,12 @@ class Plotter(PlottingValues):
                         zorder=9,
                         fill=False,
                     )
-                    self.one_fig.add_patch(rect_patch)
+                    self.one_fig.add_patch(rect_patch_rect)
             elif direction == 1:  # vertical roll
                 # translate the support to the node
 
-                support_patch = mpatches.Polygon(triangle, color="r", zorder=9)
-                self.one_fig.add_patch(support_patch)
+                support_patch_poly = mpatches.Polygon(triangle, color="r", zorder=9)
+                self.one_fig.add_patch(support_patch_poly)
 
                 y = node.vertex.y - radius
                 self.one_fig.plot(
@@ -169,7 +174,7 @@ class Plotter(PlottingValues):
                     color="r",
                 )
                 if not rotate:
-                    rect_patch = mpatches.Rectangle(
+                    rect_patch_rect = mpatches.Rectangle(
                         (node.vertex.x - radius / 2, -node.vertex.z - radius / 2),
                         radius,
                         radius,
@@ -177,7 +182,7 @@ class Plotter(PlottingValues):
                         zorder=9,
                         fill=False,
                     )
-                    self.one_fig.add_patch(rect_patch)
+                    self.one_fig.add_patch(rect_patch_rect)
             count += 1
 
     def __rotating_spring_support_patch(self, max_val: float) -> None:
@@ -451,7 +456,7 @@ class Plotter(PlottingValues):
 
     def plot_structure(
         self,
-        figsize: Optional[Sequence[float]],
+        figsize: Optional[Tuple[float, float]],
         verbosity: int,
         show: bool = False,
         supports: bool = True,
@@ -470,12 +475,12 @@ class Plotter(PlottingValues):
         if not gridplot:
             self.__start_plot(figsize)
 
-        x, y = super().structure()
+        x, y = self.plot_values.structure()
 
-        max_x = np.max(x)
-        min_x = np.min(x)
-        max_y = np.max(y)
-        min_y = np.min(y)
+        max_x: float = np.max(x)
+        min_x: float = np.min(x)
+        max_y: float = np.max(y)
+        min_y: float = np.min(y)
 
         center_x = (max_x - min_x) / 2 + min_x + -offset[0]
         center_y = (max_y - min_y) / 2 + min_y + -offset[1]
@@ -487,7 +492,7 @@ class Plotter(PlottingValues):
         minxrange = center_x - ax_range
         minyrange = center_y - ax_range * figsize[1] / figsize[0]
 
-        self.one_fig.axis([minxrange, plusxrange, minyrange, plusyrange])
+        self.one_fig.axis((minxrange, plusxrange, minyrange, plusyrange))
 
         for el in self.system.element_map.values():
             x_val, y_val = plot_values_element(el)
@@ -515,20 +520,25 @@ class Plotter(PlottingValues):
 
                 # add element ID to plot
                 factor = 0.02 * self.max_val_structure
-                x_val = (x_val[0] + x_val[-1]) / 2 - np.sin(el.angle) * factor
-                y_val = (y_val[0] + y_val[-1]) / 2 + np.cos(el.angle) * factor
+                x_scalar = (x_val[0] + x_val[-1]) / 2 - np.sin(el.angle) * factor
+                y_scalar = (y_val[0] + y_val[-1]) / 2 + np.cos(el.angle) * factor
 
                 self.one_fig.text(
-                    x_val, y_val, str(el.id), color="r", fontsize=9, zorder=10
+                    x_scalar, y_scalar, str(el.id), color="r", fontsize=9, zorder=10
                 )
 
                 # add element annotation to plot
                 # TO DO: check how this holds with multiple structure scales.
                 if annotations:
-                    x_val += +np.sin(el.angle) * factor * 2.3
-                    y_val += -np.cos(el.angle) * factor * 2.3
+                    x_scalar += +np.sin(el.angle) * factor * 2.3
+                    y_scalar += -np.cos(el.angle) * factor * 2.3
                     self.one_fig.text(
-                        x_val, y_val, el.section_name, color="b", fontsize=9, zorder=10
+                        x_scalar,
+                        y_scalar,
+                        el.section_name,
+                        color="b",
+                        fontsize=9,
+                        zorder=10,
                     )
 
         # add supports
@@ -619,12 +629,12 @@ class Plotter(PlottingValues):
             self._add_node_values(x_val, y_val, force_1, force_2, digits)
 
     def plot(self) -> None:
-        plt.show()
+        plt.show()  # type: ignore
 
     def axial_force(
         self,
         factor: Optional[float] = None,
-        figsize: Optional[Sequence[float]] = None,
+        figsize: Optional[Tuple[float, float]] = None,
         verbosity: int = 0,
         scale: float = 1,
         offset: Sequence[float] = (0, 0),
@@ -709,7 +719,7 @@ class Plotter(PlottingValues):
     def bending_moment(
         self,
         factor: Optional[float] = None,
-        figsize: Optional[Sequence[float]] = None,
+        figsize: Optional[Tuple[float, float]] = None,
         verbosity: int = 0,
         scale: float = 1,
         offset: Sequence[float] = (0, 0),
@@ -770,7 +780,7 @@ class Plotter(PlottingValues):
     def shear_force(
         self,
         factor: Optional[float] = None,
-        figsize: Optional[Sequence[float]] = None,
+        figsize: Optional[Tuple[float, float]] = None,
         verbosity: int = 0,
         scale: float = 1,
         offset: Sequence[float] = (0, 0),
@@ -815,7 +825,7 @@ class Plotter(PlottingValues):
 
     def reaction_force(
         self,
-        figsize: Optional[Sequence[float]],
+        figsize: Optional[Tuple[float, float]],
         verbosity: int,
         scale: float,
         offset: Sequence[float],
@@ -930,10 +940,10 @@ class Plotter(PlottingValues):
             return None
         return self.fig
 
-    def displacements(  # type: ignore  # pylint: disable=arguments-renamed
+    def displacements(  # pylint: disable=arguments-renamed
         self,
         factor: Optional[float] = None,
-        figsize: Optional[Sequence[float]] = None,
+        figsize: Optional[Tuple[float, float]] = None,
         verbosity: int = 0,
         scale: float = 1,
         offset: Sequence[float] = (0, 0),
@@ -984,7 +994,7 @@ class Plotter(PlottingValues):
 
     def results_plot(
         self,
-        figsize: Optional[Sequence[float]],
+        figsize: Optional[Tuple[float, float]],
         verbosity: int,
         scale: float,
         offset: Sequence[float],

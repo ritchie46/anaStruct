@@ -1,5 +1,5 @@
 import math
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple, Union
 
 import numpy as np
 
@@ -12,6 +12,8 @@ from .element import (
 )
 
 if TYPE_CHECKING:
+    from matplotlib.figure import Figure
+
     from anastruct.fem.system import SystemElements
 
 
@@ -93,7 +95,9 @@ class PlottingValues:
         )
         return xy[0, :], xy[1, :]
 
-    def axial_force(self, factor: Optional[float]) -> Tuple[np.ndarray, np.ndarray]:
+    def axial_force(
+        self, factor: Optional[float]
+    ) -> Optional[Union[Tuple[np.ndarray, np.ndarray], "Figure"]]:
         if factor is None:
             max_force = max(
                 map(

@@ -21,7 +21,7 @@ class Vertex:
         :param y: (int, flt)
         """
         if isinstance(x, (Sequence)):
-            self.coordinates = np.array([x[0], x[1]], dtype=np.float32)
+            self.coordinates: np.ndarray = np.array([x[0], x[1]], dtype=np.float32)
         elif isinstance(x, np.ndarray):
             self.coordinates = np.array(x, dtype=np.float32)
         elif isinstance(x, Vertex):
