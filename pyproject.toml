@@ -93,11 +93,7 @@ implicit_reexport = true
 strict_optional = false
 
 [[tool.mypy.overrides]]
-module = [
-    "matplotlib.*",
-    "anastruct.fem.cython.celements",
-    "anastruct.fem.cython.cbasic",
-]
+module = ["anastruct.fem.cython.celements", "anastruct.fem.cython.cbasic"]
 ignore_missing_imports = true
 
 [tool.black]
