@@ -91,9 +91,15 @@ strict = true
 allow_any_generics = true
 implicit_reexport = true
 strict_optional = false
+explicit_package_bases = true
+exclude = ["build", "dist", "tests", "doc"]
 
 [[tool.mypy.overrides]]
-module = ["anastruct.fem.cython.celements", "anastruct.fem.cython.cbasic"]
+module = [
+    "anastruct.fem.cython.celements",
+    "anastruct.fem.cython.cbasic",
+    "Cython.build",
+]
 ignore_missing_imports = true
 
 [tool.black]
