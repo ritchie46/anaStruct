@@ -1,6 +1,6 @@
 black[jupyter]==23.9.1
 mypy==1.5.1
-pylint==3.0.0
+pylint==3.0.1
 pytest==7.4.2
 pytest-describe==2.1.0
 pytest-pspec==0.0.4
