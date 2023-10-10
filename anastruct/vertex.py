@@ -194,7 +194,7 @@ class Vertex:
         coordinates = self.coordinates / other
         return Vertex(coordinates)
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object) -> bool | NotImplementedError:
         """Check if two Vertex objects are equal
 
         Args:

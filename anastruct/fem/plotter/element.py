@@ -30,6 +30,7 @@ def plot_values_deflection(
     y2 = -element.vertex_2.z + uz2
 
     if element.type == "general" and not linear:
+        assert element.deflection is not None
         n = len(element.deflection)
         x_val = np.linspace(x1, x2, n)
         y_val = np.linspace(y1, y2, n)
@@ -106,6 +107,8 @@ def plot_values_axial_force(
     """
 
     # Determine forces for horizontal element.angle = 0
+    assert element.N_1 is not None
+    assert element.N_2 is not None
     N1 = element.N_1
     N2 = element.N_2
 
@@ -150,6 +153,7 @@ def plot_values_shear_force(
     x2 = element.vertex_2.x
     y2 = -element.vertex_2.z
 
+    assert element.shear_force is not None
     n = len(element.shear_force)
 
     # apply angle ai

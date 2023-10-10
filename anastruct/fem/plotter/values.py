@@ -55,7 +55,7 @@ class PlottingValues:
             max_displacement = max(
                 map(
                     lambda el: max(
-                        abs(el.node_1.ux), abs(el.node_1.uz), el.max_deflection
+                        abs(el.node_1.ux), abs(el.node_1.uz), el.max_deflection or 0
                     )
                     if el.type == "general"
                     else 0,
@@ -86,6 +86,7 @@ class PlottingValues:
             )
             factor = det_scaling_factor(max_moment, self.max_val_structure)
 
+        assert self.system.element_map[1].bending_moment is not None
         n = len(self.system.element_map[1].bending_moment)
         xy = np.hstack(
             [
@@ -102,14 +103,15 @@ class PlottingValues:
             max_force = max(
                 map(
                     lambda el: max(
-                        abs(el.N_1),
-                        abs(el.N_2),
+                        abs(el.N_1 or 0.0),
+                        abs(el.N_2 or 0.0),
                         abs(((el.all_qn_load[0] + el.all_qn_load[1]) / 2) * el.l),
                     ),
                     self.system.element_map.values(),
                 )
             )
             factor = det_scaling_factor(max_force, self.max_val_structure)
+        assert self.system.element_map[1].axial_force is not None
         n = len(self.system.element_map[1].axial_force)
         xy = np.hstack(
             [
@@ -123,7 +125,7 @@ class PlottingValues:
         if factor is None:
             max_force = max(
                 map(
-                    lambda el: np.max(np.abs(el.shear_force)),
+                    lambda el: np.max(np.abs(el.shear_force or 0.0)),
                     self.system.element_map.values(),
                 )
             )
