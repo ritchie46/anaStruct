@@ -2,8 +2,19 @@ import collections.abc
 import copy
 import math
 import re
-from typing import (TYPE_CHECKING, Any, Collection, Dict, List, Literal,
-                    Optional, Sequence, Set, Tuple, Union)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Collection,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 
@@ -21,8 +32,14 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
     from anastruct.fem.node import Node
-    from anastruct.types import (AxisNumber, Dimension, LoadDirection, MpType,
-                                 Spring, SupportDirection)
+    from anastruct.types import (
+        AxisNumber,
+        Dimension,
+        LoadDirection,
+        MpType,
+        Spring,
+        SupportDirection,
+    )
 
 
 class SystemElements:
@@ -110,7 +127,7 @@ class SystemElements:
         self.supports_spring_x: List[Tuple[Node, bool]] = []
         self.supports_spring_z: List[Tuple[Node, bool]] = []
         self.supports_spring_y: List[Tuple[Node, bool]] = []
-        self.supports_roll_direction: List[Literal[1, 2, 3]] = []
+        self.supports_roll_direction: List[Literal[1, 2]] = []
         self.inclined_roll: Dict[
             int, float
         ] = {}  # map node ids to inclination angle relative to global x-axis.
@@ -267,7 +284,8 @@ class SystemElements:
                    location=Vertex
 
         Args:
-            location (Union[ Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex ]): The two nodes of the element or the next node of the element.
+            location (Union[ Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex ]):
+                The two nodes of the element or the next node of the element.
             EA (Optional[float], optional): Axial stiffness of the new element. Defaults to None.
 
         Returns:
@@ -313,14 +331,15 @@ class SystemElements:
                 spring={1: 0}
 
         Args:
-            location (Union[ Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex ]): The two nodes of the element or the next node of the element
+            location (Union[ Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex ]):
+                The two nodes of the element or the next node of the element
             EA (Optional[float], optional): Axial stiffness of the new element. Defaults to None.
             EI (Optional[float], optional): Bending stiffness of the new element. Defaults to None.
             g (float, optional): Self-weight of the new element. Defaults to 0.
             mp (Optional[MpType], optional): Maximum plastic moment of each end node. Keys are integers representing
                 the nodes. Values are the bending moment capacity. Defaults to None.
-            spring (Optional[Spring], optional): Rotational spring or hinge (k=0) of each end node. Keys are integers representing
-                   the nodes. Values are the bending moment capacity. Defaults to None.
+            spring (Optional[Spring], optional): Rotational spring or hinge (k=0) of each end node.
+                Keys are integers representing the nodes. Values are the bending moment capacity. Defaults to None.
 
         Optional Keyword Args:
             element_type (ElementType): "general" (axial and lateral force) or "truss" (axial force only)
@@ -447,14 +466,18 @@ class SystemElements:
                 last={'EA': 1e3, 'mp': 290}
 
         Args:
-            location (Union[ Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex ]): The two nodes of the element or the next node of the element.
+            location (Union[ Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex ]):
+                The two nodes of the element or the next node of the element.
             n (Optional[int], optional): Number of elements to add between the first and last nodes. Defaults to None.
-            dl (Optional[float], optional): Length of sub-elements to add between the first and last nodes. Length will be rounded down if necessary such that all sub-elements will have the same length. Defaults to None.
+            dl (Optional[float], optional): Length of sub-elements to add between the first and last nodes.
+                Length will be rounded down if necessary such that all sub-elements will have the same length.
+                Defaults to None.
             EA (Optional[float], optional): Axial stiffness. Defaults to None.
             EI (Optional[float], optional): Bending stiffness. Defaults to None.
             g (float, optional): Self-weight. Defaults to 0.
             mp (Optional[MpType], optional): Maximum plastic moment capacity at ends of element. Defaults to None.
-            spring (Optional[Spring], optional): Rotational springs or hinges (k=0) at ends of element. Defaults to None.
+            spring (Optional[Spring], optional): Rotational springs or hinges (k=0) at ends of element.
+                Defaults to None.
 
         Optional Keyword Args:
             element_type (ElementType): "general" (axial and lateral force) or "truss" (axial force only)
@@ -576,8 +599,10 @@ class SystemElements:
 
         Args:
             element_id (int): Id number of the element in which you want to insert the node
-            location (Optional[Union[Sequence[float], Vertex]], optional): Location in which to insert the node. Defaults to None.
-            factor (Optional[float], optional): Fraction of distance from start to end of elmeent on which to divide the element. Must be between 0 and 1. Defaults to None.
+            location (Optional[Union[Sequence[float], Vertex]], optional): Location in which to insert the node.
+                Defaults to None.
+            factor (Optional[float], optional): Fraction of distance from start to end of elmeent on which to
+                divide the element. Must be between 0 and 1. Defaults to None.
         """
 
         ss = SystemElements(
@@ -666,10 +691,12 @@ class SystemElements:
         """Compute the results of current model.
 
         Args:
-            force_linear (bool, optional): Force a linear calculation, even when the system has non-linear nodes. Defaults to False.
+            force_linear (bool, optional): Force a linear calculation, even when the system has non-linear nodes.
+                Defaults to False.
             verbosity (int, optional): Log calculation outputs (0), or silence (1). Defaults to 0.
             max_iter (int, optional): Maximum allowed iterations. Defaults to 200.
-            geometrical_non_linear (int, optional): Calculate second order effects and determine the buckling factor. Defaults to False.
+            geometrical_non_linear (int, optional): Calculate second order effects and determine the buckling factor.
+                Defaults to False.
 
         Optional Keyword Args:
             naked (bool): Whether or not to run the solve function without doing post processing.
@@ -678,7 +705,8 @@ class SystemElements:
                                       determining the buckling_factor
 
         Raises:
-            FEMException: The eigenvalues of the stiffness matrix are non zero, which indicates a instable structure. Check your support conditions
+            FEMException: The eigenvalues of the stiffness matrix are non zero, which indicates an unstable structure.
+                Check your support conditions
 
         Returns:
             np.ndarray: Displacements vector.
@@ -783,7 +811,8 @@ class SystemElements:
         """Validate the stability of the stiffness matrix.
 
         Args:
-            min_eigen (float, optional): Minimum value of the eigenvalues of the stiffness matrix. This value should be close to zero. Defaults to 1e-9.
+            min_eigen (float, optional): Minimum value of the eigenvalues of the stiffness matrix. This value
+                should be close to zero. Defaults to 1e-9.
 
         Returns:
             bool: True if the structure is stable, False if not.
@@ -862,9 +891,12 @@ class SystemElements:
 
         Args:
             node_id (Union[Sequence[int], int]): Represents the nodes ID
-            direction (Union[Sequence[SupportDirection], SupportDirection], optional): Represents the direction that is free ("x", "y", "1", or "2"). Defaults to "x".
-            angle (Union[Sequence[Optional[float]], Optional[float]], optional): Angle in degrees relative to global x-axis. If angle is given, the support will be inclined. Defaults to None.
-            rotate (Union[Sequence[bool], bool], optional): If set to False, rotation at the roller will also be restrianed. Defaults to True.
+            direction (Union[Sequence[SupportDirection], SupportDirection], optional): Represents the direction
+                that is free ("x", "y", "1", or "2"). Defaults to "x".
+            angle (Union[Sequence[Optional[float]], Optional[float]], optional): Angle in degrees relative to
+                global x-axis. If angle is given, the support will be inclined. Defaults to None.
+            rotate (Union[Sequence[bool], bool], optional): If set to False, rotation at the roller will also
+                be restrianed. Defaults to True.
 
         Raises:
             FEMException: Invalid direction, if the direction parameter is invalid
@@ -937,7 +969,8 @@ class SystemElements:
             translation (Union[Sequence[AxisNumber], AxisNumber]): Represents the prevented translation or rotation.
                 1 = translation in x, 2 = translation in z, 3 = rotation in y
             k (Union[Sequence[float], float]): Stiffness of the spring
-            roll (Union[Sequence[bool], bool], optional): If set to True, only the translation of the spring is controlled. Defaults to False.
+            roll (Union[Sequence[bool], bool], optional): If set to True, only the translation of the
+                spring is controlled. Defaults to False.
         """
         self.supports_spring_args.append((node_id, translation, k, roll))
         # The stiffness of the spring is added in the system matrix at the location that
@@ -984,9 +1017,12 @@ class SystemElements:
         Args:
             q (Union[float, Sequence[float]]): Value of the q-load
             element_id (Union[int, Sequence[int]]): The element ID to which to apply the load
-            direction (Union[&quot;LoadDirection&quot;, Sequence[&quot;LoadDirection&quot;]], optional): "element", "x", "y", "parallel", or "perpendicular". Defaults to "element".
-            rotation (Optional[Union[float, Sequence[float]]], optional): Rotate the force clockwise. Rotation is in degrees. Defaults to None.
-            q_perp (Optional[Union[float, Sequence[float]]], optional): Value of any q-load perpendicular to the indicated direction/rotatione. Defaults to None.
+            direction (Union[&quot;LoadDirection&quot;, Sequence[&quot;LoadDirection&quot;]], optional):
+                "element", "x", "y", "parallel", or "perpendicular". Defaults to "element".
+            rotation (Optional[Union[float, Sequence[float]]], optional): Rotate the force clockwise.
+                Rotation is in degrees. Defaults to None.
+            q_perp (Optional[Union[float, Sequence[float]]], optional): Value of any q-load perpendicular
+                to the indicated direction/rotatione. Defaults to None.
 
         Raises:
             FEMException: _description_
@@ -1078,7 +1114,8 @@ class SystemElements:
             node_id (Union[int, Sequence[int]]): The node ID to which to apply the load
             Fx (Union[float, Sequence[float]], optional): Force in the global X direction. Defaults to 0.0.
             Fy (Union[float, Sequence[float]], optional): Force in the global Y direction. Defaults to 0.0.
-            rotation (Union[float, Sequence[float]], optional): Rotate the force clockwise by the given angle in degrees. Defaults to 0.0.
+            rotation (Union[float, Sequence[float]], optional): Rotate the force clockwise by the given
+                angle in degrees. Defaults to 0.0.
 
         Raises:
             FEMException: Point loads may not be placed at the location of inclined roller supports
@@ -1146,7 +1183,8 @@ class SystemElements:
             figsize (Optional[Tuple[float, float]], optional): Change the figure size. Defaults to None.
             show (bool, optional): Plot the result or return a figure. Defaults to True.
             supports (bool, optional): Plot the supports. Defaults to True.
-            values_only (bool, optional): Return the values that would be plotted as tuple containing two arrays: (x, y). Defaults to False.
+            values_only (bool, optional): Return the values that would be plotted as tuple containing
+                two arrays: (x, y). Defaults to False.
             annotations (bool, optional): if True, structure annotations are plotted. It includes section name.
 
         Returns:
@@ -1178,7 +1216,8 @@ class SystemElements:
             offset (Tuple[float, float], optional): Offset the plots location on the figure. Defaults to (0, 0).
             figsize (Optional[Tuple[float, float]], optional): Change the figure size. Defaults to None.
             show (bool, optional): Plot the result or return a figure. Defaults to True.
-            values_only (bool, optional): Return the values that would be plotted as tuple containing two arrays: (x, y). Defaults to False.
+            values_only (bool, optional): Return the values that would be plotted as tuple containing
+                two arrays: (x, y). Defaults to False.
 
         Returns:
             Figure: If show is False, return a figure.
@@ -1210,7 +1249,8 @@ class SystemElements:
             offset (Tuple[float, float], optional): Offset the plots location on the figure. Defaults to (0, 0).
             figsize (Optional[Tuple[float, float]], optional): Change the figure size. Defaults to None.
             show (bool, optional): Plot the result or return a figure. Defaults to True.
-            values_only (bool, optional): Return the values that would be plotted as tuple containing two arrays: (x, y). Defaults to False.
+            values_only (bool, optional): Return the values that would be plotted as tuple containing
+                two arrays: (x, y). Defaults to False.
 
         Returns:
             Figure: If show is False, return a figure.
@@ -1239,7 +1279,8 @@ class SystemElements:
             offset (Tuple[float, float], optional): Offset the plots location on the figure. Defaults to (0, 0).
             figsize (Optional[Tuple[float, float]], optional): Change the figure size. Defaults to None.
             show (bool, optional): Plot the result or return a figure. Defaults to True.
-            values_only (bool, optional): Return the values that would be plotted as tuple containing two arrays: (x, y). Defaults to False.
+            values_only (bool, optional): Return the values that would be plotted as tuple containing
+                two arrays: (x, y). Defaults to False.
 
         Returns:
             Figure: If show is False, return a figure.
@@ -1293,7 +1334,8 @@ class SystemElements:
             figsize (Optional[Tuple[float, float]], optional): Change the figure size. Defaults to None.
             show (bool, optional): Plot the result or return a figure. Defaults to True.
             linear (bool, optional): Don't evaluate the displacement values in between the elements. Defaults to False.
-            values_only (bool, optional): Return the values that would be plotted as tuple containing two arrays: (x, y). Defaults to False.
+            values_only (bool, optional): Return the values that would be plotted as tuple containing
+                two arrays: (x, y). Defaults to False.
 
         Returns:
             Figure: If show is False, return a figure.
@@ -1337,11 +1379,15 @@ class SystemElements:
         working on the elements and may seem counter intuitive.
 
         Args:
-            node_id (int, optional): The node's ID. If node_id == 0, the results of all nodes are returned. Defaults to 0.
+            node_id (int, optional): The node's ID. If node_id == 0, the results of all nodes are returned.
+                Defaults to 0.
 
         Returns:
-            Union[ List[Tuple[Any, Any, Any, Any, Any, Any, Any]], Dict[str, Union[int, float]] ]: If node_id == 0, returns a list containing tuples with the results: [(id, Fx, Fy, Ty, ux, uy, phi_y), (id, Fx, Fy...), () .. ]
-                If node_id > 0, returns a dict with the results: {"id": id, "Fx": Fx, "Fy": Fy, "Ty": Ty, "ux": ux, "uy": uy, "phi_y": phi_y}
+            Union[ List[Tuple[Any, Any, Any, Any, Any, Any, Any]], Dict[str, Union[int, float]] ]:
+                If node_id == 0, returns a list containing tuples with the results:
+                [(id, Fx, Fy, Ty, ux, uy, phi_y), (id, Fx, Fy...), () .. ]
+                If node_id > 0, returns a dict with the results:
+                {"id": id, "Fx": Fx, "Fy": Fy, "Ty": Ty, "ux": ux, "uy": uy, "phi_y": phi_y}
         """
         # TODO: This should return a List of Dicts, not a list of Tuples...
         result_list = []
@@ -1369,10 +1415,12 @@ class SystemElements:
         """Get the node displacements.
 
         Args:
-            node_id (int, optional): The node's ID. If node_id == 0, the results of all nodes are returned. Defaults to 0.
+            node_id (int, optional): The node's ID. If node_id == 0, the results of all nodes are returned.
+                Defaults to 0.
 
         Returns:
-            Union[List[Tuple[Any, Any, Any, Any]], Dict[str, Any]]: If node_id == 0, returns a list containing tuples with the results: [(id, ux, uy, phi_y), (id, ux, uy, phi_y),  ... (id, ux, uy, phi_y) ]
+            Union[List[Tuple[Any, Any, Any, Any]], Dict[str, Any]]: If node_id == 0, returns a list containing
+                tuples with the results: [(id, ux, uy, phi_y), (id, ux, uy, phi_y),  ... (id, ux, uy, phi_y) ]
                 If node_id > 0, returns a dict with the results: {"id": id, "ux": ux, "uy": uy, "phi_y": phi_y}
         """
         # TODO: This should return a List of Dicts, not a list of Tuples...
@@ -1396,12 +1444,19 @@ class SystemElements:
         """Get the element results.
 
         Args:
-            element_id (int, optional): The element's ID. If element_id == 0, the results of all elements are returned. Defaults to 0.
-            verbose (bool, optional): If set to True, then numerical results for the deflection and the bending moment are also returned. Defaults to False.
+            element_id (int, optional): The element's ID. If element_id == 0, the results of all elements are returned.
+                Defaults to 0.
+            verbose (bool, optional): If set to True, then numerical results for the deflection and the bending
+                moment are also returned. Defaults to False.
 
         Returns:
-            Union[List[Dict[str, Any]], Dict[str, Any]]: If element_id == 0, returns a list containing dicts with the results: [{"id": id, "length": length, "alpha": alpha, "umax": umax, "umin": umin, "u": u, "wmax": wmax, "wmin": wmin, "w": w, "Mmin": Mmin, "Mmax": Mmax, "M": M, "Qmin": Qmin, "Qmax": Qmax, "Q": Q, "Nmin": Nmin, "Nmax": Nmax, "N": N, "q": q}, ... ]
-                If element_id > 0, returns a dict with the results: {"id": id, "length": length, "alpha": alpha, "umax": umax, "umin": umin, "u": u, "wmax": wmax, "wmin": wmin, "w": w, "Mmin": Mmin, "Mmax": Mmax, "M": M, "Qmin": Qmin, "Qmax": Qmax, "Q": Q, "Nmin": Nmin, "Nmax": Nmax, "N": N, "q": q}
+            Union[List[Dict[str, Any]], Dict[str, Any]]: If element_id == 0,
+                returns a list containing dicts with the results: [{"id": id, "length": length, "alpha": alpha,
+                    "umax": umax, "umin": umin, "u": u, "wmax": wmax, "wmin": wmin, "w": w, "Mmin": Mmin, "Mmax": Mmax,
+                    "M": M, "Qmin": Qmin, "Qmax": Qmax, "Q": Q, "Nmin": Nmin, "Nmax": Nmax, "N": N, "q": q}, ... ]
+                If element_id > 0, returns a dict with the results: {"id": id, "length": length, "alpha": alpha,
+                    "umax": umax, "umin": umin, "u": u, "wmax": wmax, "wmin": wmin, "w": w, "Mmin": Mmin, "Mmax": Mmax,
+                    "M": M, "Qmin": Qmin, "Qmax": Qmax, "Q": Q, "Nmin": Nmin, "Nmax": Nmax, "N": N, "q": q}
         """
         if element_id != 0:
             element_id = _negative_index_to_id(element_id, self.element_map)

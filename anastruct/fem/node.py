@@ -21,16 +21,18 @@ class Node:
         vertex: Vertex = Vertex(0, 0),
         hinge: bool = False,
     ):
-        """
-        :param id: ID of the node, integer
-        :param Fx: Value of Fx
-        :param Fz: Value of Fz
-        :param Ty: Value of Ty
-        :param ux: Value of ux
-        :param uz: Value of uz
-        :param phi_y: Value of phi
-        :param vertex: Point object
-        :param hinge: Boolean
+        """Create a Node object
+
+        Args:
+            id (int): ID of the node
+            Fx (float, optional): Value of Fx force. Defaults to 0.0.
+            Fz (float, optional): Value of Fz force. Defaults to 0.0.
+            Ty (float, optional): Value of Ty moment. Defaults to 0.0.
+            ux (float, optional): Value of ux displacement. Defaults to 0.0.
+            uz (float, optional): Value of uz displacement. Defaults to 0.0.
+            phi_y (float, optional): Value of phi_y rotation. Defaults to 0.0.
+            vertex (Vertex, optional): Point object coordinate. Defaults to Vertex(0, 0).
+            hinge (bool, optional): Is this node a hinge. Defaults to False.
         """
         self.id = id
         # forces
@@ -47,9 +49,19 @@ class Node:
 
     @property
     def Fy(self) -> float:
+        """Fy is the vertical force, and the negative of Fz
+
+        Returns:
+            float: negative of Fz
+        """
         return -self.Fz
 
     def __str__(self) -> str:
+        """String representation of the node
+
+        Returns:
+            str: String representation of the node
+        """
         if self.vertex:
             return (
                 f"[id = {self.id}, Fx = {self.Fx}, Fz = {self.Fz}, Ty = {self.Ty}, ux = {self.ux}, "
@@ -61,6 +73,14 @@ class Node:
         )
 
     def __add__(self, other: Node) -> Node:
+        """Add two nodes
+
+        Args:
+            other (Node): Node to add
+
+        Returns:
+            Node: Sum of the two nodes
+        """
         assert (
             self.id == other.id
         ), "Cannot add nodes as the ID's don't match. The nodes positions don't match."
@@ -81,6 +101,14 @@ class Node:
         )
 
     def __sub__(self, other: Node) -> Node:
+        """Subtract two nodes
+
+        Args:
+            other (Node): Node to subtract
+
+        Returns:
+            Node: Difference of the two nodes
+        """
         assert (
             self.id == other.id
         ), "Cannot subtract nodes as the ID's don't match. The nodes positions don't match."
@@ -101,10 +129,16 @@ class Node:
         )
 
     def reset(self) -> None:
+        """Reset the node to zero forces and displacements"""
         self.Fx = self.Fz = self.Ty = self.ux = self.uz = self.phi_y = 0
         self.hinge = False
 
     def add_results(self, other: Node) -> None:
+        """Add the results of another node to this node
+
+        Args:
+            other (Node): Node to add
+        """
         assert (
             self.id == other.id
         ), "Cannot add nodes as the ID's don't match. The nodes positions don't match."
