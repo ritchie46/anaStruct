@@ -8,19 +8,21 @@ from anastruct.fem.elements import det_axial, det_moment, det_shear
 if TYPE_CHECKING:
     from anastruct.fem.elements import Element
     from anastruct.fem.system import SystemElements
+    from anastruct.types import AxisNumber
 
 
 def set_force_vector(
-    system: "SystemElements", force_list: List[Tuple[int, int, float]]
+    system: "SystemElements", force_list: List[Tuple[int, "AxisNumber", float]]
 ) -> np.ndarray:
-    """
-    :param force_list: list containing tuples with the
-    1. number of the node,
-    2. the number of the direction (1 = x, 2 = z, 3 = y)
-    3. the force
-    [(1, 3, 1000)] node=1, direction=3 (y), force=1000
-    list may contain multiple tuples
-    :return: Vector with forces on the nodes
+    """Set a force vector on a node within the system
+
+    Args:
+        system (SystemElements): System to which the force vector is applied
+        force_list (List[Tuple[int, AxisNumber, float]]): List of tuples containing
+            the node id, direction (1 = x, 2 = z, 3 = y), and force magnitude
+
+    Returns:
+        np.ndarray: System force vector with the applied forces on the nodes
     """
     assert system.system_force_vector is not None
     for id_, direction, force in force_list:
@@ -30,6 +32,11 @@ def set_force_vector(
 
 
 def prep_matrix_forces(system: "SystemElements") -> None:
+    """Prepare the system force vector for the matrix assembly
+
+    Args:
+        system (SystemElements): System to which the force vector is applied
+    """
     system.system_force_vector = system.system_force_vector = np.zeros(
         len(system._vertices) * 3
     )
@@ -40,11 +47,21 @@ def prep_matrix_forces(system: "SystemElements") -> None:
 
 
 def apply_moment_load(system: "SystemElements") -> None:
+    """Apply a moment load to the system
+
+    Args:
+        system (SystemElements): System to which the moment load is applied
+    """
     for node_id, Ty in system.loads_moment.items():
         set_force_vector(system, [(node_id, 3, Ty)])
 
 
 def apply_point_load(system: "SystemElements") -> None:
+    """Apply a point load to the system
+
+    Args:
+        system (SystemElements): System to which the point load is applied
+    """
     for node_id in system.loads_point:
         Fx, Fz = system.loads_point[node_id]
         # system force vector.
@@ -58,6 +75,11 @@ def apply_point_load(system: "SystemElements") -> None:
 
 
 def apply_perpendicular_q_load(system: "SystemElements") -> None:
+    """Apply a perpendicular q load to the system
+
+    Args:
+        system (SystemElements): System to which the perpendicular q load is applied
+    """
     for element_id in system.loads_dead_load:
         element = system.element_map[element_id]
         qi_perpendicular = element.all_qp_load[0]
@@ -108,6 +130,11 @@ def apply_perpendicular_q_load(system: "SystemElements") -> None:
 
 
 def apply_parallel_qn_load(system: "SystemElements") -> None:
+    """Apply a parallel qn load to the system
+
+    Args:
+        system (SystemElements): System to which the parallel qn load is applied
+    """
     for element_id in system.loads_dead_load:
         element = system.element_map[element_id]
         qni_parallel = element.all_qn_load[0]
@@ -142,6 +169,13 @@ def apply_parallel_qn_load(system: "SystemElements") -> None:
 
 
 def dead_load(system: "SystemElements", g: float, element_id: int) -> None:
+    """Apply a dead load self-weight to an element in the system
+
+    Args:
+        system (SystemElements): System to which the dead load is applied
+        g (float): Magnitude of the dead load self-weight
+        element_id (int): Element id to which the dead load is applied
+    """
     system.loads_dead_load.add(element_id)
     system.element_map[element_id].dead_load = g
 
@@ -149,9 +183,13 @@ def dead_load(system: "SystemElements", g: float, element_id: int) -> None:
 def assemble_system_matrix(
     system: "SystemElements", validate: bool = False, geometric_matrix: bool = False
 ) -> None:
-    """
-    Shape of the matrix = n nodes * n d.o.f.
-    Shape = n * 3
+    """Assemble the system matrix
+    Shape of the matrix = n nodes * n d.o.f. = n * 3
+
+    Args:
+        system (SystemElements): System to be prepared
+        validate (bool, optional): Whether or not to validate the system. Defaults to False.
+        geometric_matrix (bool, optional): Whether or not to include the current geometric matrix. Defaults to False.
     """
     system._remainder_indexes = []
     if not geometric_matrix:
@@ -167,15 +205,15 @@ def assemble_system_matrix(
     # Determine the elements location in the stiffness matrix.
     # system matrix [K]
     #
-    # [fx 1] [K         |  \ node 1 starts at row 1
-    # |fz 1] |  K       |  /
-    # |Ty 1] |   K      | /
-    # |fx 2] |    K     |  \ node 2 starts at row 4
-    # |fz 2] |     K    |  /
-    # |Ty 2] |      K   | /
-    # |fx 3] |       K  |  \ node 3 starts at row 7
-    # |fz 3] |        K |  /
-    # [Ty 3] [         K] /
+    # [fx 1] [K        |  \ node 1 starts at row 1
+    # |fz 1] | K       |  /
+    # |Ty 1] |  K      | /
+    # |fx 2] |   K     |  \ node 2 starts at row 4
+    # |fz 2] |    K    |  /
+    # |Ty 2] |     K   | /
+    # |fx 3] |      K  |  \ node 3 starts at row 7
+    # |fz 3] |       K |  /
+    # [Ty 3] [        K] /
     #
     #         n   n  n
     #         o   o  o
@@ -204,15 +242,21 @@ def assemble_system_matrix(
 
 
 def set_displacement_vector(
-    system: "SystemElements", nodes_list: List[Tuple[int, int]]
+    system: "SystemElements", nodes_list: List[Tuple[int, "AxisNumber"]]
 ) -> np.ndarray:
-    """
-    :param nodes_list: list containing tuples with
-    1.the node
-    2. the d.o.f. that is set
-    :return: Vector with the displacements of the nodes (If displacement is not known,
-             the value is set
-    to NaN)
+    """Set the displacement vector for the system
+
+    Args:
+        system (SystemElements): System to which the displacement vector is applied
+        nodes_list (List[Tuple[int, AxisNumber]]): List of tuples containing
+            the node id and the direction (1 = x, 2 = z, 3 = y)
+
+    Raises:
+        IndexError: This often occurs if you set supports before the all the elements are
+            modelled. First finish the model.
+
+    Returns:
+        np.ndarray: System displacement vector with the applied displacements on the nodes
     """
     if system.system_displacement_vector is None:
         system.system_displacement_vector = np.ones(len(system._vertices) * 3) * np.NaN
@@ -232,6 +276,11 @@ def set_displacement_vector(
 
 
 def process_conditions(system: "SystemElements") -> None:
+    """Process the conditions of the system
+
+    Args:
+        system (SystemElements): System to be processed
+    """
     indexes = []
     # remove the unsolvable values from the matrix and vectors
     assert system.shape_system_matrix is not None
@@ -245,12 +294,19 @@ def process_conditions(system: "SystemElements") -> None:
     system.system_displacement_vector = np.delete(
         system.system_displacement_vector, indexes, 0
     )
+    assert system.system_force_vector is not None
+    assert system.system_matrix is not None
     system.reduced_force_vector = np.delete(system.system_force_vector, indexes, 0)
     system.reduced_system_matrix = np.delete(system.system_matrix, indexes, 0)
     system.reduced_system_matrix = np.delete(system.reduced_system_matrix, indexes, 1)
 
 
 def process_supports(system: "SystemElements") -> None:
+    """Process the supports of the system
+
+    Args:
+        system (SystemElements): System to be processed
+    """
     for node in system.supports_hinged:
         set_displacement_vector(system, [(node.id, 1), (node.id, 2)])
 
@@ -275,9 +331,7 @@ def process_supports(system: "SystemElements") -> None:
     for node in system.internal_hinges:
         set_displacement_vector(system, [(node.id, 3)])
         for el in system.node_element_map[node.id]:
-            el.compile_constitutive_matrix(
-                el.EA, el.EI, el.l, el.springs, el.node_1.hinge, el.node_2.hinge
-            )
+            el.compile_constitutive_matrix()
             el.compile_stiffness_matrix()
 
     for node in system.supports_fixed:
@@ -302,5 +356,5 @@ def process_supports(system: "SystemElements") -> None:
             elif el.node_2.id == node_id:
                 el.a2 = el.angle + angle
 
-            el.compile_kinematic_matrix(el.a1, el.a2, el.l)
+            el.compile_kinematic_matrix()
             el.compile_stiffness_matrix()

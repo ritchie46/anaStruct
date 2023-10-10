@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Dict
 
 from anastruct.vertex import Vertex
 
@@ -15,9 +15,9 @@ class Node:
         Fx: float = 0.0,
         Fz: float = 0.0,
         Ty: float = 0.0,
-        ux: Optional[float] = 0.0,
-        uz: Optional[float] = 0.0,
-        phi_y: Optional[float] = 0,
+        ux: float = 0.0,
+        uz: float = 0.0,
+        phi_y: float = 0.0,
         vertex: Vertex = Vertex(0, 0),
         hinge: bool = False,
     ):

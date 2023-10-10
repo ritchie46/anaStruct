@@ -78,9 +78,9 @@ class SystemLevel:
             node.Fx *= -1
             node.Fz *= -1
             node.Ty *= -1
-            node.ux = None
-            node.uz = None
-            node.phi_y = None
+            node.ux = 0.0
+            node.uz = 0.0
+            node.phi_y = 0.0
 
     def element_results(self) -> None:
         """
@@ -210,6 +210,7 @@ class ElementLevel:
         """
         iteration_factor = np.linspace(0, 1, con)
         x = iteration_factor * element.l
+        assert element.bending_moment is not None
         eq = np.polyfit(x, element.bending_moment, 3)
         shear_force = eq[0] * 3 * x**2 + eq[1] * 2 * x + eq[2]
         element.shear_force = shear_force
@@ -274,7 +275,7 @@ class ElementLevel:
         phi_neg2 = -integrate_array(element.axial_force[::-1], dx) / element.EA
         u2 = integrate_array(phi_neg2, dx)
 
-        element.extension = -(u1 + u2) / 2.0
+        element.extension = -1 * (u1 + u2) / 2.0
         element.max_extension = np.max(np.abs(element.extension))
 
         # assert element.N_1 is not None
