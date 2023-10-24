@@ -198,11 +198,7 @@ class Element:
 
     def compile_constitutive_matrix(self) -> None:
         """Compile the constitutive matrix of the element"""
-        if self.node_map is None:  # if element is just being created
-            self.constitutive_matrix = constitutive_matrix(
-                self.EA, self.EI, self.l, self.springs, False, False
-            )
-        else:
+        if self.node_map:  # if element is just being created
             self.constitutive_matrix = constitutive_matrix(
                 self.EA,
                 self.EI,
@@ -210,6 +206,10 @@ class Element:
                 self.springs,
                 self.node_1.hinge,
                 self.node_2.hinge,
+            )
+        else:
+            self.constitutive_matrix = constitutive_matrix(
+                self.EA, self.EI, self.l, self.springs, False, False
             )
 
     def update_stiffness(self, factor: float, node: Literal[1, 2]) -> None:
