@@ -218,7 +218,7 @@ class SystemElements:
             FEMException: x and y should have the same length.
             FEMException: The mp parameter should be a dictionary.
         """
-        # TODO: Why doesn't this function use Vertex objects? It's the only function which has _separated_ x and y lists
+        # TO DO: Why doesn't this function use Vertex objects? It's the only function which has _separate_ x and y lists
         if len(x) != len(y):
             raise FEMException(
                 "Wrong parameters", "x and y should have the same length."
@@ -1389,7 +1389,7 @@ class SystemElements:
                 If node_id > 0, returns a dict with the results:
                 {"id": id, "Fx": Fx, "Fy": Fy, "Ty": Ty, "ux": ux, "uy": uy, "phi_y": phi_y}
         """
-        # TODO: This should return a List of Dicts, not a list of Tuples...
+        # TO DO: This should return a List of Dicts, not a list of Tuples...
         result_list = []
         if node_id != 0:
             node_id = _negative_index_to_id(node_id, self.node_map)
@@ -1423,7 +1423,7 @@ class SystemElements:
                 tuples with the results: [(id, ux, uy, phi_y), (id, ux, uy, phi_y),  ... (id, ux, uy, phi_y) ]
                 If node_id > 0, returns a dict with the results: {"id": id, "ux": ux, "uy": uy, "phi_y": phi_y}
         """
-        # TODO: This should return a List of Dicts, not a list of Tuples...
+        # TO DO: This should return a List of Dicts, not a list of Tuples...
         result_list = []
         if node_id != 0:
             node_id = _negative_index_to_id(node_id, self.node_map)
@@ -1566,7 +1566,7 @@ class SystemElements:
         Returns:
             List[float]: List with the first mesh node results of each element for a certain unit.
         """
-        # TODO: This function does not make sense... Unclear why I should care about only the first node of each element
+        # TO DO: This function does not make sense... Unclear why I should care about only the 1st node of each element
         if unit == "shear":
             return [
                 el.shear_force[0]
