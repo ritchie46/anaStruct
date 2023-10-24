@@ -10,14 +10,15 @@ if TYPE_CHECKING:
 def plot_values_deflection(
     element: "Element", factor: float, linear: bool = False
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Determine the plotting values for deflection
+    """Determines the plotting values for deflection
 
-    :param element: (fem.Element)
-    :param factor: (flt) Factor by which to multiply the plotting values perpendicular
-                   to the elements axis.
-    :param linear: (bool) If True, the bending in between the elements is determined.
-    :return: (np.array/ list) x and y values.
+    Args:
+        element (Element): Element to plot
+        factor (float): Factor by which to multiply the plotting values perpendicular to the elements axis.
+        linear (bool, optional): If True, the bending in between the elements is determined. Defaults to False.
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray]: x and y values
     """
     ux1 = element.node_1.ux * factor
     uz1 = -element.node_1.uz * factor
@@ -48,11 +49,15 @@ def plot_values_deflection(
 def plot_values_bending_moment(
     element: "Element", factor: float, n: int
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    :param element: (object) of the Element class
-    :param factor: (float) scaling the plot
-    :param n: (integer) amount of x-values
-    :return:
+    """Determines the plotting values for bending moment
+
+    Args:
+        element (Element): Element to plot
+        factor (float): Factor by which to multiply the plotting values perpendicular to the elements axis.
+        n (int): Number of points to plot
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray]: x and y values
     """
 
     # Determine forces for horizontal element.angle = 0
@@ -99,11 +104,15 @@ def plot_values_bending_moment(
 def plot_values_axial_force(
     element: "Element", factor: float, n: int
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    :param element: (object) of the Element class
-    :param factor: (float) scaling the plot
-    :param n: (integer) amount of x-values
-    :return:
+    """Determines the plotting values for axial force
+
+    Args:
+        element (Element): Element to plot
+        factor (float): Factor by which to multiply the plotting values perpendicular to the elements axis.
+        n (int): Number of points to plot
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray]: x and y values
     """
 
     # Determine forces for horizontal element.angle = 0
@@ -148,6 +157,15 @@ def plot_values_axial_force(
 def plot_values_shear_force(
     element: "Element", factor: float
 ) -> Tuple[np.ndarray, np.ndarray]:
+    """Determines the plotting values for shear force
+
+    Args:
+        element (Element): Element to plot
+        factor (float): Factor by which to multiply the plotting values perpendicular to the elements axis.
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray]: x and y values
+    """
     x1 = element.vertex_1.x
     y1 = -element.vertex_1.z
     x2 = element.vertex_2.x
@@ -179,6 +197,14 @@ def plot_values_shear_force(
 
 
 def plot_values_element(element: "Element") -> Tuple[np.ndarray, np.ndarray]:
+    """Determines the plotting values for the element itself (e.g. for plot_structure())
+
+    Args:
+        element (Element): Element to plot
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray]: x and y values
+    """
     x_val = np.array([element.vertex_1.x, element.vertex_2.x])
     y_val = np.array([-element.vertex_1.z, -element.vertex_2.z])
     return x_val, y_val
