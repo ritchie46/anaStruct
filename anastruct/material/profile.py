@@ -53,6 +53,14 @@ nr.,kg/m,mm2,mm,mm,mm,mm,m2/m,mm4,mm3,mm4,mm3
 
 
 def load(st: str) -> Dict[int, dict]:
+    """Load profile data from string
+
+    Args:
+        st (str): String containing profile data
+
+    Returns:
+        Dict[int, dict]: Profile data
+    """
     with io.StringIO(st) as f:
         r = csv.reader(f)
         profile = {}

@@ -8,6 +8,7 @@ from typing import (
     Collection,
     Dict,
     List,
+    Literal,
     Optional,
     Sequence,
     Set,
@@ -31,26 +32,45 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
     from anastruct.fem.node import Node
-
-
-Spring = Dict[int, float]
-MpType = Dict[int, float]
+    from anastruct.types import (
+        AxisNumber,
+        Dimension,
+        LoadDirection,
+        MpType,
+        Spring,
+        SupportDirection,
+    )
 
 
 class SystemElements:
     """
     Modelling any structure starts with an object of this class.
 
-    :ivar EA: Standard axial stiffness of elements, default=15,000
-    :ivar EI: Standard bending stiffness of elements, default=5,000
-    :ivar figsize: (tpl) Matplotlibs standard figure size
-    :ivar element_map: (dict) Keys are the element ids, values are the element objects
-    :ivar node_map: (dict) Keys are the node ids, values are the node objects.
-    :ivar node_element_map: (dict) maps node ids to element objects.
-    :ivar loads_point: (dict) Maps node ids to point loads.
-    :ivar loads_q: (dict) Maps element ids to q-loads.
-    :ivar loads_moment: (dict) Maps node ids to moment loads.
-    :ivar loads_dead_load: (set) Element ids that have a dead load applied.
+    Attributes:
+        EA: Standard axial stiffness of elements, default=15,000
+        EI: Standard bending stiffness of elements, default=5,000
+        figsize: (tpl) Matplotlibs standard figure size
+        element_map: (dict) Keys are the element ids, values are the element objects
+        node_map: (dict) Keys are the node ids, values are the node objects.
+        node_element_map: (dict) maps node ids to element objects.
+        loads_point: (dict) Maps node ids to point loads.
+        loads_q: (dict) Maps element ids to q-loads.
+        loads_moment: (dict) Maps node ids to moment loads.
+        loads_dead_load: (set) Element ids that have a dead load applied.
+
+    Methods:
+        add_element: Add a new element to the structure.
+        add_element_grid: Add multiple elements in a grid shape.
+        add_multiple_elements: Add multiple elements defined by the first and the last point.
+        add_truss_element: Add a new truss element (an element that only has axial force) to the structure.
+        add_support_hinged: Add a hinged support to a node.
+        add_support_fixed: Add a fixed support to a node.
+        add_support_roll: Add a roll support to a node.
+        add_support_rotational: Add a rotational support to a node.
+        add_support_spring: Add a spring support to a node.
+        insert_node: Insert a node into an existing structure.
+        solve: Compute the results of current model.
+        validate: Validate the current model.
     """
 
     def __init__(
@@ -61,18 +81,14 @@ class SystemElements:
         load_factor: float = 1.0,
         mesh: int = 50,
     ):
-        """
-        * E = Young's modulus
-        * A = Area
-        * I = Moment of Inertia
+        """Create a new structure
 
-        :param figsize: Set the standard plotting size.
-        :param EA: Standard E * A. Set the standard values of EA if none provided when
-                   generating an element.
-        :param EI: Standard E * I. Set the standard values of EA if none provided when
-                   generating an element.
-        :param load_factor: Multiply all loads with this factor.
-        :param mesh: Plotting mesh. Has no influence on the calculation.
+        Args:
+            figsize (Tuple[float, float], optional): Figure size to generate. Defaults to (12, 8).
+            EA (float, optional): Axial stiffness. Defaults to 15e3.
+            EI (float, optional): Bending stiffness. Defaults to 5e3.
+            load_factor (float, optional): Load factor by which to multiply all loads. Defaults to 1.0.
+            mesh (int, optional): Number of mesh elements, only used for plotting. Defaults to 50.
         """
         # init object
         self.post_processor = post_sl(self)
@@ -111,7 +127,7 @@ class SystemElements:
         self.supports_spring_x: List[Tuple[Node, bool]] = []
         self.supports_spring_z: List[Tuple[Node, bool]] = []
         self.supports_spring_y: List[Tuple[Node, bool]] = []
-        self.supports_roll_direction: List[int] = []
+        self.supports_roll_direction: List[Literal[1, 2]] = []
         self.inclined_roll: Dict[
             int, float
         ] = {}  # map node ids to inclination angle relative to global x-axis.
@@ -136,7 +152,7 @@ class SystemElements:
         self.reaction_forces: Dict[int, Node] = {}  # node objects
         self.non_linear = False
         self.non_linear_elements: Dict[
-            int, Dict[int, float]
+            int, Dict[Literal[1, 2], float]
         ] = (
             {}
         )  # keys are element ids, values are dicts: {node_index: max moment capacity}
@@ -160,47 +176,84 @@ class SystemElements:
 
     @property
     def id_last_element(self) -> int:
+        """ID of the last element added to the structure
+
+        Returns:
+            int: ID of the last element added to the structure
+        """
         return max(self.element_map.keys())
 
     @property
     def id_last_node(self) -> int:
+        """ID of the last node added to the structure
+
+        Returns:
+            int: ID of the last node added to the structure
+        """
         return max(self.node_map.keys())
 
     def add_element_grid(
         self,
         x: Union[List[float], np.ndarray],
         y: Union[List[float], np.ndarray],
-        EA: Optional[Union[List[float], np.ndarray]] = None,
-        EI: Optional[Union[List[float], np.ndarray]] = None,
-        g: Optional[Union[List[float], np.ndarray]] = None,
-        mp: Optional[MpType] = None,
-        spring: Optional[Spring] = None,
+        EA: Optional[Union[List[float], np.ndarray, float]] = None,
+        EI: Optional[Union[List[float], np.ndarray, float]] = None,
+        g: Optional[Union[List[float], np.ndarray, float]] = None,
+        mp: Optional["MpType"] = None,
+        spring: Optional["Spring"] = None,
         **kwargs: dict,
     ) -> None:
-        """
-        Add multiple elements defined by two containers with coordinates.
+        """Add multiple elements in a grid shape
 
-        :param x: x coordinates.
-        :param y: y coordinates.
-        :param EA: See 'add_element' method
-        :param EI: See 'add_element' method
-        :param g: See 'add_element' method
-        :param mp: See 'add_element' method
-        :param spring: See 'add_element' method
-        :paramg **kwargs: See 'add_element' method
-        :return: None
+        Args:
+            x (Union[List[float], np.ndarray]): X coordinates of the grid
+            y (Union[List[float], np.ndarray]): Y coordinates of the grid
+            EA (Optional[Union[List[float], np.ndarray, float]], optional): Axial stiffnesses. Defaults to None.
+            EI (Optional[Union[List[float], np.ndarray, float]], optional): Bending stiffnesses. Defaults to None.
+            g (Optional[Union[List[float], np.ndarray, float]], optional): Self-weights. Defaults to None.
+            mp (Optional[MpType], optional): Maximum plastic moment capacities for all elements. Defaults to None.
+            spring (Optional[Spring], optional): Springs for all elements. Defaults to None.
+
+        Raises:
+            FEMException: x and y should have the same length.
+            FEMException: The mp parameter should be a dictionary.
         """
-        a = np.ones(len(x))
+        # TO DO: Why doesn't this function use Vertex objects? It's the only function which has _separate_ x and y lists
+        if len(x) != len(y):
+            raise FEMException(
+                "Wrong parameters", "x and y should have the same length."
+            )
+        length = np.ones(len(x))
         if EA is None:
-            EA = a * self.EA
+            EA_arr = length * self.EA
+        elif isinstance(EA, (float, int)):
+            EA_arr = length * EA
+        elif isinstance(EA, (list, np.ndarray)):
+            EA_arr = np.array(EA)
+        else:
+            raise FEMException(
+                "Wrong parameters", "EA should be a float, list or numpy array."
+            )
         if EI is None:
-            EI = a * self.EI
+            EI_arr = length * self.EI
+        elif isinstance(EI, (float, int)):
+            EI_arr = length * EI
+        elif isinstance(EI, (list, np.ndarray)):
+            EI_arr = np.array(EI)
+        else:
+            raise FEMException(
+                "Wrong parameters", "EI should be a float, list or numpy array."
+            )
         if g is None:
-            g = a * 0
-        # cast to array if parameters are not given as array.
-        EA_arr = EA * a
-        EI_arr = EI * a
-        g_arr = g * a
+            g_arr = length * 0
+        elif isinstance(g, (float, int)):
+            g_arr = length * g
+        elif isinstance(g, (list, np.ndarray)):
+            g_arr = np.array(g)
+        else:
+            raise FEMException(
+                "Wrong parameters", "g should be a float, list or numpy array."
+            )
 
         for i in range(len(x) - 1):
             self.add_element(
@@ -221,15 +274,8 @@ class SystemElements:
         EA: Optional[float] = None,
         **kwargs: dict,
     ) -> int:
-        """
-        .. highlight:: python
-
-        Add an element that only has axial force.
-
-        :param location: The two nodes of the element or the next node of the element.
-
-            :Example:
-
+        """Add a new truss element (an element that only has axial force) to the structure
+        Example:
             .. code-block:: python
 
                    location=[[x, y], [x, y]]
@@ -237,8 +283,13 @@ class SystemElements:
                    location=[x, y]
                    location=Vertex
 
-        :param EA: EA
-        :return: Elements ID.
+        Args:
+            location (Union[ Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex ]):
+                The two nodes of the element or the next node of the element.
+            EA (Optional[float], optional): Axial stiffness of the new element. Defaults to None.
+
+        Returns:
+            int: ID of the new element
         """
         return self.add_element(
             location,
@@ -259,50 +310,50 @@ class SystemElements:
         EA: Optional[float] = None,
         EI: Optional[float] = None,
         g: float = 0,
-        mp: Optional[MpType] = None,
-        spring: Optional[Spring] = None,
+        mp: Optional["MpType"] = None,
+        spring: Optional["Spring"] = None,
         **kwargs: Any,
     ) -> int:
-        """
-        :param location: The two nodes of the element or the next node of the element.
-
-            :Example:
-
+        """Add a new general element (an element with axial and lateral force) to the structure
+        Example:
             .. code-block:: python
 
-                   location=[[x, y], [x, y]]
-                   location=[Vertex, Vertex]
-                   location=[x, y]
-                   location=Vertex
+                location=[[x, y], [x, y]]
+                location=[Vertex, Vertex]
+                location=[x, y]
+                location=Vertex
 
-        :param EA: EA
-        :param EI: EI
-        :param g: Weight per meter. [kN/m] / [N/m]
-        :param mp: Set a maximum plastic moment capacity. Keys are integers representing
-                   the nodes. Values are the bending moment capacity.
+                mp={1: 210e3, 2: 180e3}
 
-            :Example:
-
-            .. code-block:: python
-
-                mp={1: 210e3,
-                    2: 180e3}
-
-        :param spring: Set a rotational spring or a hinge (k=0) at node 1 or node 2.
-
-            :Example:
-
-            .. code-block:: python
-
-                spring={1: k
-                        2: k}
-
+                spring={1: k, 2: k}
 
                 # Set a hinged node:
                 spring={1: 0}
 
+        Args:
+            location (Union[ Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex ]):
+                The two nodes of the element or the next node of the element
+            EA (Optional[float], optional): Axial stiffness of the new element. Defaults to None.
+            EI (Optional[float], optional): Bending stiffness of the new element. Defaults to None.
+            g (float, optional): Self-weight of the new element. Defaults to 0.
+            mp (Optional[MpType], optional): Maximum plastic moment of each end node. Keys are integers representing
+                the nodes. Values are the bending moment capacity. Defaults to None.
+            spring (Optional[Spring], optional): Rotational spring or hinge (k=0) of each end node.
+                Keys are integers representing the nodes. Values are the bending moment capacity. Defaults to None.
 
-        :return: Elements ID.
+        Optional Keyword Args:
+            element_type (ElementType): "general" (axial and lateral force) or "truss" (axial force only)
+            steelsection (str): Steel section name like IPE 300
+            orient (OrientAxis): Steel section axis for moment of inertia - 'y' and 'z' possible
+            b (float): Width of generic rectangle section
+            h (float): Height of generic rectangle section
+            d (float): Diameter of generic circle section
+            sw (bool): If true self weight of section is considered as dead load
+            E (float): Modulus of elasticity for section material
+            gamma (float): Weight of section material per volume unit. [kN/m3] / [N/m3]s
+
+        Returns:
+            int: ID of the new element
         """
 
         if mp is None:
@@ -402,43 +453,50 @@ class SystemElements:
         EA: Optional[float] = None,
         EI: Optional[float] = None,
         g: float = 0,
-        mp: Optional[MpType] = None,
-        spring: Optional[Spring] = None,
+        mp: Optional["MpType"] = None,
+        spring: Optional["Spring"] = None,
         **kwargs: Any,
     ) -> List[int]:
-        """
-        Add multiple elements defined by the first and the last point.
+        """Add multiple elements defined by the first and the last point.
 
-        :param location: See 'add_element' method
-        :param n: Number of elements.
-        :param dl: Distance between the elements nodes.
-        :param EA: See 'add_element' method
-        :param EI: See 'add_element' method
-        :param g: See 'add_element' method
-        :param mp: See 'add_element' method
-        :param spring: See 'add_element' method
-
-        **Keyword Args:**
-
-        :param element_type: See 'add_element' method
-        :param first: Different arguments for the first element
-        :param last: Different arguments for the last element
-        :param steelsection: Steel section name like IPE 300
-        :param orient: Steel section axis for moment of inertia - 'y' and 'z' possible
-        :param b: Width of generic rectangle section
-        :param h: Height of generic rectangle section
-        :param d: Diameter of generic circle section
-        :param sw: If true self weight of section is considered as dead load
-        :param E: Modulus of elasticity for section material
-        :param gamma: Weight of section material per volume unit. [kN/m3] / [N/m3]s
-
-            :Example:
+        Example:
 
             .. code-block:: python
 
                 last={'EA': 1e3, 'mp': 290}
 
-        :return: (list) Element IDs
+        Args:
+            location (Union[ Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex ]):
+                The two nodes of the element or the next node of the element.
+            n (Optional[int], optional): Number of elements to add between the first and last nodes. Defaults to None.
+            dl (Optional[float], optional): Length of sub-elements to add between the first and last nodes.
+                Length will be rounded down if necessary such that all sub-elements will have the same length.
+                Defaults to None.
+            EA (Optional[float], optional): Axial stiffness. Defaults to None.
+            EI (Optional[float], optional): Bending stiffness. Defaults to None.
+            g (float, optional): Self-weight. Defaults to 0.
+            mp (Optional[MpType], optional): Maximum plastic moment capacity at ends of element. Defaults to None.
+            spring (Optional[Spring], optional): Rotational springs or hinges (k=0) at ends of element.
+                Defaults to None.
+
+        Optional Keyword Args:
+            element_type (ElementType): "general" (axial and lateral force) or "truss" (axial force only)
+            first (dict): Different arguments for the first element
+            last (dict): Different arguments for the last element
+            steelsection (str): Steel section name like IPE 300
+            orient (OrientAxis): Steel section axis for moment of inertia - 'y' and 'z' possible
+            b (float): Width of generic rectangle section
+            h (float): Height of generic rectangle section
+            d (float): Diameter of generic circle section
+            sw (bool): If true self weight of section is considered as dead load
+            E (float): Modulus of elasticity for section material
+            gamma (float): Weight of section material per volume unit. [kN/m3] / [N/m3]s
+
+        Raises:
+            FEMException: One, and only one, of n and dl should be passed as argument.
+
+        Returns:
+            List[int]: IDs of the new elements
         """
 
         if mp is None:
@@ -468,19 +526,18 @@ class SystemElements:
         length = (point_2 - point_1).modulus()
         direction = (point_2 - point_1).unit()
 
-        if n is not None and dl is not None:
+        if dl is None and n is not None:
+            var_n = int(np.ceil(n))
+            lengths = np.linspace(start=0, stop=length, num=var_n + 1)
+        elif dl is not None and n is None:
+            var_n = int(np.ceil(length / dl) - 1)
+            lengths = np.linspace(start=0, stop=var_n * dl, num=var_n + 1)
+            lengths = np.append(lengths, length)
+        else:
             raise FEMException(
                 "Wrong parameters",
                 "One, and only one, of n and dl should be passed as argument.",
             )
-        if n:
-            var_n = n
-            lengths = np.linspace(start=0, stop=length, num=var_n + 1)
-        else:
-            assert dl is not None
-            var_n = int(np.ceil(length / dl) - 1)
-            lengths = np.linspace(start=0, stop=var_n * dl, num=var_n + 1)
-            lengths = np.append(lengths, length)
 
         point = point_1 + direction * lengths[1]
         elements = [
@@ -496,36 +553,43 @@ class SystemElements:
             )
         ]
 
-        for i in range(2, var_n):
-            point = point_1 + direction * lengths[i]
+        if var_n > 1:
+            for i in range(2, var_n):
+                point = point_1 + direction * lengths[i]
+                elements.append(
+                    self.add_element(
+                        point,
+                        EA,
+                        EI,
+                        g,
+                        mp,
+                        spring,
+                        element_type=element_type,
+                        **kwargs,
+                    )
+                )
+
             elements.append(
                 self.add_element(
-                    point, EA, EI, g, mp, spring, element_type=element_type, **kwargs
+                    point_2,
+                    last["EA"],
+                    last["EI"],
+                    last["g"],
+                    last["mp"],
+                    last["spring"],
+                    element_type=last["element_type"],
+                    **kwargs,
                 )
             )
-
-        elements.append(
-            self.add_element(
-                point_2,
-                last["EA"],
-                last["EI"],
-                last["g"],
-                last["mp"],
-                last["spring"],
-                element_type=last["element_type"],
-                **kwargs,
-            )
-        )
         return elements
 
     def insert_node(
         self,
         element_id: int,
-        location: Union[Sequence[float], Vertex, None] = None,
+        location: Optional[Union[Sequence[float], Vertex]] = None,
         factor: Optional[float] = None,
     ) -> None:
-        """
-        Insert a node into an existing structure.
+        """Insert a node into an existing structure.
         This can be done by adding a new Vertex at any given location, or by setting
         a factor of the elements length. E.g. if you want a node at 40% of the elements
         length, you pass factor = 0.4.
@@ -533,18 +597,14 @@ class SystemElements:
         Note: this method completely rebuilds the SystemElements object and is therefore
         slower then building a model with `add_element` methods.
 
-        :param element_id: Id number of the element you want to insert the node.
-        :param location: The nodes of the element or the next node of the element.
-
-            :Example:
-
-            .. code-block:: python
-
-                   location=[x, y]
-                   location=Vertex
-
-        :param: factor: Value between 0 and 1 to determine the new node location.
+        Args:
+            element_id (int): Id number of the element in which you want to insert the node
+            location (Optional[Union[Sequence[float], Vertex]], optional): Location in which to insert the node.
+                Defaults to None.
+            factor (Optional[float], optional): Fraction of distance from start to end of elmeent on which to
+                divide the element. Must be between 0 and 1. Defaults to None.
         """
+
         ss = SystemElements(
             EA=self.EA, EI=self.EI, load_factor=self.load_factor, mesh=self.plotter.mesh
         )
@@ -558,16 +618,29 @@ class SystemElements:
                 else {}
             )
             if element_id == element.id:
-                if factor is not None:
+                if factor is not None and location is None:
+                    if factor < 0 or factor > 1:
+                        raise FEMException(
+                            "Invalid factor parameter",
+                            f"Factor should be between 0 and 1, but is {factor}",
+                        )
                     location_vertex = Vertex(
                         factor * (element.vertex_2 - element.vertex_1)
                         + element.vertex_1
                     )
-                else:
+                elif factor is None and location is not None:
                     assert location is not None
                     location_vertex = Vertex(location)
+                else:
+                    raise FEMException(
+                        "Invalid parameters",
+                        "Either factor or location - but not both - must be passed as argument.",
+                    )
 
-                mp1 = mp2 = spring1 = spring2 = {}
+                mp1: "MpType" = {}
+                mp2: "MpType" = {}
+                spring1: "Spring" = {}
+                spring2: "Spring" = {}
                 if len(mp) != 0:
                     if 1 in mp:
                         mp1 = {1: mp[1]}
@@ -615,27 +688,29 @@ class SystemElements:
         geometrical_non_linear: int = False,
         **kwargs: Any,
     ) -> np.ndarray:
-        """
-        Compute the results of current model.
+        """Compute the results of current model.
 
-        :param force_linear: Force a linear calculation. Even when the system has non linear nodes.
-        :param verbosity: 0. Log calculation outputs. 1. silence.
-        :param max_iter: Maximum allowed iterations.
-        :param geometrical_non_linear: Calculate second order effects and determine the
-                                       buckling factor.
-        :return: Displacements vector.
+        Args:
+            force_linear (bool, optional): Force a linear calculation, even when the system has non-linear nodes.
+                Defaults to False.
+            verbosity (int, optional): Log calculation outputs (0), or silence (1). Defaults to 0.
+            max_iter (int, optional): Maximum allowed iterations. Defaults to 200.
+            geometrical_non_linear (int, optional): Calculate second order effects and determine the buckling factor.
+                Defaults to False.
 
-
-        Development **kwargs:
-            :param naked: Whether or not to run the solve function without doing post processing.
-            :param discretize_kwargs: When doing a geometric non linear analysis you can reduce or
+        Optional Keyword Args:
+            naked (bool): Whether or not to run the solve function without doing post processing.
+            discretize_kwargs (dict): When doing a geometric non linear analysis you can reduce or
                                       increase the number of elements created that are used for
                                       determining the buckling_factor
-        """
 
-        # kwargs: arguments for the iterative solver callers such as the _stiffness_adaptation
-        #         method.
-        #                naked (bool) Default = False, if True force lines won't be computed.
+        Raises:
+            FEMException: The eigenvalues of the stiffness matrix are non zero, which indicates an unstable structure.
+                Check your support conditions
+
+        Returns:
+            np.ndarray: Displacements vector.
+        """
 
         for node_id in self.node_map:
             system_components.util.check_internal_hinges(self, node_id)
@@ -733,15 +808,19 @@ class SystemElements:
         return self.system_displacement_vector
 
     def validate(self, min_eigen: float = 1e-9) -> bool:
-        """
-        Validate the stability of the stiffness matrix.
+        """Validate the stability of the stiffness matrix.
 
-        :param min_eigen: Minimum value of the eigenvalues of the stiffness matrix. This value
-        should be close to zero.
+        Args:
+            min_eigen (float, optional): Minimum value of the eigenvalues of the stiffness matrix. This value
+                should be close to zero. Defaults to 1e-9.
+
+        Returns:
+            bool: True if the structure is stable, False if not.
         """
 
         ss = copy.copy(self)
         system_components.assembly.prep_matrix_forces(ss)
+        assert ss.system_force_vector is not None
         assert (
             np.abs(ss.system_force_vector).sum() != 0
         ), "There are no forces on the structure"
@@ -750,14 +829,15 @@ class SystemElements:
 
         system_components.assembly.process_conditions(ss)
 
+        assert ss.reduced_system_matrix is not None
         w, _ = np.linalg.eig(ss.reduced_system_matrix)
         return bool(np.all(w > min_eigen))
 
     def add_support_hinged(self, node_id: Union[int, Sequence[int]]) -> None:
-        """
-        Model a hinged support at a given node.
+        """Model a hinged support at a given node.
 
-        :param node_id: Represents the nodes ID
+        Args:
+            node_id (Union[int, Sequence[int]]): Represents the nodes ID
         """
         if not isinstance(node_id, collections.abc.Iterable):
             node_id = [node_id]
@@ -769,10 +849,10 @@ class SystemElements:
             self.supports_hinged.append(self.node_map[id_])
 
     def add_support_rotational(self, node_id: Union[int, Sequence[int]]) -> None:
-        """
-        Model a rotational support at a given node.
+        """Model a rotational support at a given node.
 
-        :param node_id: Represents the nodes ID
+        Args:
+            node_id (Union[int, Sequence[int]]): Represents the nodes ID
         """
         if not isinstance(node_id, collections.abc.Iterable):
             node_id = [node_id]
@@ -784,12 +864,12 @@ class SystemElements:
             self.supports_rotational.append(self.node_map[id_])
 
     def add_internal_hinge(self, node_id: Union[int, Sequence[int]]) -> None:
-        """
-        Model an internal hinge at a given node.
-        This may alternately be done by setting spring={n: 0} when creating elements
-        but this can be an easier method of doing so
+        """Model a internal hinge at a given node.
+        This may alternatively be done by setting a spring restraint to zero (`{1: 0}` or `{2: 0}`).
+        The effect is the same, though this function may be easier to use.
 
-        :param node_id: Represents the nodes ID
+        Args:
+            node_id (Union[int, Sequence[int]]): Represents the nodes ID
         """
         if not isinstance(node_id, collections.abc.Iterable):
             node_id = [node_id]
@@ -803,18 +883,23 @@ class SystemElements:
     def add_support_roll(
         self,
         node_id: Union[Sequence[int], int],
-        direction: Union[Sequence[Union[str, int]], Union[str, int]] = "x",
+        direction: Union[Sequence["SupportDirection"], "SupportDirection"] = "x",
         angle: Union[Sequence[Optional[float]], Optional[float]] = None,
         rotate: Union[Sequence[bool], bool] = True,
     ) -> None:
-        """
-        Adds a rolling support at a given node.
+        """Add a rolling support at a given node.
 
-        :param node_id: Represents the nodes ID
-        :param direction: Represents the direction that is free: 'x', 'y'
-        :param angle: Angle in degrees relative to global x-axis.
-                                If angle is given, the support will be inclined.
-        :param rotate: If set to False, rotation at the roller will also be restrained.
+        Args:
+            node_id (Union[Sequence[int], int]): Represents the nodes ID
+            direction (Union[Sequence[SupportDirection], SupportDirection], optional): Represents the direction
+                that is free ("x", "y", "1", or "2"). Defaults to "x".
+            angle (Union[Sequence[Optional[float]], Optional[float]], optional): Angle in degrees relative to
+                global x-axis. If angle is given, the support will be inclined. Defaults to None.
+            rotate (Union[Sequence[bool], bool], optional): If set to False, rotation at the roller will also
+                be restrianed. Defaults to True.
+
+        Raises:
+            FEMException: Invalid direction, if the direction parameter is invalid
         """
         if not isinstance(node_id, collections.abc.Iterable):
             node_id = [node_id]
@@ -830,12 +915,15 @@ class SystemElements:
         for id_, direction_, angle_, rotate_ in zip(node_id, direction, angle, rotate):
             id_ = _negative_index_to_id(id_, self.node_map.keys())
 
-            if direction_ == "x":
-                direction_i = 2
-            elif direction_ == "y":
+            if direction_ in ("x", "2", 2):
+                direction_i: Literal[1, 2] = 2
+            elif direction_ in ("y", "1", 1):
                 direction_i = 1
             else:
-                direction_i = int(direction_)
+                raise FEMException(
+                    "Invalid direction",
+                    f"Direction should be 'x', 'y', '1' or '2', but is {direction_}",
+                )
 
             if angle_ is not None:
                 direction_i = 2
@@ -850,10 +938,10 @@ class SystemElements:
         self,
         node_id: Union[Sequence[int], int],
     ) -> None:
-        """
-        Add a fixed support at a given node.
+        """Add a fixed support at a given node.
 
-        :param node_id: Represents the nodes ID
+        Args:
+            node_id (Union[Sequence[int], int]): Represents the nodes ID
         """
         if not isinstance(node_id, collections.abc.Iterable):
             node_id = [
@@ -870,25 +958,19 @@ class SystemElements:
     def add_support_spring(
         self,
         node_id: Union[Sequence[int], int],
-        translation: Union[Sequence[int], int],
+        translation: Union[Sequence["AxisNumber"], "AxisNumber"],
         k: Union[Sequence[float], float],
         roll: Union[Sequence[bool], bool] = False,
     ) -> None:
-        """
-        Add a translational support at a given node.
+        """Add a spring support at a given node.
 
-        :param translation: Represents the prevented translation.
-
-            **Note**
-
-            |  1 = translation in x
-            |  2 = translation in z
-            |  3 = rotation in y
-
-        :param node_id: Integer representing the nodes ID.
-        :param k: Stiffness of the spring
-        :param roll: If set to True, only the translation of the spring is controlled.
-
+        Args:
+            node_id (Union[Sequence[int], int]): Represents the nodes ID
+            translation (Union[Sequence[AxisNumber], AxisNumber]): Represents the prevented translation or rotation.
+                1 = translation in x, 2 = translation in z, 3 = rotation in y
+            k (Union[Sequence[float], float]): Stiffness of the spring
+            roll (Union[Sequence[bool], bool], optional): If set to True, only the translation of the
+                spring is controlled. Defaults to False.
         """
         self.supports_spring_args.append((node_id, translation, k, roll))
         # The stiffness of the spring is added in the system matrix at the location that
@@ -926,18 +1008,24 @@ class SystemElements:
         self,
         q: Union[float, Sequence[float]],
         element_id: Union[int, Sequence[int]],
-        direction: Union[str, Sequence[str]] = "element",
+        direction: Union["LoadDirection", Sequence["LoadDirection"]] = "element",
         rotation: Optional[Union[float, Sequence[float]]] = None,
-        q_perp: Union[float, Sequence[float]] = None,
+        q_perp: Optional[Union[float, Sequence[float]]] = None,
     ) -> None:
-        """
-        Apply a q-load to an element.
+        """Apply a q-load (distributed load) to an element.
 
-        :param element_id: representing the element ID
-        :param q: value of the q-load
-        :param direction: "element", "x", "y", "parallel"
-        :param rotation: Rotate the force clockwise. Rotation is in degrees
-        :param q_perp: value of any q-load perpendicular to the indication direction/rotation
+        Args:
+            q (Union[float, Sequence[float]]): Value of the q-load
+            element_id (Union[int, Sequence[int]]): The element ID to which to apply the load
+            direction (Union[&quot;LoadDirection&quot;, Sequence[&quot;LoadDirection&quot;]], optional):
+                "element", "x", "y", "parallel", or "perpendicular". Defaults to "element".
+            rotation (Optional[Union[float, Sequence[float]]], optional): Rotate the force clockwise.
+                Rotation is in degrees. Defaults to None.
+            q_perp (Optional[Union[float, Sequence[float]]], optional): Value of any q-load perpendicular
+                to the indicated direction/rotatione. Defaults to None.
+
+        Raises:
+            FEMException: _description_
         """
         q_arr: Sequence[Sequence[float]]
         q_perp_arr: Sequence[Sequence[float]]
@@ -976,8 +1064,13 @@ class SystemElements:
                     rotation[i] = np.pi / 2
                 elif direction[i] == "parallel":
                     rotation[i] = self.element_map[element_id[i]].angle
-                else:
+                elif direction[i] in ("element", "perpendicular"):
                     rotation[i] = np.pi / 2 + self.element_map[element_id[i]].angle
+                else:
+                    raise FEMException(
+                        "Invalid direction parameter",
+                        "Direction should be 'x', 'y', 'parallel', 'perpendicular' or 'element'",
+                    )
             else:
                 rotation[i] = math.radians(rotation[i])
                 direction[i] = "angle"
@@ -1015,13 +1108,17 @@ class SystemElements:
         Fy: Union[float, Sequence[float]] = 0.0,
         rotation: Union[float, Sequence[float]] = 0.0,
     ) -> None:
-        """
-        Apply a point load to a node.
+        """Apply a point load to a node.
 
-        :param node_id: Nodes ID.
-        :param Fx: Force in global x direction.
-        :param Fy: Force in global x direction.
-        :param rotation: Rotate the force clockwise. Rotation is in degrees.
+        Args:
+            node_id (Union[int, Sequence[int]]): The node ID to which to apply the load
+            Fx (Union[float, Sequence[float]], optional): Force in the global X direction. Defaults to 0.0.
+            Fy (Union[float, Sequence[float]], optional): Force in the global Y direction. Defaults to 0.0.
+            rotation (Union[float, Sequence[float]], optional): Rotate the force clockwise by the given
+                angle in degrees. Defaults to 0.0.
+
+        Raises:
+            FEMException: Point loads may not be placed at the location of inclined roller supports
         """
         n = len(node_id) if isinstance(node_id, Sequence) else 1
         node_id = arg_to_list(node_id, n)
@@ -1052,11 +1149,11 @@ class SystemElements:
     def moment_load(
         self, node_id: Union[int, Sequence[int]], Ty: Union[float, Sequence[float]]
     ) -> None:
-        """
-        Apply a moment on a node.
+        """Apply a moment load to a node.
 
-        :param node_id: Nodes ID.
-        :param Ty: Moments acting on the node.
+        Args:
+            node_id (Union[int, Sequence[int]]): The node ID to which to apply the load
+            Ty (Union[float, Sequence[float]]): Moment load (about the global Y direction) to apply
         """
         n = len(node_id) if isinstance(node_id, Sequence) else 1
         node_id = arg_to_list(node_id, n)
@@ -1077,19 +1174,21 @@ class SystemElements:
         values_only: bool = False,
         annotations: bool = False,
     ) -> Union[Tuple[np.ndarray, np.ndarray], Optional["Figure"]]:
-        """
-        Plot the structure.
+        """Plot the structure.
 
-        :param factor: Influence the plotting scale.
-        :param verbosity:  0: All information, 1: Suppress information.
-        :param scale: Scale of the plot.
-        :param offset: Offset the plots location on the figure.
-        :param figsize: Change the figure size.
-        :param show: Plot the result or return a figure.
-        :param values_only: Return the values that would be plotted as tuple containing
-                            two arrays: (x, y)
-        :param annotations: if True, structure annotations are plotted. It includes section name.
-                                      Note: only works when verbosity is equal to 0.
+        Args:
+            verbosity (int, optional): 0: All information, 1: Suppress information. Defaults to 0.
+            scale (float, optional): Scale of the plot. Defaults to 1.0.
+            offset (Tuple[float, float], optional): Offset the plots location on the figure. Defaults to (0, 0).
+            figsize (Optional[Tuple[float, float]], optional): Change the figure size. Defaults to None.
+            show (bool, optional): Plot the result or return a figure. Defaults to True.
+            supports (bool, optional): Plot the supports. Defaults to True.
+            values_only (bool, optional): Return the values that would be plotted as tuple containing
+                two arrays: (x, y). Defaults to False.
+            annotations (bool, optional): if True, structure annotations are plotted. It includes section name.
+
+        Returns:
+            Figure: If show is False, return a figure.
         """
         figsize = self.figsize if figsize is None else figsize
         if values_only:
@@ -1104,22 +1203,26 @@ class SystemElements:
         verbosity: int = 0,
         scale: float = 1,
         offset: Tuple[float, float] = (0, 0),
-        figsize: Tuple[float, float] = None,
+        figsize: Optional[Tuple[float, float]] = None,
         show: bool = True,
         values_only: bool = False,
     ) -> Union[Tuple[np.ndarray, np.ndarray], Optional["Figure"]]:
-        """
-        Plot the bending moment.
+        """Plot the bending moment.
 
-        :param factor: Influence the plotting scale.
-        :param verbosity:  0: All information, 1: Suppress information.
-        :param scale: Scale of the plot.
-        :param offset: Offset the plots location on the figure.
-        :param figsize: Change the figure size.
-        :param show: Plot the result or return a figure.
-        :param values_only: Return the values that would be plotted as tuple containing
-                            two arrays: (x, y)
+        Args:
+            factor (Optional[float], optional): Influence the plotting scale. Defaults to None.
+            verbosity (int, optional):  0: All information, 1: Suppress information. Defaults to 0.
+            scale (float, optional): Scale of the plot. Defaults to 1.
+            offset (Tuple[float, float], optional): Offset the plots location on the figure. Defaults to (0, 0).
+            figsize (Optional[Tuple[float, float]], optional): Change the figure size. Defaults to None.
+            show (bool, optional): Plot the result or return a figure. Defaults to True.
+            values_only (bool, optional): Return the values that would be plotted as tuple containing
+                two arrays: (x, y). Defaults to False.
+
+        Returns:
+            Figure: If show is False, return a figure.
         """
+
         if values_only:
             return self.plot_values.bending_moment(factor)
         figsize = self.figsize if figsize is None else figsize
@@ -1137,17 +1240,20 @@ class SystemElements:
         show: bool = True,
         values_only: bool = False,
     ) -> Union[Tuple[np.ndarray, np.ndarray], Optional["Figure"]]:
-        """
-        Plot the axial force.
+        """Plot the axial force.
 
-        :param factor: Influence the plotting scale.
-        :param verbosity:  0: All information, 1: Suppress information.
-        :param scale: Scale of the plot.
-        :param offset: Offset the plots location on the figure.
-        :param figsize: Change the figure size.
-        :param show: Plot the result or return a figure.
-        :param values_only: Return the values that would be plotted as tuple containing
-                            two arrays: (x, y)
+        Args:
+            factor (Optional[float], optional): Influence the plotting scale. Defaults to None.
+            verbosity (int, optional):  0: All information, 1: Suppress information. Defaults to 0.
+            scale (float, optional): Scale of the plot. Defaults to 1.
+            offset (Tuple[float, float], optional): Offset the plots location on the figure. Defaults to (0, 0).
+            figsize (Optional[Tuple[float, float]], optional): Change the figure size. Defaults to None.
+            show (bool, optional): Plot the result or return a figure. Defaults to True.
+            values_only (bool, optional): Return the values that would be plotted as tuple containing
+                two arrays: (x, y). Defaults to False.
+
+        Returns:
+            Figure: If show is False, return a figure.
         """
         if values_only:
             return self.plot_values.axial_force(factor)
@@ -1164,17 +1270,20 @@ class SystemElements:
         show: bool = True,
         values_only: bool = False,
     ) -> Union[Tuple[np.ndarray, np.ndarray], Optional["Figure"]]:
-        """
-        Plot the shear force.
+        """Plot the shear force.
 
-        :param factor: Influence the plotting scale.
-        :param verbosity:  0: All information, 1: Suppress information.
-        :param scale: Scale of the plot.
-        :param offset: Offset the plots location on the figure.
-        :param figsize: Change the figure size.
-        :param show: Plot the result or return a figure.
-        :param values_only: Return the values that would be plotted as tuple containing
-                            two arrays: (x, y)
+        Args:
+            factor (Optional[float], optional): Influence the plotting scale. Defaults to None.
+            verbosity (int, optional):  0: All information, 1: Suppress information. Defaults to 0.
+            scale (float, optional): Scale of the plot. Defaults to 1.
+            offset (Tuple[float, float], optional): Offset the plots location on the figure. Defaults to (0, 0).
+            figsize (Optional[Tuple[float, float]], optional): Change the figure size. Defaults to None.
+            show (bool, optional): Plot the result or return a figure. Defaults to True.
+            values_only (bool, optional): Return the values that would be plotted as tuple containing
+                two arrays: (x, y). Defaults to False.
+
+        Returns:
+            Figure: If show is False, return a figure.
         """
         if values_only:
             return self.plot_values.shear_force(factor)
@@ -1189,14 +1298,17 @@ class SystemElements:
         figsize: Optional[Tuple[float, float]] = None,
         show: bool = True,
     ) -> Union[Tuple[np.ndarray, np.ndarray], Optional["Figure"]]:
-        """
-        Plot the reaction force.
+        """Plot the reaction force.
 
-        :param verbosity: 0: All information, 1: Suppress information.
-        :param scale: Scale of the plot.
-        :param offset: Offset the plots location on the figure.
-        :param figsize: Change the figure size.
-        :param show: Plot the result or return a figure.
+        Args:
+            verbosity (int, optional):  0: All information, 1: Suppress information. Defaults to 0.
+            scale (float, optional): Scale of the plot. Defaults to 1.
+            offset (Tuple[float, float], optional): Offset the plots location on the figure. Defaults to (0, 0).
+            figsize (Optional[Tuple[float, float]], optional): Change the figure size. Defaults to None.
+            show (bool, optional): Plot the result or return a figure. Defaults to True.
+
+        Returns:
+            Figure: If show is False, return a figure.
         """
         figsize = self.figsize if figsize is None else figsize
         return self.plotter.reaction_force(figsize, verbosity, scale, offset, show)
@@ -1212,18 +1324,21 @@ class SystemElements:
         linear: bool = False,
         values_only: bool = False,
     ) -> Union[Tuple[np.ndarray, np.ndarray], Optional["Figure"]]:
-        """
-        Plot the displacement.
+        """Plot the displacement.
 
-        :param factor: Influence the plotting scale.
-        :param verbosity:  0: All information, 1: Suppress information.
-        :param scale: Scale of the plot.
-        :param offset: Offset the plots location on the figure.
-        :param figsize: Change the figure size.
-        :param show: Plot the result or return a figure.
-        :param linear: Don't evaluate the displacement values in between the elements
-        :param values_only: Return the values that would be plotted as tuple containing
-                            two arrays: (x, y)
+        Args:
+            factor (Optional[float], optional): Influence the plotting scale. Defaults to None.
+            verbosity (int, optional):  0: All information, 1: Suppress information. Defaults to 0.
+            scale (float, optional): Scale of the plot. Defaults to 1.
+            offset (Tuple[float, float], optional): Offset the plots location on the figure. Defaults to (0, 0).
+            figsize (Optional[Tuple[float, float]], optional): Change the figure size. Defaults to None.
+            show (bool, optional): Plot the result or return a figure. Defaults to True.
+            linear (bool, optional): Don't evaluate the displacement values in between the elements. Defaults to False.
+            values_only (bool, optional): Return the values that would be plotted as tuple containing
+                two arrays: (x, y). Defaults to False.
+
+        Returns:
+            Figure: If show is False, return a figure.
         """
         if values_only:
             return self.plot_values.displacements(factor, linear)
@@ -1240,14 +1355,17 @@ class SystemElements:
         figsize: Optional[Tuple[float, float]] = None,
         show: bool = True,
     ) -> Optional["Figure"]:
-        """
-        Plot all the results in one window.
+        """Plot all the results in one window.
 
-        :param verbosity: 0: All information, 1: Suppress information.
-        :param scale: Scale of the plot.
-        :param offset: Offset the plots location on the figure.
-        :param figsize: Change the figure size.
-        :param show: Plot the result or return a figure.
+        Args:
+            verbosity (int, optional): 0: All information, 1: Suppress information. Defaults to 0.
+            scale (float, optional): Scale of the plot. Defaults to 1.
+            offset (Tuple[float, float], optional): Offset the plots location on the figure. Defaults to (0, 0).
+            figsize (Optional[Tuple[float, float]], optional): Change the figure size. Defaults to None.
+            show (bool, optional): Plot the result or return a figure. Defaults to True.
+
+        Returns:
+            Figure: If show is False, return a figure.
         """
         figsize = self.figsize if figsize is None else figsize
         return self.plotter.results_plot(figsize, verbosity, scale, offset, show)
@@ -1257,24 +1375,21 @@ class SystemElements:
     ) -> Union[
         List[Tuple[Any, Any, Any, Any, Any, Any, Any]], Dict[str, Union[int, float]]
     ]:
-        """
-        These are the node results. These are the opposite of the forces and displacements
+        """Get the node results. These are the opposite of the forces and displacements
         working on the elements and may seem counter intuitive.
 
-        :param node_id:  representing the node's ID. If integer = 0, the results of all nodes
-                         are returned
-        :return:
+        Args:
+            node_id (int, optional): The node's ID. If node_id == 0, the results of all nodes are returned.
+                Defaults to 0.
 
-        |  if node_id == 0:
-        |
-        |    Returns a list containing tuples with the results:
-
-        ::
-
-            [(id, Fx, Fy, Ty, ux, uy, phi_y), (id, Fx, Fy...), () .. ]
-        |
-        |  if node_id > 0:
+        Returns:
+            Union[ List[Tuple[Any, Any, Any, Any, Any, Any, Any]], Dict[str, Union[int, float]] ]:
+                If node_id == 0, returns a list containing tuples with the results:
+                [(id, Fx, Fy, Ty, ux, uy, phi_y), (id, Fx, Fy...), () .. ]
+                If node_id > 0, returns a dict with the results:
+                {"id": id, "Fx": Fx, "Fy": Fy, "Ty": Ty, "ux": ux, "uy": uy, "phi_y": phi_y}
         """
+        # TO DO: This should return a List of Dicts, not a list of Tuples...
         result_list = []
         if node_id != 0:
             node_id = _negative_index_to_id(node_id, self.node_map)
@@ -1297,20 +1412,18 @@ class SystemElements:
     def get_node_displacements(
         self, node_id: int = 0
     ) -> Union[List[Tuple[Any, Any, Any, Any]], Dict[str, Any]]:
-        """
-        :param node_id: Represents the node's ID. If integer = 0, the results of all nodes
-                        are returned.
-        :return:
-        |  if node_id == 0:
-        |
-        |    Returns a list containing tuples with the results:
+        """Get the node displacements.
 
-        ::
+        Args:
+            node_id (int, optional): The node's ID. If node_id == 0, the results of all nodes are returned.
+                Defaults to 0.
 
-             [(id, ux, uy, phi_y), (id, ux, uy, phi_y),  ... (id, ux, uy, phi_y) ]
-        |
-        |  if node_id > 0: (dict)
+        Returns:
+            Union[List[Tuple[Any, Any, Any, Any]], Dict[str, Any]]: If node_id == 0, returns a list containing
+                tuples with the results: [(id, ux, uy, phi_y), (id, ux, uy, phi_y),  ... (id, ux, uy, phi_y) ]
+                If node_id > 0, returns a dict with the results: {"id": id, "ux": ux, "uy": uy, "phi_y": phi_y}
         """
+        # TO DO: This should return a List of Dicts, not a list of Tuples...
         result_list = []
         if node_id != 0:
             node_id = _negative_index_to_id(node_id, self.node_map)
@@ -1328,26 +1441,22 @@ class SystemElements:
     def get_element_results(
         self, element_id: int = 0, verbose: bool = False
     ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
-        """
-        :param element_id: representing the elements ID. If elementID = 0 the results
-                           of all elements are returned.
-        :param verbose: If set to True the numerical results for the deflection and the
-                        bending moments are returned.
+        """Get the element results.
 
-        :return:
-        |
-        |  if node_id == 0:
-        |
-        |    Returns a list containing tuples with the results:
+        Args:
+            element_id (int, optional): The element's ID. If element_id == 0, the results of all elements are returned.
+                Defaults to 0.
+            verbose (bool, optional): If set to True, then numerical results for the deflection and the bending
+                moment are also returned. Defaults to False.
 
-        ::
-
-             [(id, length, alpha, u, N_1, N_2), (id, length, alpha, u, N_1, N_2),
-             ... (id, length, alpha, u, N_1, N_2)]
-        |
-        |  if node_id > 0: (dict)
-        |
-
+        Returns:
+            Union[List[Dict[str, Any]], Dict[str, Any]]: If element_id == 0,
+                returns a list containing dicts with the results: [{"id": id, "length": length, "alpha": alpha,
+                    "umax": umax, "umin": umin, "u": u, "wmax": wmax, "wmin": wmin, "w": w, "Mmin": Mmin, "Mmax": Mmax,
+                    "M": M, "Qmin": Qmin, "Qmax": Qmax, "Q": Q, "Nmin": Nmin, "Nmax": Nmax, "N": N, "q": q}, ... ]
+                If element_id > 0, returns a dict with the results: {"id": id, "length": length, "alpha": alpha,
+                    "umax": umax, "umin": umin, "u": u, "wmax": wmax, "wmin": wmin, "w": w, "Mmin": Mmin, "Mmax": Mmax,
+                    "M": M, "Qmin": Qmin, "Qmax": Qmax, "Q": Q, "Nmin": Nmin, "Nmax": Nmax, "N": N, "q": q}
         """
         if element_id != 0:
             element_id = _negative_index_to_id(element_id, self.element_map)
@@ -1443,32 +1552,52 @@ class SystemElements:
                 )
         return result_list
 
-    def get_element_result_range(self, unit: str) -> List[float]:
-        """
-        Useful when added lots of elements. Returns a list of all the queried unit.
+    def get_element_result_range(
+        self, unit: Literal["shear", "moment", "axial"]
+    ) -> List[float]:
+        """Get the element results. Returns a list with the first mesh node results of each element for a certain unit.
 
-        :param unit:
-            - 'shear'
-            - 'moment'
-            - 'axial'
+        Args:
+            unit (str): "shear", "moment", or "axial"
 
+        Raises:
+            NotImplementedError: If the unit is not implemented.
+
+        Returns:
+            List[float]: List with the first mesh node results of each element for a certain unit.
         """
+        # TO DO: This function does not make sense... Unclear why I should care about only the 1st node of each element
         if unit == "shear":
-            return [el.shear_force[0] for el in self.element_map.values()]
+            return [
+                el.shear_force[0]
+                for el in self.element_map.values()
+                if el.shear_force is not None
+            ]
         if unit == "moment":
-            return [el.bending_moment[0] for el in self.element_map.values()]
+            return [
+                el.bending_moment[0]
+                for el in self.element_map.values()
+                if el.bending_moment is not None
+            ]
         if unit == "axial":
-            return [el.axial_force[0] for el in self.element_map.values()]
+            return [
+                el.axial_force[0]
+                for el in self.element_map.values()
+                if el.axial_force is not None
+            ]
         raise NotImplementedError
 
-    def get_node_result_range(self, unit: str) -> List[float]:
-        """
-        Query a list with node results.
+    def get_node_result_range(self, unit: Literal["ux", "uy", "phi_y"]) -> List[float]:
+        """Get the node results. Returns a list with the node results for a certain unit.
 
-           :param unit:
-            - 'uy'
-            - 'ux'
-            - 'phi_y'
+        Args:
+            unit (str): "uy", "ux", or "phi_y"
+
+        Raises:
+            NotImplementedError: If the unit is not implemented.
+
+        Returns:
+            List[float]: List with the node results for a certain unit.
         """
         if unit == "uy":
             return [node.uz for node in self.node_map.values()]  # - * -  = +
@@ -1479,11 +1608,16 @@ class SystemElements:
         raise NotImplementedError
 
     def find_node_id(self, vertex: Union[Vertex, Sequence[float]]) -> Optional[int]:
-        """
-        Retrieve the ID of a certain location.
+        """Find the ID of a certain location.
 
-        :param vertex:  Vertex_xz, [x, y], (x, y)
-        :return:  id of the node at the location of the vertex
+        Args:
+            vertex (Union[Vertex, Sequence[float]]): Vertex_xz, [x, y], (x, y)
+
+        Raises:
+            TypeError: vertex must be a list, tuple or Vertex
+
+        Returns:
+            Optional[int]: id of the node at the location of the vertex
         """
         if isinstance(vertex, (list, tuple)):
             vertex_v = Vertex(vertex)
@@ -1504,12 +1638,15 @@ class SystemElements:
             return None
 
     def nodes_range(
-        self, dimension: str
+        self, dimension: "Dimension"
     ) -> List[Union[float, Tuple[float, float], None]]:
-        """
-        Retrieve a list with coordinates x or z (y).
+        """Retrieve a list with coordinates x or z (y).
 
-        :param dimension: "both", 'x', 'y' or 'z'
+        Args:
+            dimension (str): "both", 'x', 'y' or 'z'
+
+        Returns:
+            List[Union[float, Tuple[float, float], None]]: List with coordinates x or z (y)
         """
         return list(
             map(
@@ -1527,14 +1664,16 @@ class SystemElements:
         )
 
     def nearest_node(
-        self, dimension: str, val: Union[float, Sequence[float]]
+        self, dimension: "Dimension", val: Union[float, Sequence[float]]
     ) -> Union[int, None]:
-        """
-        Retrieve the nearest node ID.
+        """Retrieve the nearest node ID.
 
-        :param dimension: "both", 'x', 'y' or 'z'
-        :param val: Value of the dimension.
-        :return:  ID of the node.
+        Args:
+            dimension (str): "both", 'x', 'y' or 'z'
+            val (Union[float, Sequence[float]]): Value of the dimension.
+
+        Returns:
+            Union[int, None]: ID of the node.
         """
         if dimension == "both" and isinstance(val, Sequence):
             return int(
@@ -1548,11 +1687,11 @@ class SystemElements:
         return int(np.argmin(np.abs(np.array(self.nodes_range(dimension)) - val)))
 
     def discretize(self, n: int = 10) -> None:
-        """
-        Takes an already defined :class:`.SystemElements` object and increases the number
+        """Discretize the elements. Takes an already defined :class:`.SystemElements` object and increases the number
         of elements.
 
-        :param n: Divide the elements into n sub-elements.
+        Args:
+            n (int, optional): Divide the elements into n sub-elements.. Defaults to 10.
         """
         ss = SystemElements(
             EA=self.EA, EI=self.EI, load_factor=self.load_factor, mesh=self.plotter.mesh
@@ -1566,11 +1705,8 @@ class SystemElements:
                 else {}
             )
 
-            for i, v in enumerate(vertex_range(element.vertex_1, element.vertex_2, n)):
-                if i == 0:
-                    last_v = v
-                    continue
-
+            el_v_range = vertex_range(element.vertex_1, element.vertex_2, n)
+            for last_v, v in zip(el_v_range, el_v_range[1:]):
                 loc = [last_v, v]
                 ss.add_element(
                     loc,
@@ -1617,12 +1753,11 @@ class SystemElements:
         self.__dict__ = ss.__dict__.copy()
 
     def remove_loads(self, dead_load: bool = False) -> None:
-        """
-        Remove all the applied loads from the structure.
+        """Remove all the applied loads from the structure.
 
-        :param dead_load: Remove the dead load.
+        Args:
+            dead_load (bool, optional): Also remove the self-weights? Defaults to False.
         """
-
         self.loads_point = {}
         self.loads_q = {}
         self.loads_moment = {}
@@ -1635,6 +1770,11 @@ class SystemElements:
             self.loads_dead_load = set()
 
     def apply_load_case(self, loadcase: LoadCase) -> None:
+        """Apply a load case to the structure.
+
+        Args:
+            loadcase (LoadCase): Load case to apply.
+        """
         for method, kwargs in loadcase.spec.items():
             method = method.split("-")[0]
             kwargs = re.sub(r"[{}]", "", str(kwargs))
@@ -1644,6 +1784,14 @@ class SystemElements:
             exec(f"self.{method}({kwargs})")  # pylint: disable=exec-used
 
     def __deepcopy__(self, _: str) -> "SystemElements":
+        """Deepcopy the SystemElements object.
+
+        Args:
+            _ (str): Unnecessary argument.
+
+        Returns:
+            SystemElements: Copied SystemElements object.
+        """
         system = copy.copy(self)
         mesh = self.plotter.mesh
         system.plotter = None
@@ -1659,6 +1807,18 @@ class SystemElements:
 
 
 def _negative_index_to_id(idx: int, collection: Collection[int]) -> int:
+    """Convert a negative index to a positive index. (That is, allowing the Pythonic negative indexing)
+
+    Args:
+        idx (int): Index to convert
+        collection (Collection[int]): Collection of indices to check against
+
+    Raises:
+        TypeError: If the index is not an integer
+
+    Returns:
+        int: Positive index
+    """
     if not isinstance(idx, int):
         if int(idx) == idx:  # if it can be non-destructively cast to an integer
             idx = int(idx)

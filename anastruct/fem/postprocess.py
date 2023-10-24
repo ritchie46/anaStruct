@@ -19,9 +19,8 @@ class SystemLevel:
         self.post_el = ElementLevel(self.system)
 
     def node_results_elements(self) -> None:
-        """
-        Determines the node results on the system level.
-        Results placed in SystemElements class: self.node_objects (list).
+        """Determines the node results on the element level.
+        Results placed in Element class: self.system.element_map[i].node_map (list).
         """
 
         for el in self.system.element_map.values():
@@ -29,6 +28,9 @@ class SystemLevel:
             self.post_el.node_results(el)
 
     def node_results_system(self) -> None:
+        """Determines the node results on the system level.
+        Results place in SystemElements class: self.system.node_map (list)
+        """
         for k, v in self.system.node_element_map.items():
             # reset nodes in case of iterative calculation
             self.system.node_map[k].reset()
@@ -55,6 +57,9 @@ class SystemLevel:
                 self.system.node_map[k].phi_y = -node.phi_y
 
     def reaction_forces(self) -> None:
+        """Determines the reaction forces on the system level.
+        Results place in SystemElements class: self.system.reaction_forces (list)
+        """
         supports = []
         for node in self.system.supports_fixed:
             supports.append(node.id)
@@ -78,15 +83,12 @@ class SystemLevel:
             node.Fx *= -1
             node.Fz *= -1
             node.Ty *= -1
-            node.ux = None
-            node.uz = None
-            node.phi_y = None
+            node.ux = 0.0
+            node.uz = 0.0
+            node.phi_y = 0.0
 
     def element_results(self) -> None:
-        """
-        Determines the element results for all elements in the system on element level.
-        """
-
+        """Determines the element results for all elements in the system on element level."""
         for el in self.system.element_map.values():
             con = self.system.plotter.mesh
             self.post_el.determine_axial_force(el, con)
@@ -100,9 +102,7 @@ class ElementLevel:
         self.system = system
 
     def node_results(self, element: "Element") -> None:
-        """
-        Determine node results on the element level.
-        """
+        """Determine node results on the element level."""
         assert element.element_force_vector is not None
         assert element.element_primary_force_vector is not None
 
@@ -160,6 +160,12 @@ class ElementLevel:
 
     @staticmethod
     def determine_axial_force(element: "Element", con: int) -> None:
+        """Determines the axial force in the element.
+
+        Args:
+            element (Element): Element for which to determine axial force
+            con (int): Number of points to determine axial force
+        """
         N_1 = (math.sin(element.angle) * element.node_1.Fz) + -(
             math.cos(element.angle) * element.node_1.Fx
         )
@@ -185,6 +191,12 @@ class ElementLevel:
 
     @staticmethod
     def determine_bending_moment(element: "Element", con: int) -> None:
+        """Determines the bending moment in the element.
+
+        Args:
+            element (Element): Element for which to determine bending moment
+            con (int):
+        """
         dT = -(element.node_2.Ty + element.node_1.Ty)  # T2 - (-T1)
 
         iteration_factor = np.linspace(0, 1, con)
@@ -204,36 +216,40 @@ class ElementLevel:
 
     @staticmethod
     def determine_shear_force(element: "Element", con: int) -> None:
-        """
-        Determines the shear force by differentiating the bending moment.
-        :param element: (object) of the Element class
+        """Determines the shear force in the element, by differentiating the bending moment.
+
+        Args:
+            element (Element): Element for which to determine shear force
+            con (int): Number of points to determine shear force
         """
         iteration_factor = np.linspace(0, 1, con)
         x = iteration_factor * element.l
+        assert element.bending_moment is not None
         eq = np.polyfit(x, element.bending_moment, 3)
         shear_force = eq[0] * 3 * x**2 + eq[1] * 2 * x + eq[2]
         element.shear_force = shear_force
 
     @staticmethod
     def determine_displacements(element: "Element", con: int) -> None:
+        """Determines the displacements in the element, by integrating the bending moment.
+
+            w = -M''
+
+            This gives you the formula
+
+            w = -aMx +bx + c
+
+            a = already defined by the integral
+            b = Scale the slope of the parabola. This is the rotation of the deflection.
+                You can think of this as the angle of the deflection beam. By rotating
+                the beam so that the last deflection w = 0 you get the correct
+                value for b. w[-1] = 0.
+            c = Translate the parabola. Translate it so that w[0] = 0
+
+        Args:
+            element (Element): Element for which to determine displacements
+            con (int): Number of points to determine displacements
         """
-        Determines the displacement by integrating the bending moment.
-        :param element: (object) of the Element class
-
-        w = -M''
-
-        This gives you the formula
-
-        w = -aMx +bx + c
-
-        a = already defined by the integral
-        b = Scale the slope of the parabola. This is the rotation of the deflection.
-            You can think of this as the angle of the deflection beam. By rotating
-            the beam so that the last deflection w = 0 you get the correct
-            value for b. w[-1] = 0.
-        c = Translate the parabola. Translate it so that w[0] = 0
-        """
-
         if element.type == "general":
             assert element.bending_moment is not None
             dx = element.l / (len(element.bending_moment) - 1)
@@ -273,8 +289,9 @@ class ElementLevel:
 
         phi_neg2 = -integrate_array(element.axial_force[::-1], dx) / element.EA
         u2 = integrate_array(phi_neg2, dx)
+        u2 = u2[::-1]
 
-        element.extension = -(u1 + u2) / 2.0
+        element.extension = -1 * (u1 + u2) / 2.0
         element.max_extension = np.max(np.abs(element.extension))
 
         # assert element.N_1 is not None

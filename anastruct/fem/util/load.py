@@ -14,8 +14,10 @@ class LoadCase:
     """
 
     def __init__(self, name: str):
-        """
-        :param name: (str) Name of the load case
+        """Create a load case
+
+        Args:
+            name (str): Name of the load case
         """
         self.name: str = name
         self.spec: dict = {}

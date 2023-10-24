@@ -43,5 +43,6 @@
     "mypy-type-checker.reportingScope": "workspace",
     "pylint.severity": {
         "refactor": "Information"
-    }
+    },
+    "python.analysis.typeCheckingMode": "basic",
 }

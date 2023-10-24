@@ -1,5 +1,5 @@
 import math
-from typing import TYPE_CHECKING, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -29,9 +29,16 @@ PATCH_SIZE = 0.03
 
 class Plotter:
     def __init__(self, system: "SystemElements", mesh: int):
+        """Class for plotting the structure.
+
+        Args:
+            system (SystemElements): System of elements
+            mesh (int): Number of points to plot
+        """
         self.plot_values = PlottingValues(system, mesh)
         self.mesh: int = self.plot_values.mesh
         self.system: "SystemElements" = system
+        self.axes: List["Axes"] = []
         self.one_fig: Optional["Axes"] = None
         self.max_q: float = 0
         self.max_qn: float = 0
@@ -40,17 +47,36 @@ class Plotter:
 
     @property
     def max_val_structure(self) -> float:
+        """Returns the maximum value of the structure.
+
+        Returns:
+            float: Maximum value of the structure
+        """
         return self.plot_values.max_val_structure
 
-    def __start_plot(self, figsize: Optional[Tuple[float, float]]) -> None:
+    def __start_plot(
+        self, figsize: Optional[Tuple[float, float]]
+    ) -> Tuple[float, float]:
+        """Starts the plot by initialising a matplotlib plot window of the given size.
+
+        Args:
+            figsize (Optional[Tuple[float, float]]): Figure size
+
+        Returns:
+            Tuple[float, float]: Figure size (width, height)
+        """
         plt.close("all")
         self.fig = plt.figure(figsize=figsize)
-        self.one_fig = self.fig.add_subplot(111)
+        self.axes = [self.fig.add_subplot(111)]
         plt.tight_layout()
+        return (self.fig.get_figwidth(), self.fig.get_figheight())
 
-    def __fixed_support_patch(self, max_val: float) -> None:
-        """
-        :param max_val: max scale of the plot
+    def __fixed_support_patch(self, max_val: float, axes_i: int = 0) -> None:
+        """Plots the fixed supports.
+
+        Args:
+            max_val (float): Max scale of the plot
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
         """
         width = height = PATCH_SIZE * max_val
         for node in self.system.supports_fixed:
@@ -61,11 +87,14 @@ class Plotter:
                 color="r",
                 zorder=9,
             )
-            self.one_fig.add_patch(support_patch)
+            self.axes[axes_i].add_patch(support_patch)
 
-    def __hinged_support_patch(self, max_val: float) -> None:
-        """
-        :param max_val: max scale of the plot
+    def __hinged_support_patch(self, max_val: float, axes_i: int = 0) -> None:
+        """Plots the hinged supports.
+
+        Args:
+            max_val (float): Max scale of the plot
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
         """
         radius = PATCH_SIZE * max_val
         for node in self.system.supports_hinged:
@@ -76,11 +105,14 @@ class Plotter:
                 color="r",
                 zorder=9,
             )
-            self.one_fig.add_patch(support_patch)
+            self.axes[axes_i].add_patch(support_patch)
 
-    def __rotational_support_patch(self, max_val: float) -> None:
-        """
-        :param max_val: max scale of the plot
+    def __rotational_support_patch(self, max_val: float, axes_i: int = 0) -> None:
+        """Plots the rotational supports.
+
+        Args:
+            max_val (float): Max scale of the plot
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
         """
         width = height = PATCH_SIZE * max_val
         for node in self.system.supports_rotational:
@@ -92,11 +124,14 @@ class Plotter:
                 zorder=9,
                 fill=False,
             )
-            self.one_fig.add_patch(support_patch)
+            self.axes[axes_i].add_patch(support_patch)
 
-    def __roll_support_patch(self, max_val: float) -> None:
-        """
-        :param max_val: max scale of the plot
+    def __roll_support_patch(self, max_val: float, axes_i: int = 0) -> None:
+        """Plots the roller supports.
+
+        Args:
+            max_val (float): Max scale of the plot
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
         """
         radius = PATCH_SIZE * max_val
         count = 0
@@ -119,9 +154,9 @@ class Plotter:
             if node.id in self.system.inclined_roll:
                 angle = self.system.inclined_roll[node.id]
                 triangle = rotate_xy(triangle, angle + np.pi * 0.5)
-                support_patch_poly = plt.Polygon(triangle, color="r", zorder=9)
-                self.one_fig.add_patch(support_patch_poly)
-                self.one_fig.plot(
+                support_patch_poly = mpatches.Polygon(triangle, color="r", zorder=9)
+                self.axes[axes_i].add_patch(support_patch_poly)
+                self.axes[axes_i].plot(
                     triangle[1:, 0] - 0.5 * radius * np.sin(angle),
                     triangle[1:, 1] - 0.5 * radius * np.cos(angle),
                     color="r",
@@ -136,7 +171,7 @@ class Plotter:
                         zorder=9,
                         fill=False,
                     )
-                    self.one_fig.add_patch(rect_patch_regpoly)
+                    self.axes[axes_i].add_patch(rect_patch_regpoly)
 
             elif direction == 2:  # horizontal roll
                 support_patch_regpoly = mpatches.RegularPolygon(
@@ -146,9 +181,9 @@ class Plotter:
                     color="r",
                     zorder=9,
                 )
-                self.one_fig.add_patch(support_patch_regpoly)
+                self.axes[axes_i].add_patch(support_patch_regpoly)
                 y = -node.vertex.z - 2 * radius
-                self.one_fig.plot(
+                self.axes[axes_i].plot(
                     [node.vertex.x - radius, node.vertex.x + radius], [y, y], color="r"
                 )
                 if not rotate:
@@ -160,15 +195,15 @@ class Plotter:
                         zorder=9,
                         fill=False,
                     )
-                    self.one_fig.add_patch(rect_patch_rect)
+                    self.axes[axes_i].add_patch(rect_patch_rect)
             elif direction == 1:  # vertical roll
                 # translate the support to the node
 
                 support_patch_poly = mpatches.Polygon(triangle, color="r", zorder=9)
-                self.one_fig.add_patch(support_patch_poly)
+                self.axes[axes_i].add_patch(support_patch_poly)
 
                 y = node.vertex.y - radius
-                self.one_fig.plot(
+                self.axes[axes_i].plot(
                     [node.vertex.x + radius * 1.5, node.vertex.x + radius * 1.5],
                     [y, y + 2 * radius],
                     color="r",
@@ -182,12 +217,15 @@ class Plotter:
                         zorder=9,
                         fill=False,
                     )
-                    self.one_fig.add_patch(rect_patch_rect)
+                    self.axes[axes_i].add_patch(rect_patch_rect)
             count += 1
 
-    def __rotating_spring_support_patch(self, max_val: float) -> None:
-        """
-        :param max_val: max scale of the plot
+    def __rotating_spring_support_patch(self, max_val: float, axes_i: int = 0) -> None:
+        """Plots the rotational spring supports.
+
+        Args:
+            max_val (float): Max scale of the plot
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
         """
         radius = PATCH_SIZE * max_val
 
@@ -196,7 +234,7 @@ class Plotter:
             theta = 25 * np.pi * r / (0.2 * max_val)
             x = np.cos(theta) * r + node.vertex.x
             y = np.sin(theta) * r - radius + node.vertex.y
-            self.one_fig.plot(x, y, color="r", zorder=9)
+            self.axes[axes_i].plot(x, y, color="r", zorder=9)
 
             # Triangle
             support_patch = mpatches.RegularPolygon(
@@ -206,11 +244,14 @@ class Plotter:
                 color="r",
                 zorder=9,
             )
-            self.one_fig.add_patch(support_patch)
+            self.axes[axes_i].add_patch(support_patch)
 
-    def __spring_support_patch(self, max_val: float) -> None:
-        """
-        :param max_val: max scale of the plot
+    def __spring_support_patch(self, max_val: float, axes_i: int = 0) -> None:
+        """Plots the linear spring supports.
+
+        Args:
+            max_val (float): Max scale of the plot
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
         """
         h = PATCH_SIZE * max_val
         left = -0.5 * h
@@ -223,7 +264,7 @@ class Plotter:
                 np.array([0, 0, left, right, left, right, left, 0, 0]) + node.vertex.x
             )
 
-            self.one_fig.plot(xval, yval, color="r", zorder=10)
+            self.axes[axes_i].plot(xval, yval, color="r", zorder=10)
 
             # Triangle
             support_patch = mpatches.RegularPolygon(
@@ -233,7 +274,7 @@ class Plotter:
                 color="r",
                 zorder=10,
             )
-            self.one_fig.add_patch(support_patch)
+            self.axes[axes_i].add_patch(support_patch)
 
         for node, _ in self.system.supports_spring_x:
             xval = np.arange(0, 9, 1) * dh + node.vertex.x
@@ -241,7 +282,7 @@ class Plotter:
                 np.array([0, 0, left, right, left, right, left, 0, 0]) + node.vertex.y
             )
 
-            self.one_fig.plot(xval, yval, color="r", zorder=10)
+            self.axes[axes_i].plot(xval, yval, color="r", zorder=10)
 
             # Triangle
             support_patch = mpatches.RegularPolygon(
@@ -251,16 +292,20 @@ class Plotter:
                 color="r",
                 zorder=10,
             )
-            self.one_fig.add_patch(support_patch)
+            self.axes[axes_i].add_patch(support_patch)
 
-    def __q_load_patch(self, max_val: float, verbosity: int) -> None:
-        """
-        :param max_val: max scale of the plot
+    def __q_load_patch(self, max_val: float, verbosity: int, axes_i: int = 0) -> None:
+        """Plots the distributed loads.
 
         xn1;yn1  q-load   xn1;yn1
         -------------------
         |__________________|
         x1;y1  element    x2;y2
+
+        Args:
+            max_val (float): Max scale of the plot
+            verbosity (int): 0: show values and arrows, 1: show load block only
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
         """
 
         def __plot_patch(
@@ -276,15 +321,30 @@ class Plotter:
             direction: float,
             el_angle: float,  # pylint: disable=unused-argument
         ) -> None:
+            """Plots the distributed load patch.
+
+            Args:
+                h1 (float): start height
+                h2 (float): end height
+                x1 (float): start x coordinate
+                y1 (float): start y coordinate
+                x2 (float): end x coordinate
+                y2 (float): end y coordinate
+                ai (float): angle of the element
+                qi (float): start load magnitude
+                q (float): end load magnitude
+                direction (float): 1 or -1, depending on the direction of the load
+                el_angle (float): angle of the element
+            """
             # - value, because the positive z of the system is opposite of positive y of the plotter
             xn1 = x1 + np.sin(ai) * h1 * direction
             yn1 = y1 + np.cos(ai) * h1 * direction
             xn2 = x2 + np.sin(ai) * h2 * direction
             yn2 = y2 + np.cos(ai) * h2 * direction
             coordinates = ([x1, xn1, xn2, x2], [y1, yn1, yn2, y2])
-            self.one_fig.plot(*coordinates, color="g")
-            rec = plt.Polygon(np.vstack(coordinates).T, color="g", alpha=0.3)
-            self.one_fig.add_patch(rec)
+            self.axes[axes_i].plot(*coordinates, color="g")
+            rec = mpatches.Polygon(np.vstack(coordinates).T, color="g", alpha=0.3)
+            self.axes[axes_i].add_patch(rec)
 
             if verbosity == 0:
                 # arrow
@@ -303,8 +363,12 @@ class Plotter:
                 step_len_y = np.linspace(len_y1, len_y2, 11)
                 average_h = (h1 + h2) / 2
                 # fc = face color, ec = edge color
-                self.one_fig.text(xn1, yn1, f"q={qi}", color="b", fontsize=9, zorder=10)
-                self.one_fig.text(xn2, yn2, f"q={q}", color="b", fontsize=9, zorder=10)
+                self.axes[axes_i].text(
+                    xn1, yn1, f"q={qi}", color="b", fontsize=9, zorder=10
+                )
+                self.axes[axes_i].text(
+                    xn2, yn2, f"q={q}", color="b", fontsize=9, zorder=10
+                )
 
                 # add multiple arrows to fill load
                 for counter, step_xi in enumerate(step_x):
@@ -323,7 +387,7 @@ class Plotter:
                         else:
                             shape = "full"
 
-                    self.one_fig.arrow(
+                    self.axes[axes_i].arrow(
                         step_xi,
                         step_y[counter],
                         step_len_x[counter],
@@ -354,6 +418,7 @@ class Plotter:
             h1 = 0.05 * max_val * abs(qi) / self.max_q
             h2 = 0.05 * max_val * abs(q) / self.max_q
 
+            assert el.q_angle is not None
             ai = np.pi / 2 - el.q_angle
             el_angle = el.angle
             __plot_patch(h1, h2, x1, y1, x2, y2, ai, qi, q, direction, el_angle)
@@ -383,12 +448,16 @@ class Plotter:
     def __arrow_patch_values(
         Fx: float, Fz: float, node: "Node", h: float
     ) -> Tuple[float, float, float, float, float]:
-        """
-        :param Fx: (float)
-        :param Fz: (float)
-        :param node: (Node object)
-        :param h: (float) Is a scale variable
-        :return: Variables for the matplotlib plotter
+        """Determines the values for the point load arrow patch.
+
+        Args:
+            Fx (float): Point load magnitude in x direction
+            Fz (float): Point load magnitude in z direction
+            node (Node): Node upon which load is applied
+            h (float): Scale variable
+
+        Returns:
+            Tuple[float, float, float, float, float]: x, y, len_x, len_y, F (for matplotlib plotter)
         """
 
         F = (Fx**2 + Fz**2) ** 0.5
@@ -399,9 +468,15 @@ class Plotter:
 
         return x, y, len_x, len_y, F
 
-    def __point_load_patch(self, max_plot_range: float, verbosity: int = 0) -> None:
-        """
-        :param max_plot_range: max scale of the plot
+    def __point_load_patch(
+        self, max_plot_range: float, verbosity: int = 0, axes_i: int = 0
+    ) -> None:
+        """Plots the point loads.
+
+        Args:
+            max_plot_range (float): Max scale of the plot
+            verbosity (int, optional): 0: show values, 1: show arrow only. Defaults to 0.
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
         """
 
         for k in self.system.loads_point:
@@ -411,7 +486,7 @@ class Plotter:
             h = 0.1 * max_plot_range * F / self.max_system_point_load
             x, y, len_x, len_y, F = self.__arrow_patch_values(Fx, Fz, node, h)
 
-            self.one_fig.arrow(
+            self.axes[axes_i].arrow(
                 x,
                 y,
                 len_x,
@@ -423,14 +498,20 @@ class Plotter:
                 zorder=11,
             )
             if verbosity == 0:
-                self.one_fig.text(x, y, f"F={F}", color="k", fontsize=9, zorder=10)
+                self.axes[axes_i].text(x, y, f"F={F}", color="k", fontsize=9, zorder=10)
 
-    def __moment_load_patch(self, max_val: float) -> None:
+    def __moment_load_patch(self, max_val: float, axes_i: int = 0) -> None:
+        """Plots the moment loads.
+
+        Args:
+            max_val (float): Max scale of the plot
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
+        """
         h = 0.2 * max_val
         for k, v in self.system.loads_moment.items():
             node = self.system.node_map[k]
             if v > 0:
-                self.one_fig.plot(
+                self.axes[axes_i].plot(
                     node.vertex.x,
                     -node.vertex.z,
                     marker=r"$\circlearrowleft$",
@@ -438,14 +519,14 @@ class Plotter:
                     color="orange",
                 )
             else:
-                self.one_fig.plot(
+                self.axes[axes_i].plot(
                     node.vertex.x,
                     -node.vertex.z,
                     marker=r"$\circlearrowright$",
                     ms=25,
                     color="orange",
                 )
-            self.one_fig.text(
+            self.axes[axes_i].text(
                 node.vertex.x + h * 0.2,
                 -node.vertex.z + h * 0.2,
                 f"T={v}",
@@ -464,16 +545,29 @@ class Plotter:
         offset: Sequence[float] = (0, 0),
         gridplot: bool = False,
         annotations: bool = True,
+        axes_i: int = 0,
     ) -> Optional["Figure"]:
-        """
-        :param show: (boolean) if True, plt.figure will plot.
-        :param supports: (boolean) if True, supports are plotted.
-        :param annotations: (boolean) if True, structure annotations are plotted.
-                            It includes section name.
-        :return:
+        """Plots the structure.
+
+        Args:
+            figsize (Optional[Tuple[float, float]]): Figure size
+            verbosity (int): 0: show node and element IDs, 1: show structure only
+            show (bool, optional): If True, plt.figure will plot. Defaults to False.
+            supports (bool, optional): If True, supports are plotted. Defaults to True.
+            scale (float, optional): Scale of the plot. Defaults to 1.
+            offset (Sequence[float], optional): Offset of the plot. Defaults to (0, 0).
+            gridplot (bool, optional): If True, the plot will be added to a grid of plots. Defaults to False.
+            annotations (bool, optional): If True, structure annotations are plotted. Defaults to True.
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
+
+        Returns:
+            Optional[Figure]: Returns figure object if in testing mode, else None
         """
         if not gridplot:
-            self.__start_plot(figsize)
+            figsize = self.__start_plot(figsize)
+            axes_i = 0
+        else:
+            assert figsize is not None  # figsize is always set in gridplots
 
         x, y = self.plot_values.structure()
 
@@ -492,16 +586,16 @@ class Plotter:
         minxrange = center_x - ax_range
         minyrange = center_y - ax_range * figsize[1] / figsize[0]
 
-        self.one_fig.axis((minxrange, plusxrange, minyrange, plusyrange))
+        self.axes[axes_i].axis((minxrange, plusxrange, minyrange, plusyrange))
 
         for el in self.system.element_map.values():
             x_val, y_val = plot_values_element(el)
-            self.one_fig.plot(x_val, y_val, color="black", marker="s")
+            self.axes[axes_i].plot(x_val, y_val, color="black", marker="s")
 
             if verbosity == 0:
                 # add node ID to plot
                 ax_range = max_plot_range * 0.015
-                self.one_fig.text(
+                self.axes[axes_i].text(
                     x_val[0] + ax_range,
                     y_val[0] + ax_range,
                     f"{el.node_id1}",
@@ -509,7 +603,7 @@ class Plotter:
                     fontsize=9,
                     zorder=10,
                 )
-                self.one_fig.text(
+                self.axes[axes_i].text(
                     x_val[-1] + ax_range,
                     y_val[-1] + ax_range,
                     f"{el.node_id2}",
@@ -523,7 +617,7 @@ class Plotter:
                 x_scalar = (x_val[0] + x_val[-1]) / 2 - np.sin(el.angle) * factor
                 y_scalar = (y_val[0] + y_val[-1]) / 2 + np.cos(el.angle) * factor
 
-                self.one_fig.text(
+                self.axes[axes_i].text(
                     x_scalar, y_scalar, str(el.id), color="r", fontsize=9, zorder=10
                 )
 
@@ -532,7 +626,7 @@ class Plotter:
                 if annotations:
                     x_scalar += +np.sin(el.angle) * factor * 2.3
                     y_scalar += -np.cos(el.angle) * factor * 2.3
-                    self.one_fig.text(
+                    self.axes[axes_i].text(
                         x_scalar,
                         y_scalar,
                         el.section_name,
@@ -568,11 +662,22 @@ class Plotter:
         value_1: float,
         value_2: float,
         digits: int,
+        axes_i: int = 0,
     ) -> None:
+        """Adds the node values to the plot.
+
+        Args:
+            x_val (np.ndarray): X locations
+            y_val (np.ndarray): Y locations
+            value_1 (float): Value of first number
+            value_2 (float): Value of second number
+            digits (int): Number of digits to round to
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
+        """
         offset = self.max_val_structure * 0.015
 
         # add value to plot
-        self.one_fig.text(
+        self.axes[axes_i].text(
             x_val[1] - offset,
             y_val[1] + offset,
             f"{round(value_1, digits)}",
@@ -580,7 +685,7 @@ class Plotter:
             ha="center",
             va="center",
         )
-        self.one_fig.text(
+        self.axes[axes_i].text(
             x_val[-2] - offset,
             y_val[-2] + offset,
             f"{round(value_2, digits)}",
@@ -596,8 +701,19 @@ class Plotter:
         value: float,
         index: int,
         digits: int = 2,
+        axes_i: int = 0,
     ) -> None:
-        self.one_fig.text(
+        """Adds the element values to the plot.
+
+        Args:
+            x_val (np.ndarray): X locations
+            y_val (np.ndarray): Y locations
+            value (float): Value of number
+            index (int): Index of value
+            digits (int, optional): Number of digits to round to. Defaults to 2.
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
+        """
+        self.axes[axes_i].text(
             x_val[index],
             y_val[index],
             f"{round(value, digits)}",
@@ -615,20 +731,36 @@ class Plotter:
         node_results: bool = True,
         fill_polygon: bool = True,
         color: int = 0,
+        axes_i: int = 0,
     ) -> None:
+        """Plots a single result on the structure.
+
+        Args:
+            axis_values (Sequence): X and Y values
+            force_1 (Optional[float], optional): First force to plot. Defaults to None.
+            force_2 (Optional[float], optional): Second force to plot. Defaults to None.
+            digits (int, optional): Number of digits to round to. Defaults to 2.
+            node_results (bool, optional): Whether or not to plot nodal results. Defaults to True.
+            fill_polygon (bool, optional): Whether or not to fill a polygon for the result. Defaults to True.
+            color (int, optional): Color index with which to draw. Defaults to 0.
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
+        """
         if fill_polygon:
-            rec = plt.Polygon(np.vstack(axis_values).T, color=f"C{color}", alpha=0.3)
-            self.one_fig.add_patch(rec)
+            rec = mpatches.Polygon(
+                np.vstack(axis_values).T, color=f"C{color}", alpha=0.3
+            )
+            self.axes[axes_i].add_patch(rec)
         # plot force
         x_val = axis_values[0]
         y_val = axis_values[1]
 
-        self.one_fig.plot(x_val, y_val, color=f"C{color}")
+        self.axes[axes_i].plot(x_val, y_val, color=f"C{color}")
 
-        if node_results:
+        if node_results and force_1 and force_2:
             self._add_node_values(x_val, y_val, force_1, force_2, digits)
 
     def plot(self) -> None:
+        """Plots the figure."""
         plt.show()  # type: ignore
 
     def axial_force(
@@ -640,16 +772,35 @@ class Plotter:
         offset: Sequence[float] = (0, 0),
         show: bool = True,
         gridplot: bool = False,
+        axes_i: int = 0,
     ) -> Optional["Figure"]:
-        self.plot_structure(figsize, 1, scale=scale, offset=offset, gridplot=gridplot)
+        """Plots the axial force.
+
+        Args:
+            factor (Optional[float], optional): Scaling factor. Defaults to None.
+            figsize (Optional[Tuple[float, float]], optional): Figure size. Defaults to None.
+            verbosity (int, optional): 0: show values, 1: show axial force only. Defaults to 0.
+            scale (float, optional): Scale of the plot. Defaults to 1.
+            offset (Sequence[float], optional): Offset of the plot. Defaults to (0, 0).
+            show (bool, optional): If True, plt.figure will plot. Defaults to False.
+            gridplot (bool, optional): If True, the plot will be added to a grid of plots. Defaults to False.
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
+
+        Returns:
+            Optional[Figure]: Returns figure object if in testing mode, else None
+        """
+        self.plot_structure(
+            figsize, 1, scale=scale, offset=offset, gridplot=gridplot, axes_i=axes_i
+        )
+        assert self.system.element_map[1].axial_force is not None
         con = len(self.system.element_map[1].axial_force)
 
         if factor is None:
             max_force = max(
                 map(
                     lambda el: max(
-                        abs(el.N_1),
-                        abs(el.N_2),
+                        abs(el.N_1 or 0.0),
+                        abs(el.N_2 or 0.0),
                         abs(((el.all_qn_load[0] + el.all_qn_load[1]) / 16) * el.l**2),
                     ),
                     self.system.element_map.values(),
@@ -658,6 +809,8 @@ class Plotter:
             factor = det_scaling_factor(max_force, self.max_val_structure)
 
         for el in self.system.element_map.values():
+            assert el.N_1 is not None
+            assert el.N_2 is not None
             if (
                 math.isclose(el.N_1, 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.N_2, 0, rel_tol=1e-5, abs_tol=1e-9)
@@ -684,7 +837,7 @@ class Plotter:
                 )
 
                 if verbosity == 0:
-                    self.one_fig.text(
+                    self.axes[axes_i].text(
                         point.x,
                         point.y,
                         "-",
@@ -701,7 +854,7 @@ class Plotter:
                 )
 
                 if verbosity == 0:
-                    self.one_fig.text(
+                    self.axes[axes_i].text(
                         point.x,
                         point.y,
                         "+",
@@ -725,8 +878,27 @@ class Plotter:
         offset: Sequence[float] = (0, 0),
         show: bool = True,
         gridplot: bool = False,
+        axes_i: int = 0,
     ) -> Optional["Figure"]:
-        self.plot_structure(figsize, 1, scale=scale, offset=offset, gridplot=gridplot)
+        """Plots the bending moment.
+
+        Args:
+            factor (Optional[float], optional): Scaling factor. Defaults to None.
+            figsize (Optional[Tuple[float, float]], optional): Figure size. Defaults to None.
+            verbosity (int, optional): 0: show values, 1: show bending moment only. Defaults to 0.
+            scale (float, optional): Scale of the plot. Defaults to 1.
+            offset (Sequence[float], optional): Offset of the plot. Defaults to (0, 0).
+            show (bool, optional): If True, plt.figure will plot. Defaults to False.
+            gridplot (bool, optional): If True, the plot will be added to a grid of plots. Defaults to False.
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
+
+        Returns:
+            Optional[Figure]: Returns figure object if in testing mode, else None
+        """
+        self.plot_structure(
+            figsize, 1, scale=scale, offset=offset, gridplot=gridplot, axes_i=axes_i
+        )
+        assert self.system.element_map[1].bending_moment is not None
         con = len(self.system.element_map[1].bending_moment)
         if factor is None:
             # maximum moment determined by comparing the node's moments and the sagging moments.
@@ -764,6 +936,7 @@ class Plotter:
             )
 
             if el.all_qp_load:
+                assert el.bending_moment is not None
                 m_sag = min(el.bending_moment)
                 index = find_nearest(el.bending_moment, m_sag)[1]
                 offset1 = self.max_val_structure * -0.05
@@ -771,7 +944,7 @@ class Plotter:
                 if verbosity == 0:
                     x = axis_values[0][index] + np.sin(-el.angle) * offset1
                     y = axis_values[1][index] + np.cos(-el.angle) * offset1
-                    self.one_fig.text(x, y, f"{round(m_sag, 1)}", fontsize=9)
+                    self.axes[axes_i].text(x, y, f"{round(m_sag, 1)}", fontsize=9)
         if show:
             self.plot()
             return None
@@ -787,15 +960,34 @@ class Plotter:
         show: bool = True,
         gridplot: bool = False,
         include_structure: bool = True,
+        axes_i: int = 0,
     ) -> Optional["Figure"]:
+        """Plots the shear force.
+
+        Args:
+            factor (Optional[float], optional): Scaling factor. Defaults to None.
+            figsize (Optional[Tuple[float, float]], optional): Figure size. Defaults to None.
+            verbosity (int, optional): 0: show values, 1: show shear force only. Defaults to 0.
+            scale (float, optional): Scale of the plot. Defaults to 1.
+            offset (Sequence[float], optional): Offset of the plot. Defaults to (0, 0).
+            show (bool, optional): If True, plt.figure will plot. Defaults to False.
+            gridplot (bool, optional): If True, the plot will be added to a grid of plots. Defaults to False.
+            include_structure (bool, optional): If True, the structure will be plotted. Defaults to True.
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
+
+        Returns:
+            Optional[Figure]: Returns figure object if in testing mode, else None
+        """
         if include_structure:
             self.plot_structure(
-                figsize, 1, scale=scale, offset=offset, gridplot=gridplot
+                figsize, 1, scale=scale, offset=offset, gridplot=gridplot, axes_i=axes_i
             )
         if factor is None:
             max_force = max(
                 map(
-                    lambda el: np.max(np.abs(el.shear_force)),
+                    lambda el: np.max(np.abs(el.shear_force))
+                    if el.shear_force is not None
+                    else 0.0,
                     self.system.element_map.values(),
                 )
             )
@@ -812,6 +1004,7 @@ class Plotter:
                 # so no need for plotting.
                 continue
             axis_values = plot_values_shear_force(el, factor)
+            assert el.shear_force is not None
             shear_1 = el.shear_force[0]
             shear_2 = el.shear_force[-1]
 
@@ -831,9 +1024,30 @@ class Plotter:
         offset: Sequence[float],
         show: bool,
         gridplot: bool = False,
+        axes_i: int = 0,
     ) -> Optional["Figure"]:
+        """Plots the reaction forces.
+
+        Args:
+            figsize (Optional[Tuple[float, float]]): Figure size
+            verbosity (int): 0: show node and element IDs, 1: show structure only
+            scale (float): Scale of the plot
+            offset (Sequence[float]): Offset of the plot
+            show (bool): If True, plt.figure will plot
+            gridplot (bool, optional): If True, the plot will be added to a grid of plots. Defaults to False.
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
+
+        Returns:
+            Optional[Figure]: Returns figure object if in testing mode, else None
+        """
         self.plot_structure(
-            figsize, 1, supports=False, scale=scale, offset=offset, gridplot=gridplot
+            figsize,
+            1,
+            supports=False,
+            scale=scale,
+            offset=offset,
+            gridplot=gridplot,
+            axes_i=axes_i,
         )
 
         h = 0.2 * self.max_val_structure
@@ -854,7 +1068,7 @@ class Plotter:
                 len_x = sol[2]
                 len_y = sol[3]
 
-                self.one_fig.arrow(
+                self.axes[axes_i].arrow(
                     x,
                     y,
                     len_x,
@@ -867,7 +1081,7 @@ class Plotter:
                 )
 
                 if verbosity == 0:
-                    self.one_fig.text(
+                    self.axes[axes_i].text(
                         x,
                         y,
                         f"R={round(node.Fx, 2)}",
@@ -885,7 +1099,7 @@ class Plotter:
                 len_x = sol[2]
                 len_y = sol[3]
 
-                self.one_fig.arrow(
+                self.axes[axes_i].arrow(
                     x,
                     y,
                     len_x,
@@ -898,7 +1112,7 @@ class Plotter:
                 )
 
                 if verbosity == 0:
-                    self.one_fig.text(
+                    self.axes[axes_i].text(
                         x,
                         y,
                         f"R={round(node.Fz, 2)}",
@@ -910,7 +1124,7 @@ class Plotter:
             if not math.isclose(node.Ty, 0, rel_tol=1e-5, abs_tol=1e-9):
                 # '$...$': render the strings using mathtext
                 if node.Ty > 0:
-                    self.one_fig.plot(
+                    self.axes[axes_i].plot(
                         node.vertex.x,
                         -node.vertex.z,
                         marker=r"$\circlearrowleft$",
@@ -918,7 +1132,7 @@ class Plotter:
                         color="orange",
                     )
                 if node.Ty < 0:
-                    self.one_fig.plot(
+                    self.axes[axes_i].plot(
                         node.vertex.x,
                         -node.vertex.z,
                         marker=r"$\circlearrowright$",
@@ -927,7 +1141,7 @@ class Plotter:
                     )
 
                 if verbosity == 0:
-                    self.one_fig.text(
+                    self.axes[axes_i].text(
                         node.vertex.x + h * 0.2,
                         -node.vertex.z + h * 0.2,
                         f"T={round(node.Ty, 2)}",
@@ -950,14 +1164,35 @@ class Plotter:
         show: bool = True,
         linear: bool = False,
         gridplot: bool = False,
+        axes_i: int = 0,
     ) -> Optional["Figure"]:
-        self.plot_structure(figsize, 1, scale=scale, offset=offset, gridplot=gridplot)
+        """Plots the displacements.
+
+        Args:
+            factor (Optional[float], optional): Scaling factor. Defaults to None.
+            figsize (Optional[Tuple[float, float]], optional): Figure size. Defaults to None.
+            verbosity (int, optional): 0: show values, 1: show displacements only. Defaults to 0.
+            scale (float, optional): Scale of the plot. Defaults to 1.
+            offset (Sequence[float], optional): Offset of the plot. Defaults to (0, 0).
+            show (bool, optional): If True, plt.figure will plot. Defaults to False.
+            linear (bool, optional): If True, the bending in between the elements is determined. Defaults to False.
+            gridplot (bool, optional): If True, the plot will be added to a grid of plots. Defaults to False.
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
+
+        Returns:
+            Optional[Figure]: Returns figure object if in testing mode, else None
+        """
+        self.plot_structure(
+            figsize, 1, scale=scale, offset=offset, gridplot=gridplot, axes_i=axes_i
+        )
         if factor is None:
             # needed to determine the scaling factor
             max_displacement = max(
                 map(
                     lambda el: max(
-                        abs(el.node_1.ux), abs(el.node_1.uz), el.max_deflection
+                        abs(el.node_1.ux),
+                        abs(el.node_1.uz),
+                        el.max_deflection or 0,
                     )
                     if el.type == "general"
                     else 0,
@@ -971,6 +1206,7 @@ class Plotter:
             self.plot_result(axis_values, node_results=False, fill_polygon=False)
 
             if el.type == "general":
+                assert el.deflection is not None
                 # index of the max deflection
                 x = np.linspace(el.vertex_1.x, el.vertex_2.x, el.deflection.size)
                 y = np.linspace(el.vertex_1.y, el.vertex_2.y, el.deflection.size)
@@ -1000,39 +1236,93 @@ class Plotter:
         offset: Sequence[float],
         show: bool,
     ) -> Optional["Figure"]:
-        """
-        Aggregate all the plots in one grid plot.
+        """Plots all the results in one gridded figure.
 
-        :param figsize: (tpl)
-        :param verbosity: (int)
-        :param scale: (flt)
-        :param offset: (tpl)
-        :param show: (bool)
-        :return: Figure or None
+        Args:
+            figsize (Optional[Tuple[float, float]]): Figure size
+            verbosity (int): 0: show values, 1: show arrows and polygons only
+            scale (float): Scale of the plot
+            offset (Sequence[float]): Offset of the plot
+            show (bool): If True, plt.figure will plot
+
+        Returns:
+            Optional[Figure]: Returns figure object if in testing mode, else None
         """
         plt.close("all")
+        self.axes = []
         self.fig = plt.figure(figsize=figsize)
         a = 320
-        self.one_fig = self.fig.add_subplot(a + 1)
+        self.axes.append(self.fig.add_subplot(a + 1))
         plt.title("structure")
         self.plot_structure(
-            figsize, verbosity, show=False, scale=scale, offset=offset, gridplot=True
+            figsize,
+            verbosity,
+            show=False,
+            scale=scale,
+            offset=offset,
+            gridplot=True,
+            axes_i=0,
         )
-        self.one_fig = self.fig.add_subplot(a + 2)
+        self.axes.append(self.fig.add_subplot(a + 2))
         plt.title("bending moment")
-        self.bending_moment(None, figsize, verbosity, scale, offset, False, True)
-        self.one_fig = self.fig.add_subplot(a + 3)
+        self.bending_moment(
+            factor=None,
+            figsize=figsize,
+            verbosity=verbosity,
+            scale=scale,
+            offset=offset,
+            show=False,
+            gridplot=True,
+            axes_i=1,
+        )
+        self.axes.append(self.fig.add_subplot(a + 3))
         plt.title("shear force")
-        self.shear_force(None, figsize, verbosity, scale, offset, False, True)
-        self.one_fig = self.fig.add_subplot(a + 4)
+        self.shear_force(
+            factor=None,
+            figsize=figsize,
+            verbosity=verbosity,
+            scale=scale,
+            offset=offset,
+            show=False,
+            gridplot=True,
+            axes_i=2,
+        )
+        self.axes.append(self.fig.add_subplot(a + 4))
         plt.title("axial force")
-        self.axial_force(None, figsize, verbosity, scale, offset, False, True)
-        self.one_fig = self.fig.add_subplot(a + 5)
+        self.axial_force(
+            factor=None,
+            figsize=figsize,
+            verbosity=verbosity,
+            scale=scale,
+            offset=offset,
+            show=False,
+            gridplot=True,
+            axes_i=3,
+        )
+        self.axes.append(self.fig.add_subplot(a + 5))
         plt.title("displacements")
-        self.displacements(None, figsize, verbosity, scale, offset, False, False, True)
-        self.one_fig = self.fig.add_subplot(a + 6)
+        self.displacements(
+            factor=None,
+            figsize=figsize,
+            verbosity=verbosity,
+            scale=scale,
+            offset=offset,
+            show=False,
+            linear=False,
+            gridplot=True,
+            axes_i=4,
+        )
+        self.axes.append(self.fig.add_subplot(a + 6))
         plt.title("reaction force")
-        self.reaction_force(figsize, verbosity, scale, offset, False, True)
+        self.reaction_force(
+            figsize=figsize,
+            verbosity=verbosity,
+            scale=scale,
+            offset=offset,
+            show=False,
+            gridplot=True,
+            axes_i=5,
+        )
 
         if show:
             self.plot()

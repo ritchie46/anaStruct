@@ -7,6 +7,14 @@ from anastruct.sectionbase.sectionbase import section_base
 def steel_section_properties(
     **kwargs: Dict[str, Any]
 ) -> Tuple[str, float, float, float]:
+    """Get steel section properties
+
+    Raises:
+        ValueError: Raised if orient is not defined
+
+    Returns:
+        Tuple[str, float, float, float]: Section name, EA, EI, g
+    """
     steel_section = kwargs.get("steelsection", "IPE 300")
     orient = kwargs.get("orient", "y")
     E = kwargs.get("E", 210e9)
@@ -30,6 +38,11 @@ def steel_section_properties(
 
 
 def rectangle_properties(**kwargs: Dict[str, Any]) -> Tuple[str, float, float, float]:
+    """Get rectangle section properties
+
+    Returns:
+        Tuple[str, float, float, float]: Section name, EA, EI, g
+    """
     b = kwargs.get("b", 0.1)
     h = kwargs.get("h", 0.5)
     E = kwargs.get("E", 210e9)
@@ -53,6 +66,11 @@ def rectangle_properties(**kwargs: Dict[str, Any]) -> Tuple[str, float, float, f
 
 
 def circle_properties(**kwargs: Dict[str, Any]) -> Tuple[str, float, float, float]:
+    """Get circle section properties
+
+    Returns:
+        Tuple[str, float, float, float]: Section name, EA, EI, g
+    """
     d = kwargs.get("d", 0.4)
     E = kwargs.get("E", 210e9)
     gamma = kwargs.get("gamma", 10000)
