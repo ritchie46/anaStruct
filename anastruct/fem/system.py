@@ -527,7 +527,7 @@ class SystemElements:
         direction = (point_2 - point_1).unit()
 
         if dl is None and n is not None:
-            var_n = np.ceil(n)
+            var_n = int(np.ceil(n))
             lengths = np.linspace(start=0, stop=length, num=var_n + 1)
         elif dl is not None and n is None:
             var_n = int(np.ceil(length / dl) - 1)
