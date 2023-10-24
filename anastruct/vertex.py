@@ -194,11 +194,14 @@ class Vertex:
         coordinates = self.coordinates / other
         return Vertex(coordinates)
 
-    def __eq__(self, other: object) -> bool | NotImplementedError:
+    def __eq__(self, other: object) -> bool:
         """Check if two Vertex objects are equal
 
         Args:
             other (object): Object to compare
+
+        Raises:
+            NotImplementedError: If the object is not a Vertex object or a tuple or list of length 2
 
         Returns:
             bool: True if the two Vertex objects are equal
@@ -207,7 +210,7 @@ class Vertex:
             return self.x == other.x and self.y == other.y
         if isinstance(other, (tuple, list)) and len(other) == 2:
             return self.x == other[0] and self.y == other[1]
-        return NotImplemented
+        raise NotImplementedError
 
     def __str__(self) -> str:
         """String representation of the Vertex object
