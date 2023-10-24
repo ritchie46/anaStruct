@@ -208,9 +208,14 @@ class Vertex:
         """
         if isinstance(other, Vertex):
             return self.x == other.x and self.y == other.y
-        if isinstance(other, (tuple, list)) and len(other) == 2:
+        if (
+            isinstance(other, (tuple, list))
+            and len(other) == 2
+            and isinstance(other[0], (int, float))
+            and isinstance(other[1], (int, float))
+        ):
             return self.x == other[0] and self.y == other[1]
-        raise NotImplementedError
+        return NotImplemented
 
     def __str__(self) -> str:
         """String representation of the Vertex object
