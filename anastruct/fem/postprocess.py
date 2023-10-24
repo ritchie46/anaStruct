@@ -289,6 +289,7 @@ class ElementLevel:
 
         phi_neg2 = -integrate_array(element.axial_force[::-1], dx) / element.EA
         u2 = integrate_array(phi_neg2, dx)
+        u2 = u2[::-1]
 
         element.extension = -1 * (u1 + u2) / 2.0
         element.max_extension = np.max(np.abs(element.extension))
