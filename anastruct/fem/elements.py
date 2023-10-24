@@ -202,9 +202,15 @@ class Element:
             self.constitutive_matrix = constitutive_matrix(
                 self.EA, self.EI, self.l, self.springs, False, False
             )
-        self.constitutive_matrix = constitutive_matrix(
-            self.EA, self.EI, self.l, self.springs, self.node_1.hinge, self.node_2.hinge
-        )
+        else:
+            self.constitutive_matrix = constitutive_matrix(
+                self.EA,
+                self.EI,
+                self.l,
+                self.springs,
+                self.node_1.hinge,
+                self.node_2.hinge,
+            )
 
     def update_stiffness(self, factor: float, node: Literal[1, 2]) -> None:
         """Update the stiffness matrix of the element
