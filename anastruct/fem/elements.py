@@ -95,7 +95,7 @@ class Element:
         self.max_deflection = None
         self.max_extension = None
         self.nodes_plastic: List[bool] = [False, False]
-        self.compile_constitutive_matrix()
+        self.compile_constitutive_matrix(initial=True)
         self.compile_stiffness_matrix()
         self.section_name = section_name  # needed for element annotation
 
@@ -196,9 +196,13 @@ class Element:
         """Compile the kinematic matrix of the element"""
         self.kinematic_matrix = kinematic_matrix(self.a1, self.a2, self.l)
 
-    def compile_constitutive_matrix(self) -> None:
+    def compile_constitutive_matrix(self, initial=False) -> None:
         """Compile the constitutive matrix of the element"""
-        if self.node_map:  # if element is just being created
+        if initial:  # if element is just being created
+            self.constitutive_matrix = constitutive_matrix(
+                self.EA, self.EI, self.l, self.springs, False, False
+            )
+        else:
             self.constitutive_matrix = constitutive_matrix(
                 self.EA,
                 self.EI,
@@ -206,10 +210,6 @@ class Element:
                 self.springs,
                 self.node_1.hinge,
                 self.node_2.hinge,
-            )
-        else:
-            self.constitutive_matrix = constitutive_matrix(
-                self.EA, self.EI, self.l, self.springs, False, False
             )
 
     def update_stiffness(self, factor: float, node: Literal[1, 2]) -> None:
