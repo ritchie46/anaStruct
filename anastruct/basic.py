@@ -11,11 +11,11 @@ except ImportError:
     from anastruct.cython.basic import angle_x_axis, converge
 
 
-def find_nearest(array: np.ndarray[float, Any], value: float) -> Tuple[float, int]:
+def find_nearest(array: np.ndarray, value: float) -> Tuple[float, int]:
     """Find the nearest value in an array
 
     Args:
-        array (np.ndarray[float, Any]): array to search within
+        array (np.ndarray): array to search within
         value (float): value to search for
 
     Returns:

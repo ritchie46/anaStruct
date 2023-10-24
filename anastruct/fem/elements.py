@@ -196,7 +196,7 @@ class Element:
         """Compile the kinematic matrix of the element"""
         self.kinematic_matrix = kinematic_matrix(self.a1, self.a2, self.l)
 
-    def compile_constitutive_matrix(self, initial=False) -> None:
+    def compile_constitutive_matrix(self, initial: bool = False) -> None:
         """Compile the constitutive matrix of the element"""
         if initial:  # if element is just being created
             self.constitutive_matrix = constitutive_matrix(
