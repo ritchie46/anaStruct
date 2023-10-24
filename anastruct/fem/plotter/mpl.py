@@ -985,7 +985,9 @@ class Plotter:
         if factor is None:
             max_force = max(
                 map(
-                    lambda el: np.max(np.abs(el.shear_force or 0.0)),
+                    lambda el: np.max(np.abs(el.shear_force))
+                    if el.shear_force
+                    else 0.0,
                     self.system.element_map.values(),
                 )
             )
