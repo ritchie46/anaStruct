@@ -1404,9 +1404,7 @@ class SystemElements:
 
     def get_node_results_system(
         self, node_id: int = 0
-    ) -> Union[
-        List[Tuple[Any, Any, Any, Any, Any, Any, Any]], Dict[str, Union[int, float]]
-    ]:
+    ) -> Union[List[Dict[str, Union[int, float]]], Dict[str, Union[int, float]]]:
         """Get the node results. These are the opposite of the forces and displacements
         working on the elements and may seem counter intuitive.
 
@@ -1415,13 +1413,12 @@ class SystemElements:
                 Defaults to 0.
 
         Returns:
-            Union[ List[Tuple[Any, Any, Any, Any, Any, Any, Any]], Dict[str, Union[int, float]] ]:
+            Union[ List[Dict[str, Union[int, float]]], Dict[str, Union[int, float]] ]:
                 If node_id == 0, returns a list containing tuples with the results:
                 [(id, Fx, Fy, Ty, ux, uy, phi_y), (id, Fx, Fy...), () .. ]
                 If node_id > 0, returns a dict with the results:
                 {"id": id, "Fx": Fx, "Fy": Fy, "Ty": Ty, "ux": ux, "uy": uy, "phi_y": phi_y}
         """
-        # TO DO: This should return a List of Dicts, not a list of Tuples...
         result_list = []
         if node_id != 0:
             node_id = _negative_index_to_id(node_id, self.node_map)
@@ -1437,13 +1434,21 @@ class SystemElements:
             }
         for node in self.node_map.values():
             result_list.append(
-                (node.id, node.Fx, node.Fy, node.Ty, node.ux, -node.uz, node.phi_y)
+                {
+                    "id": node.id,
+                    "Fx": node.Fx,
+                    "Fy": node.Fy,
+                    "Ty": node.Ty,
+                    "ux": node.ux,
+                    "uy": -node.uz,
+                    "phi_y": node.phi_y,
+                }
             )
         return result_list
 
     def get_node_displacements(
         self, node_id: int = 0
-    ) -> Union[List[Tuple[Any, Any, Any, Any]], Dict[str, Any]]:
+    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         """Get the node displacements.
 
         Args:
@@ -1451,11 +1456,10 @@ class SystemElements:
                 Defaults to 0.
 
         Returns:
-            Union[List[Tuple[Any, Any, Any, Any]], Dict[str, Any]]: If node_id == 0, returns a list containing
+            Union[List[Dict[str, Any]], Dict[str, Any]]: If node_id == 0, returns a list containing
                 tuples with the results: [(id, ux, uy, phi_y), (id, ux, uy, phi_y),  ... (id, ux, uy, phi_y) ]
                 If node_id > 0, returns a dict with the results: {"id": id, "ux": ux, "uy": uy, "phi_y": phi_y}
         """
-        # TO DO: This should return a List of Dicts, not a list of Tuples...
         result_list = []
         if node_id != 0:
             node_id = _negative_index_to_id(node_id, self.node_map)
@@ -1467,7 +1471,14 @@ class SystemElements:
                 "phi_y": node.phi_y,
             }
         for node in self.node_map.values():
-            result_list.append((node.id, -node.ux, node.uz, node.phi_y))
+            result_list.append(
+                {
+                    "id": node.id,
+                    "ux": -node.ux,
+                    "uy": node.uz,  # - * -  = +
+                    "phi_y": node.phi_y,
+                }
+            )
         return result_list
 
     def get_element_results(
