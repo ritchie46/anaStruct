@@ -60,7 +60,8 @@ class SystemElements:
 
     Methods:
         add_element: Add a new element to the structure.
-        add_element_grid: Add multiple elements in a grid shape.
+        add_element_grid: Add multiple elements based upon sequential x and y coordinates.
+        add_sequential_elements: Add multiple elements based upon any number of sequential points.
         add_multiple_elements: Add multiple elements defined by the first and the last point.
         add_truss_element: Add a new truss element (an element that only has axial force) to the structure.
         add_support_hinged: Add a hinged support to a node.
@@ -192,10 +193,9 @@ class SystemElements:
         """
         return max(self.node_map.keys())
 
-    def add_element_grid(
+    def add_sequential_elements(
         self,
-        x: Union[List[float], np.ndarray],
-        y: Union[List[float], np.ndarray],
+        location: Union[Sequence[Sequence[float]], Sequence[Vertex]],
         EA: Optional[Union[List[float], np.ndarray, float]] = None,
         EI: Optional[Union[List[float], np.ndarray, float]] = None,
         g: Optional[Union[List[float], np.ndarray, float]] = None,
@@ -203,11 +203,11 @@ class SystemElements:
         spring: Optional["Spring"] = None,
         **kwargs: dict,
     ) -> None:
-        """Add multiple elements in a grid shape
+        """Add multiple elements based upon any number of sequential points.
 
         Args:
-            x (Union[List[float], np.ndarray]): X coordinates of the grid
-            y (Union[List[float], np.ndarray]): Y coordinates of the grid
+            location (Union[Sequence[Sequence[float]], Sequence[Vertex]]): Sequence of points
+                that define the elements.
             EA (Optional[Union[List[float], np.ndarray, float]], optional): Axial stiffnesses. Defaults to None.
             EI (Optional[Union[List[float], np.ndarray, float]], optional): Bending stiffnesses. Defaults to None.
             g (Optional[Union[List[float], np.ndarray, float]], optional): Self-weights. Defaults to None.
@@ -215,15 +215,13 @@ class SystemElements:
             spring (Optional[Spring], optional): Springs for all elements. Defaults to None.
 
         Raises:
-            FEMException: x and y should have the same length.
             FEMException: The mp parameter should be a dictionary.
         """
-        # TO DO: Why doesn't this function use Vertex objects? It's the only function which has _separate_ x and y lists
-        if len(x) != len(y):
-            raise FEMException(
-                "Wrong parameters", "x and y should have the same length."
-            )
-        length = np.ones(len(x))
+
+        location = [
+            Vertex(*loc) if isinstance(loc, Sequence) else loc for loc in location
+        ]
+        length = np.ones(len(location))
         if EA is None:
             EA_arr = length * self.EA
         elif isinstance(EA, (float, int)):
@@ -255,9 +253,9 @@ class SystemElements:
                 "Wrong parameters", "g should be a float, list or numpy array."
             )
 
-        for i in range(len(x) - 1):
+        for i in range(len(location) - 1):
             self.add_element(
-                [[x[i], y[i]], [x[i + 1], y[i + 1]]],
+                [location[i], location[i + 1]],
                 EA_arr[i],
                 EI_arr[i],
                 g_arr[i],
@@ -265,6 +263,40 @@ class SystemElements:
                 spring,
                 **kwargs,
             )
+
+    def add_element_grid(
+        self,
+        x: Union[List[float], np.ndarray],
+        y: Union[List[float], np.ndarray],
+        EA: Optional[Union[List[float], np.ndarray, float]] = None,
+        EI: Optional[Union[List[float], np.ndarray, float]] = None,
+        g: Optional[Union[List[float], np.ndarray, float]] = None,
+        mp: Optional["MpType"] = None,
+        spring: Optional["Spring"] = None,
+        **kwargs: dict,
+    ) -> None:
+        """Add multiple elements based upon sequential x and y coordinates.
+
+        Args:
+            x (Union[List[float], np.ndarray]): X coordinates of the grid
+            y (Union[List[float], np.ndarray]): Y coordinates of the grid
+            EA (Optional[Union[List[float], np.ndarray, float]], optional): Axial stiffnesses. Defaults to None.
+            EI (Optional[Union[List[float], np.ndarray, float]], optional): Bending stiffnesses. Defaults to None.
+            g (Optional[Union[List[float], np.ndarray, float]], optional): Self-weights. Defaults to None.
+            mp (Optional[MpType], optional): Maximum plastic moment capacities for all elements. Defaults to None.
+            spring (Optional[Spring], optional): Springs for all elements. Defaults to None.
+
+        Raises:
+            FEMException: x and y should have the same length.
+        """
+        # This is the only function which uses separate x and y coordinates, rather than a list of vertices.
+        # I've left it here for backwards compatibility, but it should be deprecated in the future.
+        if len(x) != len(y):
+            raise FEMException(
+                "Wrong parameters", "x and y should have the same length."
+            )
+        vertices = [Vertex(x[i], y[i]) for i in range(len(x))]
+        self.add_sequential_elements(vertices, EA, EI, g, mp, spring, **kwargs)
 
     def add_truss_element(
         self,
