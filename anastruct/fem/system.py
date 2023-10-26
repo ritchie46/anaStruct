@@ -1585,39 +1585,56 @@ class SystemElements:
         return result_list
 
     def get_element_result_range(
-        self, unit: Literal["shear", "moment", "axial"]
-    ) -> List[float]:
-        """Get the element results. Returns a list with the first mesh node results of each element for a certain unit.
+        self,
+        unit: Literal["shear", "moment", "axial"],
+        minmax: Literal["min", "max", "abs", "both"] = "abs",
+    ) -> List[Union[float, Tuple[float]]]:
+        """Get the element results. Returns a list with the min/max results of each element for a certain unit.
 
         Args:
             unit (str): "shear", "moment", or "axial"
+            minmax (str), optional: "min", "max", "abs", or "both". Defaults to "abs".
+                Note that "both" returns a tuple with two values: (min, max)
 
         Raises:
             NotImplementedError: If the unit is not implemented.
 
         Returns:
-            List[float]: List with the first mesh node results of each element for a certain unit.
+            List[Union[float, Tuple[float]]]: List with min and/or max results of each element for a certain unit.
         """
-        # TO DO: This function does not make sense... Unclear why I should care about only the 1st node of each element
+
+        def minmax_array(array: np.ndarray) -> Union[float, Tuple[float]]:
+            assert len(array) > 0
+            # technically, np.amin/np.amax returns 'Any', hence the type: ignore's
+            if minmax == "min":
+                return np.amin(array)  # type: ignore
+            if minmax == "max":
+                return np.amax(array)  # type: ignore
+            if minmax == "abs":
+                return np.amax(np.abs(array))  # type: ignore
+            if minmax == "both":
+                return (np.amin(array), np.amax(array))  # type: ignore
+            raise NotImplementedError("minmax must be 'min', 'max', 'abs', or 'both'")
+
         if unit == "shear":
             return [
-                el.shear_force[0]
+                minmax_array(el.shear_force)
                 for el in self.element_map.values()
                 if el.shear_force is not None
             ]
         if unit == "moment":
             return [
-                el.bending_moment[0]
+                minmax_array(el.bending_moment)
                 for el in self.element_map.values()
                 if el.bending_moment is not None
             ]
         if unit == "axial":
             return [
-                el.axial_force[0]
+                minmax_array(el.axial_force)
                 for el in self.element_map.values()
                 if el.axial_force is not None
             ]
-        raise NotImplementedError
+        raise NotImplementedError("unit must be 'shear', 'moment', or 'axial'")
 
     def get_node_result_range(self, unit: Literal["ux", "uy", "phi_y"]) -> List[float]:
         """Get the node results. Returns a list with the node results for a certain unit.
