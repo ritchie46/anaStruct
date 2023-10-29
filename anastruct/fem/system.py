@@ -713,16 +713,17 @@ class SystemElements:
 
         # Copy the q-loads from the old element to the new elements
         if element_id_to_split in self.loads_q:
+            assert element_to_split.q_angle is not None
             self.q_load(
                 q=element_to_split.q_load,
                 element_id=element_id1,
-                rotation=element_to_split.q_angle,
+                rotation=np.degrees(np.pi + element_to_split.q_angle),
                 q_perp=element_to_split.q_perp_load,
             )
             self.q_load(
                 q=element_to_split.q_load,
                 element_id=element_id2,
-                rotation=element_to_split.q_angle,
+                rotation=np.degrees(np.pi + element_to_split.q_angle),
                 q_perp=element_to_split.q_perp_load,
             )
 
