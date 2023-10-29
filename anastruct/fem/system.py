@@ -19,14 +19,12 @@ from typing import (
 import numpy as np
 
 from anastruct.basic import FEMException, arg_to_list
-from anastruct.fem import plotter
+from anastruct.fem import plotter, system_components
 from anastruct.fem.elements import Element
 from anastruct.fem.postprocess import SystemLevel as post_sl
 from anastruct.fem.util.load import LoadCase
 from anastruct.sectionbase import properties
 from anastruct.vertex import Vertex, vertex_range
-
-from . import system_components
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
@@ -39,6 +37,7 @@ if TYPE_CHECKING:
         MpType,
         Spring,
         SupportDirection,
+        VertexLike,
     )
 
 
@@ -195,7 +194,7 @@ class SystemElements:
 
     def add_sequential_elements(
         self,
-        location: Union[Sequence[Sequence[float]], Sequence[Vertex]],
+        location: Sequence["VertexLike"],
         EA: Optional[Union[List[float], np.ndarray, float]] = None,
         EI: Optional[Union[List[float], np.ndarray, float]] = None,
         g: Optional[Union[List[float], np.ndarray, float]] = None,
@@ -206,7 +205,7 @@ class SystemElements:
         """Add multiple elements based upon any number of sequential points.
 
         Args:
-            location (Union[Sequence[Sequence[float]], Sequence[Vertex]]): Sequence of points
+            location (Sequence[VertexLike]): Sequence of points
                 that define the elements.
             EA (Optional[Union[List[float], np.ndarray, float]], optional): Axial stiffnesses. Defaults to None.
             EI (Optional[Union[List[float], np.ndarray, float]], optional): Bending stiffnesses. Defaults to None.
@@ -300,9 +299,7 @@ class SystemElements:
 
     def add_truss_element(
         self,
-        location: Union[
-            Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex
-        ],
+        location: Union[Sequence["VertexLike"], "VertexLike"],
         EA: Optional[float] = None,
         **kwargs: dict,
     ) -> int:
@@ -316,7 +313,7 @@ class SystemElements:
                    location=Vertex
 
         Args:
-            location (Union[ Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex ]):
+            location (Union[Sequence[VertexLike], VertexLike]):
                 The two nodes of the element or the next node of the element.
             EA (Optional[float], optional): Axial stiffness of the new element. Defaults to None.
 
@@ -336,9 +333,7 @@ class SystemElements:
 
     def add_element(
         self,
-        location: Union[
-            Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex
-        ],
+        location: Union[Sequence["VertexLike"], "VertexLike"],
         EA: Optional[float] = None,
         EI: Optional[float] = None,
         g: float = 0,
@@ -363,7 +358,7 @@ class SystemElements:
                 spring={1: 0}
 
         Args:
-            location (Union[ Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex ]):
+            location (Union[Sequence[VertexLike], VertexLike]):
                 The two nodes of the element or the next node of the element
             EA (Optional[float], optional): Axial stiffness of the new element. Defaults to None.
             EI (Optional[float], optional): Bending stiffness of the new element. Defaults to None.
@@ -477,9 +472,7 @@ class SystemElements:
 
     def add_multiple_elements(
         self,
-        location: Union[
-            Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex
-        ],
+        location: Union[Sequence["VertexLike"], "VertexLike"],
         n: Optional[int] = None,
         dl: Optional[float] = None,
         EA: Optional[float] = None,
@@ -498,7 +491,7 @@ class SystemElements:
                 last={'EA': 1e3, 'mp': 290}
 
         Args:
-            location (Union[ Sequence[Sequence[float]], Sequence[Vertex], Sequence[float], Vertex ]):
+            location (Union[Sequence[VertexLike], VertexLike]):
                 The two nodes of the element or the next node of the element.
             n (Optional[int], optional): Number of elements to add between the first and last nodes. Defaults to None.
             dl (Optional[float], optional): Length of sub-elements to add between the first and last nodes.
@@ -618,7 +611,7 @@ class SystemElements:
     def insert_node(
         self,
         element_id: int,
-        location: Optional[Union[Sequence[float], Vertex]] = None,
+        location: Optional["VertexLike"] = None,
         factor: Optional[float] = None,
     ) -> None:
         """Insert a node into an existing structure.
@@ -631,7 +624,7 @@ class SystemElements:
 
         Args:
             element_id (int): Id number of the element in which you want to insert the node
-            location (Optional[Union[Sequence[float], Vertex]], optional): Location in which to insert the node.
+            location (Optional[VertexLike], optional): Location in which to insert the node.
                 Defaults to None.
             factor (Optional[float], optional): Fraction of distance from start to end of elmeent on which to
                 divide the element. Must be between 0 and 1. Defaults to None.
@@ -1651,12 +1644,7 @@ class SystemElements:
         Returns:
             Optional[int]: id of the node at the location of the vertex
         """
-        if isinstance(vertex, (list, tuple)):
-            vertex_v = Vertex(vertex)
-        elif isinstance(vertex, Vertex):
-            vertex_v = vertex
-        else:
-            raise TypeError("vertex must be a list, tuple or Vertex")
+        vertex_v = Vertex(vertex)
         try:
             tol = 1e-9
             return next(

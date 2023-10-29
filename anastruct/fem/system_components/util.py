@@ -6,6 +6,7 @@ from anastruct.vertex import Vertex
 
 if TYPE_CHECKING:
     from anastruct.fem.system import MpType, Spring, SystemElements
+    from anastruct.types import VertexLike
 
 
 def check_internal_hinges(system: "SystemElements", node_id: int) -> None:
@@ -78,11 +79,8 @@ def append_node_id(
 def det_vertices(
     system: "SystemElements",
     location_list: Union[
-        Vertex,
-        Sequence[Vertex],
-        Sequence[int],
-        Sequence[float],
-        Sequence[Sequence[float]],
+        "VertexLike",
+        Sequence["VertexLike"],
     ],
 ) -> Tuple[Vertex, Vertex]:
     """Determine the vertices of a location list
@@ -101,23 +99,21 @@ def det_vertices(
     """
     if isinstance(location_list, Vertex):
         point_1 = system._previous_point
-        point_2 = Vertex(location_list)
-    elif len(location_list) == 1 and isinstance(location_list[0], Sequence):
+        point_2 = location_list
+    elif isinstance(location_list, Sequence) and len(location_list) == 1:
         point_1 = system._previous_point
-        point_2 = Vertex(location_list[0][0], location_list[0][1])
-    elif isinstance(location_list[0], (int, float)) and isinstance(
-        location_list[1], (int, float)
+        point_2 = Vertex(location_list[0])
+    elif (
+        isinstance(location_list, Sequence)
+        and len(location_list) == 2
+        and isinstance(location_list[0], (int, float))
+        and isinstance(location_list[1], (int, float))
     ):
         point_1 = system._previous_point
         point_2 = Vertex(location_list[0], location_list[1])
-    elif isinstance(location_list[0], Vertex) and isinstance(location_list[1], Vertex):
-        point_1 = location_list[0]
-        point_2 = location_list[1]
-    elif isinstance(location_list[0], Sequence) and isinstance(
-        location_list[1], Sequence
-    ):
-        point_1 = Vertex(location_list[0][0], location_list[0][1])
-        point_2 = Vertex(location_list[1][0], location_list[1][1])
+    elif isinstance(location_list, Sequence) and len(location_list) == 2:
+        point_1 = Vertex(location_list[0])
+        point_2 = Vertex(location_list[1])
     else:
         raise FEMException(
             "Flawed inputs",
