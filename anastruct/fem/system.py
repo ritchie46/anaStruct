@@ -664,6 +664,9 @@ class SystemElements:
         elif factor is None and location is not None:
             assert location is not None
             location_vertex = Vertex(location)
+            length1 = (location_vertex - element_to_split.vertex_1).modulus()
+            length2 = (element_to_split.vertex_2 - location_vertex).modulus()
+            factor = length1 / (length1 + length2)
         else:
             raise FEMException(
                 "Invalid parameters",
@@ -713,18 +716,26 @@ class SystemElements:
 
         # Copy the q-loads from the old element to the new elements
         if element_id_to_split in self.loads_q:
+            q_load_start = element_to_split.q_load[0]
+            q_load_end = element_to_split.q_load[1]
+            q_perp_load_start = element_to_split.q_perp_load[0]
+            q_perp_load_end = element_to_split.q_perp_load[1]
+            location_q_load = factor * (q_load_end - q_load_start) + q_load_start
+            location_q_perp_load = (
+                factor * (q_perp_load_end - q_perp_load_start) + q_perp_load_start
+            )
             assert element_to_split.q_angle is not None
             self.q_load(
-                q=element_to_split.q_load,
+                q=[-q_load_start, -location_q_load],
                 element_id=element_id1,
-                rotation=np.degrees(np.pi + element_to_split.q_angle),
-                q_perp=element_to_split.q_perp_load,
+                rotation=np.degrees(element_to_split.q_angle),
+                q_perp=[q_perp_load_start, location_q_perp_load],
             )
             self.q_load(
-                q=element_to_split.q_load,
+                q=[-location_q_load, -q_load_end],
                 element_id=element_id2,
-                rotation=np.degrees(np.pi + element_to_split.q_angle),
-                q_perp=element_to_split.q_perp_load,
+                rotation=np.degrees(element_to_split.q_angle),
+                q_perp=[location_q_perp_load, q_perp_load_end],
             )
 
         # Remove the old element from everywhere it's referenced
