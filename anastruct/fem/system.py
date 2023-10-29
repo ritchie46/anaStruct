@@ -470,7 +470,7 @@ class SystemElements:
 
         return self.count
 
-    def remove_element(self, element_id: int):
+    def remove_element(self, element_id: int) -> None:
         """Remove an element from the structure.
 
         Args:
