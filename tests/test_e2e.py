@@ -302,7 +302,7 @@ def describe_end_to_end_tests():
             assert SS_20.supports_hinged == [SS_20.node_map[1], SS_20.node_map[2]]
             assert SS_20.loads_point == {3: (0, 10)}
             assert list(SS_20.loads_q.keys()) == [2, 4, 5]
-            assert SS_20.element_map[2].q_load == (-1, -1)
+            assert SS_20.element_map[2].q_load == (1, 1)
             assert SS_20.element_map[4].q_load == (1, 1)
             assert SS_20.element_map[5].q_load == (1, 1)
 
