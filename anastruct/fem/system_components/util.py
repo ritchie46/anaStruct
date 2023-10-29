@@ -78,6 +78,58 @@ def append_node_id(
         system.node_map[node_id2] = Node(node_id2, vertex=point_2)
 
 
+def remove_node_id(
+    system: "SystemElements",
+    node_id: int,
+) -> None:
+    """Remove the node id from the system
+
+    Note that this function does NOT check if the node is still used in the system. It is
+    intended to be used as a helper function to `remove_element()` and others, not to be
+    used directly by users.
+
+    Args:
+        system (SystemElements): System in which the node is located
+        node_id (int): Node id of the node
+    """
+    system._vertices.pop(system.node_map[node_id].vertex)
+    system.node_map.pop(node_id)
+    if node_id in system.loads_point:
+        system.loads_point.pop(node_id)
+    if node_id in system.loads_moment:
+        system.loads_moment.pop(node_id)
+    if node_id in system.supports_fixed:
+        system.supports_fixed.remove(node_id)
+    if node_id in system.supports_hinged:
+        system.supports_hinged.remove(node_id)
+    if node_id in system.supports_rotational:
+        system.supports_rotational.remove(node_id)
+    if node_id in system.supports_roll:
+        ind = system.supports_roll.index(node_id)
+        system.supports_roll.remove(node_id)
+        system.supports_roll_direction.pop(ind)
+        system.supports_roll_rotate.pop(ind)
+    if node_id in system.inclined_roll:
+        system.inclined_roll.pop(node_id)
+    if node_id in system.supports_spring_x:
+        system.supports_spring_x.remove(node_id)
+    if node_id in system.supports_spring_z:
+        system.supports_spring_z.remove(node_id)
+    if node_id in system.supports_spring_y:
+        system.supports_spring_y.remove(node_id)
+    if node_id in [
+        system.supports_spring_args[i][0]
+        for i in range(len(system.supports_spring_args))
+    ]:
+        ind = [
+            system.supports_spring_args[i][0]
+            for i in range(len(system.supports_spring_args))
+        ].index(node_id)
+        system.supports_spring_args.pop(ind)
+    if node_id in system.internal_hinges:
+        system.internal_hinges.remove(node_id)
+
+
 def det_vertices(
     system: "SystemElements",
     location_list: Union[

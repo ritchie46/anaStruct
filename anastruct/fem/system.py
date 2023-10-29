@@ -486,10 +486,9 @@ class SystemElements:
             if len(self.node_element_map[node_id]) == 0:
                 self.node_element_map.pop(node_id)
             self.node_map[node_id].elements.pop(element_id)
-            # Check if node is now orphaned, and remove it if so
+            # Check if node is now orphaned, and remove it and its loads if so
             if len(self.node_map[node_id].elements) == 0:
-                self._vertices.pop(self.node_map[node_id].vertex)
-                self.node_map.pop(node_id)
+                system_components.util.remove_node_id(self, node_id)
 
         # Remove element_id
         self.element_map.pop(element_id)
