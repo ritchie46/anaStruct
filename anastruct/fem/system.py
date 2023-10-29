@@ -1518,9 +1518,7 @@ class SystemElements:
 
     def get_node_results_system(
         self, node_id: int = 0
-    ) -> Union[
-        List[Tuple[Any, Any, Any, Any, Any, Any, Any]], Dict[str, Union[int, float]]
-    ]:
+    ) -> Union[List[Dict[str, Union[int, float]]], Dict[str, Union[int, float]]]:
         """Get the node results. These are the opposite of the forces and displacements
         working on the elements and may seem counter intuitive.
 
@@ -1529,13 +1527,12 @@ class SystemElements:
                 Defaults to 0.
 
         Returns:
-            Union[ List[Tuple[Any, Any, Any, Any, Any, Any, Any]], Dict[str, Union[int, float]] ]:
+            Union[ List[Dict[str, Union[int, float]]], Dict[str, Union[int, float]] ]:
                 If node_id == 0, returns a list containing tuples with the results:
                 [(id, Fx, Fy, Ty, ux, uy, phi_y), (id, Fx, Fy...), () .. ]
                 If node_id > 0, returns a dict with the results:
                 {"id": id, "Fx": Fx, "Fy": Fy, "Ty": Ty, "ux": ux, "uy": uy, "phi_y": phi_y}
         """
-        # TO DO: This should return a List of Dicts, not a list of Tuples...
         result_list = []
         if node_id != 0:
             node_id = _negative_index_to_id(node_id, self.node_map)
@@ -1551,13 +1548,21 @@ class SystemElements:
             }
         for node in self.node_map.values():
             result_list.append(
-                (node.id, node.Fx, node.Fy, node.Ty, node.ux, -node.uz, node.phi_y)
+                {
+                    "id": node.id,
+                    "Fx": node.Fx,
+                    "Fy": node.Fy,
+                    "Ty": node.Ty,
+                    "ux": node.ux,
+                    "uy": -node.uz,
+                    "phi_y": node.phi_y,
+                }
             )
         return result_list
 
     def get_node_displacements(
         self, node_id: int = 0
-    ) -> Union[List[Tuple[Any, Any, Any, Any]], Dict[str, Any]]:
+    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         """Get the node displacements.
 
         Args:
@@ -1565,11 +1570,10 @@ class SystemElements:
                 Defaults to 0.
 
         Returns:
-            Union[List[Tuple[Any, Any, Any, Any]], Dict[str, Any]]: If node_id == 0, returns a list containing
+            Union[List[Dict[str, Any]], Dict[str, Any]]: If node_id == 0, returns a list containing
                 tuples with the results: [(id, ux, uy, phi_y), (id, ux, uy, phi_y),  ... (id, ux, uy, phi_y) ]
                 If node_id > 0, returns a dict with the results: {"id": id, "ux": ux, "uy": uy, "phi_y": phi_y}
         """
-        # TO DO: This should return a List of Dicts, not a list of Tuples...
         result_list = []
         if node_id != 0:
             node_id = _negative_index_to_id(node_id, self.node_map)
@@ -1581,7 +1585,14 @@ class SystemElements:
                 "phi_y": node.phi_y,
             }
         for node in self.node_map.values():
-            result_list.append((node.id, -node.ux, node.uz, node.phi_y))
+            result_list.append(
+                {
+                    "id": node.id,
+                    "ux": -node.ux,
+                    "uy": node.uz,  # - * -  = +
+                    "phi_y": node.phi_y,
+                }
+            )
         return result_list
 
     def get_element_results(
@@ -1699,39 +1710,56 @@ class SystemElements:
         return result_list
 
     def get_element_result_range(
-        self, unit: Literal["shear", "moment", "axial"]
-    ) -> List[float]:
-        """Get the element results. Returns a list with the first mesh node results of each element for a certain unit.
+        self,
+        unit: Literal["shear", "moment", "axial"],
+        minmax: Literal["min", "max", "abs", "both"] = "abs",
+    ) -> List[Union[float, Tuple[float]]]:
+        """Get the element results. Returns a list with the min/max results of each element for a certain unit.
 
         Args:
             unit (str): "shear", "moment", or "axial"
+            minmax (str), optional: "min", "max", "abs", or "both". Defaults to "abs".
+                Note that "both" returns a tuple with two values: (min, max)
 
         Raises:
             NotImplementedError: If the unit is not implemented.
 
         Returns:
-            List[float]: List with the first mesh node results of each element for a certain unit.
+            List[Union[float, Tuple[float]]]: List with min and/or max results of each element for a certain unit.
         """
-        # TO DO: This function does not make sense... Unclear why I should care about only the 1st node of each element
+
+        def minmax_array(array: np.ndarray) -> Union[float, Tuple[float]]:
+            assert len(array) > 0
+            # technically, np.amin/np.amax returns 'Any', hence the type: ignore's
+            if minmax == "min":
+                return np.amin(array)  # type: ignore
+            if minmax == "max":
+                return np.amax(array)  # type: ignore
+            if minmax == "abs":
+                return np.amax(np.abs(array))  # type: ignore
+            if minmax == "both":
+                return (np.amin(array), np.amax(array))  # type: ignore
+            raise NotImplementedError("minmax must be 'min', 'max', 'abs', or 'both'")
+
         if unit == "shear":
             return [
-                el.shear_force[0]
+                minmax_array(el.shear_force)
                 for el in self.element_map.values()
                 if el.shear_force is not None
             ]
         if unit == "moment":
             return [
-                el.bending_moment[0]
+                minmax_array(el.bending_moment)
                 for el in self.element_map.values()
                 if el.bending_moment is not None
             ]
         if unit == "axial":
             return [
-                el.axial_force[0]
+                minmax_array(el.axial_force)
                 for el in self.element_map.values()
                 if el.axial_force is not None
             ]
-        raise NotImplementedError
+        raise NotImplementedError("unit must be 'shear', 'moment', or 'axial'")
 
     def get_node_result_range(self, unit: Literal["ux", "uy", "phi_y"]) -> List[float]:
         """Get the node results. Returns a list with the node results for a certain unit.
