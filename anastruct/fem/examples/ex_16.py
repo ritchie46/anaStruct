@@ -16,5 +16,5 @@ ss.q_load(1, (1, 2, 3, 4), "x")
 
 if __name__ == "__main__":
     ss.solve()
-    print([a["Fx"] for a in ss.get_node_results_system()])
+    print([a["Fx"] for a in ss.get_node_results_system() if isinstance(a, dict)])
     ss.show_results()
