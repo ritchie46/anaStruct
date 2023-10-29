@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import math
-from typing import TYPE_CHECKING, Sequence, Union
+from typing import Sequence, Union
 
 import numpy as np
 
-if TYPE_CHECKING:
-    from anastruct.types import VertexLike
+from anastruct.types import NumberLike, VertexLike
 
 
 class Vertex:
@@ -16,33 +15,26 @@ class Vertex:
 
     def __init__(
         self,
-        x: Union["VertexLike", int, float],
-        y: Union[int, float, None] = None,
+        x: Union[VertexLike, NumberLike],
+        y: Union[NumberLike, None] = None,
     ):
         """Create a Vertex object
 
         Args:
-            x (Union[VertexLike, int, float]): X coordinate or a Vertex object, or an object that
+            x (Union[VertexLike, NumberLike]): X coordinate or a Vertex object, or an object that
                 can be converted to a Vertex
-            y (Union[int, float, None], optional): Y coordinate. Defaults to None.
+            y (Union[NumberLike, None], optional): Y coordinate. Defaults to None.
         """
         if isinstance(x, Vertex):
             self.coordinates = np.array(x.coordinates, dtype=np.float32)
         elif (
-            isinstance(x, Sequence)
+            isinstance(x, (Sequence, np.ndarray))
             and len(x) == 2
-            and isinstance(x[0], (int, float))
-            and isinstance(x[1], (int, float))
+            and isinstance(x[0], NumberLike)
+            and isinstance(x[1], NumberLike)
         ):
             self.coordinates: np.ndarray = np.array([x[0], x[1]], dtype=np.float32)
-        elif (
-            isinstance(x, np.ndarray)
-            and len(x) == 2
-            and isinstance(x[0], (int, float))
-            and isinstance(x[1], (int, float))
-        ):
-            self.coordinates = np.array(x, dtype=np.float32)
-        elif isinstance(x, (int, float)) and isinstance(y, (int, float)):
+        elif isinstance(x, NumberLike) and isinstance(y, NumberLike):
             self.coordinates = np.array([x, y], dtype=np.float32)
         else:
             raise TypeError(
@@ -109,11 +101,11 @@ class Vertex:
             self.coordinates[0] += math.cos(alpha) * radius
             self.coordinates[1] += math.sin(alpha) * radius
 
-    def __add__(self, other: Union["VertexLike", float, int]) -> Vertex:
+    def __add__(self, other: Union[VertexLike, NumberLike]) -> Vertex:
         """Add two Vertex objects
 
         Args:
-            other (Union["VertexLike", float, int]): Vertex to add
+            other (Union[VertexLike, NumberLike]): Vertex to add
 
         Returns:
             Vertex: Sum of the two Vertex objects
@@ -121,45 +113,46 @@ class Vertex:
         other = det_coordinates(other)
         return Vertex(self.coordinates + other)
 
-    def __radd__(self, other: Union["VertexLike", float, int]) -> Vertex:
+    def __radd__(self, other: Union[VertexLike, NumberLike]) -> Vertex:
         """Add two Vertex objects
 
         Args:
-            other (Union["VertexLike", float, int]): Vertex to add
+            other (Union[VertexLike, NumberLike]): Vertex to add
 
         Returns:
             Vertex: Sum of the two Vertex objects
         """
         return self.__add__(other)
 
-    def __sub__(self, other: Union["VertexLike", float, int]) -> Vertex:
+    def __sub__(self, other: Union[VertexLike, NumberLike]) -> Vertex:
         """Subtract two Vertex objects
 
         Args:
-            other (Union["VertexLike", float, int]): Vertex to subtract
+            other (Union[VertexLike, NumberLike]): Vertex to subtract
 
         Returns:
             Vertex: Difference of the two Vertex objects
         """
         other = det_coordinates(other)
+        temp = self.coordinates - other
         return Vertex(self.coordinates - other)
 
-    def __rsub__(self, other: Union["VertexLike", float, int]) -> Vertex:
+    def __rsub__(self, other: Union[VertexLike, NumberLike]) -> Vertex:
         """Subtract two Vertex objects
 
         Args:
-            other (Union["VertexLike", float, int]): Vertex to subtract
+            other (Union[VertexLike, NumberLike]): Vertex to subtract
 
         Returns:
             Vertex: Difference of the two Vertex objects
         """
         return self.__sub__(other)
 
-    def __mul__(self, other: Union["VertexLike", float, int]) -> Vertex:
+    def __mul__(self, other: Union[VertexLike, NumberLike]) -> Vertex:
         """Multiply two Vertex objects
 
         Args:
-            other (Union["VertexLike", float, int]): Vertex to multiply
+            other (Union[VertexLike, NumberLike]): Vertex to multiply
 
         Returns:
             Vertex: Product of the two Vertex objects
@@ -167,22 +160,22 @@ class Vertex:
         other = det_coordinates(other)
         return Vertex(self.coordinates * other)
 
-    def __rmul__(self, other: Union["VertexLike", float, int]) -> Vertex:
+    def __rmul__(self, other: Union[VertexLike, NumberLike]) -> Vertex:
         """Multiply two Vertex objects
 
         Args:
-            other (Union["VertexLike", float, int]): Vertex to multiply
+            other (Union[VertexLike, NumberLike]): Vertex to multiply
 
         Returns:
             Vertex: Product of the two Vertex objects
         """
         return self.__mul__(other)
 
-    def __truediv__(self, other: Union["VertexLike", float, int]) -> Vertex:
+    def __truediv__(self, other: Union[VertexLike, NumberLike]) -> Vertex:
         """Divide two Vertex objects
 
         Args:
-            other (Union["VertexLike", float, int]): Vertex to divide
+            other (Union[VertexLike, NumberLike]): Vertex to divide
 
         Returns:
             Vertex: Quotient of the two Vertex objects
@@ -245,11 +238,11 @@ def vertex_range(v1: Vertex, v2: Vertex, n: int) -> list:
     return [v1 + dv * i / n for i in range(n + 1)]
 
 
-def det_coordinates(point: Union["VertexLike", float, int]) -> np.ndarray:
+def det_coordinates(point: Union[VertexLike, NumberLike]) -> np.ndarray:
     """Convert a point to coordinates
 
     Args:
-        point (Union[VertexLike, float, int]): Point to convert
+        point (Union[VertexLike, NumberLike]): Point to convert
 
     Raises:
         TypeError: If the point is not convertable to a Vertex object
@@ -257,16 +250,16 @@ def det_coordinates(point: Union["VertexLike", float, int]) -> np.ndarray:
     Returns:
         np.ndarray: Coordinates of the point
     """
+    if isinstance(point, Vertex):
+        return point.coordinates
     if (
         isinstance(point, (np.ndarray, Sequence))
         and len(point) == 2
-        and isinstance(point[0], (int, float))
-        and isinstance(point[1], (int, float))
+        and isinstance(point[0], NumberLike)
+        and isinstance(point[1], NumberLike)
     ):
         return np.asarray(point)
-    if isinstance(point, Vertex):
-        return point.coordinates
-    if isinstance(point, (int, float)):
+    if isinstance(point, NumberLike):
         return np.array([point, point])
     raise TypeError(
         "Points must be convertable to a Vertex object: (x, y) or [x, y] or np.array([x, y]) or Vertex(x, y)"
