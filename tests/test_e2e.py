@@ -1,8 +1,10 @@
 import numpy as np
 from pytest import approx, raises
+
 from anastruct import LoadCase, LoadCombination, SystemElements
-from .utils import pspec_context
+
 from .fixtures.e2e_fixtures import *
+from .utils import pspec_context
 
 """
 NOTE: Several tests in this file validate that the correct numerical engineering results
@@ -295,6 +297,14 @@ def describe_end_to_end_tests():
             x, y = SS_20.show_structure(values_only=True)
             assert x == approx(np.array([0.0, 3.0, 3.0, 5.0, 5.0, 10.0]))
             assert y == approx(np.array([0.0, 0.0, 0.0, 5.0, 5.0, 0.0]))
+
+        def it_retains_supports_and_loads(SS_20):
+            assert SS_20.supports_hinged == [SS_20.node_map[1], SS_20.node_map[2]]
+            assert SS_20.loads_point == {3: (0, 10)}
+            assert list(SS_20.loads_q.keys()) == [2, 4, 5]
+            assert SS_20.element_map[2].q_load == (-1, -1)
+            assert SS_20.element_map[4].q_load == (1, 1)
+            assert SS_20.element_map[5].q_load == (1, 1)
 
     def context_find_node_id():
         @pspec_context("find_node_id() function using Example 8")
