@@ -134,7 +134,6 @@ class Vertex:
             Vertex: Difference of the two Vertex objects
         """
         other = det_coordinates(other)
-        temp = self.coordinates - other
         return Vertex(self.coordinates - other)
 
     def __rsub__(self, other: Union[VertexLike, NumberLike]) -> Vertex:
