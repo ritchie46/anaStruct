@@ -1,8 +1,10 @@
 import numpy as np
 from pytest import approx, raises
+
 from anastruct import LoadCase, LoadCombination, SystemElements
-from .utils import pspec_context
+
 from .fixtures.e2e_fixtures import *
+from .utils import pspec_context
 
 """
 NOTE: Several tests in this file validate that the correct numerical engineering results

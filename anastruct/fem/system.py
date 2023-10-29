@@ -2,19 +2,8 @@ import collections.abc
 import copy
 import math
 import re
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Collection,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import (TYPE_CHECKING, Any, Collection, Dict, List, Literal,
+                    Optional, Sequence, Set, Tuple, Union)
 
 import numpy as np
 
@@ -30,15 +19,8 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
     from anastruct.fem.node import Node
-    from anastruct.types import (
-        AxisNumber,
-        Dimension,
-        LoadDirection,
-        MpType,
-        Spring,
-        SupportDirection,
-        VertexLike,
-    )
+    from anastruct.types import (AxisNumber, Dimension, LoadDirection, MpType,
+                                 Spring, SupportDirection, VertexLike)
 
 
 class SystemElements:
@@ -470,6 +452,27 @@ class SystemElements:
 
         return self.count
 
+    def remove_element(self, element_id: int):
+        """Remove an element from the structure.
+
+        Args:
+            element_id (int): ID of the element to remove
+        """
+        element = self.element_map[element_id]
+        for node_id in (element.node_id1, element.node_id2):
+            self.node_element_map[node_id].remove(element)
+            if len(self.node_element_map[node_id]) == 0:
+                self.node_element_map.pop(node_id)
+            self.node_map[node_id].elements.pop(element_id)
+
+        self.element_map.pop(element_id)
+        if element_id in self.loads_q:
+            self.loads_q.pop(element_id)
+        if element_id in self.loads_dead_load:
+            self.loads_dead_load.remove(element_id)
+        if element_id in self.non_linear_elements:
+            self.non_linear_elements.pop(element_id)
+
     def add_multiple_elements(
         self,
         location: Union[Sequence["VertexLike"], "VertexLike"],
@@ -609,6 +612,106 @@ class SystemElements:
         return elements
 
     def insert_node(
+        self,
+        element_id: int,
+        location: Optional["VertexLike"] = None,
+        factor: Optional[float] = None,
+    ) -> None:
+        """Insert a node into an existing structure.
+        This can be done by adding a new Vertex at any given location, or by setting
+        a factor of the elements length. E.g. if you want a node at 40% of the elements
+        length, you pass factor = 0.4.
+
+        Args:
+            element_id (int): Id number of the element in which you want to insert the node
+            location (Optional[VertexLike], optional): Location in which to insert the node.
+                Defaults to None.
+            factor (Optional[float], optional): Fraction of distance from start to end of elmeent on which to
+                divide the element. Must be between 0 and 1. Defaults to None.
+        """
+        element_id_to_split = _negative_index_to_id(element_id, self.element_map)
+        element_to_split = self.element_map[element_id_to_split]
+
+        # Determine vertex of the new node to insert
+        if factor is not None and location is None:
+            if factor < 0 or factor > 1:
+                raise FEMException(
+                    "Invalid factor parameter",
+                    f"Factor should be between 0 and 1, but is {factor}",
+                )
+            location_vertex = Vertex(
+                factor * (element_to_split.vertex_2 - element_to_split.vertex_1)
+                + element_to_split.vertex_1
+            )
+        elif factor is None and location is not None:
+            assert location is not None
+            location_vertex = Vertex(location)
+        else:
+            raise FEMException(
+                "Invalid parameters",
+                "Either factor or location - but not both - must be passed as argument.",
+            )
+
+        # Determine parameters of the new elements
+        vertex_start = element_to_split.vertex_1
+        vertex_end = element_to_split.vertex_2
+        mp = (
+            self.non_linear_elements[element_id_to_split]
+            if element_id_to_split in self.non_linear_elements
+            else {}
+        )
+        mp1: "MpType" = {}
+        mp2: "MpType" = {}
+        spring1: "Spring" = {}
+        spring2: "Spring" = {}
+        if len(mp) != 0:
+            if 1 in mp:
+                mp1 = {1: mp[1]}
+            if 2 in mp:
+                mp2 = {2: mp[2]}
+        if element_to_split.springs is not None:
+            if 1 in element_to_split.springs:
+                spring1 = {1: element_to_split.springs[1]}
+            if 2 in element_to_split.springs:
+                spring2 = {2: element_to_split.springs[2]}
+
+        # Add the new elements
+        element_id1 = self.add_element(
+            [vertex_start, location_vertex],
+            EA=element_to_split.EA,
+            EI=element_to_split.EI,
+            g=element_to_split.dead_load,
+            mp=mp1,
+            spring=spring1,
+        )
+        element_id2 = self.add_element(
+            [location_vertex, vertex_end],
+            EA=element_to_split.EA,
+            EI=element_to_split.EI,
+            g=element_to_split.dead_load,
+            mp=mp2,
+            spring=spring2,
+        )
+
+        # Copy the q-loads from the old element to the new elements
+        if element_id_to_split in self.loads_q:
+            self.q_load(
+                q=element_to_split.q_load,
+                element_id=element_id1,
+                rotation=element_to_split.q_angle,
+                q_perp=element_to_split.q_perp_load,
+            )
+            self.q_load(
+                q=element_to_split.q_load,
+                element_id=element_id2,
+                rotation=element_to_split.q_angle,
+                q_perp=element_to_split.q_perp_load,
+            )
+
+        # Remove the old element from everywhere it's referenced
+        self.remove_element(element_id_to_split)
+
+    def insert_node_old(
         self,
         element_id: int,
         location: Optional["VertexLike"] = None,
