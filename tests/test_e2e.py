@@ -1016,3 +1016,31 @@ def describe_analytical_validation_tests():
             assert system.get_node_results_system(1)["uy"] == approx(
                 -w * l**4 / (8 * EI)
             )
+
+    def context_remove_element():
+        @pspec_context("Removing an element from a propped beam")
+        def describe():
+            pass
+
+        system = SystemElements()
+        system.add_element([[0, 0], [10, 0]])
+        system.add_element([[10, 0], [15, 0]])
+        system.add_support_hinged(1)
+        system.add_support_hinged(2)
+        system.q_load(q=-1, element_id=1)
+        system.q_load(q=-1, element_id=2)
+        system.point_load(node_id=3, Fy=-10)
+        system.remove_element(2)
+        system.solve()
+
+        def it_removes_element():
+            assert len(system.element_map) == 1
+            assert not (2 in system.loads_q)
+
+        def it_removes_orphaned_node():
+            assert len(system.node_map) == 2
+            assert not (3 in system.loads_point)
+
+        def it_results_in_correct_reactions():
+            assert system.get_node_results_system(1)["Fy"] == approx(-5)
+            assert system.get_node_results_system(2)["Fy"] == approx(-5)
