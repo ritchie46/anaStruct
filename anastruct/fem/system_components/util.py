@@ -1,12 +1,14 @@
 from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Union
 
+import numpy as np
+
 from anastruct.basic import FEMException, angle_x_axis
 from anastruct.fem.node import Node
-from anastruct.types import NumberLike, VertexLike
 from anastruct.vertex import Vertex
 
 if TYPE_CHECKING:
     from anastruct.fem.system import MpType, Spring, SystemElements
+    from anastruct.types import VertexLike
 
 
 def check_internal_hinges(system: "SystemElements", node_id: int) -> None:
@@ -79,8 +81,8 @@ def append_node_id(
 def det_vertices(
     system: "SystemElements",
     location_list: Union[
-        VertexLike,
-        Sequence[VertexLike],
+        "VertexLike",
+        Sequence["VertexLike"],
     ],
 ) -> Tuple[Vertex, Vertex]:
     """Determine the vertices of a location list
@@ -106,8 +108,8 @@ def det_vertices(
     elif (
         isinstance(location_list, Sequence)
         and len(location_list) == 2
-        and isinstance(location_list[0], NumberLike)
-        and isinstance(location_list[1], NumberLike)
+        and isinstance(location_list[0], (float, int, np.number))
+        and isinstance(location_list[1], (float, int, np.number))
     ):
         point_1 = system._previous_point
         point_2 = Vertex(location_list[0], location_list[1])
