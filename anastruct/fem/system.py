@@ -1282,6 +1282,7 @@ class SystemElements:
         Fx: Union[float, Sequence[float]] = 0.0,
         Fy: Union[float, Sequence[float]] = 0.0,
         rotation: Union[float, Sequence[float]] = 0.0,
+        Fz: Optional[Union[float, Sequence[float]]] = None,
     ) -> None:
         """Apply a point load to a node.
 
@@ -1295,6 +1296,8 @@ class SystemElements:
         Raises:
             FEMException: Point loads may not be placed at the location of inclined roller supports
         """
+        if isinstance(Fy, (int, float)) and Fy == 0.0 and Fz is not None:
+            Fy = Fz  # for backwards compatibility with old y/z axes behaviour
         n = len(node_id) if isinstance(node_id, Sequence) else 1
         node_id = arg_to_list(node_id, n)
         Fx = arg_to_list(Fx, n)
@@ -1322,7 +1325,10 @@ class SystemElements:
             )
 
     def moment_load(
-        self, node_id: Union[int, Sequence[int]], Tz: Union[float, Sequence[float]]
+        self,
+        node_id: Union[int, Sequence[int]],
+        Tz: Union[float, Sequence[float]] = 0.0,
+        Ty: Optional[Union[float, Sequence[float]]] = None,
     ) -> None:
         """Apply a moment load to a node.
 
@@ -1330,6 +1336,8 @@ class SystemElements:
             node_id (Union[int, Sequence[int]]): The node ID to which to apply the load
             Tz (Union[float, Sequence[float]]): Moment load (about the global Y direction) to apply
         """
+        if isinstance(Tz, (int, float)) and Tz == 0.0 and Ty is not None:
+            Tz = Ty  # for backwards compatibility with old y/z axes behaviour
         n = len(node_id) if isinstance(node_id, Sequence) else 1
         node_id = arg_to_list(node_id, n)
         Tz = arg_to_list(Tz, n)
