@@ -63,11 +63,11 @@ class Vertex:
         return float(self.coordinates[1])
 
     @property
-    def z(self) -> float:
-        """Z coordinate (equals negative of Y coordinate)
+    def y_neg(self) -> float:
+        """Y negative coordinate (equals negative of Y coordinate)
 
         Returns:
-            float: Z coordinate
+            float: Y_neg coordinate
         """
         return float(self.coordinates[1] * -1)
 
@@ -88,16 +88,16 @@ class Vertex:
         return (1 / self.modulus()) * self
 
     def displace_polar(
-        self, alpha: float, radius: float, inverse_z_axis: bool = False
+        self, alpha: float, radius: float, inverse_y_axis: bool = False
     ) -> None:
         """Displace the Vertex by a polar coordinate
 
         Args:
             alpha (float): Angle in radians
             radius (float): Radius
-            inverse_z_axis (bool, optional): Return a Z coordinate (negative of Y coordinate)?. Defaults to False.
+            inverse_y_axis (bool, optional): Return a negative Y coordinate. Defaults to False.
         """
-        if inverse_z_axis:
+        if inverse_y_axis:
             self.coordinates[0] += math.cos(alpha) * radius
             self.coordinates[1] -= math.sin(alpha) * radius
         else:

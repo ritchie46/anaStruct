@@ -18,20 +18,20 @@ def converge(lhs: float, rhs: float) -> float:
     return (rhs / lhs - 1) / div + 1
 
 
-def angle_x_axis(delta_x: float, delta_z: float) -> float:
+def angle_x_axis(delta_x: float, delta_y: float) -> float:
     """Determine the angle of the element with the global x-axis
 
     Args:
         delta_x (float): Element length in the x-direction
-        delta_z (float): Element length in the z-direction
+        delta_y (float): Element length in the y-direction
 
     Returns:
         float: Angle of the element with the global x-axis
     """
-    # dot product v_x = [1, 0] ; v = [delta_x, delta_z]
-    # dot product = 1 * delta_x + 0 * delta_z -> delta_x
-    ai = math.acos(delta_x / math.sqrt(delta_x**2 + delta_z**2))
-    if delta_z < 0:
+    # dot product v_x = [1, 0] ; v = [delta_x, delta_y]
+    # dot product = 1 * delta_x + 0 * delta_y -> delta_x
+    ai = math.acos(delta_x / math.sqrt(delta_x**2 + delta_y**2))
+    if delta_y < 0:
         ai = 2 * math.pi - ai
 
     return ai

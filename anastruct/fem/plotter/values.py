@@ -80,7 +80,7 @@ class PlottingValues:
             max_displacement = max(
                 map(
                     lambda el: max(
-                        abs(el.node_1.ux), abs(el.node_1.uz), el.max_deflection or 0
+                        abs(el.node_1.ux), abs(el.node_1.uy), el.max_deflection or 0
                     )
                     if el.type == "general"
                     else 0,
@@ -110,8 +110,8 @@ class PlottingValues:
             max_moment = max(
                 map(
                     lambda el: max(
-                        abs(el.node_1.Ty),
-                        abs(el.node_2.Ty),
+                        abs(el.node_1.Tz),
+                        abs(el.node_2.Tz),
                         abs(((el.all_qp_load[0] + el.all_qp_load[1]) / 16) * el.l**2),
                     ),
                     self.system.element_map.values(),

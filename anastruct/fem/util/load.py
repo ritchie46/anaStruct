@@ -71,16 +71,16 @@ class LoadCase:
         }
 
     def moment_load(
-        self, node_id: Union[int, Sequence[int]], Ty: Union[float, Sequence[float]]
+        self, node_id: Union[int, Sequence[int]], Tz: Union[float, Sequence[float]]
     ) -> None:
         """
         Apply a moment on a node.
 
         :param node_id: (int/ list) Nodes ID.
-        :param Ty: (flt/ list) Moments acting on the node.
+        :param Tz: (flt/ list) Moments acting on the node.
         """
         self.c += 1
-        self.spec[f"moment_load-{self.c}"] = {"node_id": node_id, "Ty": Ty}
+        self.spec[f"moment_load-{self.c}"] = {"node_id": node_id, "Tz": Tz}
 
     def dead_load(
         self, element_id: Union[int, Sequence[int]], g: Union[float, Sequence[float]]

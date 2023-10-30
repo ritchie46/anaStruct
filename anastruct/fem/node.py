@@ -13,11 +13,11 @@ class Node:
         self,
         id: int,  # pylint: disable=redefined-builtin
         Fx: float = 0.0,
-        Fz: float = 0.0,
-        Ty: float = 0.0,
+        Fy: float = 0.0,
+        Tz: float = 0.0,
         ux: float = 0.0,
-        uz: float = 0.0,
-        phi_y: float = 0.0,
+        uy: float = 0.0,
+        phi_z: float = 0.0,
         vertex: Vertex = Vertex(0, 0),
         hinge: bool = False,
     ):
@@ -26,35 +26,35 @@ class Node:
         Args:
             id (int): ID of the node
             Fx (float, optional): Value of Fx force. Defaults to 0.0.
-            Fz (float, optional): Value of Fz force. Defaults to 0.0.
-            Ty (float, optional): Value of Ty moment. Defaults to 0.0.
+            Fy (float, optional): Value of Fy force. Defaults to 0.0.
+            Tz (float, optional): Value of Tz moment. Defaults to 0.0.
             ux (float, optional): Value of ux displacement. Defaults to 0.0.
-            uz (float, optional): Value of uz displacement. Defaults to 0.0.
-            phi_y (float, optional): Value of phi_y rotation. Defaults to 0.0.
+            uy (float, optional): Value of uy displacement. Defaults to 0.0.
+            phi_z (float, optional): Value of phi_z rotation. Defaults to 0.0.
             vertex (Vertex, optional): Point object coordinate. Defaults to Vertex(0, 0).
             hinge (bool, optional): Is this node a hinge. Defaults to False.
         """
         self.id = id
         # forces
         self.Fx = Fx
-        self.Fz = Fz
-        self.Ty = Ty
+        self.Fy = Fy
+        self.Tz = Tz
         # displacements
         self.ux = ux
-        self.uz = uz
-        self.phi_y = phi_y
+        self.uy = uy
+        self.phi_z = phi_z
         self.vertex = vertex
         self.hinge = hinge
         self.elements: Dict[int, Element] = {}
 
     @property
-    def Fy(self) -> float:
-        """Fy is the vertical force, and the negative of Fz
+    def Fy_neg(self) -> float:
+        """Fy is the vertical force, and the negative of Fy
 
         Returns:
-            float: negative of Fz
+            float: negative of Fy
         """
-        return -self.Fz
+        return -self.Fy
 
     def __str__(self) -> str:
         """String representation of the node
@@ -64,12 +64,12 @@ class Node:
         """
         if self.vertex:
             return (
-                f"[id = {self.id}, Fx = {self.Fx}, Fz = {self.Fz}, Ty = {self.Ty}, ux = {self.ux}, "
-                f"uz = {self.uz}, phi_y = {self.phi_y}, x = {self.vertex.x}, y = {self.vertex.y}]"
+                f"[id = {self.id}, Fx = {self.Fx}, Fy = {self.Fy}, Tz = {self.Tz}, ux = {self.ux}, "
+                f"uy = {self.uy}, phi_z = {self.phi_z}, x = {self.vertex.x}, y = {self.vertex.y}]"
             )
         return (
-            f"[id = {self.id}, Fx = {self.Fx}, Fz = {self.Fz}, Ty = {self.Ty}, ux = {self.ux}, "
-            f"uz = {self.uz}, phi_y = {self.phi_y}]"
+            f"[id = {self.id}, Fx = {self.Fx}, Fy = {self.Fy}, Tz = {self.Tz}, ux = {self.ux}, "
+            f"uy = {self.uy}, phi_z = {self.phi_z}]"
         )
 
     def __add__(self, other: Node) -> Node:
@@ -85,17 +85,17 @@ class Node:
             self.id == other.id
         ), "Cannot add nodes as the ID's don't match. The nodes positions don't match."
         Fx = self.Fx + other.Fx
-        Fz = self.Fz + other.Fz
-        Ty = self.Ty + other.Ty
+        Fy = self.Fy + other.Fy
+        Tz = self.Tz + other.Tz
 
         return Node(
             id=self.id,
             Fx=Fx,
-            Fz=Fz,
-            Ty=Ty,
+            Fy=Fy,
+            Tz=Tz,
             ux=self.ux,
-            uz=self.uz,
-            phi_y=self.phi_y,
+            uy=self.uy,
+            phi_z=self.phi_z,
             vertex=self.vertex,
             hinge=self.hinge,
         )
@@ -113,24 +113,24 @@ class Node:
             self.id == other.id
         ), "Cannot subtract nodes as the ID's don't match. The nodes positions don't match."
         Fx = self.Fx - other.Fx
-        Fz = self.Fz - other.Fz
-        Ty = self.Ty - other.Ty
+        Fy = self.Fy - other.Fy
+        Tz = self.Tz - other.Tz
 
         return Node(
             self.id,
             Fx,
-            Fz,
-            Ty,
+            Fy,
+            Tz,
             self.ux,
-            self.uz,
-            self.phi_y,
+            self.uy,
+            self.phi_z,
             self.vertex,
             hinge=self.hinge,
         )
 
     def reset(self) -> None:
         """Reset the node to zero forces and displacements"""
-        self.Fx = self.Fz = self.Ty = self.ux = self.uz = self.phi_y = 0
+        self.Fx = self.Fy = self.Tz = self.ux = self.uy = self.phi_z = 0
         self.hinge = False
 
     def add_results(self, other: Node) -> None:
@@ -142,15 +142,15 @@ class Node:
         assert (
             self.id == other.id
         ), "Cannot add nodes as the ID's don't match. The nodes positions don't match."
-        assert self.phi_y is not None
+        assert self.phi_z is not None
         assert self.ux is not None
-        assert self.uz is not None
-        assert other.phi_y is not None
+        assert self.uy is not None
+        assert other.phi_z is not None
         assert other.ux is not None
-        assert other.uz is not None
+        assert other.uy is not None
         self.Fx = self.Fx + other.Fx
-        self.Fz = self.Fz + other.Fz
-        self.Ty = self.Ty + other.Ty
+        self.Fy = self.Fy + other.Fy
+        self.Tz = self.Tz + other.Tz
         self.ux = self.ux + other.ux
-        self.uz = self.uz + other.uz
-        self.phi_y = self.phi_y + other.phi_y
+        self.uy = self.uy + other.uy
+        self.phi_z = self.phi_z + other.phi_z

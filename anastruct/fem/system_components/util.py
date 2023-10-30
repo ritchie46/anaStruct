@@ -249,15 +249,15 @@ def force_elements_orientation(
     """
     # determine the angle of the element with the global x-axis
     delta_x = point_2.x - point_1.x
-    delta_z = point_2.z - point_1.z  # minus sign to work with an opposite z-axis
-    angle = -angle_x_axis(delta_x, delta_z)
+    delta_y = point_2.y - point_1.y  # minus sign to work with an opposite y-axis
+    angle = angle_x_axis(delta_x, delta_y)
 
     if delta_x < 0:
         # switch points
         point_1, point_2 = point_2, point_1
         node_id1, node_id2 = node_id2, node_id1
 
-        angle = -angle_x_axis(-delta_x, -delta_z)
+        angle = angle_x_axis(-delta_x, -delta_y)
 
         if spring is not None:
             assert isinstance(
