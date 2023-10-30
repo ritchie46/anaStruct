@@ -92,42 +92,40 @@ def remove_node_id(
         system (SystemElements): System in which the node is located
         node_id (int): Node id of the node
     """
+    node = system.node_map[node_id]
     system._vertices.pop(system.node_map[node_id].vertex)
     system.node_map.pop(node_id)
     if node_id in system.loads_point:
         system.loads_point.pop(node_id)
     if node_id in system.loads_moment:
         system.loads_moment.pop(node_id)
-    if node_id in system.supports_fixed:
-        system.supports_fixed.remove(node_id)
-    if node_id in system.supports_hinged:
-        system.supports_hinged.remove(node_id)
-    if node_id in system.supports_rotational:
-        system.supports_rotational.remove(node_id)
-    if node_id in system.supports_roll:
-        ind = system.supports_roll.index(node_id)
-        system.supports_roll.remove(node_id)
+    if node in system.supports_fixed:
+        system.supports_fixed.remove(node)
+    if node in system.supports_hinged:
+        system.supports_hinged.remove(node)
+    if node in system.supports_rotational:
+        system.supports_rotational.remove(node)
+    if node in system.internal_hinges:
+        system.internal_hinges.remove(node)
+    if node in system.supports_roll:
+        ind = system.supports_roll.index(node)
+        system.supports_roll.remove(node)
         system.supports_roll_direction.pop(ind)
         system.supports_roll_rotate.pop(ind)
     if node_id in system.inclined_roll:
         system.inclined_roll.pop(node_id)
-    if node_id in system.supports_spring_x:
-        system.supports_spring_x.remove(node_id)
-    if node_id in system.supports_spring_z:
-        system.supports_spring_z.remove(node_id)
-    if node_id in system.supports_spring_y:
-        system.supports_spring_y.remove(node_id)
-    if node_id in [
-        system.supports_spring_args[i][0]
-        for i in range(len(system.supports_spring_args))
-    ]:
-        ind = [
-            system.supports_spring_args[i][0]
-            for i in range(len(system.supports_spring_args))
-        ].index(node_id)
+    if node in [item[0] for item in system.supports_spring_x]:
+        ind = [item[0] for item in system.supports_spring_x].index(node)
+        system.supports_spring_x.pop(ind)
+    if node in [item[0] for item in system.supports_spring_y]:
+        ind = [item[0] for item in system.supports_spring_y].index(node)
+        system.supports_spring_y.pop(ind)
+    if node in [item[0] for item in system.supports_spring_z]:
+        ind = [item[0] for item in system.supports_spring_z].index(node)
+        system.supports_spring_z.pop(ind)
+    if node_id in [item[0] for item in system.supports_spring_args]:
+        ind = [item[0] for item in system.supports_spring_args].index(node_id)
         system.supports_spring_args.pop(ind)
-    if node_id in system.internal_hinges:
-        system.internal_hinges.remove(node_id)
 
 
 def det_vertices(
