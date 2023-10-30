@@ -80,6 +80,7 @@ class SystemElements:
         EI: float = 5e3,
         load_factor: float = 1.0,
         mesh: int = 50,
+        invert_y_loads: bool = True,
     ):
         """Create a new structure
 
@@ -89,6 +90,8 @@ class SystemElements:
             EI (float, optional): Bending stiffness. Defaults to 5e3.
             load_factor (float, optional): Load factor by which to multiply all loads. Defaults to 1.0.
             mesh (int, optional): Number of mesh elements, only used for plotting. Defaults to 50.
+            invert_y_loads (bool, optional): Whether to invert the y-direction of the loads, such that a positive
+                Fy load will be in the direction of gravity. Defaults to True.
         """
         # init object
         self.post_processor = post_sl(self)
@@ -99,7 +102,8 @@ class SystemElements:
         self.EA = EA
         self.EI = EI
         self.figsize = figsize
-        self.orientation_cs = -1  # needed for the loads directions
+        # whether to invert the y-direction of the loads
+        self.orientation_cs = -1 if invert_y_loads else 1
 
         # structure system
         self.element_map: Dict[
