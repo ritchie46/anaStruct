@@ -80,6 +80,7 @@ class SystemElements:
         EI: float = 5e3,
         load_factor: float = 1.0,
         mesh: int = 50,
+        invert_y_loads: bool = True,
     ):
         """Create a new structure
 
@@ -89,6 +90,8 @@ class SystemElements:
             EI (float, optional): Bending stiffness. Defaults to 5e3.
             load_factor (float, optional): Load factor by which to multiply all loads. Defaults to 1.0.
             mesh (int, optional): Number of mesh elements, only used for plotting. Defaults to 50.
+            invert_y_loads (bool, optional): Whether to invert the y-direction of the loads, such that a positive
+                Fy load will be in the direction of gravity. Defaults to True.
         """
         # init object
         self.post_processor = post_sl(self)
@@ -99,7 +102,8 @@ class SystemElements:
         self.EA = EA
         self.EI = EI
         self.figsize = figsize
-        self.orientation_cs = -1  # needed for the loads directions
+        # whether to invert the y-direction of the loads
+        self.orientation_cs = -1 if invert_y_loads else 1
 
         # structure system
         self.element_map: Dict[
@@ -125,8 +129,8 @@ class SystemElements:
         self.internal_hinges: List[Node] = []
         self.supports_roll: List[Node] = []
         self.supports_spring_x: List[Tuple[Node, bool]] = []
-        self.supports_spring_z: List[Tuple[Node, bool]] = []
         self.supports_spring_y: List[Tuple[Node, bool]] = []
+        self.supports_spring_z: List[Tuple[Node, bool]] = []
         self.supports_roll_direction: List[Literal[1, 2]] = []
         self.inclined_roll: Dict[
             int, float
@@ -946,11 +950,11 @@ class SystemElements:
             index_node_1 = (el.node_1.id - 1) * 3
             index_node_2 = (el.node_2.id - 1) * 3
 
-            # node 1 ux, uz, phi
+            # node 1 ux, uy, phi
             el.element_displacement_vector[:3] = self.system_displacement_vector[
                 index_node_1 : index_node_1 + 3
             ]
-            # node 2 ux, uz, phi
+            # node 2 ux, uy, phi
             el.element_displacement_vector[3:] = self.system_displacement_vector[
                 index_node_2 : index_node_2 + 3
             ]
@@ -1133,7 +1137,7 @@ class SystemElements:
         Args:
             node_id (Union[Sequence[int], int]): Represents the nodes ID
             translation (Union[Sequence[AxisNumber], AxisNumber]): Represents the prevented translation or rotation.
-                1 = translation in x, 2 = translation in z, 3 = rotation in y
+                1 = translation in x, 2 = translation in y, 3 = rotation about z
             k (Union[Sequence[float], float]): Stiffness of the spring
             roll (Union[Sequence[bool], bool], optional): If set to True, only the translation of the
                 spring is controlled. Defaults to False.
@@ -1166,9 +1170,14 @@ class SystemElements:
             if translation_ == 1:
                 self.supports_spring_x.append((self.node_map[id_], roll_))
             elif translation_ == 2:
+                self.supports_spring_y.append((self.node_map[id_], roll_))
+            elif translation_ == 3:
                 self.supports_spring_z.append((self.node_map[id_], roll_))
             else:
-                self.supports_spring_y.append((self.node_map[id_], roll_))
+                raise FEMException(
+                    "Invalid translation",
+                    f"Translation should be 1, 2 or 3, but is {translation_}",
+                )
 
     def q_load(
         self,
@@ -1273,6 +1282,7 @@ class SystemElements:
         Fx: Union[float, Sequence[float]] = 0.0,
         Fy: Union[float, Sequence[float]] = 0.0,
         rotation: Union[float, Sequence[float]] = 0.0,
+        Fz: Optional[Union[float, Sequence[float]]] = None,
     ) -> None:
         """Apply a point load to a node.
 
@@ -1286,6 +1296,8 @@ class SystemElements:
         Raises:
             FEMException: Point loads may not be placed at the location of inclined roller supports
         """
+        if isinstance(Fy, (int, float)) and Fy == 0.0 and Fz is not None:
+            Fy = Fz  # for backwards compatibility with old y/z axes behaviour
         n = len(node_id) if isinstance(node_id, Sequence) else 1
         node_id = arg_to_list(node_id, n)
         Fx = arg_to_list(Fx, n)
@@ -1313,21 +1325,26 @@ class SystemElements:
             )
 
     def moment_load(
-        self, node_id: Union[int, Sequence[int]], Ty: Union[float, Sequence[float]]
+        self,
+        node_id: Union[int, Sequence[int]],
+        Tz: Union[float, Sequence[float]] = 0.0,
+        Ty: Optional[Union[float, Sequence[float]]] = None,
     ) -> None:
         """Apply a moment load to a node.
 
         Args:
             node_id (Union[int, Sequence[int]]): The node ID to which to apply the load
-            Ty (Union[float, Sequence[float]]): Moment load (about the global Y direction) to apply
+            Tz (Union[float, Sequence[float]]): Moment load (about the global Y direction) to apply
         """
+        if isinstance(Tz, (int, float)) and Tz == 0.0 and Ty is not None:
+            Tz = Ty  # for backwards compatibility with old y/z axes behaviour
         n = len(node_id) if isinstance(node_id, Sequence) else 1
         node_id = arg_to_list(node_id, n)
-        Ty = arg_to_list(Ty, n)
+        Tz = arg_to_list(Tz, n)
 
         for i, node_idi in enumerate(node_id):
             id_ = _negative_index_to_id(node_idi, self.node_map.keys())
-            self.loads_moment[id_] = Ty[i] * self.load_factor
+            self.loads_moment[id_] = Tz[i] * self.load_factor
 
     def show_structure(
         self,
@@ -1549,9 +1566,9 @@ class SystemElements:
         Returns:
             Union[ List[Dict[str, Union[int, float]]], Dict[str, Union[int, float]] ]:
                 If node_id == 0, returns a list containing tuples with the results:
-                [(id, Fx, Fy, Ty, ux, uy, phi_y), (id, Fx, Fy...), () .. ]
+                [(id, Fx, Fy, Tz, ux, uy, phi_z), (id, Fx, Fy...), () .. ]
                 If node_id > 0, returns a dict with the results:
-                {"id": id, "Fx": Fx, "Fy": Fy, "Ty": Ty, "ux": ux, "uy": uy, "phi_y": phi_y}
+                {"id": id, "Fx": Fx, "Fy": Fy, "Tz": Tz, "ux": ux, "uy": uy, "phi_z": phi_z}
         """
         result_list = []
         if node_id != 0:
@@ -1560,22 +1577,22 @@ class SystemElements:
             return {
                 "id": node.id,
                 "Fx": node.Fx,
-                "Fy": node.Fy,
-                "Ty": node.Ty,
+                "Fy": node.Fy_neg,
+                "Tz": node.Tz,
                 "ux": node.ux,
-                "uy": -node.uz,
-                "phi_y": node.phi_y,
+                "uy": -node.uy,
+                "phi_z": node.phi_z,
             }
         for node in self.node_map.values():
             result_list.append(
                 {
                     "id": node.id,
                     "Fx": node.Fx,
-                    "Fy": node.Fy,
-                    "Ty": node.Ty,
+                    "Fy": node.Fy_neg,
+                    "Tz": node.Tz,
                     "ux": node.ux,
-                    "uy": -node.uz,
-                    "phi_y": node.phi_y,
+                    "uy": -node.uy,
+                    "phi_z": node.phi_z,
                 }
             )
         return result_list
@@ -1591,8 +1608,8 @@ class SystemElements:
 
         Returns:
             Union[List[Dict[str, Any]], Dict[str, Any]]: If node_id == 0, returns a list containing
-                tuples with the results: [(id, ux, uy, phi_y), (id, ux, uy, phi_y),  ... (id, ux, uy, phi_y) ]
-                If node_id > 0, returns a dict with the results: {"id": id, "ux": ux, "uy": uy, "phi_y": phi_y}
+                tuples with the results: [(id, ux, uy, phi_z), (id, ux, uy, phi_z),  ... (id, ux, uy, phi_z) ]
+                If node_id > 0, returns a dict with the results: {"id": id, "ux": ux, "uy": uy, "phi_z": phi_z}
         """
         result_list = []
         if node_id != 0:
@@ -1601,16 +1618,16 @@ class SystemElements:
             return {
                 "id": node.id,
                 "ux": -node.ux,
-                "uy": node.uz,  # - * -  = +
-                "phi_y": node.phi_y,
+                "uy": node.uy,  # - * -  = +
+                "phi_z": node.phi_z,
             }
         for node in self.node_map.values():
             result_list.append(
                 {
                     "id": node.id,
                     "ux": -node.ux,
-                    "uy": node.uz,  # - * -  = +
-                    "phi_y": node.phi_y,
+                    "uy": node.uy,  # - * -  = +
+                    "phi_z": node.phi_z,
                 }
             )
         return result_list
@@ -1781,11 +1798,11 @@ class SystemElements:
             ]
         raise NotImplementedError("unit must be 'shear', 'moment', or 'axial'")
 
-    def get_node_result_range(self, unit: Literal["ux", "uy", "phi_y"]) -> List[float]:
+    def get_node_result_range(self, unit: Literal["ux", "uy", "phi_z"]) -> List[float]:
         """Get the node results. Returns a list with the node results for a certain unit.
 
         Args:
-            unit (str): "uy", "ux", or "phi_y"
+            unit (str): "uy", "ux", or "phi_z"
 
         Raises:
             NotImplementedError: If the unit is not implemented.
@@ -1794,11 +1811,11 @@ class SystemElements:
             List[float]: List with the node results for a certain unit.
         """
         if unit == "uy":
-            return [node.uz for node in self.node_map.values()]  # - * -  = +
+            return [node.uy for node in self.node_map.values()]  # - * -  = +
         if unit == "ux":
             return [-node.ux for node in self.node_map.values()]
-        if unit == "phi_y":
-            return [node.phi_y for node in self.node_map.values()]
+        if unit == "phi_z":
+            return [node.phi_z for node in self.node_map.values()]
         raise NotImplementedError
 
     def find_node_id(self, vertex: Union[Vertex, Sequence[float]]) -> Optional[int]:
@@ -1829,22 +1846,22 @@ class SystemElements:
     def nodes_range(
         self, dimension: "Dimension"
     ) -> List[Union[float, Tuple[float, float], None]]:
-        """Retrieve a list with coordinates x or z (y).
+        """Retrieve a list with coordinates x or y.
 
         Args:
-            dimension (str): "both", 'x', 'y' or 'z'
+            dimension (str): "both", 'x' or 'y'
 
         Returns:
-            List[Union[float, Tuple[float, float], None]]: List with coordinates x or z (y)
+            List[Union[float, Tuple[float, float], None]]: List with coordinates x or y
         """
         return list(
             map(
                 lambda x: x.vertex.x
                 if dimension == "x"
-                else x.vertex.z
-                if dimension == "z"
                 else x.vertex.y
                 if dimension == "y"
+                else x.vertex.y_neg
+                if dimension == "y_neg"
                 else (x.vertex.x, x.vertex.y)
                 if dimension == "both"
                 else None,
@@ -1869,7 +1886,7 @@ class SystemElements:
                 np.argmin(
                     np.sqrt(
                         (np.array(self.nodes_range("x")) - val[0]) ** 2
-                        + (np.array(self.nodes_range("y")) - val[1]) ** 2
+                        + (np.array(self.nodes_range("y_neg")) - val[1]) ** 2
                     )
                 )
             )

@@ -284,11 +284,11 @@ class Element:
         el.node_map[self.node_id1] = el.node_1 + other.node_1
         el.node_map[self.node_id2] = el.node_2 + other.node_2
         el.node_map[self.node_id1].ux = el.node_1.ux + other.node_1.ux
-        el.node_map[self.node_id1].uz = el.node_1.uz + other.node_1.uz
-        el.node_map[self.node_id1].phi_y = el.node_1.phi_y + other.node_1.phi_y
+        el.node_map[self.node_id1].uy = el.node_1.uy + other.node_1.uy
+        el.node_map[self.node_id1].phi_z = el.node_1.phi_z + other.node_1.phi_z
         el.node_map[self.node_id2].ux = el.node_2.ux + other.node_2.ux
-        el.node_map[self.node_id2].uz = el.node_2.uz + other.node_2.uz
-        el.node_map[self.node_id2].phi_y = el.node_2.phi_y + other.node_2.phi_y
+        el.node_map[self.node_id2].uy = el.node_2.uy + other.node_2.uy
+        el.node_map[self.node_id2].phi_z = el.node_2.phi_z + other.node_2.phi_z
         return el
 
 

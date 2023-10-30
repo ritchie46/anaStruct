@@ -36,25 +36,25 @@ class SystemLevel:
             self.system.node_map[k].reset()
 
             if k in self.system.loads_moment:
-                self.system.node_map[k].Ty += self.system.loads_moment[k]
+                self.system.node_map[k].Tz += self.system.loads_moment[k]
 
             if k in self.system.loads_point:
-                Fx, Fz = self.system.loads_point[k]
+                Fx, Fy = self.system.loads_point[k]
                 self.system.node_map[k].Fx += Fx
-                self.system.node_map[k].Fz += Fz
+                self.system.node_map[k].Fy += Fy
 
             for vi in v:
                 node = vi.node_map[k]
                 self.system.node_map[k] -= node
 
                 assert node.ux is not None
-                assert node.uz is not None
-                assert node.phi_y is not None
+                assert node.uy is not None
+                assert node.phi_z is not None
 
                 # The displacements are not summarized. Should be assigned only once
                 self.system.node_map[k].ux = -node.ux
-                self.system.node_map[k].uz = -node.uz
-                self.system.node_map[k].phi_y = -node.phi_y
+                self.system.node_map[k].uy = -node.uy
+                self.system.node_map[k].phi_z = -node.phi_z
 
     def reaction_forces(self) -> None:
         """Determines the reaction forces on the system level.
@@ -71,9 +71,9 @@ class SystemLevel:
             supports.append(node.id)
         for node, _ in self.system.supports_spring_x:
             supports.append(node.id)
-        for node, _ in self.system.supports_spring_z:
-            supports.append(node.id)
         for node, _ in self.system.supports_spring_y:
+            supports.append(node.id)
+        for node, _ in self.system.supports_spring_z:
             supports.append(node.id)
 
         for node_id in supports:
@@ -81,11 +81,11 @@ class SystemLevel:
             node = copy.copy(node)
             self.system.reaction_forces[node_id] = node
             node.Fx *= -1
-            node.Fz *= -1
-            node.Ty *= -1
+            node.Fy *= -1
+            node.Tz *= -1
             node.ux = 0.0
-            node.uz = 0.0
-            node.phi_y = 0.0
+            node.uy = 0.0
+            node.phi_z = 0.0
 
     def element_results(self) -> None:
         """Determines the element results for all elements in the system on element level."""
@@ -115,14 +115,14 @@ class ElementLevel:
             id=element.node_id1,
             Fx=element.element_force_vector[0]
             + element.element_primary_force_vector[0],
-            Fz=element.element_force_vector[1]
+            Fy=element.element_force_vector[1]
             + element.element_primary_force_vector[1],
-            Ty=element.element_force_vector[2] + element.element_primary_force_vector[2]
+            Tz=element.element_force_vector[2] + element.element_primary_force_vector[2]
             if not hinge1
             else 0,
             ux=element.element_displacement_vector[0],
-            uz=element.element_displacement_vector[1],
-            phi_y=element.element_displacement_vector[2] if not hinge1 else 0,
+            uy=element.element_displacement_vector[1],
+            phi_z=element.element_displacement_vector[2] if not hinge1 else 0,
             hinge=hinge1,
         )
 
@@ -130,14 +130,14 @@ class ElementLevel:
             id=element.node_id2,
             Fx=element.element_force_vector[3]
             + element.element_primary_force_vector[3],
-            Fz=element.element_force_vector[4]
+            Fy=element.element_force_vector[4]
             + element.element_primary_force_vector[4],
-            Ty=element.element_force_vector[5] + element.element_primary_force_vector[5]
+            Tz=element.element_force_vector[5] + element.element_primary_force_vector[5]
             if not hinge2
             else 0,
             ux=element.element_displacement_vector[3],
-            uz=element.element_displacement_vector[4],
-            phi_y=element.element_displacement_vector[5] if not hinge2 else 0,
+            uy=element.element_displacement_vector[4],
+            phi_z=element.element_displacement_vector[5] if not hinge2 else 0,
             hinge=hinge2,
         )
 
@@ -150,13 +150,13 @@ class ElementLevel:
                 c = np.cos(angle)
                 s = np.sin(angle)
                 Fx = node.Fx
-                Fz = node.Fz
+                Fy = node.Fy
                 ux = node.ux
-                uz = node.uz
-                node.Fz = c * Fz + s * Fx
-                node.Fx = -(c * Fx + s * Fz)
-                node.ux = c * ux + s * uz
-                node.uz = c * uz + s * ux
+                uy = node.uy
+                node.Fy = c * Fy + s * Fx
+                node.Fx = -(c * Fx + s * Fy)
+                node.ux = c * ux + s * uy
+                node.uy = c * uy + s * ux
 
     @staticmethod
     def determine_axial_force(element: "Element", con: int) -> None:
@@ -166,10 +166,10 @@ class ElementLevel:
             element (Element): Element for which to determine axial force
             con (int): Number of points to determine axial force
         """
-        N_1 = (math.sin(element.angle) * element.node_1.Fz) + -(
+        N_1 = (math.sin(element.angle) * element.node_1.Fy) + -(
             math.cos(element.angle) * element.node_1.Fx
         )
-        N_2 = -(math.sin(element.angle) * element.node_2.Fz) + (
+        N_2 = -(math.sin(element.angle) * element.node_2.Fy) + (
             math.cos(element.angle) * element.node_2.Fx
         )
 
@@ -197,11 +197,11 @@ class ElementLevel:
             element (Element): Element for which to determine bending moment
             con (int):
         """
-        dT = -(element.node_2.Ty + element.node_1.Ty)  # T2 - (-T1)
+        dT = -(element.node_2.Tz + element.node_1.Tz)  # T2 - (-T1)
 
         iteration_factor = np.linspace(0, 1, con)
         x = iteration_factor * element.l
-        m_val = element.node_1.Ty + iteration_factor * dT
+        m_val = element.node_1.Tz + iteration_factor * dT
         if element.all_qp_load:
             qi = element.all_qp_load[0]
             q = element.all_qp_load[1]

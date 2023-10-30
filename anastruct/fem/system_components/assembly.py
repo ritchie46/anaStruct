@@ -19,7 +19,7 @@ def set_force_vector(
     Args:
         system (SystemElements): System to which the force vector is applied
         force_list (List[Tuple[int, AxisNumber, float]]): List of tuples containing
-            the node id, direction (1 = x, 2 = z, 3 = y), and force magnitude
+            the node id, direction (1 = x, 2 = y, 3 = z), and force magnitude
 
     Returns:
         np.ndarray: System force vector with the applied forces on the nodes
@@ -52,8 +52,8 @@ def apply_moment_load(system: "SystemElements") -> None:
     Args:
         system (SystemElements): System to which the moment load is applied
     """
-    for node_id, Ty in system.loads_moment.items():
-        set_force_vector(system, [(node_id, 3, Ty)])
+    for node_id, Tz in system.loads_moment.items():
+        set_force_vector(system, [(node_id, 3, Tz)])
 
 
 def apply_point_load(system: "SystemElements") -> None:
@@ -63,13 +63,13 @@ def apply_point_load(system: "SystemElements") -> None:
         system (SystemElements): System to which the point load is applied
     """
     for node_id in system.loads_point:
-        Fx, Fz = system.loads_point[node_id]
+        Fx, Fy = system.loads_point[node_id]
         # system force vector.
         set_force_vector(
             system,
             [
                 (node_id, 1, Fx),
-                (node_id, 2, Fz),
+                (node_id, 2, Fy),
             ],
         )
 
@@ -107,15 +107,15 @@ def apply_perpendicular_q_load(system: "SystemElements") -> None:
         rleft_x = rleft * math.sin(element.a1)
         rright_x = rright * math.sin(element.a2)
 
-        rleft_z = rleft * math.cos(element.a1)
-        rright_z = rright * math.cos(element.a2)
+        rleft_y = rleft * math.cos(element.a1)
+        rright_y = rright * math.cos(element.a2)
 
         if element.type == "truss":
             left_moment = 0
             right_moment = 0
 
         primary_force = np.array(
-            [rleft_x, rleft_z, left_moment, rright_x, rright_z, right_moment]
+            [rleft_x, rleft_y, left_moment, rright_x, rright_y, right_moment]
         )
         element.element_primary_force_vector -= primary_force
 
@@ -149,19 +149,19 @@ def apply_parallel_qn_load(system: "SystemElements") -> None:
         rleft_x = -rleft * math.cos(element.a1)
         rright_x = -rright * math.cos(element.a2)
 
-        rleft_z = rleft * math.sin(element.a1)
-        rright_z = rright * math.sin(element.a2)
+        rleft_y = rleft * math.sin(element.a1)
+        rright_y = rright * math.sin(element.a2)
 
         element.element_primary_force_vector[0] -= rleft_x
-        element.element_primary_force_vector[1] -= rleft_z
+        element.element_primary_force_vector[1] -= rleft_y
         element.element_primary_force_vector[3] -= rright_x
-        element.element_primary_force_vector[4] -= rright_z
+        element.element_primary_force_vector[4] -= rright_y
 
         set_force_vector(
             system,
             [
-                (element.node_1.id, 2, rleft_z),
-                (element.node_2.id, 2, rright_z),
+                (element.node_1.id, 2, rleft_y),
+                (element.node_2.id, 2, rright_y),
                 (element.node_1.id, 1, rleft_x),
                 (element.node_2.id, 1, rright_x),
             ],
@@ -206,14 +206,14 @@ def assemble_system_matrix(
     # system matrix [K]
     #
     # [fx 1] [K        |  \ node 1 starts at row 1
-    # |fz 1] | K       |  /
-    # |Ty 1] |  K      | /
+    # |Fy 1] | K       |  /
+    # |Tz 1] |  K      | /
     # |fx 2] |   K     |  \ node 2 starts at row 4
-    # |fz 2] |    K    |  /
-    # |Ty 2] |     K   | /
+    # |Fy 2] |    K    |  /
+    # |Tz 2] |     K   | /
     # |fx 3] |      K  |  \ node 3 starts at row 7
-    # |fz 3] |       K |  /
-    # [Ty 3] [        K] /
+    # |Fy 3] |       K |  /
+    # [Tz 3] [        K] /
     #
     #         n   n  n
     #         o   o  o
@@ -249,7 +249,7 @@ def set_displacement_vector(
     Args:
         system (SystemElements): System to which the displacement vector is applied
         nodes_list (List[Tuple[int, AxisNumber]]): List of tuples containing
-            the node id and the direction (1 = x, 2 = z, 3 = y)
+            the node id and the direction (1 = x, 2 = y, 3 = z)
 
     Raises:
         IndexError: This often occurs if you set supports before the all the elements are
@@ -341,11 +341,11 @@ def process_supports(system: "SystemElements") -> None:
         if not roll:
             set_displacement_vector(system, [(node.id, 2)])
 
-    for node, roll in system.supports_spring_z:
+    for node, roll in system.supports_spring_y:
         if not roll:
             set_displacement_vector(system, [(node.id, 1)])
 
-    for node, roll in system.supports_spring_y:
+    for node, roll in system.supports_spring_z:
         if not roll:
             set_displacement_vector(system, [(node.id, 1), (node.id, 2)])
 

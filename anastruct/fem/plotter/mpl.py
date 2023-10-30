@@ -81,7 +81,7 @@ class Plotter:
         width = height = PATCH_SIZE * max_val
         for node in self.system.supports_fixed:
             support_patch = mpatches.Rectangle(
-                (node.vertex.x - width * 0.5, -node.vertex.z - width * 0.5),
+                (node.vertex.x - width * 0.5, node.vertex.y - width * 0.5),
                 width,
                 height,
                 color="r",
@@ -117,7 +117,7 @@ class Plotter:
         width = height = PATCH_SIZE * max_val
         for node in self.system.supports_rotational:
             support_patch = mpatches.Rectangle(
-                (node.vertex.x - width * 0.5, -node.vertex.z - width * 0.5),
+                (node.vertex.x - width * 0.5, node.vertex.y - width * 0.5),
                 width,
                 height,
                 color="r",
@@ -182,13 +182,13 @@ class Plotter:
                     zorder=9,
                 )
                 self.axes[axes_i].add_patch(support_patch_regpoly)
-                y = -node.vertex.z - 2 * radius
+                y = node.vertex.y - 2 * radius
                 self.axes[axes_i].plot(
                     [node.vertex.x - radius, node.vertex.x + radius], [y, y], color="r"
                 )
                 if not rotate:
                     rect_patch_rect = mpatches.Rectangle(
-                        (node.vertex.x - radius / 2, -node.vertex.z - radius / 2),
+                        (node.vertex.x - radius / 2, node.vertex.y - radius / 2),
                         radius,
                         radius,
                         color="r",
@@ -210,7 +210,7 @@ class Plotter:
                 )
                 if not rotate:
                     rect_patch_rect = mpatches.Rectangle(
-                        (node.vertex.x - radius / 2, -node.vertex.z - radius / 2),
+                        (node.vertex.x - radius / 2, node.vertex.y - radius / 2),
                         radius,
                         radius,
                         color="r",
@@ -229,7 +229,7 @@ class Plotter:
         """
         radius = PATCH_SIZE * max_val
 
-        for node, _ in self.system.supports_spring_y:
+        for node, _ in self.system.supports_spring_z:
             r = np.arange(0, radius, 0.001)
             theta = 25 * np.pi * r / (0.2 * max_val)
             x = np.cos(theta) * r + node.vertex.x
@@ -258,7 +258,7 @@ class Plotter:
         right = 0.5 * h
         dh = 0.2 * h
 
-        for node, _ in self.system.supports_spring_z:
+        for node, _ in self.system.supports_spring_y:
             yval = np.arange(0, -9, -1) * dh + node.vertex.y
             xval = (
                 np.array([0, 0, left, right, left, right, left, 0, 0]) + node.vertex.x
@@ -268,7 +268,7 @@ class Plotter:
 
             # Triangle
             support_patch = mpatches.RegularPolygon(
-                (node.vertex.x, -node.vertex.z - h * 2.6),
+                (node.vertex.x, node.vertex.y - h * 2.6),
                 numVertices=3,
                 radius=h * 0.9,
                 color="r",
@@ -286,7 +286,7 @@ class Plotter:
 
             # Triangle
             support_patch = mpatches.RegularPolygon(
-                (node.vertex.x + h * 1.7, -node.vertex.z - h),
+                (node.vertex.x + h * 1.7, node.vertex.y - h),
                 numVertices=3,
                 radius=h * 0.9,
                 color="r",
@@ -336,7 +336,7 @@ class Plotter:
                 direction (float): 1 or -1, depending on the direction of the load
                 el_angle (float): angle of the element
             """
-            # - value, because the positive z of the system is opposite of positive y of the plotter
+            # - value, because the positive y of the system is opposite of positive y of the plotter
             xn1 = x1 + np.sin(ai) * h1 * direction
             yn1 = y1 + np.cos(ai) * h1 * direction
             xn2 = x2 + np.sin(ai) * h2 * direction
@@ -446,13 +446,13 @@ class Plotter:
 
     @staticmethod
     def __arrow_patch_values(
-        Fx: float, Fz: float, node: "Node", h: float
+        Fx: float, Fy: float, node: "Node", h: float
     ) -> Tuple[float, float, float, float, float]:
         """Determines the values for the point load arrow patch.
 
         Args:
             Fx (float): Point load magnitude in x direction
-            Fz (float): Point load magnitude in z direction
+            Fy (float): Point load magnitude in y direction
             node (Node): Node upon which load is applied
             h (float): Scale variable
 
@@ -460,9 +460,9 @@ class Plotter:
             Tuple[float, float, float, float, float]: x, y, len_x, len_y, F (for matplotlib plotter)
         """
 
-        F = (Fx**2 + Fz**2) ** 0.5
+        F = (Fx**2 + Fy**2) ** 0.5
         len_x = Fx / F * h
-        len_y = -Fz / F * h
+        len_y = -Fy / F * h
         x = node.vertex.x - len_x * 1.2
         y = node.vertex.y - len_y * 1.2
 
@@ -480,11 +480,11 @@ class Plotter:
         """
 
         for k in self.system.loads_point:
-            Fx, Fz = self.system.loads_point[k]
-            F = (Fx**2 + Fz**2) ** 0.5
+            Fx, Fy = self.system.loads_point[k]
+            F = (Fx**2 + Fy**2) ** 0.5
             node = self.system.node_map[k]
             h = 0.1 * max_plot_range * F / self.max_system_point_load
-            x, y, len_x, len_y, F = self.__arrow_patch_values(Fx, Fz, node, h)
+            x, y, len_x, len_y, F = self.__arrow_patch_values(Fx, Fy, node, h)
 
             self.axes[axes_i].arrow(
                 x,
@@ -513,7 +513,7 @@ class Plotter:
             if v > 0:
                 self.axes[axes_i].plot(
                     node.vertex.x,
-                    -node.vertex.z,
+                    node.vertex.y,
                     marker=r"$\circlearrowleft$",
                     ms=25,
                     color="orange",
@@ -521,14 +521,14 @@ class Plotter:
             else:
                 self.axes[axes_i].plot(
                     node.vertex.x,
-                    -node.vertex.z,
+                    node.vertex.y,
                     marker=r"$\circlearrowright$",
                     ms=25,
                     color="orange",
                 )
             self.axes[axes_i].text(
                 node.vertex.x + h * 0.2,
-                -node.vertex.z + h * 0.2,
+                node.vertex.y + h * 0.2,
                 f"T={v}",
                 color="k",
                 fontsize=9,
@@ -834,7 +834,7 @@ class Plotter:
                 point.displace_polar(
                     alpha=el.angle + 0.5 * np.pi,
                     radius=0.5 * el.N_1 * factor,
-                    inverse_z_axis=True,
+                    inverse_y_axis=True,
                 )
 
                 if verbosity == 0:
@@ -851,7 +851,7 @@ class Plotter:
                 point.displace_polar(
                     alpha=el.angle + 0.5 * np.pi,
                     radius=0.5 * el.N_1 * factor,
-                    inverse_z_axis=True,
+                    inverse_y_axis=True,
                 )
 
                 if verbosity == 0:
@@ -906,8 +906,8 @@ class Plotter:
             max_moment = max(
                 map(
                     lambda el: max(
-                        abs(el.node_1.Ty),
-                        abs(el.node_2.Ty),
+                        abs(el.node_1.Tz),
+                        abs(el.node_2.Tz),
                         abs(((el.all_qp_load[0] + el.all_qp_load[1]) / 16) * el.l**2),
                     )
                     if el.type == "general"
@@ -920,8 +920,8 @@ class Plotter:
         # determine the axis values
         for el in self.system.element_map.values():
             if (
-                math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
-                and math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
+                math.isclose(el.node_1.Tz, 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.node_2.Tz, 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.all_qp_load[0], 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.all_qp_load[1], 0, rel_tol=1e-5, abs_tol=1e-9)
             ):
@@ -931,8 +931,8 @@ class Plotter:
             node_results = verbosity == 0
             self.plot_result(
                 axis_values,
-                abs(el.node_1.Ty),
-                abs(el.node_2.Ty),
+                abs(el.node_1.Tz),
+                abs(el.node_2.Tz),
                 node_results=node_results,
                 axes_i=axes_i,
             )
@@ -997,8 +997,8 @@ class Plotter:
 
         for el in self.system.element_map.values():
             if (
-                math.isclose(el.node_1.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
-                and math.isclose(el.node_2.Ty, 0, rel_tol=1e-5, abs_tol=1e-9)
+                math.isclose(el.node_1.Tz, 0, rel_tol=1e-5, abs_tol=1e-9)
+                and math.isclose(el.node_2.Tz, 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.all_qp_load[0], 0, rel_tol=1e-5, abs_tol=1e-9)
                 and math.isclose(el.all_qp_load[1], 0, rel_tol=1e-5, abs_tol=1e-9)
             ):
@@ -1059,7 +1059,7 @@ class Plotter:
         h = 0.2 * self.max_val_structure
         max_force = max(
             map(
-                lambda node: max(abs(node.Fx), abs(node.Fz)),
+                lambda node: max(abs(node.Fx), abs(node.Fy)),
                 self.system.reaction_forces.values(),
             )
         )
@@ -1096,10 +1096,10 @@ class Plotter:
                         zorder=10,
                     )
 
-            if not math.isclose(node.Fz, 0, rel_tol=1e-5, abs_tol=1e-9):
-                # z direction
-                scale = abs(node.Fz) / max_force * h
-                sol = self.__arrow_patch_values(0, node.Fz, node, scale)
+            if not math.isclose(node.Fy, 0, rel_tol=1e-5, abs_tol=1e-9):
+                # y direction
+                scale = abs(node.Fy) / max_force * h
+                sol = self.__arrow_patch_values(0, node.Fy, node, scale)
                 x = sol[0]
                 y = sol[1]
                 len_x = sol[2]
@@ -1121,26 +1121,26 @@ class Plotter:
                     self.axes[axes_i].text(
                         x,
                         y,
-                        f"R={round(node.Fz, 2)}",
+                        f"R={round(node.Fy, 2)}",
                         color="k",
                         fontsize=9,
                         zorder=10,
                     )
 
-            if not math.isclose(node.Ty, 0, rel_tol=1e-5, abs_tol=1e-9):
+            if not math.isclose(node.Tz, 0, rel_tol=1e-5, abs_tol=1e-9):
                 # '$...$': render the strings using mathtext
-                if node.Ty > 0:
+                if node.Tz > 0:
                     self.axes[axes_i].plot(
                         node.vertex.x,
-                        -node.vertex.z,
+                        node.vertex.y,
                         marker=r"$\circlearrowleft$",
                         ms=25,
                         color="orange",
                     )
-                if node.Ty < 0:
+                if node.Tz < 0:
                     self.axes[axes_i].plot(
                         node.vertex.x,
-                        -node.vertex.z,
+                        node.vertex.y,
                         marker=r"$\circlearrowright$",
                         ms=25,
                         color="orange",
@@ -1149,8 +1149,8 @@ class Plotter:
                 if verbosity == 0:
                     self.axes[axes_i].text(
                         node.vertex.x + h * 0.2,
-                        -node.vertex.z + h * 0.2,
-                        f"T={round(node.Ty, 2)}",
+                        node.vertex.y + h * 0.2,
+                        f"T={round(node.Tz, 2)}",
                         color="k",
                         fontsize=9,
                         zorder=10,
@@ -1197,7 +1197,7 @@ class Plotter:
                 map(
                     lambda el: max(
                         abs(el.node_1.ux),
-                        abs(el.node_1.uz),
+                        abs(el.node_1.uy),
                         el.max_deflection or 0,
                     )
                     if el.type == "general"

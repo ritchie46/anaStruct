@@ -39,12 +39,12 @@ def stiffness_adaptation(
 
             for node_no, mp in v.items():
                 if node_no == 1:
-                    # Fast Ty
+                    # Fast Tz
                     m_e = (
                         el.element_force_vector[2] + el.element_primary_force_vector[2]
                     )
                 else:
-                    # Fast Ty
+                    # Fast Tz
                     m_e = (
                         el.element_force_vector[5] + el.element_primary_force_vector[5]
                     )
