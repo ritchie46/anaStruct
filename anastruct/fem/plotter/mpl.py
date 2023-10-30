@@ -826,6 +826,7 @@ class Plotter:
                 el.N_2,
                 node_results=not bool(verbosity),
                 color=color,
+                axes_i=axes_i,
             )
 
             point = (el.vertex_2 - el.vertex_1) / 2 + el.vertex_1
@@ -933,6 +934,7 @@ class Plotter:
                 abs(el.node_1.Ty),
                 abs(el.node_2.Ty),
                 node_results=node_results,
+                axes_i=axes_i,
             )
 
             if el.all_qp_load:
@@ -1009,7 +1011,11 @@ class Plotter:
             shear_2 = el.shear_force[-1]
 
             self.plot_result(
-                axis_values, shear_1, shear_2, node_results=not bool(verbosity)
+                axis_values,
+                shear_1,
+                shear_2,
+                node_results=not bool(verbosity),
+                axes_i=axes_i,
             )
         if show:
             self.plot()
@@ -1203,7 +1209,12 @@ class Plotter:
 
         for el in self.system.element_map.values():
             axis_values = plot_values_deflection(el, factor, linear)
-            self.plot_result(axis_values, node_results=False, fill_polygon=False)
+            self.plot_result(
+                axis_values,
+                node_results=False,
+                fill_polygon=False,
+                axes_i=axes_i,
+            )
 
             if el.type == "general":
                 assert el.deflection is not None
@@ -1264,6 +1275,7 @@ class Plotter:
             axes_i=0,
         )
         self.axes.append(self.fig.add_subplot(a + 2))
+        print(self.axes)
         plt.title("bending moment")
         self.bending_moment(
             factor=None,
