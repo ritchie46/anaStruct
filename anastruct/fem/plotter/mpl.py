@@ -1333,7 +1333,7 @@ class Plotter:
         offset: Sequence[float],
         show: bool,
     ) -> Optional["Figure"]:
-        """Plots all the results in one  ded figure.
+        """Plots all the results in one gridded figure.
 
         Args:
             figsize (Optional[Tuple[float, float]]): Figure size
