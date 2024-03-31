@@ -988,13 +988,17 @@ class Plotter:
             # maximum moment determined by comparing the node's moments and the sagging moments.
             max_moment = max(
                 map(
-                    lambda el: max(
-                        abs(el.node_1.Tz),
-                        abs(el.node_2.Tz),
-                        abs(((el.all_qp_load[0] + el.all_qp_load[1]) / 16) * el.l**2),
-                    )
-                    if el.type == "general"
-                    else 0,
+                    lambda el: (
+                        max(
+                            abs(el.node_1.Tz),
+                            abs(el.node_2.Tz),
+                            abs(
+                                ((el.all_qp_load[0] + el.all_qp_load[1]) / 16) * el.l**2
+                            ),
+                        )
+                        if el.type == "general"
+                        else 0
+                    ),
                     self.system.element_map.values(),
                 )
             )
@@ -1071,9 +1075,11 @@ class Plotter:
         if factor is None:
             max_force = max(
                 map(
-                    lambda el: np.max(np.abs(el.shear_force))
-                    if el.shear_force is not None
-                    else 0.0,
+                    lambda el: (
+                        np.max(np.abs(el.shear_force))
+                        if el.shear_force is not None
+                        else 0.0
+                    ),
                     self.system.element_map.values(),
                 )
             )
@@ -1280,13 +1286,15 @@ class Plotter:
             # needed to determine the scaling factor
             max_displacement = max(
                 map(
-                    lambda el: max(
-                        abs(el.node_1.ux),
-                        abs(el.node_1.uy),
-                        el.max_deflection or 0,
-                    )
-                    if el.type == "general"
-                    else 0,
+                    lambda el: (
+                        max(
+                            abs(el.node_1.ux),
+                            abs(el.node_1.uy),
+                            el.max_deflection or 0,
+                        )
+                        if el.type == "general"
+                        else 0
+                    ),
                     self.system.element_map.values(),
                 )
             )

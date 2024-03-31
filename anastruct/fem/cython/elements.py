@@ -20,11 +20,7 @@ def det_moment(
         -(L**3)
         * kl
         * (14 * EI * q + 16 * EI * qi + 2 * L * kr * q + 3 * L * kr * qi)
-        / (
-            60
-            * EI
-            * (12 * EI**2 + 4 * EI * L * kl + 4 * EI * L * kr + L**2 * kl * kr)
-        )
+        / (60 * EI * (12 * EI**2 + 4 * EI * L * kl + 4 * EI * L * kr + L**2 * kl * kr))
         - L
         * x
         * (
@@ -99,6 +95,5 @@ def det_axial(qi: float, q: float, x: float, EA: float, L: float) -> float:
     """
     return EA * (
         x * (-L * qi / 2 + x * (-q + qi) / 3) / (EA * L)
-        + (L**2 * (q + 2 * qi) / 6 - L * qi * x / 2 + x**2 * (-q + qi) / 6)
-        / (EA * L)
+        + (L**2 * (q + 2 * qi) / 6 - L * qi * x / 2 + x**2 * (-q + qi) / 6) / (EA * L)
     )
