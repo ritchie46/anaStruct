@@ -840,7 +840,7 @@ class Plotter:
 
     def plot(self) -> None:
         """Plots the figure."""
-        plt.show()  # type: ignore
+        plt.show()
 
     def axial_force(
         self,
