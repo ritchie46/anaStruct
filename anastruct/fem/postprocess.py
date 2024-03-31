@@ -117,9 +117,12 @@ class ElementLevel:
             + element.element_primary_force_vector[0],
             Fy=element.element_force_vector[1]
             + element.element_primary_force_vector[1],
-            Tz=element.element_force_vector[2] + element.element_primary_force_vector[2]
-            if not hinge1
-            else 0,
+            Tz=(
+                element.element_force_vector[2]
+                + element.element_primary_force_vector[2]
+                if not hinge1
+                else 0
+            ),
             ux=element.element_displacement_vector[0],
             uy=element.element_displacement_vector[1],
             phi_z=element.element_displacement_vector[2] if not hinge1 else 0,
@@ -132,9 +135,12 @@ class ElementLevel:
             + element.element_primary_force_vector[3],
             Fy=element.element_force_vector[4]
             + element.element_primary_force_vector[4],
-            Tz=element.element_force_vector[5] + element.element_primary_force_vector[5]
-            if not hinge2
-            else 0,
+            Tz=(
+                element.element_force_vector[5]
+                + element.element_primary_force_vector[5]
+                if not hinge2
+                else 0
+            ),
             ux=element.element_displacement_vector[3],
             uy=element.element_displacement_vector[4],
             phi_z=element.element_displacement_vector[5] if not hinge2 else 0,

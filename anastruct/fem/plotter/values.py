@@ -79,11 +79,13 @@ class PlottingValues:
             # needed to determine the scaling factor
             max_displacement = max(
                 map(
-                    lambda el: max(
-                        abs(el.node_1.ux), abs(el.node_1.uy), el.max_deflection or 0
-                    )
-                    if el.type == "general"
-                    else 0,
+                    lambda el: (
+                        max(
+                            abs(el.node_1.ux), abs(el.node_1.uy), el.max_deflection or 0
+                        )
+                        if el.type == "general"
+                        else 0
+                    ),
                     self.system.element_map.values(),
                 )
             )
