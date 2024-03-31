@@ -227,7 +227,15 @@ def force_elements_orientation(
     node_id2: int,
     spring: Optional["Spring"],
     mp: Optional["MpType"],
-) -> Tuple[Vertex, Vertex, int, int, Optional["Spring"], Optional["MpType"], float,]:
+) -> Tuple[
+    Vertex,
+    Vertex,
+    int,
+    int,
+    Optional["Spring"],
+    Optional["MpType"],
+    float,
+]:
     """Force the elements to be in the first and the last quadrant of the unity circle.
     Meaning the first node is always left and the last node is always right. Or they
     are both on one vertical line.

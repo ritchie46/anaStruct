@@ -106,15 +106,15 @@ class SystemElements:
         self.orientation_cs = -1 if invert_y_loads else 1
 
         # structure system
-        self.element_map: Dict[
-            int, Element
-        ] = {}  # maps element ids to the Element objects.
-        self.node_map: Dict[
-            int, Node  # pylint: disable=used-before-assignment
-        ] = {}  # maps node ids to the Node objects.
-        self.node_element_map: Dict[
-            int, List[Element]
-        ] = {}  # maps node ids to Element objects
+        self.element_map: Dict[int, Element] = (
+            {}
+        )  # maps element ids to the Element objects.
+        self.node_map: Dict[int, Node] = (  # pylint: disable=used-before-assignment
+            {}
+        )  # maps node ids to the Node objects.
+        self.node_element_map: Dict[int, List[Element]] = (
+            {}
+        )  # maps node ids to Element objects
         # keys matrix index (for both row and columns), values K, are processed
         # assemble_system_matrix
         self.system_spring_map: Dict[int, float] = {}
@@ -132,32 +132,30 @@ class SystemElements:
         self.supports_spring_y: List[Tuple[Node, bool]] = []
         self.supports_spring_z: List[Tuple[Node, bool]] = []
         self.supports_roll_direction: List[Literal[1, 2]] = []
-        self.inclined_roll: Dict[
-            int, float
-        ] = {}  # map node ids to inclination angle relative to global x-axis.
+        self.inclined_roll: Dict[int, float] = (
+            {}
+        )  # map node ids to inclination angle relative to global x-axis.
         self.supports_roll_rotate: List[bool] = []
 
         # save tuples of the arguments for copying purposes.
         self.supports_spring_args: List[tuple] = []
 
         # keep track of the loads
-        self.loads_point: Dict[
-            int, Tuple[float, float]
-        ] = {}  # node ids with a point loads {node_id: (x, y)}
-        self.loads_q: Dict[
-            int, List[Tuple[float, float]]
-        ] = {}  # element ids with a q-loadad
+        self.loads_point: Dict[int, Tuple[float, float]] = (
+            {}
+        )  # node ids with a point loads {node_id: (x, y)}
+        self.loads_q: Dict[int, List[Tuple[float, float]]] = (
+            {}
+        )  # element ids with a q-loadad
         self.loads_moment: Dict[int, float] = {}
-        self.loads_dead_load: Set[
-            int
-        ] = set()  # element ids with q-load due to dead load
+        self.loads_dead_load: Set[int] = (
+            set()
+        )  # element ids with q-load due to dead load
 
         # results
         self.reaction_forces: Dict[int, Node] = {}  # node objects
         self.non_linear = False
-        self.non_linear_elements: Dict[
-            int, Dict[Literal[1, 2], float]
-        ] = (
+        self.non_linear_elements: Dict[int, Dict[Literal[1, 2], float]] = (
             {}
         )  # keys are element ids, values are dicts: {node_index: max moment capacity}
         self.buckling_factor: Optional[float] = None
@@ -171,9 +169,9 @@ class SystemElements:
         self.system_matrix: Optional[np.ndarray] = None
         self.system_force_vector: Optional[np.ndarray] = None
         self.system_displacement_vector: Optional[np.ndarray] = None
-        self.shape_system_matrix: Optional[
-            int
-        ] = None  # actually is the size of the square system matrix
+        self.shape_system_matrix: Optional[int] = (
+            None  # actually is the size of the square system matrix
+        )
         self.reduced_force_vector: Optional[np.ndarray] = None
         self.reduced_system_matrix: Optional[np.ndarray] = None
         self._vertices: Dict[Vertex, int] = {}  # maps vertices to node ids
@@ -1866,15 +1864,23 @@ class SystemElements:
         """
         return list(
             map(
-                lambda x: x.vertex.x
-                if dimension == "x"
-                else x.vertex.y
-                if dimension == "y"
-                else x.vertex.y_neg
-                if dimension == "y_neg"
-                else (x.vertex.x, x.vertex.y)
-                if dimension == "both"
-                else None,
+                lambda x: (
+                    x.vertex.x
+                    if dimension == "x"
+                    else (
+                        x.vertex.y
+                        if dimension == "y"
+                        else (
+                            x.vertex.y_neg
+                            if dimension == "y_neg"
+                            else (
+                                (x.vertex.x, x.vertex.y)
+                                if dimension == "both"
+                                else None
+                            )
+                        )
+                    )
+                ),
                 self.node_map.values(),
             )
         )
