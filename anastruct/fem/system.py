@@ -1380,6 +1380,16 @@ class SystemElements:
             figsize, verbosity, show, supports, scale, offset, annotations=annotations
         )
 
+    def change_plot_colors(self, plot_colors: Dict) -> None:
+        """
+        Calls the change_plot_colors method of the plotter object
+
+        Args:
+            colors (Dict): A dictionary containing plot components and colors
+            as key-value pairs.
+        """
+        self.plotter.change_plot_colors(plot_colors)
+
     def show_bending_moment(
         self,
         factor: Optional[float] = None,
