@@ -1,6 +1,7 @@
 import math
-from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple
 
+import matplotlib.colors
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -44,6 +45,50 @@ class Plotter:
         self.max_qn: float = 0
         self.max_system_point_load: float = 0
         self.fig: Optional["Figure"] = None
+        self.plot_colors: Dict[str, str] = {
+            "support": "r",
+            "element": "k",
+            "node_number": "k",
+            "element_number": "k",
+            "displaced_elem": "C0",
+            "point_load_fill": "orange",
+            "point_load_edge": "b",
+            "point_load_text": "k",
+            "q_load": "g",
+            "q_load_arrow_face": "k",
+            "q_load_arrow_edge": "k",
+            "q_load_text": "b",
+            "moment_load": "orange",
+            "moment_load_text": "k",
+            "reaction_force_arrow_edge": "orange",
+            "reaction_force_arrow_fill": "b",
+            "reaction_force_text": "b",
+            "axial_force_neg": "C0",
+            "axial_force_pos": "C1",
+            "axial_force_sign": "b",
+            "bending_moment": "C0",
+            "shear_force": "C0",
+            "annotation": "b",
+        }
+
+    def change_plot_colors(self, colors: Dict) -> None:
+        """Changes the plotting color for various components of the plot.
+
+        Args:
+            colors (Dict): A dictionary containing plot components and colors
+            as key-value pairs.
+        """
+        for item, color in colors.items():
+            if not isinstance(color, str) or not isinstance(item, str):
+                print("Plot components and colors must be passed in as strings")
+            elif self.plot_colors.get(item) is None:
+                print(
+                    str(item) + " is not a valid plot component to change the color of"
+                )
+            elif not matplotlib.colors.is_color_like(color):
+                print(str(color + "is not a valid matplotlib color"))
+            else:
+                self.plot_colors[item] = color
 
     @property
     def max_val_structure(self) -> float:
@@ -84,7 +129,7 @@ class Plotter:
                 (node.vertex.x - width * 0.5, node.vertex.y - width * 0.5),
                 width,
                 height,
-                color="r",
+                color=self.plot_colors["support"],
                 zorder=9,
             )
             self.axes[axes_i].add_patch(support_patch)
@@ -102,7 +147,7 @@ class Plotter:
                 (node.vertex.x, node.vertex.y - radius),
                 numVertices=3,
                 radius=radius,
-                color="r",
+                color=self.plot_colors["support"],
                 zorder=9,
             )
             self.axes[axes_i].add_patch(support_patch)
@@ -120,7 +165,7 @@ class Plotter:
                 (node.vertex.x - width * 0.5, node.vertex.y - width * 0.5),
                 width,
                 height,
-                color="r",
+                color=self.plot_colors["support"],
                 zorder=9,
                 fill=False,
             )
@@ -154,12 +199,14 @@ class Plotter:
             if node.id in self.system.inclined_roll:
                 angle = self.system.inclined_roll[node.id]
                 triangle = rotate_xy(triangle, angle + np.pi * 0.5)
-                support_patch_poly = mpatches.Polygon(triangle, color="r", zorder=9)
+                support_patch_poly = mpatches.Polygon(
+                    triangle, color=self.plot_colors["support"], zorder=9
+                )
                 self.axes[axes_i].add_patch(support_patch_poly)
                 self.axes[axes_i].plot(
                     triangle[1:, 0] - 0.5 * radius * np.sin(angle),
                     triangle[1:, 1] - 0.5 * radius * np.cos(angle),
-                    color="r",
+                    color=self.plot_colors["support"],
                 )
                 if not rotate:
                     rect_patch_regpoly = mpatches.RegularPolygon(
@@ -167,7 +214,7 @@ class Plotter:
                         numVertices=4,
                         radius=radius,
                         orientation=angle,
-                        color="r",
+                        color=self.plot_colors["support"],
                         zorder=9,
                         fill=False,
                     )
@@ -178,20 +225,22 @@ class Plotter:
                     (node.vertex.x, node.vertex.y - radius),
                     numVertices=3,
                     radius=radius,
-                    color="r",
+                    color=self.plot_colors["support"],
                     zorder=9,
                 )
                 self.axes[axes_i].add_patch(support_patch_regpoly)
                 y = node.vertex.y - 2 * radius
                 self.axes[axes_i].plot(
-                    [node.vertex.x - radius, node.vertex.x + radius], [y, y], color="r"
+                    [node.vertex.x - radius, node.vertex.x + radius],
+                    [y, y],
+                    color=self.plot_colors["support"],
                 )
                 if not rotate:
                     rect_patch_rect = mpatches.Rectangle(
                         (node.vertex.x - radius / 2, node.vertex.y - radius / 2),
                         radius,
                         radius,
-                        color="r",
+                        color=self.plot_colors["support"],
                         zorder=9,
                         fill=False,
                     )
@@ -199,21 +248,23 @@ class Plotter:
             elif direction == 1:  # vertical roll
                 # translate the support to the node
 
-                support_patch_poly = mpatches.Polygon(triangle, color="r", zorder=9)
+                support_patch_poly = mpatches.Polygon(
+                    triangle, color=self.plot_colors["support"], zorder=9
+                )
                 self.axes[axes_i].add_patch(support_patch_poly)
 
                 y = node.vertex.y - radius
                 self.axes[axes_i].plot(
                     [node.vertex.x + radius * 1.5, node.vertex.x + radius * 1.5],
                     [y, y + 2 * radius],
-                    color="r",
+                    color=self.plot_colors["support"],
                 )
                 if not rotate:
                     rect_patch_rect = mpatches.Rectangle(
                         (node.vertex.x - radius / 2, node.vertex.y - radius / 2),
                         radius,
                         radius,
-                        color="r",
+                        color=self.plot_colors["support"],
                         zorder=9,
                         fill=False,
                     )
@@ -234,14 +285,14 @@ class Plotter:
             theta = 25 * np.pi * r / (0.2 * max_val)
             x = np.cos(theta) * r + node.vertex.x
             y = np.sin(theta) * r - radius + node.vertex.y
-            self.axes[axes_i].plot(x, y, color="r", zorder=9)
+            self.axes[axes_i].plot(x, y, color=self.plot_colors["support"], zorder=9)
 
             # Triangle
             support_patch = mpatches.RegularPolygon(
                 (node.vertex.x, node.vertex.y - radius * 3),
                 numVertices=3,
                 radius=radius * 0.9,
-                color="r",
+                color=self.plot_colors["support"],
                 zorder=9,
             )
             self.axes[axes_i].add_patch(support_patch)
@@ -264,14 +315,16 @@ class Plotter:
                 np.array([0, 0, left, right, left, right, left, 0, 0]) + node.vertex.x
             )
 
-            self.axes[axes_i].plot(xval, yval, color="r", zorder=10)
+            self.axes[axes_i].plot(
+                xval, yval, color=self.plot_colors["support"], zorder=10
+            )
 
             # Triangle
             support_patch = mpatches.RegularPolygon(
                 (node.vertex.x, node.vertex.y - h * 2.6),
                 numVertices=3,
                 radius=h * 0.9,
-                color="r",
+                color=self.plot_colors["support"],
                 zorder=10,
             )
             self.axes[axes_i].add_patch(support_patch)
@@ -282,14 +335,16 @@ class Plotter:
                 np.array([0, 0, left, right, left, right, left, 0, 0]) + node.vertex.y
             )
 
-            self.axes[axes_i].plot(xval, yval, color="r", zorder=10)
+            self.axes[axes_i].plot(
+                xval, yval, color=self.plot_colors["support"], zorder=10
+            )
 
             # Triangle
             support_patch = mpatches.RegularPolygon(
                 (node.vertex.x + h * 1.7, node.vertex.y - h),
                 numVertices=3,
                 radius=h * 0.9,
-                color="r",
+                color=self.plot_colors["support"],
                 zorder=10,
             )
             self.axes[axes_i].add_patch(support_patch)
@@ -342,8 +397,10 @@ class Plotter:
             xn2 = x2 + np.sin(ai) * h2 * direction
             yn2 = y2 + np.cos(ai) * h2 * direction
             coordinates = ([x1, xn1, xn2, x2], [y1, yn1, yn2, y2])
-            self.axes[axes_i].plot(*coordinates, color="g")
-            rec = mpatches.Polygon(np.vstack(coordinates).T, color="g", alpha=0.3)
+            self.axes[axes_i].plot(*coordinates, color=self.plot_colors["q_load"])
+            rec = mpatches.Polygon(
+                np.vstack(coordinates).T, color=self.plot_colors["q_load"], alpha=0.3
+            )
             self.axes[axes_i].add_patch(rec)
 
             if verbosity == 0:
@@ -364,10 +421,20 @@ class Plotter:
                 average_h = (h1 + h2) / 2
                 # fc = face color, ec = edge color
                 self.axes[axes_i].text(
-                    xn1, yn1, f"q={qi}", color="b", fontsize=9, zorder=10
+                    xn1,
+                    yn1,
+                    f"q={qi}",
+                    color=self.plot_colors["q_load_text"],
+                    fontsize=9,
+                    zorder=10,
                 )
                 self.axes[axes_i].text(
-                    xn2, yn2, f"q={q}", color="b", fontsize=9, zorder=10
+                    xn2,
+                    yn2,
+                    f"q={q}",
+                    color=self.plot_colors["q_load_text"],
+                    fontsize=9,
+                    zorder=10,
                 )
 
                 # add multiple arrows to fill load
@@ -395,8 +462,8 @@ class Plotter:
                         head_width=average_h * 0.25,
                         head_length=0.4
                         * np.sqrt(step_len_y[counter] ** 2 + step_len_x[counter] ** 2),
-                        ec="k",
-                        fc="k",
+                        ec=self.plot_colors["q_load_arrow_edge"],
+                        fc=self.plot_colors["q_load_arrow_face"],
                         shape=shape,
                     )
 
@@ -493,12 +560,19 @@ class Plotter:
                 len_y,
                 head_width=h * 0.15,
                 head_length=0.2 * h,
-                ec="b",
-                fc="orange",
+                ec=self.plot_colors["point_load_edge"],
+                fc=self.plot_colors["point_load_fill"],
                 zorder=11,
             )
             if verbosity == 0:
-                self.axes[axes_i].text(x, y, f"F={F}", color="k", fontsize=9, zorder=10)
+                self.axes[axes_i].text(
+                    x,
+                    y,
+                    f"F={F}",
+                    color=self.plot_colors["point_load_text"],
+                    fontsize=9,
+                    zorder=10,
+                )
 
     def __moment_load_patch(self, max_val: float, axes_i: int = 0) -> None:
         """Plots the moment loads.
@@ -516,7 +590,7 @@ class Plotter:
                     node.vertex.y,
                     marker=r"$\circlearrowleft$",
                     ms=25,
-                    color="orange",
+                    color=self.plot_colors["moment_load"],
                 )
             else:
                 self.axes[axes_i].plot(
@@ -524,13 +598,13 @@ class Plotter:
                     node.vertex.y,
                     marker=r"$\circlearrowright$",
                     ms=25,
-                    color="orange",
+                    color=self.plot_colors["moment_load"],
                 )
             self.axes[axes_i].text(
                 node.vertex.x + h * 0.2,
                 node.vertex.y + h * 0.2,
                 f"T={v}",
-                color="k",
+                color=self.plot_colors["moment_load_text"],
                 fontsize=9,
                 zorder=10,
             )
@@ -590,7 +664,9 @@ class Plotter:
 
         for el in self.system.element_map.values():
             x_val, y_val = plot_values_element(el)
-            self.axes[axes_i].plot(x_val, y_val, color="black", marker="s")
+            self.axes[axes_i].plot(
+                x_val, y_val, color=self.plot_colors["element"], marker="s"
+            )
 
             if verbosity == 0:
                 # add node ID to plot
@@ -599,7 +675,7 @@ class Plotter:
                     x_val[0] + ax_range,
                     y_val[0] + ax_range,
                     f"{el.node_id1}",
-                    color="g",
+                    color=self.plot_colors["node_number"],
                     fontsize=9,
                     zorder=10,
                 )
@@ -607,7 +683,7 @@ class Plotter:
                     x_val[-1] + ax_range,
                     y_val[-1] + ax_range,
                     f"{el.node_id2}",
-                    color="g",
+                    color=self.plot_colors["node_number"],
                     fontsize=9,
                     zorder=10,
                 )
@@ -618,7 +694,12 @@ class Plotter:
                 y_scalar = (y_val[0] + y_val[-1]) / 2 + np.cos(el.angle) * factor
 
                 self.axes[axes_i].text(
-                    x_scalar, y_scalar, str(el.id), color="r", fontsize=9, zorder=10
+                    x_scalar,
+                    y_scalar,
+                    str(el.id),
+                    color=self.plot_colors["element_number"],
+                    fontsize=9,
+                    zorder=10,
                 )
 
                 # add element annotation to plot
@@ -630,7 +711,7 @@ class Plotter:
                         x_scalar,
                         y_scalar,
                         el.section_name,
-                        color="b",
+                        color=self.plot_colors["annotation"],
                         fontsize=9,
                         zorder=10,
                     )
@@ -730,7 +811,7 @@ class Plotter:
         digits: int = 2,
         node_results: bool = True,
         fill_polygon: bool = True,
-        color: int = 0,
+        color: str = "b",
         axes_i: int = 0,
     ) -> None:
         """Plots a single result on the structure.
@@ -746,15 +827,13 @@ class Plotter:
             axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
         """
         if fill_polygon:
-            rec = mpatches.Polygon(
-                np.vstack(axis_values).T, color=f"C{color}", alpha=0.3
-            )
+            rec = mpatches.Polygon(np.vstack(axis_values).T, color=color, alpha=0.3)
             self.axes[axes_i].add_patch(rec)
         # plot force
         x_val = axis_values[0]
         y_val = axis_values[1]
 
-        self.axes[axes_i].plot(x_val, y_val, color=f"C{color}")
+        self.axes[axes_i].plot(x_val, y_val, color=color)
 
         if node_results and force_1 and force_2:
             self._add_node_values(x_val, y_val, force_1, force_2, digits)
@@ -819,7 +898,11 @@ class Plotter:
             ):
                 continue
             axis_values = plot_values_axial_force(el, factor, con)
-            color = 1 if el.N_1 < 0 else 0
+            color = (
+                self.plot_colors["axial_force_neg"]
+                if el.N_1 < 0
+                else self.plot_colors["axial_force_pos"]
+            )
             self.plot_result(
                 axis_values,
                 el.N_1,
@@ -845,7 +928,7 @@ class Plotter:
                         ha="center",
                         va="center",
                         fontsize=20,
-                        color="b",
+                        color=self.plot_colors["axial_force_sign"],
                     )
             if el.N_1 > 0:
                 point.displace_polar(
@@ -862,7 +945,7 @@ class Plotter:
                         ha="center",
                         va="center",
                         fontsize=14,
-                        color="b",
+                        color=self.plot_colors["axial_force_sign"],
                     )
 
         if show:
@@ -934,6 +1017,7 @@ class Plotter:
                 abs(el.node_1.Tz),
                 abs(el.node_2.Tz),
                 node_results=node_results,
+                color=self.plot_colors["bending_moment"],
                 axes_i=axes_i,
             )
 
@@ -1015,6 +1099,7 @@ class Plotter:
                 shear_1,
                 shear_2,
                 node_results=not bool(verbosity),
+                color=self.plot_colors["shear_force"],
                 axes_i=axes_i,
             )
         if show:
@@ -1081,8 +1166,8 @@ class Plotter:
                     len_y,
                     head_width=h * 0.15,
                     head_length=0.2 * scale,
-                    ec="b",
-                    fc="orange",
+                    ec=self.plot_colors["reaction_force_arrow_edge"],
+                    fc=self.plot_colors["reaction_force_arrow_fill"],
                     zorder=11,
                 )
 
@@ -1091,7 +1176,7 @@ class Plotter:
                         x,
                         y,
                         f"R={round(node.Fx, 2)}",
-                        color="k",
+                        color=self.plot_colors["reaction_force_text"],
                         fontsize=9,
                         zorder=10,
                     )
@@ -1112,8 +1197,8 @@ class Plotter:
                     len_y,
                     head_width=h * 0.15,
                     head_length=0.2 * scale,
-                    ec="b",
-                    fc="orange",
+                    ec=self.plot_colors["reaction_force_arrow_edge"],
+                    fc=self.plot_colors["reaction_force_arrow_fill"],
                     zorder=11,
                 )
 
@@ -1122,7 +1207,7 @@ class Plotter:
                         x,
                         y,
                         f"R={round(node.Fy, 2)}",
-                        color="k",
+                        color=self.plot_colors["reaction_force_text"],
                         fontsize=9,
                         zorder=10,
                     )
@@ -1135,7 +1220,7 @@ class Plotter:
                         node.vertex.y,
                         marker=r"$\circlearrowleft$",
                         ms=25,
-                        color="orange",
+                        color=self.plot_colors["reaction_force_arrow_fill"],
                     )
                 if node.Tz < 0:
                     self.axes[axes_i].plot(
@@ -1143,7 +1228,7 @@ class Plotter:
                         node.vertex.y,
                         marker=r"$\circlearrowright$",
                         ms=25,
-                        color="orange",
+                        color=self.plot_colors["reaction_force_arrow_fill"],
                     )
 
                 if verbosity == 0:
@@ -1151,7 +1236,7 @@ class Plotter:
                         node.vertex.x + h * 0.2,
                         node.vertex.y + h * 0.2,
                         f"T={round(node.Tz, 2)}",
-                        color="k",
+                        color=self.plot_colors["reaction_force_text"],
                         fontsize=9,
                         zorder=10,
                     )
@@ -1213,6 +1298,7 @@ class Plotter:
                 axis_values,
                 node_results=False,
                 fill_polygon=False,
+                color=self.plot_colors["displaced_elem"],
                 axes_i=axes_i,
             )
 
