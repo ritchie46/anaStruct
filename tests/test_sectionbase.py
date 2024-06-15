@@ -1,6 +1,7 @@
 import unittest
-from anastruct.sectionbase import section_base
+
 from anastruct.fem import system
+from anastruct.sectionbase import section_base
 
 
 class SimpleUnitTest(unittest.TestCase):
@@ -97,7 +98,7 @@ class SimpleUnitTest(unittest.TestCase):
         ss.add_support_hinged(1)
         ss.add_support_hinged(2)
         ss.solve()
-        self.assertAlmostEqual(-4224.24, ss.reaction_forces[1].Fz)
+        self.assertAlmostEqual(-4224.24, ss.reaction_forces[1].Fy)
 
     def test_rectangle_section_deflection(self):
         ss = system.SystemElements()
@@ -125,7 +126,7 @@ class SimpleUnitTest(unittest.TestCase):
         ss.add_support_hinged(1)
         ss.add_support_hinged(2)
         ss.solve()
-        self.assertAlmostEqual(-100, ss.reaction_forces[1].Fz)
+        self.assertAlmostEqual(-100, ss.reaction_forces[1].Fy)
 
     def test_circle_section_self_weight_reaction(self):
         ss = system.SystemElements()
@@ -133,7 +134,7 @@ class SimpleUnitTest(unittest.TestCase):
         ss.add_support_hinged(1)
         ss.add_support_hinged(2)
         ss.solve()
-        self.assertAlmostEqual(-314.15926535, ss.reaction_forces[1].Fz)
+        self.assertAlmostEqual(-314.15926535, ss.reaction_forces[1].Fy)
 
     def test_show_available_sections(self):
         sections = section_base.available_sections

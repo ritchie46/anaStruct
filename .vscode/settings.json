@@ -1,7 +1,4 @@
 {
-    "python.formatting.provider": "black",
-    "python.linting.pylintEnabled": true,
-    "python.linting.mypyEnabled": true,
     "cSpell.words": [
         "allclose",
         "anastruct",
@@ -14,12 +11,15 @@
         "linalg",
         "linspace",
         "loadcase",
+        "matplotlib",
         "Mmax",
         "Mmin",
         "ndarray",
         "Nmax",
         "Nmin",
+        "numpy",
         "perp",
+        "postprocess",
         "pspec",
         "Qmax",
         "Qmin",
@@ -31,5 +31,18 @@
         "wmax",
         "wmin"
     ],
-    "editor.formatOnSave": true
+    "cSpell.diagnosticLevel": "Hint",
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+        "editor.formatOnPaste": true,
+    },
+    "mypy-type-checker.reportingScope": "workspace",
+    "pylint.severity": {
+        "refactor": "Information"
+    },
+    "python.analysis.typeCheckingMode": "basic",
 }

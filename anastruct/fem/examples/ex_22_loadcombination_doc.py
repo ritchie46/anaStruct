@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from anastruct.fem.system import SystemElements
+
 from anastruct import LoadCase, LoadCombination
+from anastruct.fem.system import SystemElements
 
 ss = SystemElements()
 
@@ -42,7 +43,7 @@ combination.add_load_case(lc_cables, factor=1.2)
 results = combination.solve(ss)
 
 for k, ss in results.items():
-    results[k].show_structure()
-    results[k].show_displacement(show=False)
+    ss.show_structure()
+    ss.show_displacement(show=False)
     plt.title(k)
-    plt.show()
+    plt.show()  # type: ignore

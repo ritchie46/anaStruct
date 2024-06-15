@@ -2,6 +2,7 @@ Modelling methods
 =================
 
 .. autoclass:: anastruct.fem.system.SystemElements
+    :noindex:
 
 
 Add elements

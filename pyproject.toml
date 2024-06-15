@@ -1,0 +1,105 @@
+[build-system]
+requires = ["setuptools>=61.0", "cython"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anastruct"
+authors = [{ name = "Ritchie Vink", email = "ritchie46@gmail.com" }]
+maintainers = [{ name = "Brooks Smith", email = "smith120bh@gmail.com" }]
+description = "Finite element analysis of 2D structures"
+requires-python = ">=3.8"
+keywords = [
+    "FEA",
+    "finite element",
+    "structural engineering",
+    "structural analysis",
+]
+license = { text = "GPL-3.0" }
+classifiers = [
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+]
+dynamic = ["version", "readme", "dependencies", "optional-dependencies"]
+
+[tool.setuptools.dynamic]
+version = { attr = "anastruct._version.__version__" }
+readme = { file = "README.md", content-type = "text/markdown" }
+dependencies = { file = "requirements.txt" }
+
+[tool.setuptools.dynamic.optional-dependencies]
+plot = { file = "plot_requirements.txt" }
+test = { file = "test_requirements.txt" }
+dev = { file = "dev_requirements.txt" }
+
+[project.urls]
+homepage = "https://github.com/ritchie46/anaStruct"
+documentation = "http://anastruct.readthedocs.io"
+author = "https://ritchievink.com"
+
+[tool.setuptools]
+packages = [
+    "anastruct",
+    "anastruct.fem",
+    "anastruct.fem.system_components",
+    "anastruct.fem.examples",
+    "anastruct.material",
+    "anastruct.cython",
+    "anastruct.fem.cython",
+    "anastruct.fem.plotter",
+    "anastruct.fem.util",
+    "anastruct.sectionbase",
+    "anastruct.sectionbase.data",
+]
+py-modules = ["_custom_build"]
+
+[tool.setuptools.cmdclass]
+build_py = "_custom_build.build_py"
+
+[tool.setuptools.package-data]
+anastruct = ["py.typed"]
+
+[tool.pylint]
+disable = [
+    "too-many-locals",
+    "too-many-arguments",
+    "too-many-statements",
+    "too-many-branches",
+    "too-many-nested-blocks",
+    "too-many-instance-attributes",
+    "too-many-public-methods",
+    "protected-access",
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "too-many-lines",
+    "duplicate-code",
+    "invalid-name",
+    "logging-fstring-interpolation",
+]
+max-line-length = 120
+py-version = 3.8
+
+[tool.mypy]
+packages = "anastruct"
+python_version = "3.8"
+strict = true
+allow_any_generics = true
+implicit_reexport = true
+strict_optional = false
+explicit_package_bases = true
+exclude = ["build", "dist", "tests", "doc"]
+
+[[tool.mypy.overrides]]
+module = [
+    "anastruct.fem.cython.celements",
+    "anastruct.fem.cython.cbasic",
+    "Cython.build",
+]
+ignore_missing_imports = true
+
+[tool.black]
+target-version = ['py38', 'py39', 'py310', 'py311']

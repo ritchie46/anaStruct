@@ -1,9 +1,9 @@
 import copy
 import logging
 from typing import TYPE_CHECKING, Optional
+
 import numpy as np
 from anastruct.basic import converge
-
 
 if TYPE_CHECKING:
     from anastruct.fem.system import SystemElements
@@ -23,10 +23,11 @@ def stiffness_adaptation(
 
     # check validity
     assert all(
-        [mp > 0 for mpd in system.non_linear_elements.values() for mp in mpd]
+        mp > 0 for mpd in system.non_linear_elements.values() for mp in mpd
     ), "Cannot solve for an mp = 0. If you want a hinge set the spring stiffness equal to 0."
 
-    for c in range(max_iter):
+    iteration = 0
+    while iteration < max_iter:
         factors = []
 
         # update the elements stiffnesses
@@ -36,12 +37,12 @@ def stiffness_adaptation(
 
             for node_no, mp in v.items():
                 if node_no == 1:
-                    # Fast Ty
+                    # Fast Tz
                     m_e = (
                         el.element_force_vector[2] + el.element_primary_force_vector[2]
                     )
                 else:
-                    # Fast Ty
+                    # Fast Tz
                     m_e = (
                         el.element_force_vector[5] + el.element_primary_force_vector[5]
                     )
@@ -61,13 +62,14 @@ def stiffness_adaptation(
             system.post_processor.reaction_forces()
             system.post_processor.element_results()
             break
+        iteration += 1
 
-    if c == max_iter - 1:
+    if iteration >= max_iter:
         logging.warning(
             f"Couldn't solve the in the amount of iterations given. max_iter={max_iter}"
         )
     elif verbosity == 0:
-        logging.info(f"Solved in {c} iterations")
+        logging.info(f"Solved in {iteration} iterations")
 
     assert system.system_displacement_vector is not None
     return system.system_displacement_vector
