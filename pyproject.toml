@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "cython"]
+requires = ["setuptools>=61.0", "cython", "numpy>=2.0.0rc1"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,7 @@ name = "anastruct"
 authors = [{ name = "Ritchie Vink", email = "ritchie46@gmail.com" }]
 maintainers = [{ name = "Brooks Smith", email = "smith120bh@gmail.com" }]
 description = "Finite element analysis of 2D structures"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 keywords = [
     "FEA",
     "finite element",
