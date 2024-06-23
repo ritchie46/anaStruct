@@ -1,8 +1,30 @@
-name: Python tests
+name: Python build & test
 
 on: [pull_request]
 
 jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.python }}-${{ matrix.os }} 
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+        python: ["cp310", "cp311", "cp312"]
+
+    steps:
+      - uses: pypa/cibuildwheel@v2.19.1
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir dist
+        env:
+          CIBW_BUILD: "{{ matrix.python }}-*"
+          CIBW_TEST_EXTRAS: "test"
+          CIBW_TEST_COMMAND: "python -m pytest --pspec anastruct/tests"
+  
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anastruct-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
+
   min_build:
     name: Run Code Checks and Tests on Python 3.9
     runs-on: "ubuntu-latest"
@@ -31,7 +53,8 @@ jobs:
       - name: Run FEM tests with pytest
         run: |
           python -m pytest --pspec tests/
-  build:
+
+  run_tests:
     name: Run FEM Testing Suite on Multiple Python Versions
     runs-on: ubuntu-latest
     strategy:
