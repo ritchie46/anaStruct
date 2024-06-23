@@ -12,6 +12,8 @@ jobs:
         python: ["cp310", "cp311", "cp312"]
 
     steps:
+      - uses: actions/checkout@v4
+      
       - uses: pypa/cibuildwheel@v2.19.1
       - name: Build wheels
         run: python -m cibuildwheel --output-dir dist
