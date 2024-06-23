@@ -259,7 +259,7 @@ def set_displacement_vector(
         np.ndarray: System displacement vector with the applied displacements on the nodes
     """
     if system.system_displacement_vector is None:
-        system.system_displacement_vector = np.ones(len(system._vertices) * 3) * np.NaN
+        system.system_displacement_vector = np.ones(len(system._vertices) * 3) * np.nan
 
     for i in nodes_list:
         index = (i[0] - 1) * 3 + i[1] - 1
