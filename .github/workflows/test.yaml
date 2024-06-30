@@ -7,6 +7,7 @@ jobs:
     name: Build wheels on ${{ matrix.python }}-${{ matrix.buildplat[1] }} 
     runs-on: ${{ matrix.buildplat[0] }}
     strategy:
+      fail-fast: false
       matrix:
           buildplat:
           - [ubuntu-latest, manylinux_x86_64]
@@ -26,6 +27,7 @@ jobs:
           CIBW_BUILD: "${{ matrix.python }}-${{ matrix.buildplat[1] }}"
           CIBW_TEST_EXTRAS: "test"
           CIBW_TEST_COMMAND: "python -m pytest --pspec anastruct/tests"
+          CIBW_BUILD_VERBOSITY: 1
   
       - uses: actions/upload-artifact@v4
         with:

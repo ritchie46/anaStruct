@@ -38,6 +38,7 @@ jobs:
     needs: build_sdist
     runs-on: ${{ matrix.buildplat[0] }}
     strategy:
+      fail-fast: false
       matrix:
         buildplat:
           - [ubuntu-latest, manylinux_x86_64]
