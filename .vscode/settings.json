@@ -1,48 +1,48 @@
 {
-    "cSpell.words": [
-        "allclose",
-        "anastruct",
-        "argmin",
-        "cumsum",
-        "discretize",
-        "eigen",
-        "figsize",
-        "ivar",
-        "linalg",
-        "linspace",
-        "loadcase",
-        "matplotlib",
-        "Mmax",
-        "Mmin",
-        "ndarray",
-        "Nmax",
-        "Nmin",
-        "numpy",
-        "perp",
-        "postprocess",
-        "pspec",
-        "Qmax",
-        "Qmin",
-        "roundoff",
-        "sectionbase",
-        "steelsection",
-        "umax",
-        "umin",
-        "wmax",
-        "wmin"
-    ],
-    "cSpell.diagnosticLevel": "Hint",
-    "editor.codeActionsOnSave": {
-        "source.organizeImports": true
-    },
-    "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter",
-        "editor.formatOnSave": true,
-        "editor.formatOnPaste": true,
-    },
-    "mypy-type-checker.reportingScope": "workspace",
-    "pylint.severity": {
-        "refactor": "Information"
-    },
-    "python.analysis.typeCheckingMode": "basic",
+  "cSpell.words": [
+    "allclose",
+    "anastruct",
+    "argmin",
+    "cumsum",
+    "discretize",
+    "eigen",
+    "figsize",
+    "ivar",
+    "linalg",
+    "linspace",
+    "loadcase",
+    "matplotlib",
+    "Mmax",
+    "Mmin",
+    "ndarray",
+    "Nmax",
+    "Nmin",
+    "numpy",
+    "perp",
+    "postprocess",
+    "pspec",
+    "Qmax",
+    "Qmin",
+    "roundoff",
+    "sectionbase",
+    "steelsection",
+    "umax",
+    "umin",
+    "wmax",
+    "wmin"
+  ],
+  "cSpell.diagnosticLevel": "Hint",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+},
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true
+  },
+  "mypy-type-checker.reportingScope": "workspace",
+  "pylint.severity": {
+    "refactor": "Information"
+  },
+  "python.analysis.typeCheckingMode": "basic"
 }
