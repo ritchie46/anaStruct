@@ -87,6 +87,7 @@ py-version = 3.8
 packages = "anastruct"
 python_version = "3.10"
 strict = true
+allow_any_generics = true
 implicit_reexport = true
 strict_optional = false
 explicit_package_bases = true
