@@ -4,7 +4,7 @@ on: [pull_request]
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.python }}-${{ matrix.os }} 
+    name: Build wheels on ${{ matrix.python }}-${{ matrix.buildplat[1] }} 
     runs-on: ${{ matrix.buildplat[0] }}
     strategy:
       matrix:
@@ -17,11 +17,11 @@ jobs:
           python: ["cp310", "cp311", "cp312"]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout anaStruct Repository
+        uses: actions/checkout@v4
       
-      - uses: pypa/cibuildwheel@v2.19.1
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir dist
+        uses: pypa/cibuildwheel@v2.19.1
         env:
           CIBW_BUILD: "{{ matrix.python }}-${{ matrix.buildplat[1] }}"
           CIBW_TEST_EXTRAS: "test"
