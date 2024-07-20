@@ -3,35 +3,6 @@ name: Python build & test
 on: [pull_request]
 
 jobs:
-  build_wheels:
-    name: Build wheels on ${{ matrix.python }}-${{ matrix.buildplat[1] }} 
-    runs-on: ${{ matrix.buildplat[0] }}
-    strategy:
-      fail-fast: false
-      matrix:
-          buildplat:
-          - [ubuntu-latest, manylinux_x86_64]
-          - [ubuntu-latest, musllinux_x86_64]
-          - [macos-13, macosx_x86_64]
-          - [macos-14, macosx_arm64]
-          - [windows-latest, win_amd64]
-          python: ["cp310", "cp311", "cp312"]
-
-    steps:
-      - name: Checkout anaStruct Repository
-        uses: actions/checkout@v4
-      
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v2.19.1
-        env:
-          CIBW_BUILD: "${{ matrix.python }}-${{ matrix.buildplat[1] }}"
-          CIBW_BUILD_VERBOSITY: 1
-  
-      - uses: actions/upload-artifact@v4
-        with:
-          name: anastruct-${{ matrix.python }}-${{ matrix.buildplat[1] }}
-          path: ./wheelhouse/*.whl
-
   min_build:
     name: Run Code Checks and Tests on Python 3.10
     runs-on: "ubuntu-latest"
