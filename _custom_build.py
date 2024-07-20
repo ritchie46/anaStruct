@@ -13,7 +13,7 @@ class build_py(_build_py):
         if self.distribution.ext_modules is None:
             self.distribution.ext_modules = []
 
-        cythonize(["anastruct/cython/basic.py", "anastruct/fem/cython/elements.py"])
+        cythonize(["anastruct/cython/cbasic.pyx", "anastruct/fem/cython/celements.pyx"])
 
         self.distribution.ext_modules.append(
             Extension(
