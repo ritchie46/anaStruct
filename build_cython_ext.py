@@ -1,4 +1,4 @@
-from Cython.distutils import build_ext
+from Cython.Distutils import build_ext
 
 # from Cython.Build import cythonize
 from setuptools import Extension
