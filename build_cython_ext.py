@@ -7,8 +7,13 @@ define_macros = [("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]
 
 ext_modules = [
     Extension(
-        "anastruct.fem.cython",
-        sources=["anastruct/cython/cbasic.pyx", "anastruct/fem/cython/celements.pyx"],
+        "anastruct.fem.cython.celements",
+        sources=["anastruct/fem/cython/celements.pyx"],
+        define_macros=define_macros,
+    ),
+    Extension(
+        "anastruct.cython.cbasic",
+        sources=["anastruct/cython/cbasic.pyx"],
         define_macros=define_macros,
     ),
 ]
