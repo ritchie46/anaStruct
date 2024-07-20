@@ -34,14 +34,7 @@ homepage = "https://github.com/ritchie46/anaStruct"
 repository = "https://github.com/ritchie46/anaStruct"
 documentation = "http://anastruct.readthedocs.io"
 packages = [{ include = "anastruct" }]
-include = [
-    "requirements.txt",
-    "plot_requirements.txt",
-    "test_requirements.txt",
-    "dev_requirements.txt",
-    "py.typed",
-    "*.pyx",
-]
+include = ["py.typed", "*.pyx"]
 
 [tool.poetry.dependencies]
 python = ">=3.10"
