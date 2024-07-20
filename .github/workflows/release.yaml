@@ -25,8 +25,8 @@ jobs:
       - name: Upload Source Distribution
         uses: actions/upload-artifact@v4
         with:
-          name: anastruct-sdist
-          path: dist/*.tar.gz
+          name: sdist
+          path: ./dist/*.tar.gz
 
   build_wheels:
     name: Build wheels on ${{ matrix.python }}-${{ matrix.buildplat[1] }} 
@@ -56,7 +56,7 @@ jobs:
         
       - uses: actions/upload-artifact@v4
         with:
-          name: anastruct-${{ matrix.python }}-${{ matrix.buildplat[1] }}
+          name: wheel-${{ matrix.python }}-${{ matrix.buildplat[1] }}
           path: ./dist/*.whl
 
   run_tests:
@@ -97,8 +97,10 @@ jobs:
     runs-on: "ubuntu-latest"
 
     steps:
-      - name: Checkout anaStruct Repository
-        uses: actions/checkout@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
 
       - name: Publish to pypi
         uses: pypa/gh-action-pypi-publish@release/v1
