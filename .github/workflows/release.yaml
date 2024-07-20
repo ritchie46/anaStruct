@@ -21,17 +21,16 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install .[dev,test]
-          pip install build
+          poetry install
       
       - name: Build Source Distribution
-        run: python -m build --sdist --outdir dist/ .
+        run: poetry build -f sdist
       
       - name: Upload Source Distribution
         uses: actions/upload-artifact@v4
         with:
           name: anastruct-sdist
-          path: ./dist/*.tar.gz
+          path: dist/*.tar.gz
 
   build_wheels:
     name: Build wheels on ${{ matrix.python }}-${{ matrix.buildplat[1] }} 
@@ -56,8 +55,6 @@ jobs:
         uses: pypa/cibuildwheel@v2.19.1
         env:
           CIBW_BUILD: "${{ matrix.python }}-${{ matrix.buildplat[1] }}"
-          CIBW_TEST_EXTRAS: "test"
-          CIBW_TEST_COMMAND: "python -m pytest --pspec anastruct/tests"
         with:
           output-dir: dist
         
