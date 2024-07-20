@@ -18,6 +18,9 @@ class build_py(_build_py):
         self.distribution.ext_modules.append(
             Extension(
                 "anastruct.fem.cython",
-                sources=["anastruct/cython/basic.c", "anastruct/fem/cython/elements.c"],
+                sources=[
+                    "anastruct/cython/cbasic.c",
+                    "anastruct/fem/cython/celements.c",
+                ],
             )
         )
