@@ -51,7 +51,7 @@ matplotlib = "==3.9.0"
 pylint = "==3.2.5"
 mypy = "==1.10.1"
 black = { version = "==24.4.2", extras = ["jupyter"] }
-pytest = "==8.2.2"
+pytest = "==8.3.1"
 pytest-describe = "==2.2.0"
 pytest-pspec = "==0.0.4"
 pytest-raises = "==0.11"
