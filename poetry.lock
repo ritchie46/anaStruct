@@ -1414,21 +1414,22 @@ test = ["cython (>=3.0)", "defusedxml (>=0.7.1)", "pytest (>=8.0)", "setuptools 
 
 [[package]]
 name = "sphinx-autodoc-typehints"
-version = "1.17.1"
+version = "2.2.3"
 description = "Type hints (PEP 484) support for the Sphinx autodoc extension"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.9"
 files = [
-    {file = "sphinx_autodoc_typehints-1.17.1-py3-none-any.whl", hash = "sha256:f16491cad05a13f4825ecdf9ee4ff02925d9a3b1cf103d4d02f2f81802cce653"},
-    {file = "sphinx_autodoc_typehints-1.17.1.tar.gz", hash = "sha256:844d7237d3f6280b0416f5375d9556cfd84df1945356fcc34b82e8aaacab40f3"},
+    {file = "sphinx_autodoc_typehints-2.2.3-py3-none-any.whl", hash = "sha256:b7058e8c5831e5598afca1a78fda0695d3291388d954464a6e480c36198680c0"},
+    {file = "sphinx_autodoc_typehints-2.2.3.tar.gz", hash = "sha256:fde3d888949bd0a91207cf1e54afda58121dbb4bf1f183d0cc78a0826654c974"},
 ]
 
 [package.dependencies]
-Sphinx = ">=4"
+sphinx = ">=7.3.5"
 
 [package.extras]
-testing = ["covdefaults (>=2)", "coverage (>=6)", "diff-cover (>=6.4)", "nptyping (>=1,<2)", "pytest (>=6)", "pytest-cov (>=3)", "sphobjinv (>=2)", "typing-extensions (>=3.5)"]
-type-comments = ["typed-ast (>=1.4.0)"]
+docs = ["furo (>=2024.1.29)"]
+numpy = ["nptyping (>=2.5)"]
+testing = ["covdefaults (>=2.3)", "coverage (>=7.4.4)", "defusedxml (>=0.7.1)", "diff-cover (>=9)", "pytest (>=8.1.1)", "pytest-cov (>=5)", "sphobjinv (>=2.3.1)", "typing-extensions (>=4.11)"]
 
 [[package]]
 name = "sphinxcontrib-applehelp"
