@@ -14,6 +14,7 @@ from typing import (
     Set,
     Tuple,
     Union,
+    overload,
 )
 
 import numpy as np
@@ -1344,6 +1345,45 @@ class SystemElements:
             id_ = _negative_index_to_id(node_idi, self.node_map.keys())
             self.loads_moment[id_] = Tz[i] * self.load_factor
 
+    @overload
+    def show_structure(
+        self,
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: bool,
+        supports: bool,
+        values_only: Literal[True],
+        annotations: bool,
+    ) -> Tuple[np.ndarray, np.ndarray]: ...
+
+    @overload
+    def show_structure(
+        self,
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: Literal[False],
+        supports: bool,
+        values_only: Literal[False],
+        annotations: bool,
+    ) -> "Figure": ...
+
+    @overload
+    def show_structure(
+        self,
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: Literal[True],
+        supports: bool,
+        values_only: Literal[False],
+        annotations: bool,
+    ) -> None: ...
+
     def show_structure(
         self,
         verbosity: int = 0,
@@ -1388,6 +1428,42 @@ class SystemElements:
         """
         self.plotter.change_plot_colors(plot_colors)
 
+    @overload
+    def show_bending_moment(
+        self,
+        factor: Optional[float],
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: bool,
+        values_only: Literal[True],
+    ) -> Tuple[np.ndarray, np.ndarray]: ...
+
+    @overload
+    def show_bending_moment(
+        self,
+        factor: Optional[float],
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: Literal[False],
+        values_only: Literal[False],
+    ) -> "Figure": ...
+
+    @overload
+    def show_bending_moment(
+        self,
+        factor: Optional[float],
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: Literal[True],
+        values_only: Literal[False],
+    ) -> None: ...
+
     def show_bending_moment(
         self,
         factor: Optional[float] = None,
@@ -1421,6 +1497,42 @@ class SystemElements:
             factor, figsize, verbosity, scale, offset, show
         )
 
+    @overload
+    def show_axial_force(
+        self,
+        factor: Optional[float],
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: bool,
+        values_only: Literal[True],
+    ) -> Tuple[np.ndarray, np.ndarray]: ...
+
+    @overload
+    def show_axial_force(
+        self,
+        factor: Optional[float],
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: Literal[False],
+        values_only: Literal[False],
+    ) -> "Figure": ...
+
+    @overload
+    def show_axial_force(
+        self,
+        factor: Optional[float],
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: Literal[True],
+        values_only: Literal[False],
+    ) -> None: ...
+
     def show_axial_force(
         self,
         factor: Optional[float] = None,
@@ -1450,6 +1562,42 @@ class SystemElements:
             return self.plot_values.axial_force(factor)
         figsize = self.figsize if figsize is None else figsize
         return self.plotter.axial_force(factor, figsize, verbosity, scale, offset, show)
+
+    @overload
+    def show_shear_force(
+        self,
+        factor: Optional[float],
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: bool,
+        values_only: Literal[True],
+    ) -> Tuple[np.ndarray, np.ndarray]: ...
+
+    @overload
+    def show_shear_force(
+        self,
+        factor: Optional[float],
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: Literal[False],
+        values_only: Literal[False],
+    ) -> "Figure": ...
+
+    @overload
+    def show_shear_force(
+        self,
+        factor: Optional[float],
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: Literal[True],
+        values_only: Literal[False],
+    ) -> None: ...
 
     def show_shear_force(
         self,
@@ -1481,6 +1629,26 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         return self.plotter.shear_force(factor, figsize, verbosity, scale, offset, show)
 
+    @overload
+    def show_reaction_force(
+        self,
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: Literal[False],
+    ) -> "Figure": ...
+
+    @overload
+    def show_reaction_force(
+        self,
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: Literal[True],
+    ) -> None: ...
+
     def show_reaction_force(
         self,
         verbosity: int = 0,
@@ -1488,7 +1656,7 @@ class SystemElements:
         offset: Tuple[float, float] = (0, 0),
         figsize: Optional[Tuple[float, float]] = None,
         show: bool = True,
-    ) -> Union[Tuple[np.ndarray, np.ndarray], Optional["Figure"]]:
+    ) -> Optional["Figure"]:
         """Plot the reaction force.
 
         Args:
@@ -1503,6 +1671,45 @@ class SystemElements:
         """
         figsize = self.figsize if figsize is None else figsize
         return self.plotter.reaction_force(figsize, verbosity, scale, offset, show)
+
+    @overload
+    def show_displacement(
+        self,
+        factor: Optional[float],
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: bool,
+        linear: bool,
+        values_only: Literal[True],
+    ) -> Tuple[np.ndarray, np.ndarray]: ...
+
+    @overload
+    def show_displacement(
+        self,
+        factor: Optional[float],
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: Literal[False],
+        linear: bool,
+        values_only: Literal[False],
+    ) -> "Figure": ...
+
+    @overload
+    def show_displacement(
+        self,
+        factor: Optional[float],
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: Literal[True],
+        linear: bool,
+        values_only: Literal[False],
+    ) -> None: ...
 
     def show_displacement(
         self,
@@ -1538,6 +1745,26 @@ class SystemElements:
             factor, figsize, verbosity, scale, offset, show, linear
         )
 
+    @overload
+    def show_results(
+        self,
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: Literal[False],
+    ) -> "Figure": ...
+
+    @overload
+    def show_results(
+        self,
+        verbosity: int,
+        scale: float,
+        offset: Tuple[float, float],
+        figsize: Tuple[float, float],
+        show: Literal[True],
+    ) -> None: ...
+
     def show_results(
         self,
         verbosity: int = 0,
@@ -1561,15 +1788,23 @@ class SystemElements:
         figsize = self.figsize if figsize is None else figsize
         return self.plotter.results_plot(figsize, verbosity, scale, offset, show)
 
+    @overload
     def get_node_results_system(
-        self, node_id: int = 0
+        self, node_id: None
+    ) -> List[Dict[str, Union[int, float]]]: ...
+
+    @overload
+    def get_node_results_system(self, node_id: int) -> Dict[str, Union[int, float]]: ...
+
+    def get_node_results_system(
+        self, node_id: Optional[int] = None
     ) -> Union[List[Dict[str, Union[int, float]]], Dict[str, Union[int, float]]]:
         """Get the node results. These are the opposite of the forces and displacements
         working on the elements and may seem counter intuitive.
 
         Args:
-            node_id (int, optional): The node's ID. If node_id == 0, the results of all nodes are returned.
-                Defaults to 0.
+            node_id (int, optional): The node's ID. If node_id == None or 0, the results of all nodes are returned.
+                Defaults to None.
 
         Returns:
             Union[ List[Dict[str, Union[int, float]]], Dict[str, Union[int, float]] ]:
@@ -1579,7 +1814,7 @@ class SystemElements:
                 {"id": id, "Fx": Fx, "Fy": Fy, "Tz": Tz, "ux": ux, "uy": uy, "phi_z": phi_z}
         """
         result_list = []
-        if node_id != 0:
+        if node_id is not None and node_id != 0:
             node_id = _negative_index_to_id(node_id, self.node_map)
             node = self.node_map[node_id]
             return {
@@ -1605,14 +1840,20 @@ class SystemElements:
             )
         return result_list
 
+    @overload
+    def get_node_displacements(self, node_id: None) -> List[Dict[str, Any]]: ...
+
+    @overload
+    def get_node_displacements(self, node_id: int) -> Dict[str, Any]: ...
+
     def get_node_displacements(
-        self, node_id: int = 0
+        self, node_id: Optional[int] = None
     ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         """Get the node displacements.
 
         Args:
-            node_id (int, optional): The node's ID. If node_id == 0, the results of all nodes are returned.
-                Defaults to 0.
+            node_id (int, optional): The node's ID. If node_id == None or 0, the results of all nodes are returned.
+                Defaults to None.
 
         Returns:
             Union[List[Dict[str, Any]], Dict[str, Any]]: If node_id == 0, returns a list containing
@@ -1620,7 +1861,7 @@ class SystemElements:
                 If node_id > 0, returns a dict with the results: {"id": id, "ux": ux, "uy": uy, "phi_z": phi_z}
         """
         result_list = []
-        if node_id != 0:
+        if node_id is not None and node_id != 0:
             node_id = _negative_index_to_id(node_id, self.node_map)
             node = self.node_map[node_id]
             return {
@@ -1640,14 +1881,22 @@ class SystemElements:
             )
         return result_list
 
+    @overload
     def get_element_results(
-        self, element_id: int = 0, verbose: bool = False
+        self, element_id: None, verbose: bool
+    ) -> List[Dict[str, Any]]: ...
+
+    @overload
+    def get_element_results(self, element_id: int, verbose: bool) -> Dict[str, Any]: ...
+
+    def get_element_results(
+        self, element_id: Optional[int] = None, verbose: bool = False
     ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         """Get the element results.
 
         Args:
-            element_id (int, optional): The element's ID. If element_id == 0, the results of all elements are returned.
-                Defaults to 0.
+            element_id (int, optional): The element's ID. If element_id == None or 0, the results of all elements are returned.
+                Defaults to None.
             verbose (bool, optional): If set to True, then numerical results for the deflection and the bending
                 moment are also returned. Defaults to False.
 
@@ -1660,7 +1909,7 @@ class SystemElements:
                     "umax": umax, "umin": umin, "u": u, "wmax": wmax, "wmin": wmin, "w": w, "Mmin": Mmin, "Mmax": Mmax,
                     "M": M, "Qmin": Qmin, "Qmax": Qmax, "Q": Q, "Nmin": Nmin, "Nmax": Nmax, "N": N, "q": q}
         """
-        if element_id != 0:
+        if element_id is not None and element_id != 0:
             element_id = _negative_index_to_id(element_id, self.element_map)
             el = self.element_map[element_id]
 
@@ -1761,11 +2010,23 @@ class SystemElements:
                 )
         return result_list
 
+    @overload
+    def get_element_result_range(
+        self,
+        unit: Literal["shear", "moment", "axial"],
+        minmax: Literal["min", "max", "abs"],
+    ) -> List[float]: ...
+
+    @overload
+    def get_element_result_range(
+        self, unit: Literal["shear", "moment", "axial"], minmax: Literal["both"]
+    ) -> List[Tuple[float, float]]: ...
+
     def get_element_result_range(
         self,
         unit: Literal["shear", "moment", "axial"],
         minmax: Literal["min", "max", "abs", "both"] = "abs",
-    ) -> List[Union[float, Tuple[float]]]:
+    ) -> Union[List[float], List[Tuple[float, float]]]:
         """Get the element results. Returns a list with the min/max results of each element for a certain unit.
 
         Args:
@@ -1780,7 +2041,19 @@ class SystemElements:
             List[Union[float, Tuple[float]]]: List with min and/or max results of each element for a certain unit.
         """
 
-        def minmax_array(array: np.ndarray) -> Union[float, Tuple[float]]:
+        @overload
+        def minmax_array(
+            array: np.ndarray, minmax: Literal["min", "max", "abs"]
+        ) -> float: ...
+
+        @overload
+        def minmax_array(
+            array: np.ndarray, minmax: Literal["both"]
+        ) -> Tuple[float, float]: ...
+
+        def minmax_array(
+            array: np.ndarray, minmax: Literal["min", "max", "abs", "both"] = minmax
+        ) -> Union[float, Tuple[float, float]]:
             assert len(array) > 0
             # technically, np.amin/np.amax returns 'Any', hence the type: ignore's
             if minmax == "min":
@@ -1795,19 +2068,19 @@ class SystemElements:
 
         if unit == "shear":
             return [
-                minmax_array(el.shear_force)
+                minmax_array(el.shear_force)  # type: ignore
                 for el in self.element_map.values()
                 if el.shear_force is not None
             ]
         if unit == "moment":
             return [
-                minmax_array(el.bending_moment)
+                minmax_array(el.bending_moment)  # type: ignore
                 for el in self.element_map.values()
                 if el.bending_moment is not None
             ]
         if unit == "axial":
             return [
-                minmax_array(el.axial_force)
+                minmax_array(el.axial_force)  # type: ignore
                 for el in self.element_map.values()
                 if el.axial_force is not None
             ]
