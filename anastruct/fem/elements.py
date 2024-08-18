@@ -1,30 +1,32 @@
 from __future__ import annotations
-from math import sin, cos
-from functools import lru_cache
+
 import copy
-from typing import TYPE_CHECKING, Dict, Optional, List
+from functools import lru_cache
+from math import cos, sin
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional
+
 import numpy as np
+
 from anastruct.basic import FEMException
 
-
 if TYPE_CHECKING:
-    from anastruct.vertex import Vertex
     from anastruct.fem.node import Node
     from anastruct.fem.system import Spring
+    from anastruct.types import ElementType
+    from anastruct.vertex import Vertex
 
 try:
-    from anastruct.fem.cython.celements import (  # type: ignore # pylint: disable=unused-import
-        det_shear,
-        det_moment,
+    from anastruct.fem.cython.celements import (  # pylint: disable=unused-import
         det_axial,
+        det_moment,
+        det_shear,
     )
 except ImportError:
-    from anastruct.fem.cython.elements import det_shear, det_moment, det_axial
+    from anastruct.fem.cython.elements import det_axial, det_moment, det_shear
 
-"""
-The matrices underneath are for slender beams, where the most deformation occurs due to bending.
-Shear deformation is not taken into account.
-"""
+
+# The matrices underneath are for slender beams, where the most deformation occurs due to bending.
+# Shear deformation is not taken into account.
 
 CACHE_BOUND = 32000
 
@@ -39,21 +41,24 @@ class Element:
         angle: float,
         vertex_1: Vertex,
         vertex_2: Vertex,
-        type_: str,
+        type_: ElementType,
         section_name: str,
-        spring: Spring = None,
+        spring: Optional[Spring] = None,
     ):
-        """
-        :param id_: integer representing the elements ID
-        :param EA: Young's modulus * Area
-        :param EI: Young's modulus * Moment of Inertia
-        :param l: length
-        :param angle: angle between element and x-axis
-        :param vertex_1: point object
-        :param vertex_2: point object
-        :param spring: (dict) Set a spring at node 1 or node 2.
-                    spring={1: k
-                            2: k}
+        """Create an element object
+
+        Args:
+            id_ (int): Integer representing the elements ID
+            EA (float): Axial stiffness
+            EI (float): Bending stiffness
+            l (float): Length
+            angle (float): Angle between element and x-axis
+            vertex_1 (Vertex): Starting Vertex
+            vertex_2 (Vertex): Ending Vertex
+            type_ (str):
+            section_name (str): Section name (for element annotation)
+            spring (Optional[Spring], optional): Set a spring at node 1 or node 2.
+                spring={1: k, 2: k}. Defaults to None.
         """
         self.id = id_
         self.type = type_
@@ -90,12 +95,17 @@ class Element:
         self.max_deflection = None
         self.max_extension = None
         self.nodes_plastic: List[bool] = [False, False]
-        self.compile_constitutive_matrix(EA, EI, l, spring)
+        self.compile_constitutive_matrix(initial=True)
         self.compile_stiffness_matrix()
         self.section_name = section_name  # needed for element annotation
 
     @property
     def all_qp_load(self) -> List[float]:
+        """All parallel q (distributed) loads
+
+        Returns:
+            List[float]: All parallel q (distributed) loads
+        """
         if self.q_angle is not None:
             q_factor = sin(self.q_angle - self.angle)
             q_perp_factor = cos(self.q_angle - self.angle)
@@ -111,6 +121,11 @@ class Element:
 
     @property
     def all_qn_load(self) -> List[float]:
+        """All normal q (distributed) loads
+
+        Returns:
+            List[float]: All normal q (distributed) loads
+        """
         if self.q_angle is not None:
             q_factor = -cos(self.q_angle - self.angle)
             q_perp_factor = sin(self.q_angle - self.angle)
@@ -126,16 +141,28 @@ class Element:
 
     @property
     def node_1(self) -> Node:
+        """Starting node
+
+        Returns:
+            Node: Starting node
+        """
         return self.node_map[self.node_id1]
 
     @property
     def node_2(self) -> Node:
+        """Ending node
+
+        Returns:
+            Node: Ending node
+        """
         return self.node_map[self.node_id2]
 
     @property
     def hinges(self) -> List[int]:
-        """
-        Node ids of hinges on element
+        """Node IDs of hinges
+
+        Returns:
+            List[int]: Node IDs of hinges
         """
         out = []
 
@@ -149,33 +176,49 @@ class Element:
         return out
 
     def determine_force_vector(self) -> Optional[np.ndarray]:
+        """Determine the force vector of the element
+
+        Returns:
+            Optional[np.ndarray]: Force vector of the element
+        """
         self.element_force_vector = np.dot(
             self.stiffness_matrix, self.element_displacement_vector
         )
         return self.element_force_vector
 
-    def compile_stiffness_matrix(self):
+    def compile_stiffness_matrix(self) -> None:
+        """Compile the stiffness matrix of the element"""
         self.stiffness_matrix = stiffness_matrix(
             self.constitutive_matrix, self.kinematic_matrix
         )
 
-    def compile_kinematic_matrix(self, a1: float, a2: float, l: float):
-        self.kinematic_matrix = kinematic_matrix(a1, a2, l)
+    def compile_kinematic_matrix(self) -> None:
+        """Compile the kinematic matrix of the element"""
+        self.kinematic_matrix = kinematic_matrix(self.a1, self.a2, self.l)
 
-    def compile_constitutive_matrix(
-        self,
-        EA: float,
-        EI: float,
-        l: float,
-        spring: Optional[Dict[int, float]] = None,
-        node_1_hinge: Optional[bool] = False,
-        node_2_hinge: Optional[bool] = False,
-    ):
-        self.constitutive_matrix = constitutive_matrix(
-            EA, EI, l, spring, node_1_hinge, node_2_hinge
-        )
+    def compile_constitutive_matrix(self, initial: bool = False) -> None:
+        """Compile the constitutive matrix of the element"""
+        if initial:  # if element is just being created
+            self.constitutive_matrix = constitutive_matrix(
+                self.EA, self.EI, self.l, self.springs, False, False
+            )
+        else:
+            self.constitutive_matrix = constitutive_matrix(
+                self.EA,
+                self.EI,
+                self.l,
+                self.springs,
+                self.node_1.hinge,
+                self.node_2.hinge,
+            )
 
-    def update_stiffness(self, factor: float, node: int):
+    def update_stiffness(self, factor: float, node: Literal[1, 2]) -> None:
+        """Update the stiffness matrix of the element
+
+        Args:
+            factor (float): Factor to multiply the stiffness matrix with
+            node (Literal[1, 2]): Node ID of the node to update (1 or 2)
+        """
         if node == 1:
             self.constitutive_matrix[1][1] *= factor
             self.constitutive_matrix[1][2] *= factor
@@ -186,17 +229,31 @@ class Element:
             self.constitutive_matrix[2][2] *= factor
         self.compile_stiffness_matrix()
 
-    def compile_geometric_non_linear_stiffness_matrix(self):
+    def compile_geometric_non_linear_stiffness_matrix(self) -> None:
+        """Compile the geometric non-linear stiffness matrix of the element"""
         self.compile_stiffness_matrix()
+        assert self.N_1 is not None
         self.stiffness_matrix += geometric_stiffness_matrix(
             self.l, self.N_1, self.a1, self.a2
         )
 
-    def reset(self):
+    def reset(self) -> None:
+        """Reset the element's solve state"""
         self.element_displacement_vector = np.zeros(6)
         self.element_primary_force_vector = np.zeros(6)
 
     def __add__(self, other: Element) -> Element:
+        """Add two elements
+
+        Args:
+            other (Element): Element to add
+
+        Raises:
+            FEMException: If the elements have different IDs
+
+        Returns:
+            Element: Sum of the two elements
+        """
         if self.id != other.id:
             raise FEMException(
                 "Wrong element:", "only elements with the same id can be added."
@@ -227,21 +284,25 @@ class Element:
         el.node_map[self.node_id1] = el.node_1 + other.node_1
         el.node_map[self.node_id2] = el.node_2 + other.node_2
         el.node_map[self.node_id1].ux = el.node_1.ux + other.node_1.ux
-        el.node_map[self.node_id1].uz = el.node_1.uz + other.node_1.uz
-        el.node_map[self.node_id1].phi_y = el.node_1.phi_y + other.node_1.phi_y
+        el.node_map[self.node_id1].uy = el.node_1.uy + other.node_1.uy
+        el.node_map[self.node_id1].phi_z = el.node_1.phi_z + other.node_1.phi_z
         el.node_map[self.node_id2].ux = el.node_2.ux + other.node_2.ux
-        el.node_map[self.node_id2].uz = el.node_2.uz + other.node_2.uz
-        el.node_map[self.node_id2].phi_y = el.node_2.phi_y + other.node_2.phi_y
+        el.node_map[self.node_id2].uy = el.node_2.uy + other.node_2.uy
+        el.node_map[self.node_id2].phi_z = el.node_2.phi_z + other.node_2.phi_z
         return el
 
 
 @lru_cache(CACHE_BOUND)
 def kinematic_matrix(a1: float, a2: float, l: float) -> np.ndarray:
-    """
-    Kinematic matrix of an element dependent of the angle ai and the length of the element.
+    """Generate the kinematic matrix of an element
 
-    :param a1: (float) angle with respect to the x axis.
-    :param l: (float) Length
+    Args:
+        a1 (float): Angle of the element at node 1
+        a2 (float): Angle of the element at node 2
+        l (float): Length of the element
+
+    Returns:
+        np.ndarray: Kinematic matrix of the element
     """
     c1 = cos(a1)
     s1 = sin(a1)
@@ -260,16 +321,22 @@ def constitutive_matrix(
     EA: float,
     EI: float,
     l: float,
-    spring: Optional[Dict[int, float]],
+    spring: Optional["Spring"],
     node_1_hinge: Optional[bool],
     node_2_hinge: Optional[bool],
 ) -> np.ndarray:
-    """
-    :param EA: (float) Young's modules * Area
-    :param EI: (float) Young's modules * Moment of Inertia
-    :param l: (float) Length
-    :param spring: (int) 1 or 2. Apply a hinge on the first of the second node.
-    :return: (array)
+    """Generate the constitutive matrix of an element
+
+    Args:
+        EA (float): Axial stiffness
+        EI (float): Bending stiffness
+        l (float): Length
+        spring (Optional[Spring]): Spring stiffnesses at node 1 and node 2
+        node_1_hinge (Optional[bool]): Whether node 1 is a hinge
+        node_2_hinge (Optional[bool]): Whether node 2 is a hinge
+
+    Returns:
+        np.ndarray: Constitutive matrix of the element
     """
     matrix = np.array(
         [[EA / l, 0, 0], [0, 4 * EI / l, -2 * EI / l], [0, -2 * EI / l, 4 * EI / l]]
@@ -282,19 +349,17 @@ def constitutive_matrix(
         matrix[1][2] = matrix[2][1] = matrix[2][2] = 0
 
     if spring is not None:
-        """
-        stiffness matrix K:
-        [[ k, k ]
-        [ k, k ]]
+        # stiffness matrix K:
+        # [[ k, k ]
+        # [ k, k ]]
 
-        flexibility matrix C:
-        [[ c, c ]    =   [[ 1/k, 1/k ]
-        `[ c, c ]]       [  1/k, 1/k ]]
+        # flexibility matrix C:
+        # [[ c, c ]    =   [[ 1/k, 1/k ]
+        # `[ c, c ]]       [  1/k, 1/k ]]
 
-        flexibility matrix c + springs on both sides:
-        [[ c11 + 1/k1, c12       ]
-        [  c21      , c21 + 1/k2 ]]
-        """
+        # flexibility matrix c + springs on both sides:
+        # [[ c11 + 1/k1, c12       ]
+        # [  c21      , c21 + 1/k2 ]]
         if 1 in spring and spring[1] != 0:  # not hinge
             matrix[1][1] = 1 / (1 / matrix[1][1] + 1 / spring[1])
             matrix[2][1] = 1 / (1 / matrix[2][1] + 1 / spring[1])
@@ -308,26 +373,39 @@ def constitutive_matrix(
 def stiffness_matrix(
     var_constitutive_matrix: np.ndarray, var_kinematic_matrix: np.ndarray
 ) -> np.ndarray:
-    kinematic_transposed_times_constitutive = np.dot(
-        var_kinematic_matrix.transpose(), var_constitutive_matrix
+    """Generate the stiffness matrix of an element
+
+    Args:
+        var_constitutive_matrix (np.ndarray): Constitutive matrix of the element
+        var_kinematic_matrix (np.ndarray): Kinematic matrix of the element
+
+    Returns:
+        np.ndarray: Stiffness matrix of the element
+    """
+    kinematic_transposed_times_constitutive = (
+        var_kinematic_matrix.transpose() @ var_constitutive_matrix
     )
-    return np.dot(kinematic_transposed_times_constitutive, var_kinematic_matrix)
+    return kinematic_transposed_times_constitutive @ var_kinematic_matrix  # type: ignore
 
 
 def geometric_stiffness_matrix(l: float, N: float, a1: float, a2: float) -> np.ndarray:
-    """
+    """Generate the geometric stiffness matrix of an element
 
-    :param l: (float) Length.
-    :param N: (float) Axial force.
-    :param a1: (float) angle. (First try 1st order)
-    :return: (array)
+    Args:
+        l (float): Length
+        N (float): Axial force
+        a1 (float): Angle of the element at node 1
+        a2 (float): Angle of the element at node 2
+
+    Returns:
+        np.ndarray: Geometric stiffness matrix of the element
     """
     c1 = cos(a1)
     s1 = sin(a1)
     c2 = cos(a2)
     s2 = sin(a2)
     # http://people.duke.edu/~hpgavin/cee421/frame-finite-def.pdf
-    return (
+    return (  # type: ignore
         N
         / l
         * np.array(

@@ -2,7 +2,9 @@ from functools import lru_cache
 
 
 @lru_cache(32000)
-def det_moment(kl, kr, qi, q, x, EI, L):
+def det_moment(
+    kl: float, kr: float, qi: float, q: float, x: float, EI: float, L: float
+) -> float:
     """
     See notebook in: anastruct/fem/background/primary_m_v.ipynb
 
@@ -18,11 +20,7 @@ def det_moment(kl, kr, qi, q, x, EI, L):
         -(L**3)
         * kl
         * (14 * EI * q + 16 * EI * qi + 2 * L * kr * q + 3 * L * kr * qi)
-        / (
-            60
-            * EI
-            * (12 * EI**2 + 4 * EI * L * kl + 4 * EI * L * kr + L**2 * kl * kr)
-        )
+        / (60 * EI * (12 * EI**2 + 4 * EI * L * kl + 4 * EI * L * kr + L**2 * kl * kr))
         - L
         * x
         * (
@@ -47,7 +45,9 @@ def det_moment(kl, kr, qi, q, x, EI, L):
 
 
 @lru_cache(32000)
-def det_shear(kl, kr, qi, q, x, EI, L):
+def det_shear(
+    kl: float, kr: float, qi: float, q: float, x: float, EI: float, L: float
+) -> float:
     """
     See notebook in: anastruct/fem/background/primary_m_v.ipynb
 
@@ -83,7 +83,7 @@ def det_shear(kl, kr, qi, q, x, EI, L):
 
 
 @lru_cache(32000)
-def det_axial(qi, q, x, EA, L):
+def det_axial(qi: float, q: float, x: float, EA: float, L: float) -> float:
     """
     See notebook in: anastruct/fem/background/distributed_ax_force.ipynb
 
@@ -95,6 +95,5 @@ def det_axial(qi, q, x, EA, L):
     """
     return EA * (
         x * (-L * qi / 2 + x * (-q + qi) / 3) / (EA * L)
-        + (L**2 * (q + 2 * qi) / 6 - L * qi * x / 2 + x**2 * (-q + qi) / 6)
-        / (EA * L)
+        + (L**2 * (q + 2 * qi) / 6 - L * qi * x / 2 + x**2 * (-q + qi) / 6) / (EA * L)
     )

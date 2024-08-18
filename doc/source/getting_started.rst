@@ -29,8 +29,8 @@ a structure.
 
 .. code-block:: python
 
-    ss.add_element(location=[[0, 0], [3, 4]])
-    ss.add_element(location=[[3, 4], [8, 4]])
+    ss.add_element(location=[[0, 0], [3, 4]], EA=5e9, EI=8000)
+    ss.add_element(location=[[3, 4], [8, 4]], EA=5e9, EI=4000)
 
 Now we have elements, we need to define the supporting conditions of our structure.
 

@@ -1,8 +1,10 @@
 import numpy as np
 from pytest import approx, raises
+
 from anastruct import LoadCase, LoadCombination, SystemElements
-from .utils import pspec_context
+
 from .fixtures.e2e_fixtures import *
+from .utils import pspec_context
 
 """
 NOTE: Several tests in this file validate that the correct numerical engineering results
@@ -100,7 +102,7 @@ def describe_end_to_end_tests():
         def it_results_in_correct_node_3_displacements():
             assert system.get_node_displacements(3)["ux"] == approx(0.0575402011335)
             assert system.get_node_displacements(3)["uy"] == approx(-0.0128738197933)
-            assert system.get_node_displacements(3)["phi_y"] == approx(0.0021605118130)
+            assert system.get_node_displacements(3)["phi_z"] == approx(0.0021605118130)
 
     def context_example_4():
         @pspec_context("Example 4")
@@ -110,7 +112,7 @@ def describe_end_to_end_tests():
         system = SystemElements()
         system.add_element(location=[[0, 0], [5, 0]], EA=5e9, EI=8000, spring={2: 0})
         system.add_element(location=[[5, 0], [5, 5]], EA=5e9, EI=4000)
-        system.moment_load(Ty=10, node_id=3)
+        system.moment_load(Tz=10, node_id=3)
         system.add_support_hinged(node_id=1)
         system.add_support_hinged(node_id=3)
 
@@ -132,7 +134,7 @@ def describe_end_to_end_tests():
         system = SystemElements()
         system.add_element(location=[[0, 0], [5, 0]], EA=5e9, EI=8000)
         system.add_element(location=[[5, 0], [5, -5]], EA=5e9, EI=4000)
-        system.moment_load(Ty=10, node_id=3)
+        system.moment_load(Tz=10, node_id=3)
         system.add_support_hinged(node_id=1)
         system.add_support_hinged(node_id=3)
 
@@ -161,7 +163,7 @@ def describe_end_to_end_tests():
         system.solve()
 
         def it_results_in_correct_in_correct_moment_at_support():
-            assert system.get_node_results_system(1)["Ty"] == approx(-61.25, rel=1e-3)
+            assert system.get_node_results_system(1)["Tz"] == approx(-61.25, rel=1e-3)
 
     def context_example_7_rotational_spring():
         @pspec_context("Example 7: Test the rotational springs")
@@ -210,10 +212,10 @@ def describe_end_to_end_tests():
 
         def it_results_in_correct_moment_loads(SS_12):
             SS_12.solve()
-            assert SS_12.get_node_results_system(1)["Ty"] == approx(6.66667)
-            assert SS_12.get_node_results_system(2)["Ty"] == approx(0)
-            assert SS_12.get_node_results_system(3)["Ty"] == approx(0)
-            assert SS_12.get_node_results_system(4)["Ty"] == approx(-6.66667)
+            assert SS_12.get_node_results_system(1)["Tz"] == approx(6.66667)
+            assert SS_12.get_node_results_system(2)["Tz"] == approx(0)
+            assert SS_12.get_node_results_system(3)["Tz"] == approx(0)
+            assert SS_12.get_node_results_system(4)["Tz"] == approx(-6.66667)
 
     def context_example_13():
         @pspec_context("Example 13: X-axis loads, with system nodes having 0 Fx loads")
@@ -296,6 +298,14 @@ def describe_end_to_end_tests():
             assert x == approx(np.array([0.0, 3.0, 3.0, 5.0, 5.0, 10.0]))
             assert y == approx(np.array([0.0, 0.0, 0.0, 5.0, 5.0, 0.0]))
 
+        def it_retains_supports_and_loads(SS_20):
+            assert SS_20.supports_hinged == [SS_20.node_map[1], SS_20.node_map[2]]
+            assert SS_20.loads_point == {3: (0, 10)}
+            assert list(SS_20.loads_q.keys()) == [2, 4, 5]
+            assert SS_20.element_map[2].q_load == approx((1, 1.6))
+            assert SS_20.element_map[4].q_load == approx((1.6, 2.205258))
+            assert SS_20.element_map[5].q_load == approx((2.205258, 3))
+
     def context_find_node_id():
         @pspec_context("find_node_id() function using Example 8")
         def describe():
@@ -355,7 +365,7 @@ def describe_end_to_end_tests():
         def it_results_in_same_forces():
             assert u1["Fx"] == approx(u2["Fx"])
             assert u1["Fy"] == approx(u2["Fy"])
-            assert u1["Ty"] == approx(u2["Ty"])
+            assert u1["Tz"] == approx(u2["Tz"])
 
     def context_inclined_roller_reactions():
         @pspec_context("Inclined roller forces are calculated correctly")
@@ -443,8 +453,8 @@ def describe_end_to_end_tests():
         def it_results_in_correct_reactions():
             assert system.get_node_results_system(1)["Fx"] == approx(-12.5)
             assert system.get_node_results_system(1)["Fy"] == approx(-10)
-            assert system.get_node_results_system(1)["Ty"] == approx(0)
-            assert system.get_node_results_system(3)["Ty"] == approx(0)
+            assert system.get_node_results_system(1)["Tz"] == approx(0)
+            assert system.get_node_results_system(3)["Tz"] == approx(0)
 
     def context_multiple_elements_spacing():
         @pspec_context(
@@ -496,10 +506,10 @@ def describe_end_to_end_tests():
         def it_results_in_correct_displacements():
             assert system.get_node_results_system(2)["ux"] == approx(0.00833333)
             assert system.get_node_results_system(2)["uy"] == approx(0)
-            assert system.get_node_results_system(2)["phi_y"] == approx(0)
+            assert system.get_node_results_system(2)["phi_z"] == approx(0)
 
         def it_results_in_correct_reaction():
-            assert system.get_node_results_system(2)["Ty"] == approx(166.6667)
+            assert system.get_node_results_system(2)["Tz"] == approx(166.6667)
 
     def context_rotational_support():
         @pspec_context("Test addition of rotation-only supports")
@@ -517,10 +527,10 @@ def describe_end_to_end_tests():
         def it_results_in_correct_displacements():
             assert system.get_node_results_system(2)["ux"] == approx(0.00666667)
             assert system.get_node_results_system(2)["uy"] == approx(0.00833333)
-            assert system.get_node_results_system(2)["phi_y"] == approx(0)
+            assert system.get_node_results_system(2)["phi_z"] == approx(0)
 
         def it_results_in_correct_reaction():
-            assert system.get_node_results_system(2)["Ty"] == approx(-166.6667)
+            assert system.get_node_results_system(2)["Tz"] == approx(-166.6667)
 
     def context_load_cases():
         @pspec_context("Test a trivial load case")
@@ -556,7 +566,7 @@ def describe_end_to_end_tests():
         system.q_load(q=(0.1, 1), element_id=2, direction="element")
         system.point_load(node_id=1, Fx=15)
         system.point_load(node_id=2, Fy=-5)
-        system.moment_load(node_id=3, Ty=-7)
+        system.moment_load(node_id=3, Tz=-7)
         system.solve()
 
         def it_has_correct_trapezoidal_load():
@@ -568,8 +578,8 @@ def describe_end_to_end_tests():
             assert system.get_node_results_system(1)["Fx"] == approx(15)
             assert system.get_node_results_system(2)["Fy"] == approx(-4.45)
             assert system.get_node_results_system(2)["Fx"] == approx(-0.825)
-            assert system.get_node_results_system(1)["Ty"] == approx(0)
-            assert system.get_node_results_system(2)["Ty"] == approx(-5.8625)
+            assert system.get_node_results_system(1)["Tz"] == approx(0)
+            assert system.get_node_results_system(2)["Tz"] == approx(-5.8625)
 
     def context_internal_hinge_symmetry():
         @pspec_context("Test bug fix for asymmetric results with internal hinges")
@@ -914,7 +924,7 @@ def describe_analytical_validation_tests():
         def it_results_in_correct_reactions():
             assert system.get_node_results_system(1)["Fy"] == approx(3 * w * l / 8)
             assert system.get_node_results_system(2)["Fy"] == approx(5 * w * l / 8)
-            assert system.get_node_results_system(2)["Ty"] == approx(-w * (l**2) / 8)
+            assert system.get_node_results_system(2)["Tz"] == approx(-w * (l**2) / 8)
 
         def it_results_in_correct_deflections():
             assert system.get_element_results(1)["wmax"] == approx(
@@ -945,7 +955,7 @@ def describe_analytical_validation_tests():
         def it_results_in_correct_reactions():
             assert system.get_node_results_system(1)["Fy"] == approx(5 * p / 16)
             assert system.get_node_results_system(4)["Fy"] == approx(11 * p / 16)
-            assert system.get_node_results_system(4)["Ty"] == approx(-3 * p * l / 16)
+            assert system.get_node_results_system(4)["Tz"] == approx(-3 * p * l / 16)
 
         def it_results_in_correct_deflections():
             assert system.get_node_results_system(2)["uy"] == approx(
@@ -971,8 +981,8 @@ def describe_analytical_validation_tests():
         def it_results_in_correct_reactions():
             assert system.get_node_results_system(1)["Fy"] == approx(w * l / 2)
             assert system.get_node_results_system(2)["Fy"] == approx(w * l / 2)
-            assert system.get_node_results_system(1)["Ty"] == approx(w * l**2 / 12)
-            assert system.get_node_results_system(2)["Ty"] == approx(-w * l**2 / 12)
+            assert system.get_node_results_system(1)["Tz"] == approx(w * l**2 / 12)
+            assert system.get_node_results_system(2)["Tz"] == approx(-w * l**2 / 12)
 
         def it_results_in_correct_deflections():
             assert system.get_element_results(1)["wmax"] == approx(
@@ -1006,3 +1016,31 @@ def describe_analytical_validation_tests():
             assert system.get_node_results_system(1)["uy"] == approx(
                 -w * l**4 / (8 * EI)
             )
+
+    def context_remove_element():
+        @pspec_context("Removing an element from a propped beam")
+        def describe():
+            pass
+
+        system = SystemElements()
+        system.add_element([[0, 0], [10, 0]])
+        system.add_element([[10, 0], [15, 0]])
+        system.add_support_hinged(1)
+        system.add_support_hinged(2)
+        system.q_load(q=-1, element_id=1)
+        system.q_load(q=-1, element_id=2)
+        system.point_load(node_id=3, Fy=-10)
+        system.remove_element(2)
+        system.solve()
+
+        def it_removes_element():
+            assert len(system.element_map) == 1
+            assert not (2 in system.loads_q)
+
+        def it_removes_orphaned_node():
+            assert len(system.node_map) == 2
+            assert not (3 in system.loads_point)
+
+        def it_results_in_correct_reactions():
+            assert system.get_node_results_system(1)["Fy"] == approx(-5)
+            assert system.get_node_results_system(2)["Fy"] == approx(-5)

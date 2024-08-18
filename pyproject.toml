@@ -1,19 +1,25 @@
 [build-system]
-requires = ["setuptools>=61.0", "cython"]
-build-backend = "setuptools.build_meta"
+requires = [
+    "poetry-core>=1.2.0",
+    "setuptools>=61.0",
+    "cython>=3.0",
+    "numpy>=2.0.0rc1",
+]
+build-backend = "poetry.core.masonry.api"
 
-[project]
+[tool.poetry]
 name = "anastruct"
-authors = [
-    {name = "Ritchie Vink", email = "ritchie46@gmail.com"},
-]
-maintainers= [
-    {name = "Brooks Smith", email = "smith120bh@gmail.com"}
-]
+version = "1.6.0"
+authors = ["Ritchie Vink <ritchie46@gmail.com>"]
+maintainers = ["Brooks Smith <smith120bh@gmail.com>"]
 description = "Finite element analysis of 2D structures"
-requires-python = ">=3.8"
-keywords = ["FEA", "finite element", "structural engineering", "structural analysis"]
-license = {text = "GPL-3.0"}
+keywords = [
+    "FEA",
+    "finite element",
+    "structural engineering",
+    "structural analysis",
+]
+license = "GPL-3.0-or-later"
 classifiers = [
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Physics",
@@ -23,36 +29,84 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
 ]
-dynamic = ["version", "readme", "dependencies", "optional-dependencies"]
-
-[tool.setuptools.dynamic]
-version = {attr = "anastruct._version.__version__"}
-readme = {file = ["README.md"]}
-dependencies = {file = "requirements.txt"}
-optional-dependencies.plot = {file = "plot_requirements.txt"}
-optional-dependencies.test = {file = "test_requirements.txt"}
-optional-dependencies.dev = {file = "dev_requirements.txt"}
-
-[project.urls]
+readme = "README.md"
 homepage = "https://github.com/ritchie46/anaStruct"
+repository = "https://github.com/ritchie46/anaStruct"
 documentation = "http://anastruct.readthedocs.io"
-author = "https://ritchievink.com"
+packages = [{ include = "anastruct" }]
+include = ["py.typed", "*.pyx"]
 
-[tool.setuptools]
-packages = [
-    "anastruct",
-    "anastruct.fem",
-    "anastruct.fem.system_components",
-    "anastruct.fem.examples",
-    "anastruct.material",
-    "anastruct.cython",
-    "anastruct.fem.cython",
-    "anastruct.fem.plotter",
-    "anastruct.fem.util",
-    "anastruct.sectionbase",
-    "anastruct.sectionbase.data",
+[tool.poetry.dependencies]
+python = ">=3.10"
+numpy = ">=1.23.5"
+scipy = ">=1.10.0"
+matplotlib = { version = ">=3.0", optional = true }
+
+[tool.poetry.group.dev.dependencies]
+numpy = "==2.0.1"
+scipy = "==1.14.0"
+matplotlib = "==3.9.2"
+
+[tool.poetry.group.test.dependencies]
+pylint = "==3.2.6"
+mypy = "==1.11.1"
+black = { version = "==24.8.0", extras = ["jupyter"] }
+pytest = "==8.3.2"
+pytest-describe = "==2.2.0"
+pytest-pspec = "==0.0.4"
+pytest-raises = "==0.11"
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+sphinx = "==8.0.2"
+sphinx_autodoc_typehints = "*"
+
+[tool.poetry.extras]
+plot = ["matplotlib"]
+
+[tool.poetry.build]
+script = "build_cython_ext.py"
+generate-setup-file = true
+
+[tool.pylint]
+disable = [
+    "too-many-locals",
+    "too-many-arguments",
+    "too-many-statements",
+    "too-many-branches",
+    "too-many-nested-blocks",
+    "too-many-instance-attributes",
+    "too-many-public-methods",
+    "protected-access",
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "too-many-lines",
+    "duplicate-code",
+    "invalid-name",
+    "logging-fstring-interpolation",
 ]
-py-modules = ["_custom_build"]
+max-line-length = 120
+py-version = 3.8
 
-[tool.setuptools.cmdclass]
-build_py = "_custom_build.build_py"
+[tool.mypy]
+packages = "anastruct"
+python_version = "3.10"
+strict = true
+allow_any_generics = true
+implicit_reexport = true
+strict_optional = false
+explicit_package_bases = true
+exclude = ["build", "dist", "tests", "doc"]
+
+[[tool.mypy.overrides]]
+module = [
+    "anastruct.fem.cython.celements",
+    "anastruct.fem.cython.cbasic",
+    "Cython.build",
+]
+ignore_missing_imports = true
+
+[tool.black]
+target-version = ['py310', 'py311', 'py312']

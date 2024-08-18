@@ -1,8 +1,6 @@
 from anastruct.fem.system import SystemElements
 
-"""
-Geting section form sectionbase
-"""
+# Geting section form sectionbase
 
 ss = SystemElements()
 

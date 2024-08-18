@@ -1,7 +1,11 @@
-import pprint
 import copy
-from typing import Sequence
-from anastruct.basic import args_to_lists
+import pprint
+from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence, Union
+
+from anastruct.basic import arg_to_list
+
+if TYPE_CHECKING:
+    from anastruct.fem.system import SystemElements
 
 
 class LoadCase:
@@ -9,15 +13,24 @@ class LoadCase:
     Group different loads in a load case
     """
 
-    def __init__(self, name):
-        """
-        :param name: (str) Name of the load case
-        """
-        self.name = name
-        self.spec = dict()
-        self.c = 0
+    def __init__(self, name: str):
+        """Create a load case
 
-    def q_load(self, q, element_id, direction="element", rotation=None, q_perp=None):
+        Args:
+            name (str): Name of the load case
+        """
+        self.name: str = name
+        self.spec: dict = {}
+        self.c: int = 0
+
+    def q_load(
+        self,
+        q: Union[float, Sequence[float]],
+        element_id: Union[int, Sequence[int]],
+        direction: Union[str, Sequence[str]] = "element",
+        rotation: Optional[Union[float, Sequence[float]]] = None,
+        q_perp: Optional[Union[float, Sequence[float]]] = None,
+    ) -> None:
         """
         Apply a q-load to an element.
 
@@ -25,22 +38,22 @@ class LoadCase:
         :param q: (flt) value of the q-load
         :param direction: (str) "element", "x", "y", "parallel"
         """
-        if q_perp is None:
-            q_perp = [0, 0]
-        if not isinstance(q, Sequence):
-            q = [q, q]
-        if not isinstance(q_perp, Sequence):
-            q_perp = [q_perp, q_perp]
         self.c += 1
-        self.spec[f"q_load-{self.c}"] = dict(
-            q=q,
-            element_id=element_id,
-            direction=direction,
-            rotation=rotation,
-            q_perp=q_perp,
-        )
+        self.spec[f"q_load-{self.c}"] = {
+            "q": q,
+            "element_id": element_id,
+            "direction": direction,
+            "rotation": rotation,
+            "q_perp": q_perp,
+        }
 
-    def point_load(self, node_id, Fx=0, Fy=0, rotation=0):
+    def point_load(
+        self,
+        node_id: Union[int, Sequence[int]],
+        Fx: Union[float, Sequence[float]] = 0,
+        Fy: Union[float, Sequence[float]] = 0,
+        rotation: Union[float, Sequence[float]] = 0,
+    ) -> None:
         """
         Apply a point load to a node.
 
@@ -50,21 +63,28 @@ class LoadCase:
         :param rotation: (flt/ list) Rotate the force clockwise. Rotation is in degrees.
         """
         self.c += 1
-        self.spec[f"point_load-{self.c}"] = dict(
-            node_id=node_id, Fx=Fx, Fy=Fy, rotation=rotation
-        )
+        self.spec[f"point_load-{self.c}"] = {
+            "node_id": node_id,
+            "Fx": Fx,
+            "Fy": Fy,
+            "rotation": rotation,
+        }
 
-    def moment_load(self, node_id, Ty):
+    def moment_load(
+        self, node_id: Union[int, Sequence[int]], Tz: Union[float, Sequence[float]]
+    ) -> None:
         """
         Apply a moment on a node.
 
         :param node_id: (int/ list) Nodes ID.
-        :param Ty: (flt/ list) Moments acting on the node.
+        :param Tz: (flt/ list) Moments acting on the node.
         """
         self.c += 1
-        self.spec[f"moment_load-{self.c}"] = dict(node_id=node_id, Ty=Ty)
+        self.spec[f"moment_load-{self.c}"] = {"node_id": node_id, "Tz": Tz}
 
-    def dead_load(self, element_id, g):
+    def dead_load(
+        self, element_id: Union[int, Sequence[int]], g: Union[float, Sequence[float]]
+    ) -> None:
         """
         Apply a dead load in kN/m on elements.
 
@@ -72,39 +92,46 @@ class LoadCase:
         :param g: (flt/ list) Weight per meter. [kN/m] / [N/m]
         """
         self.c += 1
-        self.spec[f"dead_load-{self.c}"] = dict(element_id=element_id, g=g)
+        self.spec[f"dead_load-{self.c}"] = {"element_id": element_id, "g": g}
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Loadcase {self.name}:\n" + pprint.pformat(self.spec)
 
 
 class LoadCombination:
-    def __init__(self, name):
-        self.name = name
-        self.spec = dict()
+    def __init__(self, name: str):
+        self.name: str = name
+        self.spec: dict = {}
 
-    def add_load_case(self, lc, factor):
+    def add_load_case(
+        self,
+        lc: Union[LoadCase, Sequence[LoadCase]],
+        factor: Union[float, Sequence[float]],
+    ) -> None:
         """
         Add a load case to the load combination.
 
         :param lc: (:class:`anastruct.fem.util.LoadCase`)
         :param factor: (flt) Multiply all the loads in this LoadCase with this factor.
         """
-        lc, factor = args_to_lists(  # pylint: disable=unbalanced-tuple-unpacking
-            lc, factor
-        )
+        if isinstance(lc, LoadCase):
+            n = 1
+        else:
+            n = len(lc)
+        lc = arg_to_list(lc, n)
+        factor = arg_to_list(factor, n)
         for i, lci in enumerate(lc):
             self.spec[lci.name] = [lci, factor[i]]
 
     def solve(
         self,
-        system,
-        force_linear=False,
-        verbosity=0,
-        max_iter=200,
-        geometrical_non_linear=False,
-        **kwargs,
-    ):
+        system: "SystemElements",
+        force_linear: bool = False,
+        verbosity: int = 0,
+        max_iter: int = 200,
+        geometrical_non_linear: bool = False,
+        **kwargs: Any,
+    ) -> Dict[str, "SystemElements"]:
         """
         Evaluate the Load Combination.
 
