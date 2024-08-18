@@ -305,28 +305,28 @@ class ElementLevel:
 
         # Total deflection
         ux1 = element.node_1.ux
-        uz1 = -element.node_1.uy
+        uy1 = -element.node_1.uy
         ux2 = element.node_2.ux
-        uz2 = -element.node_2.uy
+        uy2 = -element.node_2.uy
 
         if element.type == "general":
             n = len(element.deflection)
             x_val = np.linspace(ux1, ux2, n)
-            y_val = np.linspace(uz1, uz2, n)
+            y_val = np.linspace(uy1, uy2, n)
 
             element.total_deflection = (
                 element.deflection
                 + x_val * math.sin(element.angle)
-                + y_val * math.cos(element.angle)
+                - y_val * math.cos(element.angle)
             )
 
         else:  # truss element has no bending
             n = len(element.extension)
             x_val = np.linspace(ux1, ux2, n)
-            y_val = np.linspace(uz1, uz2, n)
+            y_val = np.linspace(uy1, uy2, n)
 
             element.total_deflection = x_val * math.sin(
                 element.angle
-            ) + y_val * math.cos(element.angle)
+            ) - y_val * math.cos(element.angle)
 
         element.max_total_deflection = np.max(np.abs(element.total_deflection))
