@@ -43,7 +43,7 @@ scipy = ">=1.10.0"
 matplotlib = { version = ">=3.0", optional = true }
 
 [tool.poetry.group.dev.dependencies]
-numpy = "==2.0.1"
+numpy = "==2.1.0"
 scipy = "==1.14.0"
 matplotlib = "==3.9.2"
 
