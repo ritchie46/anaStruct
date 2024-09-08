@@ -49,7 +49,7 @@ matplotlib = "==3.9.2"
 
 [tool.poetry.group.test.dependencies]
 pylint = "==3.2.6"
-mypy = "==1.11.1"
+mypy = "==1.11.2"
 black = { version = "==24.8.0", extras = ["jupyter"] }
 pytest = "==8.3.2"
 pytest-describe = "==2.2.0"
