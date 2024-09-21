@@ -265,6 +265,7 @@ class Element:
             "bending_moment",
             "shear_force",
             "deflection",
+            "total_deflection",
             "extension",
             "N_1",
             "N_2",
