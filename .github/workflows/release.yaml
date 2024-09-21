@@ -1,19 +1,79 @@
 name: Release
 
 on:
-  # push:
-  #    # Sequence of patterns matched against refs/tags
-  #   tags:
-  #     - 'release-v*' # Push events to matching release-v*, i.e. release-v1.0, release-v20.15.10
   release:
     types: [published, edited]
 jobs:
-  build:
-    name: Test and Build Python Release Package with Release Dependencies
+  build_sdist:
+    name: Build Source Distribution
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: Checkout anaStruct Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade poetry
+          poetry install
+      
+      - name: Build Source Distribution
+        run: poetry build -f sdist
+      
+      - name: Upload Source Distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: cibw-sdist
+          path: dist/*.tar.gz
+
+  build_wheels:
+    name: Build wheels on ${{ matrix.python }}-${{ matrix.buildplat[1] }} 
+    needs: build_sdist
+    runs-on: ${{ matrix.buildplat[0] }}
+    strategy:
+      fail-fast: false
+      matrix:
+        buildplat:
+          - [ubuntu-latest, manylinux_x86_64, x86_64]
+          - [ubuntu-latest, manylinux_aarch64, aarch64]
+          - [ubuntu-latest, musllinux_x86_64, x86_64]
+          - [macos-13, macosx_x86_64, x86_64]
+          - [macos-14, macosx_arm64, arm64]
+          - [windows-latest, win_amd64, AMD64]
+        python: ["cp310", "cp311", "cp312"]
+
+    steps:
+      - name: Set up QEMU for aarch64
+        if: matrix.buildplat[1] == 'manylinux_aarch64'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Checkout anaStruct Repository
+        uses: actions/checkout@v4
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.21.0
+        env:
+          CIBW_BUILD: "${{ matrix.python }}-${{ matrix.buildplat[1] }}"
+          CIBW_ARCHS: "${{ matrix.buildplat[2] }}"
+        with:
+          output-dir: dist
+        
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.python }}-${{ matrix.buildplat[1] }}
+          path: ./dist/*.whl
+
+  run_tests:
+    name: Fully Test Release Package with Release Dependencies
+    needs: build_sdist
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        python-version: ["3.9"]
+        python-version: ["3.10"]
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -22,31 +82,39 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install .[dev,test]
+          python -m pip install --upgrade poetry
+          poetry install
       - name: Run linting check with pylint
         run: |
-          pylint ./anastruct
+          poetry run pylint ./anastruct
       - name: Run formatting checks with black
         run: |
-          black --check .
+          poetry run black --check .
       - name: Run type checks with mypy
         run: |
-          mypy
+          poetry run mypy
       - name: Run FEM tests with pytest
         run: |
-          python -m pytest --pspec tests/
-      - name: Install pypa/build
-        run: |
-          pip install build
-      - name: Build a binary wheel and a source tarball
-        run: >-
-          python -m
-          build
-          --sdist
-          --wheel
-          --outdir dist/
-          .
+          poetry run pytest --pspec tests/
+  publish:
+    name: Publish to PyPI
+    needs: 
+    - build_sdist
+    - build_wheels
+    - run_tests
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-*
+          path: dist
+          merge-multiple: true
+
+      - name: Display our files
+        run: ls dist
+
       - name: Publish to pypi
         uses: pypa/gh-action-pypi-publish@release/v1
         with:

@@ -1,14 +1,14 @@
-name: Python tests
+name: Python build & test
 
 on: [pull_request]
 
 jobs:
   min_build:
-    name: Run Code Checks and Tests on Python 3.9
+    name: Run Code Checks and Tests on Python 3.10
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        python-version: ["3.9"]
+        python-version: ["3.10"]
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -17,27 +17,28 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install .[dev,test]
+          python -m pip install --upgrade poetry
+          poetry install
       - name: Run linting check with pylint
         run: |
-          pylint ./anastruct
+          poetry run pylint ./anastruct
       - name: Run formatting checks with black
         run: |
-          black --check .
+          poetry run black --check .
       - name: Run type checks with mypy
         run: |
-          mypy -p anastruct
+          poetry run mypy -p anastruct
       - name: Run FEM tests with pytest
         run: |
-          python -m pytest --pspec tests/
-  build:
+          poetry run pytest --pspec tests/
+
+  run_tests:
     name: Run FEM Testing Suite on Multiple Python Versions
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 3
       matrix:
-        python-version: ["3.8", "3.10", "3.11"]
+        python-version: ["3.11", "3.12"]
 
     steps:
       - uses: actions/checkout@v4
@@ -47,9 +48,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install .[plot,test]
+          python -m pip install --upgrade poetry
+          poetry install
 
       - name: Run FEM tests with pytest
         run: |
-          python -m pytest --pspec tests/
+          poetry run pytest --pspec tests/
