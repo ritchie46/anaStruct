@@ -43,15 +43,15 @@ scipy = ">=1.10.0"
 matplotlib = { version = ">=3.0", optional = true }
 
 [tool.poetry.group.dev.dependencies]
-numpy = "==2.0.1"
-scipy = "==1.14.0"
+numpy = "==2.1.1"
+scipy = "==1.14.1"
 matplotlib = "==3.9.2"
 
 [tool.poetry.group.test.dependencies]
-pylint = "==3.2.6"
-mypy = "==1.11.1"
+pylint = "==3.2.7"
+mypy = "==1.11.2"
 black = { version = "==24.8.0", extras = ["jupyter"] }
-pytest = "==8.3.2"
+pytest = "==8.3.3"
 pytest-describe = "==2.2.0"
 pytest-pspec = "==0.0.4"
 pytest-raises = "==0.11"

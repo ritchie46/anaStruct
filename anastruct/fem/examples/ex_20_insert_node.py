@@ -11,4 +11,4 @@ ss.point_load(3, Fy=-10)
 ss.insert_node(3, [5, 5])
 
 if __name__ == "__main__":
-    ss.show_structure(values_only=True)
+    ss.show_structure(values_only=True)  # type: ignore
