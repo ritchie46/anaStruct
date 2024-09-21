@@ -2,20 +2,8 @@ import collections.abc
 import copy
 import math
 import re
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Collection,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
-    overload,
-)
+from typing import (TYPE_CHECKING, Any, Collection, Dict, List, Literal,
+                    Optional, Sequence, Set, Tuple, Union, overload)
 
 import numpy as np
 
@@ -31,15 +19,8 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
     from anastruct.fem.node import Node
-    from anastruct.types import (
-        AxisNumber,
-        Dimension,
-        LoadDirection,
-        MpType,
-        Spring,
-        SupportDirection,
-        VertexLike,
-    )
+    from anastruct.types import (AxisNumber, Dimension, LoadDirection, MpType,
+                                 Spring, SupportDirection, VertexLike)
 
 
 class SystemElements:
@@ -1943,11 +1924,11 @@ class SystemElements:
                 "umax": np.max(el.extension),
                 "umin": np.min(el.extension),
                 "u": el.extension if verbose else None,
-                "wmax": np.max(el.deflection),
-                "wmin": np.min(el.deflection),
+                "wmax": np.min(el.deflection),
+                "wmin": np.max(el.deflection),
                 "w": el.deflection if verbose else None,
-                "wtotmax": np.max(el.total_deflection),
-                "wtotmin": np.min(el.total_deflection),
+                "wtotmax": np.min(el.total_deflection),
+                "wtotmin": np.max(el.total_deflection),
                 "wtot": el.total_deflection if verbose else None,
                 "Mmin": np.min(el.bending_moment),
                 "Mmax": np.max(el.bending_moment),
@@ -1975,8 +1956,8 @@ class SystemElements:
                         "umax": np.max(el.extension),
                         "umin": np.min(el.extension),
                         "u": el.extension if verbose else None,
-                        "wtotmax": np.max(el.total_deflection),
-                        "wtotmin": np.min(el.total_deflection),
+                        "wtotmax": np.min(el.total_deflection),
+                        "wtotmin": np.max(el.total_deflection),
                         "wtot": el.total_deflection if verbose else None,
                         "Nmin": np.min(el.axial_force),
                         "Nmax": np.max(el.axial_force),
@@ -1997,8 +1978,8 @@ class SystemElements:
                         "umax": np.max(el.extension),
                         "umin": np.min(el.extension),
                         "u": el.extension if verbose else None,
-                        "wmax": np.max(el.deflection),
-                        "wmin": np.min(el.deflection),
+                        "wmax": np.min(el.deflection),
+                        "wmin": np.max(el.deflection),
                         "w": el.deflection if verbose else None,
                         "wtotmax": np.min(el.total_deflection),
                         "wtotmin": np.max(el.total_deflection),
