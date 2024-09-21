@@ -76,7 +76,7 @@ class SystemElements:
 
     def __init__(
         self,
-        figsize: Tuple[float, float] = (12, 8),
+        figsize: Optional[Tuple[float, float]] = (12, 8),
         EA: float = 15e3,
         EI: float = 5e3,
         load_factor: float = 1.0,
@@ -1351,7 +1351,7 @@ class SystemElements:
         verbosity: int,
         scale: float,
         offset: Tuple[float, float],
-        figsize: Tuple[float, float],
+        figsize: Optional[Tuple[float, float]],
         show: bool,
         supports: bool,
         values_only: Literal[True],
@@ -1364,7 +1364,7 @@ class SystemElements:
         verbosity: int,
         scale: float,
         offset: Tuple[float, float],
-        figsize: Tuple[float, float],
+        figsize: Optional[Tuple[float, float]],
         show: Literal[False],
         supports: bool,
         values_only: Literal[False],
@@ -1374,14 +1374,14 @@ class SystemElements:
     @overload
     def show_structure(
         self,
-        verbosity: int,
-        scale: float,
-        offset: Tuple[float, float],
-        figsize: Tuple[float, float],
-        show: Literal[True],
-        supports: bool,
-        values_only: Literal[False],
-        annotations: bool,
+        verbosity: int = 0,
+        scale: float = 1.0,
+        offset: Tuple[float, float] = (0, 0),
+        figsize: Optional[Tuple[float, float]] = None,
+        show: Literal[True] = True,
+        supports: bool = True,
+        values_only: Literal[False] = False,
+        annotations: bool = False,
     ) -> None: ...
 
     def show_structure(
@@ -1435,7 +1435,7 @@ class SystemElements:
         verbosity: int,
         scale: float,
         offset: Tuple[float, float],
-        figsize: Tuple[float, float],
+        figsize: Optional[Tuple[float, float]],
         show: bool,
         values_only: Literal[True],
     ) -> Tuple[np.ndarray, np.ndarray]: ...
@@ -1447,7 +1447,7 @@ class SystemElements:
         verbosity: int,
         scale: float,
         offset: Tuple[float, float],
-        figsize: Tuple[float, float],
+        figsize: Optional[Tuple[float, float]],
         show: Literal[False],
         values_only: Literal[False],
     ) -> "Figure": ...
@@ -1455,13 +1455,13 @@ class SystemElements:
     @overload
     def show_bending_moment(
         self,
-        factor: Optional[float],
-        verbosity: int,
-        scale: float,
-        offset: Tuple[float, float],
-        figsize: Tuple[float, float],
-        show: Literal[True],
-        values_only: Literal[False],
+        factor: Optional[float] = None,
+        verbosity: int = 0,
+        scale: float = 1.0,
+        offset: Tuple[float, float] = (0, 0),
+        figsize: Optional[Tuple[float, float]] = None,
+        show: Literal[True] = True,
+        values_only: Literal[False] = False,
     ) -> None: ...
 
     def show_bending_moment(
@@ -1504,7 +1504,7 @@ class SystemElements:
         verbosity: int,
         scale: float,
         offset: Tuple[float, float],
-        figsize: Tuple[float, float],
+        figsize: Optional[Tuple[float, float]],
         show: bool,
         values_only: Literal[True],
     ) -> Tuple[np.ndarray, np.ndarray]: ...
@@ -1516,7 +1516,7 @@ class SystemElements:
         verbosity: int,
         scale: float,
         offset: Tuple[float, float],
-        figsize: Tuple[float, float],
+        figsize: Optional[Tuple[float, float]],
         show: Literal[False],
         values_only: Literal[False],
     ) -> "Figure": ...
@@ -1524,13 +1524,13 @@ class SystemElements:
     @overload
     def show_axial_force(
         self,
-        factor: Optional[float],
-        verbosity: int,
-        scale: float,
-        offset: Tuple[float, float],
-        figsize: Tuple[float, float],
-        show: Literal[True],
-        values_only: Literal[False],
+        factor: Optional[float] = None,
+        verbosity: int = 0,
+        scale: float = 1.0,
+        offset: Tuple[float, float] = (0, 0),
+        figsize: Optional[Tuple[float, float]] = None,
+        show: Literal[True] = True,
+        values_only: Literal[False] = False,
     ) -> None: ...
 
     def show_axial_force(
@@ -1570,7 +1570,7 @@ class SystemElements:
         verbosity: int,
         scale: float,
         offset: Tuple[float, float],
-        figsize: Tuple[float, float],
+        figsize: Optional[Tuple[float, float]],
         show: bool,
         values_only: Literal[True],
     ) -> Tuple[np.ndarray, np.ndarray]: ...
@@ -1582,7 +1582,7 @@ class SystemElements:
         verbosity: int,
         scale: float,
         offset: Tuple[float, float],
-        figsize: Tuple[float, float],
+        figsize: Optional[Tuple[float, float]],
         show: Literal[False],
         values_only: Literal[False],
     ) -> "Figure": ...
@@ -1590,13 +1590,13 @@ class SystemElements:
     @overload
     def show_shear_force(
         self,
-        factor: Optional[float],
-        verbosity: int,
-        scale: float,
-        offset: Tuple[float, float],
-        figsize: Tuple[float, float],
-        show: Literal[True],
-        values_only: Literal[False],
+        factor: Optional[float] = None,
+        verbosity: int = 0,
+        scale: float = 1.0,
+        offset: Tuple[float, float] = (0, 0),
+        figsize: Optional[Tuple[float, float]] = None,
+        show: Literal[True] = True,
+        values_only: Literal[False] = False,
     ) -> None: ...
 
     def show_shear_force(
@@ -1635,18 +1635,18 @@ class SystemElements:
         verbosity: int,
         scale: float,
         offset: Tuple[float, float],
-        figsize: Tuple[float, float],
+        figsize: Optional[Tuple[float, float]],
         show: Literal[False],
     ) -> "Figure": ...
 
     @overload
     def show_reaction_force(
         self,
-        verbosity: int,
-        scale: float,
-        offset: Tuple[float, float],
-        figsize: Tuple[float, float],
-        show: Literal[True],
+        verbosity: int = 0,
+        scale: float = 1.0,
+        offset: Tuple[float, float] = (0, 0),
+        figsize: Optional[Tuple[float, float]] = None,
+        show: Literal[True] = True,
     ) -> None: ...
 
     def show_reaction_force(
@@ -1679,7 +1679,7 @@ class SystemElements:
         verbosity: int,
         scale: float,
         offset: Tuple[float, float],
-        figsize: Tuple[float, float],
+        figsize: Optional[Tuple[float, float]],
         show: bool,
         linear: bool,
         values_only: Literal[True],
@@ -1692,7 +1692,7 @@ class SystemElements:
         verbosity: int,
         scale: float,
         offset: Tuple[float, float],
-        figsize: Tuple[float, float],
+        figsize: Optional[Tuple[float, float]],
         show: Literal[False],
         linear: bool,
         values_only: Literal[False],
@@ -1701,14 +1701,14 @@ class SystemElements:
     @overload
     def show_displacement(
         self,
-        factor: Optional[float],
-        verbosity: int,
-        scale: float,
-        offset: Tuple[float, float],
-        figsize: Tuple[float, float],
-        show: Literal[True],
-        linear: bool,
-        values_only: Literal[False],
+        factor: Optional[float] = None,
+        verbosity: int = 0,
+        scale: float = 1.0,
+        offset: Tuple[float, float] = (0, 0),
+        figsize: Optional[Tuple[float, float]] = None,
+        show: Literal[True] = True,
+        linear: bool = False,
+        values_only: Literal[False] = False,
     ) -> None: ...
 
     def show_displacement(
@@ -1751,18 +1751,18 @@ class SystemElements:
         verbosity: int,
         scale: float,
         offset: Tuple[float, float],
-        figsize: Tuple[float, float],
+        figsize: Optional[Tuple[float, float]],
         show: Literal[False],
     ) -> "Figure": ...
 
     @overload
     def show_results(
         self,
-        verbosity: int,
-        scale: float,
-        offset: Tuple[float, float],
-        figsize: Tuple[float, float],
-        show: Literal[True],
+        verbosity: int = 0,
+        scale: float = 1.0,
+        offset: Tuple[float, float] = (0, 0),
+        figsize: Optional[Tuple[float, float]] = None,
+        show: Literal[True] = True,
     ) -> None: ...
 
     def show_results(
@@ -1790,7 +1790,7 @@ class SystemElements:
 
     @overload
     def get_node_results_system(
-        self, node_id: None
+        self, node_id: None = None
     ) -> List[Dict[str, Union[int, float]]]: ...
 
     @overload
@@ -1895,8 +1895,8 @@ class SystemElements:
         """Get the element results.
 
         Args:
-            element_id (int, optional): The element's ID. If element_id == None or 0, the results of all elements are returned.
-                Defaults to None.
+            element_id (int, optional): The element's ID. If element_id == None or 0, the results of all elements
+                are returned. Defaults to None.
             verbose (bool, optional): If set to True, then numerical results for the deflection and the bending
                 moment are also returned. Defaults to False.
 
