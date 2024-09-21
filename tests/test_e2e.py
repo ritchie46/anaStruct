@@ -764,7 +764,7 @@ def describe_analytical_validation_tests():
             assert system.get_node_results_system(2)["Fy"] == approx(w * l / 2)
 
         def it_results_in_correct_deflections():
-            assert system.get_element_results(1)["wmax"] == approx(
+            assert system.get_element_results(1)["wtotmax"] == approx(
                 -5 * w * l**4 / (384 * EI)
             )
 
@@ -796,9 +796,9 @@ def describe_analytical_validation_tests():
             assert system.get_node_results_system(4)["Fy"] == approx(p)
 
         def it_results_in_correct_deflections():
-            assert system.get_node_results_system(3)["uy"] + system.get_element_results(
-                2
-            )["wmax"] == approx(-((p * a) / (24 * EI)) * (3 * (l**2) - 4 * (a**2)))
+            assert system.get_element_results(2)["wtotmax"] == approx(
+                -((p * a) / (24 * EI)) * (3 * (l**2) - 4 * (a**2))
+            )
 
     def context_simply_supported_beam_point_load_validation():
         @pspec_context("Simply-supported beam with point load at center validation")
@@ -893,7 +893,7 @@ def describe_analytical_validation_tests():
             assert system.get_node_results_system(3)["Fy"] == approx(0.55 * w * l)
 
         def it_results_in_correct_deflections():
-            assert system.get_element_results(1)["wmax"] == approx(
+            assert system.get_element_results(1)["wtotmax"] == approx(
                 -0.009917469 * w * l**4 / EI
             )
 
@@ -927,7 +927,7 @@ def describe_analytical_validation_tests():
             assert system.get_node_results_system(2)["Tz"] == approx(-w * (l**2) / 8)
 
         def it_results_in_correct_deflections():
-            assert system.get_element_results(1)["wmax"] == approx(
+            assert system.get_element_results(1)["wtotmax"] == approx(
                 -w * (l**4) / (185 * EI), rel=1e-3
             )
 
@@ -985,7 +985,7 @@ def describe_analytical_validation_tests():
             assert system.get_node_results_system(2)["Tz"] == approx(-w * l**2 / 12)
 
         def it_results_in_correct_deflections():
-            assert system.get_element_results(1)["wmax"] == approx(
+            assert system.get_element_results(1)["wtotmax"] == approx(
                 -w * l**4 / (384 * EI)
             )
 

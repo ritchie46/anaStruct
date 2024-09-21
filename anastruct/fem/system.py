@@ -1915,6 +1915,7 @@ class SystemElements:
 
             assert el.extension is not None
             assert el.axial_force is not None
+            assert el.total_deflection is not None
 
             if el.type == "truss":
                 return {
@@ -1924,6 +1925,9 @@ class SystemElements:
                     "umax": np.max(el.extension),
                     "umin": np.min(el.extension),
                     "u": el.extension if verbose else None,
+                    "wtotmax": np.max(el.total_deflection),
+                    "wtotmin": np.min(el.total_deflection),
+                    "wtot": el.total_deflection if verbose else None,
                     "Nmin": np.min(el.axial_force),
                     "Nmax": np.max(el.axial_force),
                     "N": el.axial_force if verbose else None,
@@ -1942,6 +1946,9 @@ class SystemElements:
                 "wmax": np.min(el.deflection),
                 "wmin": np.max(el.deflection),
                 "w": el.deflection if verbose else None,
+                "wtotmax": np.min(el.total_deflection),
+                "wtotmin": np.max(el.total_deflection),
+                "wtot": el.total_deflection if verbose else None,
                 "Mmin": np.min(el.bending_moment),
                 "Mmax": np.max(el.bending_moment),
                 "M": el.bending_moment if verbose else None,
@@ -1957,6 +1964,7 @@ class SystemElements:
         for el in self.element_map.values():
             assert el.extension is not None
             assert el.axial_force is not None
+            assert el.total_deflection is not None
 
             if el.type == "truss":
                 result_list.append(
@@ -1967,6 +1975,9 @@ class SystemElements:
                         "umax": np.max(el.extension),
                         "umin": np.min(el.extension),
                         "u": el.extension if verbose else None,
+                        "wtotmax": np.min(el.total_deflection),
+                        "wtotmin": np.max(el.total_deflection),
+                        "wtot": el.total_deflection if verbose else None,
                         "Nmin": np.min(el.axial_force),
                         "Nmax": np.max(el.axial_force),
                         "N": el.axial_force if verbose else None,
@@ -1989,6 +2000,9 @@ class SystemElements:
                         "wmax": np.min(el.deflection),
                         "wmin": np.max(el.deflection),
                         "w": el.deflection if verbose else None,
+                        "wtotmax": np.min(el.total_deflection),
+                        "wtotmin": np.max(el.total_deflection),
+                        "wtot": el.total_deflection if verbose else None,
                         "Mmin": np.min(el.bending_moment),
                         "Mmax": np.max(el.bending_moment),
                         "M": el.bending_moment if verbose else None,
