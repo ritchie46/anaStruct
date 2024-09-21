@@ -2,8 +2,20 @@ import collections.abc
 import copy
 import math
 import re
-from typing import (TYPE_CHECKING, Any, Collection, Dict, List, Literal,
-                    Optional, Sequence, Set, Tuple, Union, overload)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Collection,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+    overload,
+)
 
 import numpy as np
 
@@ -19,8 +31,15 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
     from anastruct.fem.node import Node
-    from anastruct.types import (AxisNumber, Dimension, LoadDirection, MpType,
-                                 Spring, SupportDirection, VertexLike)
+    from anastruct.types import (
+        AxisNumber,
+        Dimension,
+        LoadDirection,
+        MpType,
+        Spring,
+        SupportDirection,
+        VertexLike,
+    )
 
 
 class SystemElements:
