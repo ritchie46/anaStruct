@@ -2056,7 +2056,7 @@ class SystemElements:
             if minmax == "abs":
                 return np.amax(np.abs(array))  # type: ignore
             if minmax == "both":
-                return (np.amin(array), np.amax(array))  # type: ignore
+                return (np.amin(array), np.amax(array))
             raise NotImplementedError("minmax must be 'min', 'max', 'abs', or 'both'")
 
         if unit == "shear":
