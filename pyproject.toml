@@ -60,7 +60,7 @@ pytest-raises = "==0.11"
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-sphinx = "==8.0.2"
+sphinx = "==8.1.0"
 sphinx_autodoc_typehints = "*"
 
 [tool.poetry.extras]
