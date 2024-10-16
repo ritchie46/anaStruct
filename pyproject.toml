@@ -48,7 +48,7 @@ scipy = "==1.14.1"
 matplotlib = "==3.9.2"
 
 [tool.poetry.group.test.dependencies]
-pylint = "==3.2.7"
+pylint = "==3.3.1"
 mypy = "==1.11.2"
 black = { version = "==24.10.0", extras = ["jupyter"] }
 pytest = "==8.3.3"
@@ -74,6 +74,7 @@ generate-setup-file = true
 disable = [
     "too-many-locals",
     "too-many-arguments",
+    "too-many-positional-arguments",
     "too-many-statements",
     "too-many-branches",
     "too-many-nested-blocks",
