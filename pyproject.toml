@@ -74,6 +74,7 @@ generate-setup-file = true
 disable = [
     "too-many-locals",
     "too-many-arguments",
+    "too-many-positional-arguments",
     "too-many-statements",
     "too-many-branches",
     "too-many-nested-blocks",
