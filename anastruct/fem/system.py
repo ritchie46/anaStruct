@@ -2292,7 +2292,7 @@ class SystemElements:
 
             exec(f"self.{method}({kwargs})")  # pylint: disable=exec-used
 
-    def get_stiffness_matrix(self, element_id: int) -> Optional[Union[list, None]]:
+    def get_stiffness_matrix(self, element_id: int) -> Optional[np.ndarray]:
         """
         Return the stiffness matrix for a specific element by its ID.
         Args:
@@ -2308,7 +2308,7 @@ class SystemElements:
             return None
 
         if isinstance(element, Element):
-            if hasattr(element, 'stiffness_matrix'):
+            if hasattr(element, "stiffness_matrix"):
                 print(f"Stiffness Matrix for Element ID {element_id}:")
                 return element.stiffness_matrix
 
@@ -2338,6 +2338,7 @@ class SystemElements:
         system.plot_values = plotter.PlottingValues(system, mesh)
 
         return system
+
 
 def _negative_index_to_id(idx: int, collection: Collection[int]) -> int:
     """Convert a negative index to a positive index. (That is, allowing the Pythonic negative indexing)

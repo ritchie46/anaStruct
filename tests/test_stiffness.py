@@ -1,7 +1,7 @@
 import unittest
-import numpy as np
+
 from anastruct.fem import system as se
-from anastruct.fem.elements import Element
+
 
 class TestSystemElements(unittest.TestCase):
     def test_get_stiffness_matrix(self):
@@ -9,7 +9,9 @@ class TestSystemElements(unittest.TestCase):
         system = se.SystemElements()
 
         # Add a simple beam element (make sure it has a stiffness matrix)
-        system.add_element(location=[[0, 0], [5, 0]])  # Adjust as necessary based on your implementation
+        system.add_element(
+            location=[[0, 0], [5, 0]]
+        )  # Adjust as necessary based on your implementation
 
         # Here, we assume that the added element has a stiffness matrix defined
         # Check if stiffness matrix is correctly returned for element 1
@@ -28,5 +30,6 @@ class TestSystemElements(unittest.TestCase):
         self.assertIsNone(stiffness_matrix)
         print("Handled invalid element ID correctly.")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
