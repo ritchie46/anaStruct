@@ -2292,6 +2292,31 @@ class SystemElements:
 
             exec(f"self.{method}({kwargs})")  # pylint: disable=exec-used
 
+    def get_stiffness_matrix(self, element_id: int) -> Optional[np.ndarray]:
+        """
+        Return the stiffness matrix for a specific element by its ID.
+        Args:
+            element_id (int): ID of the element.
+
+        Returns:
+        Optional[Union[list, None]]: The stiffness matrix of the element if it exists, otherwise None.
+        """
+        try:
+            element = self.element_map[element_id]
+        except KeyError:
+            print(f"Element with ID {element_id} does not exist.")
+            return None
+
+        if isinstance(element, Element):
+            if hasattr(element, "stiffness_matrix"):
+                print(f"Stiffness Matrix for Element ID {element_id}:")
+                return element.stiffness_matrix
+
+            print(f"Element ID {element_id} does not have a stiffness matrix.")
+        else:
+            print(f"Invalid element type for element ID {element_id}.")
+        return None
+
     def __deepcopy__(self, _: str) -> "SystemElements":
         """Deepcopy the SystemElements object.
 
