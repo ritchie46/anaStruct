@@ -836,7 +836,7 @@ class Plotter:
         self.axes[axes_i].plot(x_val, y_val, color=color)
 
         if node_results and force_1 and force_2:
-            self._add_node_values(x_val, y_val, force_1, force_2, digits)
+            self._add_node_values(x_val, y_val, force_1, force_2, digits, axes_i=axes_i)
 
     def plot(self) -> None:
         """Plots the figure."""
@@ -1324,6 +1324,7 @@ class Plotter:
                             deflection[index],
                             index,
                             3,
+                            axes_i=axes_i,
                         )
         if show:
             self.plot()
