@@ -1324,7 +1324,7 @@ class Plotter:
                             deflection[index],
                             index,
                             3,
-                            axes_i=axes_i
+                            axes_i=axes_i,
                         )
         if show:
             self.plot()
