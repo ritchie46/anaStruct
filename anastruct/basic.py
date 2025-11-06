@@ -94,7 +94,7 @@ def rotate_xy(a: np.ndarray, angle: float) -> np.ndarray:
     Returns:
         np.ndarray: Rotated matrix
     """
-    b = np.array(a)
+    b: np.ndarray = np.array(a)
     b[:, 0] -= a[0, 0]
     b[:, 1] -= a[0, 1]
     b = np.dot(b, rotation_matrix(angle))
