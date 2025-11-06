@@ -330,7 +330,7 @@ class Plotter:
             self.axes[axes_i].add_patch(support_patch)
 
         for node, _ in self.system.supports_spring_x:
-            xval = np.arange(0, 9, 1) * dh + node.vertex.x
+            xval = np.arange(0, 9, 1, dtype=np.float64) * dh + node.vertex.x
             yval = (
                 np.array([0, 0, left, right, left, right, left, 0, 0]) + node.vertex.y
             )

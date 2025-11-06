@@ -24,7 +24,7 @@ def find_nearest(array: np.ndarray, value: float) -> Tuple[float, int]:
 
     # Subtract the value of the value's in the array. Make the values absolute.
     # The lowest value is the nearest.
-    index: int = (np.abs(array - value)).argmin()
+    index: int = int((np.abs(array - value)).argmin())
     return array[index], index
 
 
@@ -38,7 +38,7 @@ def integrate_array(y: np.ndarray, dx: float) -> np.ndarray:
     Returns:
         np.ndarray: Integrated array
     """
-    return np.cumsum(y) * dx  # type: ignore
+    return np.cumsum(y) * dx
 
 
 class FEMException(Exception):
