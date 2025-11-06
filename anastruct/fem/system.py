@@ -245,11 +245,11 @@ class SystemElements:
                 "Wrong parameters", "EI should be a float, list or numpy array."
             )
         if g is None:
-            g_arr = length * 0
+            g_arr = length * 0.0
         elif isinstance(g, (float, int)):
-            g_arr = length * g
+            g_arr = length * float(g)
         elif isinstance(g, (list, np.ndarray)):
-            g_arr = np.array(g)
+            g_arr = np.asarray(g, dtype=float)
         else:
             raise FEMException(
                 "Wrong parameters", "g should be a float, list or numpy array."
