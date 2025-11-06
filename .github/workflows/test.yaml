@@ -4,11 +4,11 @@ on: [pull_request]
 
 jobs:
   min_build:
-    name: Run Code Checks and Tests on Python 3.10
+    name: Run Code Checks and Tests on Python 3.12
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.12"]
     steps:
       - uses: actions/checkout@v5
       - name: Set up Python ${{ matrix.python-version }}
@@ -38,7 +38,7 @@ jobs:
     strategy:
       max-parallel: 3
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.13", "3.14"]
 
     steps:
       - uses: actions/checkout@v5
