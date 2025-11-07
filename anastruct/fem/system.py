@@ -2185,15 +2185,19 @@ class SystemElements:
             Union[int, None]: ID of the node.
         """
         if dimension == "both" and isinstance(val, Sequence):
-            return int(
-                np.argmin(
-                    np.sqrt(
-                        (np.array(self.nodes_range("x")) - val[0]) ** 2
-                        + (np.array(self.nodes_range("y_neg")) - val[1]) ** 2
+            return self.node_map[
+                int(
+                    np.argmin(
+                        np.sqrt(
+                            (np.array(self.nodes_range("x")) - val[0]) ** 2
+                            + (np.array(self.nodes_range("y_neg")) - val[1]) ** 2
+                        )
                     )
                 )
-            )
-        return int(np.argmin(np.abs(np.array(self.nodes_range(dimension)) - val)))
+            ].id
+        return self.node_map[
+            int(np.argmin(np.abs(np.array(self.nodes_range(dimension)) - val)))
+        ].id
 
     def discretize(self, n: int = 10) -> None:
         """Discretize the elements. Takes an already defined :class:`.SystemElements` object and increases the number
