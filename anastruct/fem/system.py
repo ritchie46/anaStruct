@@ -463,6 +463,7 @@ class SystemElements:
         # Register the elements per node
         for node_id in (node_id1, node_id2):
             self.node_map[node_id].elements[element.id] = element
+            system_components.util.check_internal_hinges(self, node_id)
 
         assert mp is not None
         if len(mp) > 0:

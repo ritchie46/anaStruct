@@ -47,6 +47,7 @@ class Plotter:
         self.fig: Optional["Figure"] = None
         self.plot_colors: Dict[str, str] = {
             "support": "r",
+            "hinge": "k",
             "element": "k",
             "node_number": "k",
             "element_number": "k",
@@ -346,6 +347,25 @@ class Plotter:
                 radius=h * 0.9,
                 color=self.plot_colors["support"],
                 zorder=10,
+            )
+            self.axes[axes_i].add_patch(support_patch)
+
+    def __internal_hinges_patch(self, max_val: float, axes_i: int = 0) -> None:
+        """Plots the internal hinges.
+
+        Args:
+            max_val (float): Max scale of the plot
+            axes_i (int, optional): Which set of axes to plot on (for multi-plot windows). Defaults to 0.
+        """
+        radius = PATCH_SIZE * max_val / 2
+        for node in self.system.internal_hinges:
+            support_patch = mpatches.Circle(
+                (node.vertex.x, node.vertex.y),
+                radius,
+                edgecolor=self.plot_colors["hinge"],
+                facecolor="w",
+                linewidth=2,
+                zorder=9,
             )
             self.axes[axes_i].add_patch(support_patch)
 
@@ -724,6 +744,7 @@ class Plotter:
             self.__roll_support_patch(max_plot_range * scale)
             self.__rotating_spring_support_patch(max_plot_range * scale)
             self.__spring_support_patch(max_plot_range * scale)
+            self.__internal_hinges_patch(max_plot_range * scale)
 
         if verbosity == 0:
             # add_loads
