@@ -78,6 +78,8 @@ jobs:
         python-version: ["3.12"]
     steps:
       - uses: actions/checkout@v5
+      - name: Install poetry 
+        run: pipx install poetry
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
         with:
@@ -85,7 +87,6 @@ jobs:
           cache: "poetry"
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade poetry
           poetry install
       - name: Run linting check with pylint
         run: |
