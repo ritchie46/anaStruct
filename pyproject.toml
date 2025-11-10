@@ -52,7 +52,7 @@ pylint = "==4.0.2"
 mypy = "==1.18.2"
 black = { version = "==24.10.0", extras = ["jupyter"] }
 pytest = "==8.4.2"
-pytest-describe = "==2.2.0"
+pytest-describe = "==3.0.0"
 pytest-pspec = "==0.0.4"
 pytest-raises = "==0.11"
 

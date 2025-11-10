@@ -1578,18 +1578,18 @@ dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "requests
 
 [[package]]
 name = "pytest-describe"
-version = "2.2.0"
+version = "3.0.0"
 description = "Describe-style plugin for pytest"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.9"
 groups = ["test"]
 files = [
-    {file = "pytest-describe-2.2.0.tar.gz", hash = "sha256:39bb05eb90f2497d9ca342ef9a0b7fa5bada7e58505aec33f66d661d631955b7"},
-    {file = "pytest_describe-2.2.0-py3-none-any.whl", hash = "sha256:bd9e2c73acb4b9522a8400823d98f5b6a081667d3bfd7243a8598336896b544d"},
+    {file = "pytest_describe-3.0.0-py3-none-any.whl", hash = "sha256:946d40b5d77faf4eb610b94f2d54ab8b6721cc0b313f5bfb3663fd25c6a3920a"},
+    {file = "pytest_describe-3.0.0.tar.gz", hash = "sha256:50e0b7f404decaeb1b5d7bca13cbe369208d1eeffafc2802663777b195f074ff"},
 ]
 
 [package.dependencies]
-pytest = ">=4.6,<9"
+pytest = ">=6,<9"
 
 [[package]]
 name = "pytest-pspec"
@@ -2066,4 +2066,4 @@ plot = ["matplotlib"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10"
-content-hash = "a0985047e5bb57d077a5b00b0a8fffd307a4baa7d0000cf551a9d92cd271ad97"
+content-hash = "7e1f00b98dcb070fa6e3aa04c509aba027f1cb0002a3a0de856e21e55c18b25a"
