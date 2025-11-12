@@ -87,9 +87,10 @@ disable = [
     "duplicate-code",
     "invalid-name",
     "logging-fstring-interpolation",
+    "using-f-string-in-unsupported-version",
 ]
 max-line-length = 120
-py-version = 3.8
+py-version = [3.10, 3.11, 3.12, 3.13]
 
 [tool.mypy]
 packages = "anastruct"
