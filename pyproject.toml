@@ -50,7 +50,7 @@ matplotlib = "==3.10.7"
 [tool.poetry.group.test.dependencies]
 pylint = "==4.0.2"
 mypy = "==1.18.2"
-black = { version = "==24.10.0", extras = ["jupyter"] }
+black = { version = "==25.11.0", extras = ["jupyter"] }
 pytest = "==8.4.2"
 pytest-describe = "==3.0.0"
 pytest-pspec = "==0.0.4"
@@ -87,9 +87,10 @@ disable = [
     "duplicate-code",
     "invalid-name",
     "logging-fstring-interpolation",
+    "using-f-string-in-unsupported-version",
 ]
 max-line-length = 120
-py-version = 3.8
+py-version = [3.10, 3.11, 3.12, 3.13]
 
 [tool.mypy]
 packages = "anastruct"
