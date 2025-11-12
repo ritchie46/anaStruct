@@ -2363,6 +2363,6 @@ def _negative_index_to_id(idx: int, collection: Collection[int]) -> int:
             idx = int(idx)
         else:
             raise TypeError("Node or element id must be an integer")
-    if idx > 0:
+    if idx >= 0:
         return idx
     return max(collection) + (idx + 1)
