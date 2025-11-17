@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Literal, Optional, Sequence, Union
+from typing import Iterable, Literal, Optional, Sequence, Union
+
+import numpy as np
 
 from anastruct import SystemElements
 from anastruct.fem.system_components.util import add_node
@@ -30,8 +32,8 @@ class Truss(ABC):
 
     # Defined by subclass
     nodes: list[Vertex] = []
-    top_chord_node_ids: list[int] = []
-    bottom_chord_node_ids: list[int] = []
+    top_chord_node_ids: list[list[int]] = []
+    bottom_chord_node_ids: list[list[int]] = []
     web_node_pairs: list[tuple[int, int]] = []
     web_verticals_node_pairs: list[tuple[int, int]] = []
     support_definitions: dict[int, Literal["fixed", "pinned", "roller"]] = {}
@@ -94,47 +96,49 @@ class Truss(ABC):
             add_node(self.system, point=vertex, node_id=i)
 
     def add_elements(self) -> None:
+        def add_segment_elements(
+            node_pairs: Iterable[tuple[int, int]],
+            section: SectionProps,
+            continuous: bool,
+        ) -> None:
+            for i, j in node_pairs:
+                self.system.add_element(
+                    location=(self.nodes[i], self.nodes[j]),
+                    EA=section["EA"],
+                    EI=section["EI"],
+                    g=section["g"],
+                    spring=None if continuous else {1: 0.0, 2: 0.0},
+                )
+
         # Bottom chord elements
-        for i, j in zip(
-            self.bottom_chord_node_ids[:-1], self.bottom_chord_node_ids[1:]
-        ):
-            self.system.add_element(
-                location=(self.nodes[i], self.nodes[j]),
-                EA=self.bottom_chord_section["EA"],
-                EI=self.bottom_chord_section["EI"],
-                g=self.bottom_chord_section["g"],
-                spring=None if self.bottom_chord_continuous else {1: 0.0, 2: 0.0},
+        for segment_node_ids in self.bottom_chord_node_ids:
+            add_segment_elements(
+                node_pairs=zip(segment_node_ids[:-1], segment_node_ids[1:]),
+                section=self.bottom_chord_section,
+                continuous=self.bottom_chord_continuous,
             )
 
         # Top chord elements
-        for i, j in zip(self.top_chord_node_ids[:-1], self.top_chord_node_ids[1:]):
-            self.system.add_element(
-                location=(self.nodes[i], self.nodes[j]),
-                EA=self.top_chord_section["EA"],
-                EI=self.top_chord_section["EI"],
-                g=self.top_chord_section["g"],
-                spring=None if self.top_chord_continous else {1: 0.0, 2: 0.0},
+        for segment_node_ids in self.top_chord_node_ids:
+            add_segment_elements(
+                node_pairs=zip(segment_node_ids[:-1], segment_node_ids[1:]),
+                section=self.top_chord_section,
+                continuous=self.top_chord_continous,
             )
 
         # Web diagonal elements
-        for i, j in self.web_node_pairs:
-            self.system.add_element(
-                location=(self.nodes[i], self.nodes[j]),
-                EA=self.web_section["EA"],
-                EI=self.web_section["EI"],
-                g=self.web_section["g"],
-                spring={1: 0.0, 2: 0.0},
-            )
+        add_segment_elements(
+            node_pairs=self.web_node_pairs,
+            section=self.web_section,
+            continuous=False,
+        )
 
         # Web vertical elements
-        for i, j in self.web_verticals_node_pairs:
-            self.system.add_element(
-                location=(self.nodes[i], self.nodes[j]),
-                EA=self.web_verticals_section["EA"],
-                EI=self.web_verticals_section["EI"],
-                g=self.web_verticals_section["g"],
-                spring={1: 0.0, 2: 0.0},
-            )
+        add_segment_elements(
+            node_pairs=self.web_verticals_node_pairs,
+            section=self.web_verticals_section,
+            continuous=False,
+        )
 
     def add_supports(self) -> None:
         for node_id, support_type in self.support_definitions.items():
@@ -177,3 +181,57 @@ class Truss(ABC):
 
     def show_structure(self) -> None:
         self.system.show_structure()
+
+
+class RoofTruss(Truss):
+    # Additional geometry for this truss type
+    overhang_length: float
+    roof_pitch_deg: float
+
+    # Computed properties
+    roof_pitch: float
+
+    @property
+    def type(self) -> str:
+        return "[Generic] Roof Truss"
+
+    def __init__(
+        self,
+        width: float,
+        roof_pitch_deg: float,
+        overhang_length: float = 0.0,
+        top_chord_section: Optional[SectionProps] = None,
+        bottom_chord_section: Optional[SectionProps] = None,
+        web_section: Optional[SectionProps] = None,
+        web_verticals_section: Optional[SectionProps] = None,
+    ):
+        self.roof_pitch_deg = roof_pitch_deg
+        self.roof_pitch = np.radians(roof_pitch_deg)
+        height = (width / 2) * np.tan(self.roof_pitch)
+        self.overhang_length = overhang_length
+        super().__init__(
+            width,
+            height,
+            top_chord_section,
+            bottom_chord_section,
+            web_section,
+            web_verticals_section,
+        )
+
+    @abstractmethod
+    def define_nodes(self) -> None:
+        pass
+
+    @abstractmethod
+    def define_connectivity(self) -> None:
+        pass
+
+    def define_supports(self) -> None:
+        bottom_left = 0
+        bottom_right = max(self.bottom_chord_node_ids[0])
+        self.support_definitions[bottom_left] = (
+            self.supports_type if self.supports_type != "simple" else "pinned"
+        )
+        self.support_definitions[bottom_right] = (
+            self.supports_type if self.supports_type != "simple" else "roller"
+        )
