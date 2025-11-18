@@ -1007,4 +1007,9 @@ __all__ = [
     "HoweRoofTruss",
     "PrattRoofTruss",
     "FanRoofTruss",
+    "ModifiedQueenPostRoofTruss",
+    "DoubleFinkRoofTruss",
+    "DoubleHoweRoofTruss",
+    "ModifiedFanRoofTruss",
+    "AtticRoofTruss",
 ]
