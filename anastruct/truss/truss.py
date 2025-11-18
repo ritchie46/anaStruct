@@ -2,66 +2,19 @@ from typing import Literal, Optional
 
 import numpy as np
 
-from anastruct.truss.truss_class import DEFAULT_TRUSS_SECTION, RoofTruss, Truss
+from anastruct.truss.truss_class import (
+    DEFAULT_TRUSS_SECTION,
+    FlatTruss,
+    RoofTruss,
+    Truss,
+)
 from anastruct.types import SectionProps, Vertex
 
 
-class HoweFlatTruss(Truss):
-    # Data types specific to this truss type
-    EndType = Literal["flat", "triangle_down", "triangle_up"]
-    SupportLoc = Literal["bottom_chord", "top_chord", "both"]
-
-    # Additional geometry for this truss type
-    unit_width: float
-    end_type: EndType
-    supports_loc: SupportLoc
-
-    # Addtional configuration
-    min_end_fraction: float
-    enforce_even_units: bool
-
-    # Computed properties
-    n_units: int
-    end_width: float
-
+class HoweFlatTruss(FlatTruss):
     @property
     def type(self) -> str:
         return "Howe Flat Truss"
-
-    def __init__(
-        self,
-        width: float,
-        height: float,
-        unit_width: float,
-        end_type: EndType = "triangle_down",
-        supports_loc: SupportLoc = "bottom_chord",
-        min_end_fraction: float = 0.5,
-        enforce_even_units: bool = True,
-        top_chord_section: Optional[SectionProps] = None,
-        bottom_chord_section: Optional[SectionProps] = None,
-        web_section: Optional[SectionProps] = None,
-        web_verticals_section: Optional[SectionProps] = None,
-    ):
-
-        self.unit_width = unit_width
-        self.end_type = end_type
-        self.supports_loc = supports_loc
-        self.min_end_fraction = min_end_fraction
-        self.enforce_even_units = enforce_even_units
-        self.n_units = np.floor(
-            (width - unit_width * 2 * min_end_fraction) / unit_width
-        )
-        if self.enforce_even_units and self.n_units % 2 != 0:
-            self.n_units -= 1
-        self.end_width = (width - self.n_units * unit_width) / 2
-        super().__init__(
-            width,
-            height,
-            top_chord_section,
-            bottom_chord_section,
-            web_section,
-            web_verticals_section,
-        )
 
     def define_nodes(self) -> None:
         # Bottom chord nodes
@@ -144,82 +97,11 @@ class HoweFlatTruss(Truss):
         ):
             self.web_verticals_node_pairs.append((b, t))
 
-    def define_supports(self) -> None:
-        bottom_left = 0
-        bottom_right = max(self.bottom_chord_node_ids[0])
-        top_left = min(self.top_chord_node_ids[0])
-        top_right = max(self.top_chord_node_ids[0])
-        if self.supports_loc in ["bottom_chord", "both"]:
-            self.support_definitions[bottom_left] = (
-                self.supports_type if self.supports_type != "simple" else "pinned"
-            )
-            self.support_definitions[bottom_right] = (
-                self.supports_type if self.supports_type != "simple" else "roller"
-            )
-        if self.supports_loc in ["top_chord", "both"]:
-            self.support_definitions[top_left] = (
-                self.supports_type if self.supports_type != "simple" else "pinned"
-            )
-            self.support_definitions[top_right] = (
-                self.supports_type if self.supports_type != "simple" else "roller"
-            )
 
-
-class PrattFlatTruss(Truss):
-    # Data types specific to this truss type
-    EndType = Literal["flat", "triangle_down", "triangle_up"]
-    SupportLoc = Literal["bottom_chord", "top_chord", "both"]
-
-    # Additional geometry for this truss type
-    unit_width: float
-    end_type: EndType
-    supports_loc: SupportLoc
-
-    # Addtional configuration
-    min_end_fraction: float
-    enforce_even_units: bool
-
-    # Computed properties
-    n_units: int
-    end_width: float
-
+class PrattFlatTruss(FlatTruss):
     @property
     def type(self) -> str:
         return "Pratt Flat Truss"
-
-    def __init__(
-        self,
-        width: float,
-        height: float,
-        unit_width: float,
-        end_type: EndType = "triangle_down",
-        supports_loc: SupportLoc = "bottom_chord",
-        min_end_fraction: float = 0.5,
-        enforce_even_units: bool = True,
-        top_chord_section: Optional[SectionProps] = None,
-        bottom_chord_section: Optional[SectionProps] = None,
-        web_section: Optional[SectionProps] = None,
-        web_verticals_section: Optional[SectionProps] = None,
-    ):
-        self.unit_width = unit_width
-        self.end_type = end_type
-        self.supports_loc = supports_loc
-        self.min_end_fraction = min_end_fraction
-        self.enforce_even_units = enforce_even_units
-        self.n_units = np.floor(
-            (width - unit_width * 2 * min_end_fraction) / unit_width
-        )
-        if self.enforce_even_units and self.n_units % 2 != 0:
-            self.n_units -= 1
-        self.end_width = (width - self.n_units * unit_width) / 2
-        super().__init__(
-            width,
-            height,
-            top_chord_section,
-            bottom_chord_section,
-            web_section,
-            web_verticals_section,
-        )
 
     def define_nodes(self) -> None:
         # Bottom chord nodes
@@ -302,28 +184,8 @@ class PrattFlatTruss(Truss):
         ):
             self.web_verticals_node_pairs.append((b, t))
 
-    def define_supports(self) -> None:
-        bottom_left = 0
-        bottom_right = max(self.bottom_chord_node_ids[0])
-        top_left = min(self.top_chord_node_ids[0])
-        top_right = max(self.top_chord_node_ids[0])
-        if self.supports_loc in ["bottom_chord", "both"]:
-            self.support_definitions[bottom_left] = (
-                self.supports_type if self.supports_type != "simple" else "pinned"
-            )
-            self.support_definitions[bottom_right] = (
-                self.supports_type if self.supports_type != "simple" else "roller"
-            )
-        if self.supports_loc in ["top_chord", "both"]:
-            self.support_definitions[top_left] = (
-                self.supports_type if self.supports_type != "simple" else "pinned"
-            )
-            self.support_definitions[top_right] = (
-                self.supports_type if self.supports_type != "simple" else "roller"
-            )
 
-
-class WarrenFlatTruss(Truss):
+class WarrenFlatTruss(FlatTruss):
     # Data types specific to this truss type
     EndType = Literal["triangle_down", "triangle_up"]
     SupportLoc = Literal["bottom_chord", "top_chord", "both"]
@@ -353,24 +215,25 @@ class WarrenFlatTruss(Truss):
         web_section: Optional[SectionProps] = None,
         web_verticals_section: Optional[SectionProps] = None,
     ):
-        self.unit_width = unit_width
-        self.end_type = end_type
-        self.supports_loc = supports_loc
         # Note that the maths for a Warren truss is simpler than for Howe/Pratt, because there
         # cannot be any option for non-even number of units, and there are no special cases for
         # web verticals.
-        self.n_units = np.floor(width / unit_width)
-        if self.n_units % 2 != 0:
-            self.n_units -= 1
-        self.end_width = (width - self.n_units * unit_width) / 2 + (unit_width / 2)
+        min_end_fraction = 0.5  # Not used for Warren truss
+        enforce_even_units = True  # Handled internally for Warren truss
         super().__init__(
             width,
             height,
+            unit_width,
+            end_type,
+            supports_loc,
+            min_end_fraction,
+            enforce_even_units,
             top_chord_section,
             bottom_chord_section,
             web_section,
             web_verticals_section,
         )
+        self.end_width = (width - self.n_units * unit_width) / 2 + (unit_width / 2)
 
     def define_nodes(self) -> None:
         # Bottom chord nodes
@@ -432,26 +295,6 @@ class WarrenFlatTruss(Truss):
             self.bottom_chord_node_ids[0][bot_start:],
         ):
             self.web_node_pairs.append((b, t))
-
-    def define_supports(self) -> None:
-        bottom_left = 0
-        bottom_right = max(self.bottom_chord_node_ids[0])
-        top_left = min(self.top_chord_node_ids[0])
-        top_right = max(self.top_chord_node_ids[0])
-        if self.supports_loc in ["bottom_chord", "both"]:
-            self.support_definitions[bottom_left] = (
-                self.supports_type if self.supports_type != "simple" else "pinned"
-            )
-            self.support_definitions[bottom_right] = (
-                self.supports_type if self.supports_type != "simple" else "roller"
-            )
-        if self.supports_loc in ["top_chord", "both"]:
-            self.support_definitions[top_left] = (
-                self.supports_type if self.supports_type != "simple" else "pinned"
-            )
-            self.support_definitions[top_right] = (
-                self.supports_type if self.supports_type != "simple" else "roller"
-            )
 
 
 class KingPostRoofTruss(RoofTruss):
@@ -558,13 +401,13 @@ class FinkRoofTruss(RoofTruss):
     def define_nodes(self) -> None:
         # Bottom chord nodes
         self.nodes.append(Vertex(0.0, 0.0))
-        self.nodes.append(Vertex(self.width / 3, 0.0))
+        self.nodes.append(Vertex(1 * self.width / 3, 0.0))
         self.nodes.append(Vertex(2 * self.width / 3, 0.0))
         self.nodes.append(Vertex(self.width, 0.0))
 
         # Top chord nodes
         # self.nodes.append(Vertex(0.0, 0.0))
-        self.nodes.append(Vertex(self.width / 4, self.height / 2))
+        self.nodes.append(Vertex(1 * self.width / 4, self.height / 2))
         self.nodes.append(Vertex(self.width / 2, self.height))
         self.nodes.append(Vertex(3 * self.width / 4, self.height / 2))
         # self.nodes.append(Vertex(self.width, 0.0))
@@ -609,14 +452,14 @@ class HoweRoofTruss(RoofTruss):
     def define_nodes(self) -> None:
         # Bottom chord nodes
         self.nodes.append(Vertex(0.0, 0.0))
-        self.nodes.append(Vertex(self.width / 4, 0.0))
+        self.nodes.append(Vertex(1 * self.width / 4, 0.0))
         self.nodes.append(Vertex(self.width / 2, 0.0))
         self.nodes.append(Vertex(3 * self.width / 4, 0.0))
         self.nodes.append(Vertex(self.width, 0.0))
 
         # Top chord nodes
         # self.nodes.append(Vertex(0.0, 0.0))
-        self.nodes.append(Vertex(self.width / 4, self.height / 2))
+        self.nodes.append(Vertex(1 * self.width / 4, self.height / 2))
         self.nodes.append(Vertex(self.width / 2, self.height))
         self.nodes.append(Vertex(3 * self.width / 4, self.height / 2))
         # self.nodes.append(Vertex(self.width, 0.0))
@@ -638,7 +481,7 @@ class HoweRoofTruss(RoofTruss):
         # Bottom chord connectivity
         self.bottom_chord_node_ids = [[0, 1, 2, 3, 4]]
         left_v = 0
-        right_v = 2
+        right_v = 4
 
         # Top chord connectivity (left and right slopes stored separately)
         self.top_chord_node_ids = [[left_v, 5, 6], [6, 7, right_v]]
@@ -664,14 +507,14 @@ class PrattRoofTruss(RoofTruss):
     def define_nodes(self) -> None:
         # Bottom chord nodes
         self.nodes.append(Vertex(0.0, 0.0))
-        self.nodes.append(Vertex(self.width / 4, 0.0))
+        self.nodes.append(Vertex(1 * self.width / 4, 0.0))
         self.nodes.append(Vertex(self.width / 2, 0.0))
         self.nodes.append(Vertex(3 * self.width / 4, 0.0))
         self.nodes.append(Vertex(self.width, 0.0))
 
         # Top chord nodes
         # self.nodes.append(Vertex(0.0, 0.0))
-        self.nodes.append(Vertex(self.width / 4, self.height / 2))
+        self.nodes.append(Vertex(1 * self.width / 4, self.height / 2))
         self.nodes.append(Vertex(self.width / 2, self.height))
         self.nodes.append(Vertex(3 * self.width / 4, self.height / 2))
         # self.nodes.append(Vertex(self.width, 0.0))
@@ -693,7 +536,7 @@ class PrattRoofTruss(RoofTruss):
         # Bottom chord connectivity
         self.bottom_chord_node_ids = [[0, 1, 2, 3, 4]]
         left_v = 0
-        right_v = 2
+        right_v = 4
 
         # Top chord connectivity (left and right slopes stored separately)
         self.top_chord_node_ids = [[left_v, 5, 6], [6, 7, right_v]]
@@ -719,13 +562,13 @@ class FanRoofTruss(RoofTruss):
     def define_nodes(self) -> None:
         # Bottom chord nodes
         self.nodes.append(Vertex(0.0, 0.0))
-        self.nodes.append(Vertex(self.width / 3, 0.0))
+        self.nodes.append(Vertex(1 * self.width / 3, 0.0))
         self.nodes.append(Vertex(2 * self.width / 3, 0.0))
         self.nodes.append(Vertex(self.width, 0.0))
 
         # Top chord nodes
         # self.nodes.append(Vertex(0.0, 0.0))
-        self.nodes.append(Vertex(self.width / 6, self.height / 3))
+        self.nodes.append(Vertex(1 * self.width / 6, self.height / 3))
         self.nodes.append(Vertex(2 * self.width / 6, 2 * self.height / 3))
         self.nodes.append(Vertex(self.width / 2, self.height))
         self.nodes.append(Vertex(4 * self.width / 6, 2 * self.height / 3))
@@ -766,6 +609,392 @@ class FanRoofTruss(RoofTruss):
         # Web verticals connectivity
         self.web_verticals_node_pairs.append((1, 5))
         self.web_verticals_node_pairs.append((2, 7))
+
+
+class ModifiedQueenPostRoofTruss(RoofTruss):
+    @property
+    def type(self) -> str:
+        return "Modified Queen Post Roof Truss"
+
+    def define_nodes(self) -> None:
+        # Bottom chord nodes
+        self.nodes.append(Vertex(0.0, 0.0))
+        self.nodes.append(Vertex(1 * self.width / 4, 0.0))
+        self.nodes.append(Vertex(self.width / 2, 0.0))
+        self.nodes.append(Vertex(3 * self.width / 4, 0.0))
+        self.nodes.append(Vertex(self.width, 0.0))
+
+        # Top chord nodes
+        # self.nodes.append(Vertex(0.0, 0.0))
+        self.nodes.append(Vertex(1 * self.width / 6, self.height / 3))
+        self.nodes.append(Vertex(2 * self.width / 6, 2 * self.height / 3))
+        self.nodes.append(Vertex(self.width / 2, self.height))
+        self.nodes.append(Vertex(4 * self.width / 6, 2 * self.height / 3))
+        self.nodes.append(Vertex(5 * self.width / 6, self.height / 3))
+        # self.nodes.append(Vertex(self.width, 0.0))
+        if self.overhang_length > 0:
+            self.nodes.append(
+                Vertex(
+                    -self.overhang_length * np.cos(self.roof_pitch),
+                    -self.overhang_length * np.sin(self.roof_pitch),
+                )
+            )
+            self.nodes.append(
+                Vertex(
+                    self.width + self.overhang_length * np.cos(self.roof_pitch),
+                    -self.overhang_length * np.sin(self.roof_pitch),
+                )
+            )
+
+    def define_connectivity(self) -> None:
+        # Bottom chord connectivity
+        self.bottom_chord_node_ids = [[0, 1, 2, 3, 4]]
+        left_v = 0
+        right_v = 4
+
+        # Top chord connectivity (left and right slopes stored separately)
+        self.top_chord_node_ids = [[left_v, 5, 6, 7], [7, 8, 9, right_v]]
+        if self.overhang_length > 0:
+            self.top_chord_node_ids[0].insert(0, 10)  # left overhang
+            self.top_chord_node_ids[1].append(11)  # right overhang
+
+        # Web diagonals connectivity
+        self.web_node_pairs.append((1, 5))
+        self.web_node_pairs.append((1, 6))
+        self.web_node_pairs.append((2, 6))
+        self.web_node_pairs.append((2, 8))
+        self.web_node_pairs.append((3, 8))
+        self.web_node_pairs.append((3, 9))
+
+        # Web verticals connectivity
+        self.web_verticals_node_pairs.append((2, 7))  # center vertical
+
+
+class DoubleFinkRoofTruss(RoofTruss):
+    @property
+    def type(self) -> str:
+        return "Double Fink Roof Truss"
+
+    def define_nodes(self) -> None:
+        # Bottom chord nodes
+        self.nodes.append(Vertex(0.0, 0.0))
+        self.nodes.append(Vertex(1 * self.width / 5, 0.0))
+        self.nodes.append(Vertex(2 * self.width / 5, 0.0))
+        self.nodes.append(Vertex(3 * self.width / 5, 0.0))
+        self.nodes.append(Vertex(4 * self.width / 5, 0.0))
+        self.nodes.append(Vertex(self.width, 0.0))
+
+        # Top chord nodes
+        # self.nodes.append(Vertex(0.0, 0.0))
+        self.nodes.append(Vertex(1 * self.width / 6, self.height / 3))
+        self.nodes.append(Vertex(2 * self.width / 6, 2 * self.height / 3))
+        self.nodes.append(Vertex(self.width / 2, self.height))
+        self.nodes.append(Vertex(4 * self.width / 6, 2 * self.height / 3))
+        self.nodes.append(Vertex(5 * self.width / 6, self.height / 3))
+        # self.nodes.append(Vertex(self.width, 0.0))
+        if self.overhang_length > 0:
+            self.nodes.append(
+                Vertex(
+                    -self.overhang_length * np.cos(self.roof_pitch),
+                    -self.overhang_length * np.sin(self.roof_pitch),
+                )
+            )
+            self.nodes.append(
+                Vertex(
+                    self.width + self.overhang_length * np.cos(self.roof_pitch),
+                    -self.overhang_length * np.sin(self.roof_pitch),
+                )
+            )
+
+    def define_connectivity(self) -> None:
+        # Bottom chord connectivity
+        self.bottom_chord_node_ids = [[0, 1, 2, 3, 4, 5]]
+        left_v = 0
+        right_v = 5
+
+        # Top chord connectivity (left and right slopes stored separately)
+        self.top_chord_node_ids = [[left_v, 6, 7, 8], [8, 9, 10, right_v]]
+        if self.overhang_length > 0:
+            self.top_chord_node_ids[0].insert(0, 11)  # left overhang
+            self.top_chord_node_ids[1].append(12)  # right overhang
+
+        # Web diagonals connectivity
+        self.web_node_pairs.append((1, 6))
+        self.web_node_pairs.append((1, 7))
+        self.web_node_pairs.append((2, 7))
+        self.web_node_pairs.append((2, 8))
+        self.web_node_pairs.append((3, 8))
+        self.web_node_pairs.append((3, 9))
+        self.web_node_pairs.append((4, 9))
+        self.web_node_pairs.append((4, 10))
+
+
+class DoubleHoweRoofTruss(RoofTruss):
+    @property
+    def type(self) -> str:
+        return "Double Howe Roof Truss"
+
+    def define_nodes(self) -> None:
+        # Bottom chord nodes
+        self.nodes.append(Vertex(0.0, 0.0))
+        self.nodes.append(Vertex(1 * self.width / 6, 0.0))
+        self.nodes.append(Vertex(2 * self.width / 6, 0.0))
+        self.nodes.append(Vertex(self.width / 2, 0.0))
+        self.nodes.append(Vertex(4 * self.width / 6, 0.0))
+        self.nodes.append(Vertex(5 * self.width / 6, 0.0))
+        self.nodes.append(Vertex(self.width, 0.0))
+
+        # Top chord nodes
+        # self.nodes.append(Vertex(0.0, 0.0))
+        self.nodes.append(Vertex(1 * self.width / 6, self.height / 3))
+        self.nodes.append(Vertex(2 * self.width / 6, 2 * self.height / 3))
+        self.nodes.append(Vertex(self.width / 2, self.height))
+        self.nodes.append(Vertex(4 * self.width / 6, 2 * self.height / 3))
+        self.nodes.append(Vertex(5 * self.width / 6, self.height / 3))
+        # self.nodes.append(Vertex(self.width, 0.0))
+        if self.overhang_length > 0:
+            self.nodes.append(
+                Vertex(
+                    -self.overhang_length * np.cos(self.roof_pitch),
+                    -self.overhang_length * np.sin(self.roof_pitch),
+                )
+            )
+            self.nodes.append(
+                Vertex(
+                    self.width + self.overhang_length * np.cos(self.roof_pitch),
+                    -self.overhang_length * np.sin(self.roof_pitch),
+                )
+            )
+
+    def define_connectivity(self) -> None:
+        # Bottom chord connectivity
+        self.bottom_chord_node_ids = [[0, 1, 2, 3, 4, 5, 6]]
+        left_v = 0
+        right_v = 6
+
+        # Top chord connectivity (left and right slopes stored separately)
+        self.top_chord_node_ids = [[left_v, 7, 8, 9], [9, 10, 11, right_v]]
+        if self.overhang_length > 0:
+            self.top_chord_node_ids[0].insert(0, 12)  # left overhang
+            self.top_chord_node_ids[1].append(13)  # right overhang
+
+        # Web diagonals connectivity
+        self.web_node_pairs.append((2, 7))
+        self.web_node_pairs.append((3, 8))
+        self.web_node_pairs.append((3, 10))
+        self.web_node_pairs.append((4, 11))
+
+        # Web verticals connectivity
+        self.web_verticals_node_pairs.append((1, 7))
+        self.web_verticals_node_pairs.append((2, 8))
+        self.web_verticals_node_pairs.append((3, 9))  # center vertical
+        self.web_verticals_node_pairs.append((4, 10))
+        self.web_verticals_node_pairs.append((5, 11))
+
+
+class ModifiedFanRoofTruss(RoofTruss):
+    @property
+    def type(self) -> str:
+        return "Modified Fan Roof Truss"
+
+    def define_nodes(self) -> None:
+        # Bottom chord nodes
+        self.nodes.append(Vertex(0.0, 0.0))
+        self.nodes.append(Vertex(1 * self.width / 4, 0.0))
+        self.nodes.append(Vertex(self.width / 2, 0.0))
+        self.nodes.append(Vertex(3 * self.width / 4, 0.0))
+        self.nodes.append(Vertex(self.width, 0.0))
+
+        # Top chord nodes
+        # self.nodes.append(Vertex(0.0, 0.0))
+        self.nodes.append(Vertex(1 * self.width / 8, 1 * self.height / 4))
+        self.nodes.append(Vertex(2 * self.width / 8, 2 * self.height / 4))
+        self.nodes.append(Vertex(3 * self.width / 8, 3 * self.height / 4))
+        self.nodes.append(Vertex(self.width / 2, self.height))
+        self.nodes.append(Vertex(5 * self.width / 8, 3 * self.height / 4))
+        self.nodes.append(Vertex(6 * self.width / 8, 2 * self.height / 4))
+        self.nodes.append(Vertex(7 * self.width / 8, 1 * self.height / 4))
+        # self.nodes.append(Vertex(self.width, 0.0))
+        if self.overhang_length > 0:
+            self.nodes.append(
+                Vertex(
+                    -self.overhang_length * np.cos(self.roof_pitch),
+                    -self.overhang_length * np.sin(self.roof_pitch),
+                )
+            )
+            self.nodes.append(
+                Vertex(
+                    self.width + self.overhang_length * np.cos(self.roof_pitch),
+                    -self.overhang_length * np.sin(self.roof_pitch),
+                )
+            )
+
+    def define_connectivity(self) -> None:
+        # Bottom chord connectivity
+        self.bottom_chord_node_ids = [[0, 1, 2, 3, 4]]
+        left_v = 0
+        right_v = 4
+
+        # Top chord connectivity (left and right slopes stored separately)
+        self.top_chord_node_ids = [[left_v, 5, 6, 7, 8], [8, 9, 10, 11, right_v]]
+        if self.overhang_length > 0:
+            self.top_chord_node_ids[0].insert(0, 12)  # left overhang
+            self.top_chord_node_ids[1].append(13)  # right overhang
+
+        # Web diagonals connectivity
+        self.web_node_pairs.append((1, 5))
+        self.web_node_pairs.append((1, 7))
+        self.web_node_pairs.append((2, 7))
+        self.web_node_pairs.append((2, 9))
+        self.web_node_pairs.append((3, 9))
+        self.web_node_pairs.append((3, 11))
+
+        # Web verticals connectivity
+        self.web_verticals_node_pairs.append((1, 6))
+        self.web_verticals_node_pairs.append((2, 8))  # center vertical
+        self.web_verticals_node_pairs.append((3, 10))
+
+
+class AtticRoofTruss(RoofTruss):
+    # Additional properties for this truss type
+    attic_width: float
+    attic_height: float
+
+    # Computed properties for this truss type
+    wall_x: float
+    wall_y: float
+    ceiling_y: float
+    ceiling_x: float
+    wall_ceiling_intersect: bool = False
+
+    @property
+    def type(self) -> str:
+        return "Attic Roof Truss"
+
+    def __init__(
+        self,
+        width: float,
+        roof_pitch_deg: float,
+        attic_width: float,
+        attic_height: Optional[float] = None,
+        overhang_length: float = 0.0,
+        top_chord_section: Optional[SectionProps] = None,
+        bottom_chord_section: Optional[SectionProps] = None,
+        web_section: Optional[SectionProps] = None,
+        web_verticals_section: Optional[SectionProps] = None,
+    ):
+        super().__init__(
+            width=width,
+            roof_pitch_deg=roof_pitch_deg,
+            overhang_length=overhang_length,
+            top_chord_section=top_chord_section,
+            bottom_chord_section=bottom_chord_section,
+            web_section=web_section,
+            web_verticals_section=web_verticals_section,
+        )
+        self.attic_width = attic_width
+        self.wall_x = self.width / 2 - self.attic_width / 2
+        self.wall_y = self.wall_x * np.tan(self.roof_pitch)
+        if attic_height is None:
+            self.attic_height = self.wall_y
+        else:
+            self.attic_height = attic_height
+        self.ceiling_y = self.attic_height
+        self.ceiling_x = self.width / 2 - (self.height - self.ceiling_y) / np.tan(
+            self.roof_pitch
+        )
+        if self.ceiling_y == self.wall_y:
+            self.wall_ceiling_intersect = True
+        if self.ceiling_y < self.wall_y or self.ceiling_x < self.wall_y:
+            raise ValueError(
+                "Attic height may not be less than the attic wall height. Please increase your attic width and/or attic height."
+            )
+
+    def define_nodes(self) -> None:
+        # Bottom chord nodes
+        self.nodes.append(Vertex(0.0, 0.0))
+        self.nodes.append(Vertex(self.wall_x, 0.0))
+        self.nodes.append(Vertex(self.width - self.wall_x, 0.0))
+        self.nodes.append(Vertex(self.width, 0.0))
+
+        # Top chord nodes
+        # self.nodes.append(Vertex(0.0, 0.0))
+        self.nodes.append(Vertex(self.wall_x / 2, self.wall_y / 2))
+        self.nodes.append(Vertex(self.wall_x, self.wall_y))
+        if not self.wall_ceiling_intersect:
+            self.nodes.append(Vertex(self.ceiling_x, self.ceiling_y))
+        self.nodes.append(Vertex(self.width / 2, self.height))
+        if not self.wall_ceiling_intersect:
+            self.nodes.append(Vertex(self.width - self.ceiling_x, self.ceiling_y))
+        self.nodes.append(Vertex(self.width - self.wall_x, self.wall_y))
+        self.nodes.append(Vertex(self.width - self.wall_x / 2, self.wall_y / 2))
+        self.nodes.append(
+            Vertex(self.width / 2, self.ceiling_y)
+        )  # special node in the middle of the ceiling beam
+        # self.nodes.append(Vertex(self.width, 0.0))
+        if self.overhang_length > 0:
+            self.nodes.append(
+                Vertex(
+                    -self.overhang_length * np.cos(self.roof_pitch),
+                    -self.overhang_length * np.sin(self.roof_pitch),
+                )
+            )
+            self.nodes.append(
+                Vertex(
+                    self.width + self.overhang_length * np.cos(self.roof_pitch),
+                    -self.overhang_length * np.sin(self.roof_pitch),
+                )
+            )
+
+    def define_connectivity(self) -> None:
+        # Bottom chord connectivity
+        self.bottom_chord_node_ids = [[0, 1, 2, 3]]
+        left_v = 0
+        right_v = 3
+
+        if self.wall_ceiling_intersect:
+            # Top chord connectivity (left and right slopes stored separately)
+            self.top_chord_node_ids = [
+                [left_v, 4, 5, 6],
+                [6, 7, 8, right_v],
+                [5, 9, 7],  # attic ceiling
+            ]
+            if self.overhang_length > 0:
+                self.top_chord_node_ids[0].insert(0, 10)  # left overhang
+                self.top_chord_node_ids[1].append(11)  # right overhang
+
+            # Web diagonals connectivity
+            self.web_node_pairs.append((1, 4))
+            self.web_node_pairs.append(
+                (9, 6)
+            )  # special case: this is actually the center vertical post
+            self.web_node_pairs.append((2, 8))
+
+            # Web verticals connectivity
+            self.web_verticals_node_pairs.append((1, 5))
+            self.web_verticals_node_pairs.append((2, 7))
+
+        else:
+            # Top chord connectivity (left and right slopes stored separately)
+            self.top_chord_node_ids = [
+                [left_v, 4, 5, 6, 7],
+                [7, 8, 9, 10, right_v],
+                [6, 11, 8],  # attic ceiling
+            ]
+            if self.overhang_length > 0:
+                self.top_chord_node_ids[0].insert(0, 12)  # left overhang
+                self.top_chord_node_ids[1].append(13)  # right overhang
+
+            # Web diagonals connectivity
+            self.web_node_pairs.append((1, 4))
+            self.web_node_pairs.append(
+                (11, 7)
+            )  # special case: this is actually the center vertical post
+            self.web_node_pairs.append((2, 10))
+
+            # Web verticals connectivity
+            self.web_verticals_node_pairs.append((1, 5))
+            self.web_verticals_node_pairs.append((2, 9))
 
 
 __all__ = [
