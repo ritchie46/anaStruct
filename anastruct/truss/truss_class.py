@@ -183,6 +183,93 @@ class Truss(ABC):
         self.system.show_structure()
 
 
+class FlatTruss(Truss):
+    # Data types specific to this truss type
+    EndType = Literal["flat", "triangle_down", "triangle_up"]
+    SupportLoc = Literal["bottom_chord", "top_chord", "both"]
+
+    # Additional geometry for this truss type
+    unit_width: float
+    end_type: EndType
+    supports_loc: SupportLoc
+
+    # Addtional configuration
+    min_end_fraction: float
+    enforce_even_units: bool
+
+    # Computed properties
+    n_units: int
+    end_width: float
+
+    @property
+    @abstractmethod
+    def type(self) -> str:
+        return "[Generic] Flat Truss"
+
+    def __init__(
+        self,
+        width: float,
+        height: float,
+        unit_width: float,
+        end_type: EndType = "triangle_down",
+        supports_loc: SupportLoc = "bottom_chord",
+        min_end_fraction: float = 0.5,
+        enforce_even_units: bool = True,
+        top_chord_section: Optional[SectionProps] = None,
+        bottom_chord_section: Optional[SectionProps] = None,
+        web_section: Optional[SectionProps] = None,
+        web_verticals_section: Optional[SectionProps] = None,
+    ):
+
+        self.unit_width = unit_width
+        self.end_type = end_type
+        self.supports_loc = supports_loc
+        self.min_end_fraction = min_end_fraction
+        self.enforce_even_units = enforce_even_units
+        self.n_units = np.floor(
+            (width - unit_width * 2 * min_end_fraction) / unit_width
+        )
+        if self.enforce_even_units and self.n_units % 2 != 0:
+            self.n_units -= 1
+        self.end_width = (width - self.n_units * unit_width) / 2
+        super().__init__(
+            width,
+            height,
+            top_chord_section,
+            bottom_chord_section,
+            web_section,
+            web_verticals_section,
+        )
+
+    @abstractmethod
+    def define_nodes(self) -> None:
+        pass
+
+    @abstractmethod
+    def define_connectivity(self) -> None:
+        pass
+
+    def define_supports(self) -> None:
+        bottom_left = 0
+        bottom_right = max(self.bottom_chord_node_ids[0])
+        top_left = min(self.top_chord_node_ids[0])
+        top_right = max(self.top_chord_node_ids[0])
+        if self.supports_loc in ["bottom_chord", "both"]:
+            self.support_definitions[bottom_left] = (
+                self.supports_type if self.supports_type != "simple" else "pinned"
+            )
+            self.support_definitions[bottom_right] = (
+                self.supports_type if self.supports_type != "simple" else "roller"
+            )
+        if self.supports_loc in ["top_chord", "both"]:
+            self.support_definitions[top_left] = (
+                self.supports_type if self.supports_type != "simple" else "pinned"
+            )
+            self.support_definitions[top_right] = (
+                self.supports_type if self.supports_type != "simple" else "roller"
+            )
+
+
 class RoofTruss(Truss):
     # Additional geometry for this truss type
     overhang_length: float
@@ -192,6 +279,7 @@ class RoofTruss(Truss):
     roof_pitch: float
 
     @property
+    @abstractmethod
     def type(self) -> str:
         return "[Generic] Roof Truss"
 
