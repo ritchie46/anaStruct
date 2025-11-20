@@ -2,7 +2,7 @@ from typing import Literal, Optional
 
 import numpy as np
 
-from anastruct.truss.truss_class import FlatTruss, RoofTruss
+from anastruct.preprocess.truss_class import FlatTruss, RoofTruss
 from anastruct.types import SectionProps, Vertex
 
 
