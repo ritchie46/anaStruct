@@ -48,7 +48,7 @@ scipy = "==1.15.3"
 matplotlib = "==3.10.7"
 
 [tool.poetry.group.test.dependencies]
-pylint = "==4.0.2"
+pylint = "==4.0.3"
 mypy = "==1.18.2"
 black = { version = "==25.11.0", extras = ["jupyter"] }
 pytest = "==8.4.2"
