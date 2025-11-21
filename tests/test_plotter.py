@@ -6,7 +6,7 @@ from anastruct.fem import system as se
 
 
 class SimpleTest(unittest.TestCase):
-    show = True
+    show = False
 
     def test_example_1(self):
         system = se.SystemElements()
