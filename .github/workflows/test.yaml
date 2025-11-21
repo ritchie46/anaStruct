@@ -32,7 +32,7 @@ jobs:
           poetry run mypy -p anastruct
       - name: Run FEM tests with pytest
         run: |
-          poetry run pytest --pspec tests/
+          poetry run pytest
 
   run_tests:
     name: Run FEM Testing Suite on Multiple Python Versions
@@ -57,4 +57,4 @@ jobs:
 
       - name: Run FEM tests with pytest
         run: |
-          poetry run pytest --pspec tests/
+          poetry run pytest

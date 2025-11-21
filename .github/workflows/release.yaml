@@ -99,7 +99,7 @@ jobs:
           poetry run mypy
       - name: Run FEM tests with pytest
         run: |
-          poetry run pytest --pspec tests/
+          poetry run pytest
   publish:
     name: Publish to PyPI
     needs: 
