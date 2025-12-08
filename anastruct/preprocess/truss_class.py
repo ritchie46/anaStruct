@@ -40,6 +40,12 @@ class Truss(ABC):
     top_chord_length: float = 0.0
     bottom_chord_length: float = 0.0
 
+    # Defined by main class
+    top_chord_element_ids: list[list[int]] = []
+    bottom_chord_element_ids: list[list[int]] = []
+    web_element_ids: list[int] = []
+    web_verticals_element_ids: list[int] = []
+
     # System
     system: SystemElements
 
@@ -100,41 +106,49 @@ class Truss(ABC):
             node_pairs: Iterable[tuple[int, int]],
             section: SectionProps,
             continuous: bool,
-        ) -> None:
+        ) -> list[int]:
+            element_ids = []
             for i, j in node_pairs:
-                self.system.add_element(
-                    location=(self.nodes[i], self.nodes[j]),
-                    EA=section["EA"],
-                    EI=section["EI"],
-                    g=section["g"],
-                    spring=None if continuous else {1: 0.0, 2: 0.0},
+                element_ids.append(
+                    self.system.add_element(
+                        location=(self.nodes[i], self.nodes[j]),
+                        EA=section["EA"],
+                        EI=section["EI"],
+                        g=section["g"],
+                        spring=None if continuous else {1: 0.0, 2: 0.0},
+                    )
                 )
+            return element_ids
 
         # Bottom chord elements
         for segment_node_ids in self.bottom_chord_node_ids:
-            add_segment_elements(
-                node_pairs=zip(segment_node_ids[:-1], segment_node_ids[1:]),
-                section=self.bottom_chord_section,
-                continuous=self.bottom_chord_continuous,
+            self.bottom_chord_element_ids.append(
+                add_segment_elements(
+                    node_pairs=zip(segment_node_ids[:-1], segment_node_ids[1:]),
+                    section=self.bottom_chord_section,
+                    continuous=self.bottom_chord_continuous,
+                )
             )
 
         # Top chord elements
         for segment_node_ids in self.top_chord_node_ids:
-            add_segment_elements(
-                node_pairs=zip(segment_node_ids[:-1], segment_node_ids[1:]),
-                section=self.top_chord_section,
-                continuous=self.top_chord_continous,
+            self.top_chord_element_ids.append(
+                add_segment_elements(
+                    node_pairs=zip(segment_node_ids[:-1], segment_node_ids[1:]),
+                    section=self.top_chord_section,
+                    continuous=self.top_chord_continous,
+                )
             )
 
         # Web diagonal elements
-        add_segment_elements(
+        self.web_element_ids = add_segment_elements(
             node_pairs=self.web_node_pairs,
             section=self.web_section,
             continuous=False,
         )
 
         # Web vertical elements
-        add_segment_elements(
+        self.web_verticals_element_ids = add_segment_elements(
             node_pairs=self.web_verticals_node_pairs,
             section=self.web_verticals_section,
             continuous=False,
