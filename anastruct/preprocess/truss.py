@@ -39,12 +39,12 @@ class HoweFlatTruss(FlatTruss):
         )
 
         # Bottom chord connectivity
-        self.bottom_chord_node_ids = [list(range(0, n_bottom_nodes))]
+        self.bottom_chord_node_ids = list(range(0, n_bottom_nodes))
 
         # Top chord connectivity
-        self.top_chord_node_ids = [
-            list(range(n_bottom_nodes, n_bottom_nodes + n_top_nodes))
-        ]
+        self.top_chord_node_ids = list(
+            range(n_bottom_nodes, n_bottom_nodes + n_top_nodes)
+        )
 
         # Web diagonals connectivity
         start_bot = 0
@@ -65,13 +65,13 @@ class HoweFlatTruss(FlatTruss):
         mid_bot = len(self.bottom_chord_node_ids) // 2
         mid_top = len(self.top_chord_node_ids) // 2
         for b, t in zip(
-            self.bottom_chord_node_ids[0][start_bot : mid_bot + 1],
-            self.top_chord_node_ids[0][start_top : mid_top + 1],
+            self.bottom_chord_node_ids[start_bot : mid_bot + 1],
+            self.top_chord_node_ids[start_top : mid_top + 1],
         ):
             self.web_node_pairs.append((b, t))
         for b, t in zip(
-            self.bottom_chord_node_ids[0][end_bot : mid_bot - 1 : -1],
-            self.top_chord_node_ids[0][end_top : mid_top - 1 : -1],
+            self.bottom_chord_node_ids[end_bot : mid_bot - 1 : -1],
+            self.top_chord_node_ids[end_top : mid_top - 1 : -1],
         ):
             self.web_node_pairs.append((b, t))
 
@@ -87,8 +87,8 @@ class HoweFlatTruss(FlatTruss):
             start_bot = 1
             end_bot = -1
         for b, t in zip(
-            self.bottom_chord_node_ids[0][start_bot:end_bot],
-            self.top_chord_node_ids[0][start_top:end_top],
+            self.bottom_chord_node_ids[start_bot:end_bot],
+            self.top_chord_node_ids[start_top:end_top],
         ):
             self.web_verticals_node_pairs.append((b, t))
 
@@ -126,12 +126,12 @@ class PrattFlatTruss(FlatTruss):
         )
 
         # Bottom chord connectivity
-        self.bottom_chord_node_ids = [list(range(0, n_bottom_nodes))]
+        self.bottom_chord_node_ids = list(range(0, n_bottom_nodes))
 
         # Top chord connectivity
-        self.top_chord_node_ids = [
-            list(range(n_bottom_nodes, n_bottom_nodes + n_top_nodes))
-        ]
+        self.top_chord_node_ids = list(
+            range(n_bottom_nodes, n_bottom_nodes + n_top_nodes)
+        )
 
         # Web diagonals connectivity
         start_bot = 0
@@ -152,13 +152,13 @@ class PrattFlatTruss(FlatTruss):
         mid_bot = len(self.bottom_chord_node_ids) // 2
         mid_top = len(self.top_chord_node_ids) // 2
         for b, t in zip(
-            self.bottom_chord_node_ids[0][start_bot : mid_bot + 1],
-            self.top_chord_node_ids[0][start_top : mid_top + 1],
+            self.bottom_chord_node_ids[start_bot : mid_bot + 1],
+            self.top_chord_node_ids[start_top : mid_top + 1],
         ):
             self.web_node_pairs.append((b, t))
         for b, t in zip(
-            self.bottom_chord_node_ids[0][end_bot : mid_bot - 1 : -1],
-            self.top_chord_node_ids[0][end_top : mid_top - 1 : -1],
+            self.bottom_chord_node_ids[end_bot : mid_bot - 1 : -1],
+            self.top_chord_node_ids[end_top : mid_top - 1 : -1],
         ):
             self.web_node_pairs.append((b, t))
 
@@ -174,8 +174,8 @@ class PrattFlatTruss(FlatTruss):
             start_bot = 1
             end_bot = -1
         for b, t in zip(
-            self.bottom_chord_node_ids[0][start_bot:end_bot],
-            self.top_chord_node_ids[0][start_top:end_top],
+            self.bottom_chord_node_ids[start_bot:end_bot],
+            self.top_chord_node_ids[start_top:end_top],
         ):
             self.web_verticals_node_pairs.append((b, t))
 
@@ -268,26 +268,26 @@ class WarrenFlatTruss(FlatTruss):
         n_top_nodes = int(self.n_units) + (1 if self.end_type == "triangle_up" else 0)
 
         # Bottom chord connectivity
-        self.bottom_chord_node_ids = [list(range(0, n_bottom_nodes))]
+        self.bottom_chord_node_ids = list(range(0, n_bottom_nodes))
 
         # Top chord connectivity
-        self.top_chord_node_ids = [
-            list(range(n_bottom_nodes, n_bottom_nodes + n_top_nodes))
-        ]
+        self.top_chord_node_ids = list(
+            range(n_bottom_nodes, n_bottom_nodes + n_top_nodes)
+        )
 
         # Web diagonals connectivity
         # sloping up from bottom left to top right
         top_start = 0 if self.end_type == "triangle_down" else 1
         for b, t in zip(
-            self.bottom_chord_node_ids[0],
-            self.top_chord_node_ids[0][top_start:],
+            self.bottom_chord_node_ids,
+            self.top_chord_node_ids[top_start:],
         ):
             self.web_node_pairs.append((b, t))
         # sloping down from top left to bottom right
         bot_start = 0 if self.end_type == "triangle_up" else 1
         for b, t in zip(
-            self.top_chord_node_ids[0],
-            self.bottom_chord_node_ids[0][bot_start:],
+            self.top_chord_node_ids,
+            self.bottom_chord_node_ids[bot_start:],
         ):
             self.web_node_pairs.append((b, t))
 
@@ -323,15 +323,15 @@ class KingPostRoofTruss(RoofTruss):
 
     def define_connectivity(self) -> None:
         # Bottom chord connectivity
-        self.bottom_chord_node_ids = [[0, 1, 2]]
+        self.bottom_chord_node_ids = [0, 1, 2]
         left_v = 0
         right_v = 2
 
         # Top chord connectivity (left and right slopes stored separately)
-        self.top_chord_node_ids = [[left_v, 3], [3, right_v]]
+        self.top_chord_node_ids = {"left": [left_v, 3], "right": [3, right_v]}
         if self.overhang_length > 0:
-            self.top_chord_node_ids[0].insert(0, 4)  # left overhang
-            self.top_chord_node_ids[1].append(5)  # right overhang
+            self.top_chord_node_ids["left"].insert(0, 4)  # left overhang
+            self.top_chord_node_ids["right"].append(5)  # right overhang
 
         # Web verticals connectivity
         self.web_verticals_node_pairs.append((1, 3))  # center vertical
@@ -370,15 +370,15 @@ class QueenPostRoofTruss(RoofTruss):
 
     def define_connectivity(self) -> None:
         # Bottom chord connectivity
-        self.bottom_chord_node_ids = [[0, 1, 2]]
+        self.bottom_chord_node_ids = [0, 1, 2]
         left_v = 0
         right_v = 2
 
         # Top chord connectivity (left and right slopes stored separately)
-        self.top_chord_node_ids = [[left_v, 3, 4], [4, 5, right_v]]
+        self.top_chord_node_ids = {"left": [left_v, 3, 4], "right": [4, 5, right_v]}
         if self.overhang_length > 0:
-            self.top_chord_node_ids[0].insert(0, 6)  # left overhang
-            self.top_chord_node_ids[1].append(7)  # right overhang
+            self.top_chord_node_ids["left"].insert(0, 6)  # left overhang
+            self.top_chord_node_ids["right"].append(7)  # right overhang
 
         # Web diagonals connectivity
         self.web_node_pairs.append((1, 3))  # left diagonal
@@ -422,15 +422,15 @@ class FinkRoofTruss(RoofTruss):
 
     def define_connectivity(self) -> None:
         # Bottom chord connectivity
-        self.bottom_chord_node_ids = [[0, 1, 2, 3]]
+        self.bottom_chord_node_ids = [0, 1, 2, 3]
         left_v = 0
         right_v = 3
 
         # Top chord connectivity (left and right slopes stored separately)
-        self.top_chord_node_ids = [[left_v, 4, 5], [5, 6, right_v]]
+        self.top_chord_node_ids = {"left": [left_v, 4, 5], "right": [5, 6, right_v]}
         if self.overhang_length > 0:
-            self.top_chord_node_ids[0].insert(0, 7)  # left overhang
-            self.top_chord_node_ids[1].append(8)  # right overhang
+            self.top_chord_node_ids["left"].insert(0, 7)  # left overhang
+            self.top_chord_node_ids["right"].append(8)  # right overhang
 
         # Web diagonals connectivity
         self.web_node_pairs.append((1, 4))
@@ -474,15 +474,15 @@ class HoweRoofTruss(RoofTruss):
 
     def define_connectivity(self) -> None:
         # Bottom chord connectivity
-        self.bottom_chord_node_ids = [[0, 1, 2, 3, 4]]
+        self.bottom_chord_node_ids = [0, 1, 2, 3, 4]
         left_v = 0
         right_v = 4
 
         # Top chord connectivity (left and right slopes stored separately)
-        self.top_chord_node_ids = [[left_v, 5, 6], [6, 7, right_v]]
+        self.top_chord_node_ids = {"left": [left_v, 5, 6], "right": [6, 7, right_v]}
         if self.overhang_length > 0:
-            self.top_chord_node_ids[0].insert(0, 8)  # left overhang
-            self.top_chord_node_ids[1].append(9)  # right overhang
+            self.top_chord_node_ids["left"].insert(0, 8)  # left overhang
+            self.top_chord_node_ids["right"].append(9)  # right overhang
 
         # Web diagonals connectivity
         self.web_node_pairs.append((2, 5))  # left diagonal
@@ -529,15 +529,15 @@ class PrattRoofTruss(RoofTruss):
 
     def define_connectivity(self) -> None:
         # Bottom chord connectivity
-        self.bottom_chord_node_ids = [[0, 1, 2, 3, 4]]
+        self.bottom_chord_node_ids = [0, 1, 2, 3, 4]
         left_v = 0
         right_v = 4
 
         # Top chord connectivity (left and right slopes stored separately)
-        self.top_chord_node_ids = [[left_v, 5, 6], [6, 7, right_v]]
+        self.top_chord_node_ids = {"left": [left_v, 5, 6], "right": [6, 7, right_v]}
         if self.overhang_length > 0:
-            self.top_chord_node_ids[0].insert(0, 8)  # left overhang
-            self.top_chord_node_ids[1].append(9)  # right overhang
+            self.top_chord_node_ids["left"].insert(0, 8)  # left overhang
+            self.top_chord_node_ids["right"].append(9)  # right overhang
 
         # Web diagonals connectivity
         self.web_node_pairs.append((1, 6))  # left diagonal
@@ -585,15 +585,18 @@ class FanRoofTruss(RoofTruss):
 
     def define_connectivity(self) -> None:
         # Bottom chord connectivity
-        self.bottom_chord_node_ids = [[0, 1, 2, 3]]
+        self.bottom_chord_node_ids = [0, 1, 2, 3]
         left_v = 0
         right_v = 3
 
         # Top chord connectivity (left and right slopes stored separately)
-        self.top_chord_node_ids = [[left_v, 4, 5, 6], [6, 7, 8, right_v]]
+        self.top_chord_node_ids = {
+            "left": [left_v, 4, 5, 6],
+            "right": [6, 7, 8, right_v],
+        }
         if self.overhang_length > 0:
-            self.top_chord_node_ids[0].insert(0, 9)  # left overhang
-            self.top_chord_node_ids[1].append(10)  # right overhang
+            self.top_chord_node_ids["left"].insert(0, 9)  # left overhang
+            self.top_chord_node_ids["right"].append(10)  # right overhang
 
         # Web diagonals connectivity
         self.web_node_pairs.append((1, 4))
@@ -643,15 +646,18 @@ class ModifiedQueenPostRoofTruss(RoofTruss):
 
     def define_connectivity(self) -> None:
         # Bottom chord connectivity
-        self.bottom_chord_node_ids = [[0, 1, 2, 3, 4]]
+        self.bottom_chord_node_ids = [0, 1, 2, 3, 4]
         left_v = 0
         right_v = 4
 
         # Top chord connectivity (left and right slopes stored separately)
-        self.top_chord_node_ids = [[left_v, 5, 6, 7], [7, 8, 9, right_v]]
+        self.top_chord_node_ids = {
+            "left": [left_v, 5, 6, 7],
+            "right": [7, 8, 9, right_v],
+        }
         if self.overhang_length > 0:
-            self.top_chord_node_ids[0].insert(0, 10)  # left overhang
-            self.top_chord_node_ids[1].append(11)  # right overhang
+            self.top_chord_node_ids["left"].insert(0, 10)  # left overhang
+            self.top_chord_node_ids["right"].append(11)  # right overhang
 
         # Web diagonals connectivity
         self.web_node_pairs.append((1, 5))
@@ -703,15 +709,18 @@ class DoubleFinkRoofTruss(RoofTruss):
 
     def define_connectivity(self) -> None:
         # Bottom chord connectivity
-        self.bottom_chord_node_ids = [[0, 1, 2, 3, 4, 5]]
+        self.bottom_chord_node_ids = [0, 1, 2, 3, 4, 5]
         left_v = 0
         right_v = 5
 
         # Top chord connectivity (left and right slopes stored separately)
-        self.top_chord_node_ids = [[left_v, 6, 7, 8], [8, 9, 10, right_v]]
+        self.top_chord_node_ids = {
+            "left": [left_v, 6, 7, 8],
+            "right": [8, 9, 10, right_v],
+        }
         if self.overhang_length > 0:
-            self.top_chord_node_ids[0].insert(0, 11)  # left overhang
-            self.top_chord_node_ids[1].append(12)  # right overhang
+            self.top_chord_node_ids["left"].insert(0, 11)  # left overhang
+            self.top_chord_node_ids["right"].append(12)  # right overhang
 
         # Web diagonals connectivity
         self.web_node_pairs.append((1, 6))
@@ -763,15 +772,18 @@ class DoubleHoweRoofTruss(RoofTruss):
 
     def define_connectivity(self) -> None:
         # Bottom chord connectivity
-        self.bottom_chord_node_ids = [[0, 1, 2, 3, 4, 5, 6]]
+        self.bottom_chord_node_ids = [0, 1, 2, 3, 4, 5, 6]
         left_v = 0
         right_v = 6
 
         # Top chord connectivity (left and right slopes stored separately)
-        self.top_chord_node_ids = [[left_v, 7, 8, 9], [9, 10, 11, right_v]]
+        self.top_chord_node_ids = {
+            "left": [left_v, 7, 8, 9],
+            "right": [9, 10, 11, right_v],
+        }
         if self.overhang_length > 0:
-            self.top_chord_node_ids[0].insert(0, 12)  # left overhang
-            self.top_chord_node_ids[1].append(13)  # right overhang
+            self.top_chord_node_ids["left"].insert(0, 12)  # left overhang
+            self.top_chord_node_ids["right"].append(13)  # right overhang
 
         # Web diagonals connectivity
         self.web_node_pairs.append((2, 7))
@@ -826,15 +838,18 @@ class ModifiedFanRoofTruss(RoofTruss):
 
     def define_connectivity(self) -> None:
         # Bottom chord connectivity
-        self.bottom_chord_node_ids = [[0, 1, 2, 3, 4]]
+        self.bottom_chord_node_ids = [0, 1, 2, 3, 4]
         left_v = 0
         right_v = 4
 
         # Top chord connectivity (left and right slopes stored separately)
-        self.top_chord_node_ids = [[left_v, 5, 6, 7, 8], [8, 9, 10, 11, right_v]]
+        self.top_chord_node_ids = {
+            "left": [left_v, 5, 6, 7, 8],
+            "right": [8, 9, 10, 11, right_v],
+        }
         if self.overhang_length > 0:
-            self.top_chord_node_ids[0].insert(0, 12)  # left overhang
-            self.top_chord_node_ids[1].append(13)  # right overhang
+            self.top_chord_node_ids["left"].insert(0, 12)  # left overhang
+            self.top_chord_node_ids["right"].append(13)  # right overhang
 
         # Web diagonals connectivity
         self.web_node_pairs.append((1, 5))
@@ -943,20 +958,20 @@ class AtticRoofTruss(RoofTruss):
 
     def define_connectivity(self) -> None:
         # Bottom chord connectivity
-        self.bottom_chord_node_ids = [[0, 1, 2, 3]]
+        self.bottom_chord_node_ids = [0, 1, 2, 3]
         left_v = 0
         right_v = 3
 
         if self.wall_ceiling_intersect:
             # Top chord connectivity (left and right slopes stored separately)
-            self.top_chord_node_ids = [
-                [left_v, 4, 5, 6],
-                [6, 7, 8, right_v],
-                [5, 9, 7],  # attic ceiling
-            ]
+            self.top_chord_node_ids = {
+                "left": [left_v, 4, 5, 6],
+                "right": [6, 7, 8, right_v],
+                "ceiling": [5, 9, 7],  # attic ceiling
+            }
             if self.overhang_length > 0:
-                self.top_chord_node_ids[0].insert(0, 10)  # left overhang
-                self.top_chord_node_ids[1].append(11)  # right overhang
+                self.top_chord_node_ids["left"].insert(0, 10)  # left overhang
+                self.top_chord_node_ids["right"].append(11)  # right overhang
 
             # Web diagonals connectivity
             self.web_node_pairs.append((1, 4))
@@ -971,14 +986,14 @@ class AtticRoofTruss(RoofTruss):
 
         else:
             # Top chord connectivity (left and right slopes stored separately)
-            self.top_chord_node_ids = [
-                [left_v, 4, 5, 6, 7],
-                [7, 8, 9, 10, right_v],
-                [6, 11, 8],  # attic ceiling
-            ]
+            self.top_chord_node_ids = {
+                "left": [left_v, 4, 5, 6, 7],
+                "right": [7, 8, 9, 10, right_v],
+                "ceiling": [6, 11, 8],  # attic ceiling
+            }
             if self.overhang_length > 0:
-                self.top_chord_node_ids[0].insert(0, 12)  # left overhang
-                self.top_chord_node_ids[1].append(13)  # right overhang
+                self.top_chord_node_ids["left"].insert(0, 12)  # left overhang
+                self.top_chord_node_ids["right"].append(13)  # right overhang
 
             # Web diagonals connectivity
             self.web_node_pairs.append((1, 4))
