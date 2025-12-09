@@ -32,8 +32,8 @@ class Truss(ABC):
 
     # Defined by subclass
     nodes: list[Vertex] = []
-    top_chord_node_ids: list[list[int]] = []
-    bottom_chord_node_ids: list[list[int]] = []
+    top_chord_node_ids: Union[list[int], dict[str, list[int]]] = []
+    bottom_chord_node_ids: Union[list[int], dict[str, list[int]]] = []
     web_node_pairs: list[tuple[int, int]] = []
     web_verticals_node_pairs: list[tuple[int, int]] = []
     support_definitions: dict[int, Literal["fixed", "pinned", "roller"]] = {}
@@ -41,8 +41,8 @@ class Truss(ABC):
     bottom_chord_length: float = 0.0
 
     # Defined by main class
-    top_chord_element_ids: list[list[int]] = []
-    bottom_chord_element_ids: list[list[int]] = []
+    top_chord_element_ids: Union[list[int], dict[str, list[int]]] = []
+    bottom_chord_element_ids: Union[list[int], dict[str, list[int]]] = []
     web_element_ids: list[int] = []
     web_verticals_element_ids: list[int] = []
 
@@ -57,7 +57,7 @@ class Truss(ABC):
         bottom_chord_section: Optional[SectionProps] = None,
         web_section: Optional[SectionProps] = None,
         web_verticals_section: Optional[SectionProps] = None,
-        top_chord_continous: bool = True,
+        top_chord_continuous: bool = True,
         bottom_chord_continuous: bool = True,
         supports_type: Literal["simple", "pinned", "fixed"] = "simple",
     ):
@@ -67,7 +67,7 @@ class Truss(ABC):
         self.bottom_chord_section = bottom_chord_section or DEFAULT_TRUSS_SECTION
         self.web_section = web_section or DEFAULT_TRUSS_SECTION
         self.web_verticals_section = web_verticals_section or self.web_section
-        self.top_chord_continous = top_chord_continous
+        self.top_chord_continuous = top_chord_continuous
         self.bottom_chord_continuous = bottom_chord_continuous
         self.supports_type = supports_type
 
@@ -121,23 +121,39 @@ class Truss(ABC):
             return element_ids
 
         # Bottom chord elements
-        for segment_node_ids in self.bottom_chord_node_ids:
-            self.bottom_chord_element_ids.append(
-                add_segment_elements(
+        if isinstance(self.bottom_chord_node_ids, dict):
+            self.bottom_chord_element_ids = {}
+            for key, segment_node_ids in self.bottom_chord_node_ids.items():
+                self.bottom_chord_element_ids[key] = add_segment_elements(
                     node_pairs=zip(segment_node_ids[:-1], segment_node_ids[1:]),
                     section=self.bottom_chord_section,
                     continuous=self.bottom_chord_continuous,
                 )
+        else:
+            self.bottom_chord_element_ids = add_segment_elements(
+                node_pairs=zip(
+                    self.bottom_chord_node_ids[:-1], self.bottom_chord_node_ids[1:]
+                ),
+                section=self.bottom_chord_section,
+                continuous=self.bottom_chord_continuous,
             )
 
         # Top chord elements
-        for segment_node_ids in self.top_chord_node_ids:
-            self.top_chord_element_ids.append(
-                add_segment_elements(
+        if isinstance(self.top_chord_node_ids, dict):
+            self.top_chord_element_ids = {}
+            for key, segment_node_ids in self.top_chord_node_ids.items():
+                self.top_chord_element_ids[key] = add_segment_elements(
                     node_pairs=zip(segment_node_ids[:-1], segment_node_ids[1:]),
                     section=self.top_chord_section,
-                    continuous=self.top_chord_continous,
+                    continuous=self.top_chord_continuous,
                 )
+        else:
+            self.top_chord_element_ids = add_segment_elements(
+                node_pairs=zip(
+                    self.top_chord_node_ids[:-1], self.top_chord_node_ids[1:]
+                ),
+                section=self.top_chord_section,
+                continuous=self.top_chord_continuous,
             )
 
         # Web diagonal elements
@@ -163,35 +179,70 @@ class Truss(ABC):
             elif support_type == "roller":
                 self.system.add_support_roll(node_id=node_id)
 
-    def apply_q_loads_to_top_chord(
+    def get_element_ids_of_chord(
+        self, chord: Literal["top", "bottom"], chord_segment: Optional[str] = None
+    ) -> list[int]:
+        if chord == "top":
+            if isinstance(self.top_chord_element_ids, dict):
+                if chord_segment is None:
+                    all_ids = []
+                    for ids in self.top_chord_element_ids.values():
+                        all_ids.extend(ids)
+                    return all_ids
+                return self.top_chord_element_ids[chord_segment]
+            return self.top_chord_element_ids
+
+        if chord == "bottom":
+            if isinstance(self.bottom_chord_element_ids, dict):
+                if chord_segment is None:
+                    all_ids = []
+                    for ids in self.bottom_chord_element_ids.values():
+                        all_ids.extend(ids)
+                    return all_ids
+                return self.bottom_chord_element_ids[chord_segment]
+            return self.bottom_chord_element_ids
+
+        raise ValueError("chord must be either 'top' or 'bottom'.")
+
+    def apply_q_load_to_top_chord(
         self,
         q: Union[float, Sequence[float]],
         direction: Union["LoadDirection", Sequence["LoadDirection"]] = "element",
         rotation: Optional[Union[float, Sequence[float]]] = None,
         q_perp: Optional[Union[float, Sequence[float]]] = None,
+        chord_segment: Optional[str] = None,
     ) -> None:
-        pass
+        element_ids = self.get_element_ids_of_chord(
+            chord="top", chord_segment=chord_segment
+        )
+        for el_id in element_ids:
+            self.system.q_load(
+                element_id=el_id,
+                q=q,
+                direction=direction,
+                rotation=rotation,
+                q_perp=q_perp,
+            )
 
-    def apply_q_loads_to_bottom_chord(
+    def apply_q_load_to_bottom_chord(
         self,
-        x_start: float,
-        x_end: float,
         q: Union[float, Sequence[float]],
         direction: Union["LoadDirection", Sequence["LoadDirection"]] = "element",
         rotation: Optional[Union[float, Sequence[float]]] = None,
         q_perp: Optional[Union[float, Sequence[float]]] = None,
+        chord_segment: Optional[str] = None,
     ) -> None:
-        pass
-
-    def apply_point_load_to_top_chord(
-        self, x_loc: float, Fx: float = 0.0, Fy: float = 0.0, rotation: float = 0.0
-    ) -> None:
-        pass
-
-    def apply_point_load_to_bottom_chord(
-        self, x_loc: float, Fx: float = 0.0, Fy: float = 0.0, rotation: float = 0.0
-    ) -> None:
-        pass
+        element_ids = self.get_element_ids_of_chord(
+            chord="bottom", chord_segment=chord_segment
+        )
+        for el_id in element_ids:
+            self.system.q_load(
+                element_id=el_id,
+                q=q,
+                direction=direction,
+                rotation=rotation,
+                q_perp=q_perp,
+            )
 
     def show_structure(self) -> None:
         self.system.show_structure()
@@ -264,10 +315,14 @@ class FlatTruss(Truss):
         pass
 
     def define_supports(self) -> None:
+        # This default implementation assumes that top and bottom chords are one single segment / list, and
+        # that supports are at the ends of the truss.
+        assert isinstance(self.bottom_chord_node_ids, list)
+        assert isinstance(self.top_chord_node_ids, list)
         bottom_left = 0
-        bottom_right = max(self.bottom_chord_node_ids[0])
-        top_left = min(self.top_chord_node_ids[0])
-        top_right = max(self.top_chord_node_ids[0])
+        bottom_right = max(self.bottom_chord_node_ids)
+        top_left = min(self.top_chord_node_ids)
+        top_right = max(self.top_chord_node_ids)
         if self.supports_loc in ["bottom_chord", "both"]:
             self.support_definitions[bottom_left] = (
                 self.supports_type if self.supports_type != "simple" else "pinned"
@@ -329,8 +384,12 @@ class RoofTruss(Truss):
         pass
 
     def define_supports(self) -> None:
+        # This default implementation assumes that bottom chords are one single segment / list, and
+        # that supports are at the ends of the truss.
+        assert isinstance(self.bottom_chord_node_ids, list)
+
         bottom_left = 0
-        bottom_right = max(self.bottom_chord_node_ids[0])
+        bottom_right = max(self.bottom_chord_node_ids)
         self.support_definitions[bottom_left] = (
             self.supports_type if self.supports_type != "simple" else "pinned"
         )
