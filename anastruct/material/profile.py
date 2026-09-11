@@ -3,7 +3,7 @@ import io
 from typing import Dict
 
 s_hea = """profiel,G,A,h,b,tw,tf,AL,Iy,Wy,Iz,Wz
-nr.,kg/m,mm2,mm,mm,mm,mm,m2/m,mm4,mm3,mm4,mm3
+nr.,kg/m,mm2,mm,mm,mm,mm,m2/m,cm4,cm3,cm4,cm3
 100,17.0,2124,96,100,5,8,0.561,349,72.8,134,26.8
 120,20.3,2534,114,120,5,8,0.677,606,106,231,38.5
 140,25.1,3142,133,140,5.5,8.5,0.794,1033,155,389,55.6
@@ -31,7 +31,7 @@ nr.,kg/m,mm2,mm,mm,mm,mm,m2/m,mm4,mm3,mm4,mm3
 """
 
 s_ipe = """profiel,G,A,h,b,tw,tf,AL,Iy,Wy,Iz,Wz
-nr.,kg/m,mm2,mm,mm,mm,mm,m2/m,mm4,mm3,mm4,mm3
+nr.,kg/m,mm2,mm,mm,mm,mm,m2/m,cm4,cm3,cm4,cm3
 80,6,764,80,46,3.8,5.2,328,80.1,20.0,8.49,3.69
 100,8,1032,100,55,4.1,5.7,400,171,34.2,15.9,5.79
 120,10,1321,120,64,4.4,6.3,475,318,53.0,27.7,8.65
